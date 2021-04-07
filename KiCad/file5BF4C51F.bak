@@ -1,0 +1,154 @@
+EESchema Schematic File Version 2
+LIBS:ARDF 2 Band MiniTx-rescue
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:special
+LIBS:ARDF 2 Band MiniTx-cache
+EELAYER 25 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 4 4
+Title "ARDF 2-Band Mini Transmitter"
+Date "2020-10-12"
+Rev "P2.1"
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L CHASSIS_BOX BOX401
+U 1 1 5BF4CC06
+P 3250 2750
+F 0 "BOX401" H 3250 3050 50  0000 C CNN
+F 1 "Chassis Box" H 3250 2700 61  0000 C CNB
+F 2 "Oddities:Dummy_Empty" H 3250 2750 50  0001 C CNN
+F 3 "" H 3250 2750 50  0000 C CNN
+F 4 "HM1796-ND" H 3250 2750 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=1554F2GYCL\">Link</a>" H 3250 2750 60  0001 C CNN "Link"
+	1    3250 2750
+	1    0    0    -1  
+$EndComp
+$Comp
+L SCREW SCREW401
+U 1 1 5BF4F9A4
+P 4400 2650
+F 0 "SCREW401" H 4405 2935 50  0000 C CNN
+F 1 "QTY 4 SCREWS" H 4400 2450 61  0000 C CNB
+F 2 "Oddities:Dummy_Empty" H 4405 2650 50  0001 C CNN
+F 3 "" H 4405 2650 50  0000 C CNN
+F 4 "H742-ND" H 4400 2650 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en/hardware-fasteners-accessories/screws-bolts/572?k=H742-ND\">Link</a>" H 4400 2650 60  0001 C CNN "Link"
+	1    4400 2650
+	1    0    0    -1  
+$EndComp
+$Comp
+L Circuit_Board PCB401
+U 1 1 5BF5C2D3
+P 2000 2500
+F 0 "PCB401" H 1920 2925 50  0000 L CNN
+F 1 "Circuit Board" H 1765 2055 61  0000 L CNB
+F 2 "Oddities:Dummy_Empty" H 2840 2660 50  0001 C CNN
+F 3 "" H 2840 2660 50  0000 C CNN
+F 4 "OSH Park PCB" H 2000 2500 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://oshpark.com/shared_projects/sZ495SMd\">Link</a>" H 2000 2500 60  0001 C CNN "Link"
+	1    2000 2500
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X06 J401
+U 1 1 5C10B0E5
+P 3100 3700
+F 0 "J401" H 3100 4050 50  0000 C CNN
+F 1 "CONN_01X06" V 3200 3700 50  0000 C CNN
+F 2 "Oddities:Dummy_Empty" H 3100 3700 50  0001 C CNN
+F 3 "" H 3100 3700 50  0001 C CNN
+F 4 "S5637-ND" H 3100 3700 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/product-detail/en/sullins-connector-solutions/NPPC061KFXC-RC/S5637-ND/776096\">Link</a>" H 3100 3700 60  0001 C CNN "Link"
+	1    3100 3700
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X10 J402
+U 1 1 5C10B110
+P 3750 3850
+F 0 "J402" H 3750 4400 50  0000 C CNN
+F 1 "CONN_01X10" V 3850 3850 50  0000 C CNN
+F 2 "Oddities:Dummy_Empty" H 3750 3850 50  0001 C CNN
+F 3 "" H 3750 3850 50  0001 C CNN
+F 4 "S5641-ND" H 3750 3850 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/product-detail/en/sullins-connector-solutions/NPPC101KFXC-RC/S5641-ND/776100\">Link</a>" H 3750 3850 60  0001 C CNN "Link"
+	1    3750 3850
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X10 J403
+U 1 1 5C10B14B
+P 4250 3850
+F 0 "J403" H 4250 4400 50  0000 C CNN
+F 1 "CONN_01X10" V 4350 3850 50  0000 C CNN
+F 2 "Oddities:Dummy_Empty" H 4250 3850 50  0001 C CNN
+F 3 "" H 4250 3850 50  0001 C CNN
+F 4 "S5641-ND" H 4250 3850 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/product-detail/en/sullins-connector-solutions/NPPC101KFXC-RC/S5641-ND/776100\">Link</a>" H 4250 3850 60  0001 C CNN "Link"
+	1    4250 3850
+	1    0    0    -1  
+$EndComp
+NoConn ~ 4050 3400
+NoConn ~ 4050 3500
+NoConn ~ 4050 3600
+NoConn ~ 4050 3700
+NoConn ~ 4050 3800
+NoConn ~ 4050 3900
+NoConn ~ 4050 4000
+NoConn ~ 4050 4100
+NoConn ~ 4050 4200
+NoConn ~ 4050 4300
+NoConn ~ 3550 4300
+NoConn ~ 3550 4200
+NoConn ~ 3550 4100
+NoConn ~ 3550 4000
+NoConn ~ 3550 3900
+NoConn ~ 3550 3800
+NoConn ~ 3550 3700
+NoConn ~ 3550 3600
+NoConn ~ 3550 3500
+NoConn ~ 3550 3400
+NoConn ~ 2900 3450
+NoConn ~ 2900 3550
+NoConn ~ 2900 3650
+NoConn ~ 2900 3750
+NoConn ~ 2900 3850
+NoConn ~ 2900 3950
+Text Notes 2900 3250 0    61   ~ 12
+Header sockets for Huzzah board
+$EndSCHEMATC
