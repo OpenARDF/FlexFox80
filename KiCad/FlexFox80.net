@@ -1,22 +1,22 @@
 (export (version D)
   (design
-    (source "/Library/Application Support/kicad/docs/KiCad/Receiver_Development_Platform/Dual-Band_MiniTx/ARDF 2 Band MiniTx.sch")
+    (source "/Users/Charles/Documents/GitHub/FlexFox80/KiCad/FlexFox80.sch")
     (date "Wednesday, October 14, 2020 'PMt' 02:38:22 PM")
     (tool "Eeschema 4.0.6")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
-        (title "ARDF 2-Band Mini Transmitter")
+        (title "FlexFox80")
         (company)
         (rev P2.1)
         (date 2020-10-12)
-        (source "ARDF 2 Band MiniTx.sch")
+        (source "FlexFox80.sch")
         (comment (number 1) (value ""))
         (comment (number 2) (value ""))
         (comment (number 3) (value ""))
         (comment (number 4) (value ""))))
     (sheet (number 2) (name "/ARDF Tx Continued/") (tstamps /591BC960/)
       (title_block
-        (title "ARDF 2-Band Mini Transmitter")
+        (title "FlexFox80")
         (company)
         (rev P2.1)
         (date 2020-10-12)
@@ -27,7 +27,7 @@
         (comment (number 4) (value ""))))
     (sheet (number 3) (name /Digital/) (tstamps /5BC7F38C/)
       (title_block
-        (title "ARDF 2-Band Mini Transmitter")
+        (title "FlexFox80")
         (company)
         (rev P2.1)
         (date 2020-10-12)
@@ -38,7 +38,7 @@
         (comment (number 4) (value ""))))
     (sheet (number 4) (name /Non-PCB/) (tstamps /5BF4C520/)
       (title_block
-        (title "ARDF 2-Band Mini Transmitter")
+        (title "FlexFox80")
         (company)
         (rev P2.1)
         (date 2020-10-12)
@@ -416,7 +416,7 @@
       (fields
         (field (name "Part No.") LMN400E01-7)
         (field (name Link) "<a href=\"https://www.digikey.com/products/en?keywords=LMN400E01DICT-ND\">Link</a>"))
-      (libsource (lib "ARDF 2 Band MiniTx-cache") (part LMN200B01))
+      (libsource (lib "FlexFox80-cache") (part LMN200B01))
       (sheetpath (names /) (tstamps /))
       (tstamp 5C64951A))
     (comp (ref U105)
@@ -623,7 +623,7 @@
       (fields
         (field (name "Part No.") MBD54DWT1GOSCT-ND)
         (field (name Link) "<a href=\"https://www.digikey.com/products/en?keywords=MBD54DWT1GOSCT-ND\">Link</a>"))
-      (libsource (lib "ARDF 2 Band MiniTx-cache") (part MBD54DWT1G_Schottky_Ind))
+      (libsource (lib "FlexFox80-cache") (part MBD54DWT1G_Schottky_Ind))
       (sheetpath (names /) (tstamps /))
       (tstamp 5CE0AD33))
     (comp (ref C503)
@@ -2291,7 +2291,7 @@
         (pin (num 4) (name Vss) (type power_in))
         (pin (num 5) (name InB) (type input))
         (pin (num 6) (name In) (type input))))
-    (libpart (lib "ARDF 2 Band MiniTx-cache") (part LMN200B01)
+    (libpart (lib "FlexFox80-cache") (part LMN200B01)
       (footprints
         (fp SOT-23*)
         (fp SC-59*)
@@ -2326,7 +2326,7 @@
         (pin (num 11) (name VOUT) (type power_out))
         (pin (num 12) (name PGOOD) (type output))
         (pin (num 13) (name PGND) (type power_in))))
-    (libpart (lib "ARDF 2 Band MiniTx-cache") (part MBD54DWT1G_Schottky_Ind)
+    (libpart (lib "FlexFox80-cache") (part MBD54DWT1G_Schottky_Ind)
       (footprints
         (fp SOT-363*))
       (fields
@@ -2506,8 +2506,8 @@
       (uri "/Library/Application Support/kicad/library/atmel.lib"))
     (library (logical special)
       (uri "/Library/Application Support/kicad/docs/KiCad/kicad libraries/special.lib"))
-    (library (logical "ARDF 2 Band MiniTx-cache")
-      (uri "/Library/Application Support/kicad/docs/KiCad/Receiver_Development_Platform/Dual-Band_MiniTx/ARDF 2 Band MiniTx-cache.lib")))
+    (library (logical "FlexFox80-cache")
+      (uri "/Library/Application Support/kicad/docs/KiCad/Receiver_Development_Platform/Dual-Band_MiniTx/FlexFox80-cache.lib")))
   (nets
     (net (code 1) (name "Net-(C504-Pad1)")
       (node (ref J507) (pin 1))

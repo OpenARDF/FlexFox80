@@ -53,7 +53,7 @@ F 5 "<a href=\"https://oshpark.com/shared_projects/sZ495SMd\">Link</a>" H 2000 2
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:CONN_01X06 J401
+L FlexFox80-rescue:CONN_01X06-ARDF-2-Band-MiniTx-rescue J401
 U 1 1 5C10B0E5
 P 3100 3700
 F 0 "J401" H 3100 4050 50  0000 C CNN
@@ -66,7 +66,7 @@ F 5 "<a href=\"https://www.digikey.com/product-detail/en/sullins-connector-solut
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:CONN_01X10 J402
+L FlexFox80-rescue:CONN_01X10-ARDF-2-Band-MiniTx-rescue J402
 U 1 1 5C10B110
 P 3750 3850
 F 0 "J402" H 3750 4400 50  0000 C CNN
@@ -79,7 +79,7 @@ F 5 "<a href=\"https://www.digikey.com/product-detail/en/sullins-connector-solut
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:CONN_01X10 J403
+L FlexFox80-rescue:CONN_01X10-ARDF-2-Band-MiniTx-rescue J403
 U 1 1 5C10B14B
 P 4250 3850
 F 0 "J403" H 4250 4400 50  0000 C CNN
@@ -119,4 +119,6 @@ NoConn ~ 2900 3850
 NoConn ~ 2900 3950
 Text Notes 2900 3250 0    61   ~ 12
 Header sockets for Huzzah board
+Text Notes 7200 6750 0    118  ~ 24
+BOM-ONLY: Flex Fox 80 ARDF Transmitter
 $EndSCHEMATC

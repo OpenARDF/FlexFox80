@@ -1,11 +1,11 @@
 EESchema-LIBRARY Version 2.4
 #encoding utf-8
 #
-# ARDF-2-Band-MiniTx-rescue_+2to+12V
+# +2to+12V-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_+2to+12V #PWR 0 0 Y Y 1 F P
+DEF +2to+12V-ARDF-2-Band-MiniTx-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -150 50 H I C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_+2to+12V" 0 140 50 H V C CNN
+F1 "+2to+12V-ARDF-2-Band-MiniTx-rescue" 0 140 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -16,11 +16,11 @@ X +2to+12V 1 0 0 0 U 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_+3V3_L8
+# +3V3_L8-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_+3V3_L8 #PWR 0 0 Y Y 1 F P
+DEF +3V3_L8-ARDF-2-Band-MiniTx-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -150 50 H I C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_+3V3_L8" 0 140 50 H V C CNN
+F1 "+3V3_L8-ARDF-2-Band-MiniTx-rescue" 0 140 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -31,11 +31,11 @@ X +3V3_L8 1 0 0 0 U 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_+5V_L8
+# +5V_L8-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_+5V_L8 #PWR 0 0 Y Y 1 F P
+DEF +5V_L8-ARDF-2-Band-MiniTx-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -150 50 H I C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_+5V_L8" 0 140 50 H V C CNN
+F1 "+5V_L8-ARDF-2-Band-MiniTx-rescue" 0 140 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -46,11 +46,11 @@ X +5V_L8 1 0 0 0 U 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_74HC1G08
+# 74HC1G08-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_74HC1G08 U 0 30 Y Y 1 F N
+DEF 74HC1G08-ARDF-2-Band-MiniTx-rescue U 0 30 Y Y 1 F N
 F0 "U" 0 50 61 H V C CNB
-F1 "ARDF-2-Band-MiniTx-rescue_74HC1G08" 0 -50 61 H V C CNB
+F1 "74HC1G08-ARDF-2-Band-MiniTx-rescue" 0 -50 61 H V C CNB
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 DRAW
@@ -72,11 +72,11 @@ X ~ 3 600 0 300 L 50 50 1 2 O I
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_AFT05MS004N
+# AFT05MS004N-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_AFT05MS004N Q 0 0 Y Y 1 F N
+DEF AFT05MS004N-ARDF-2-Band-MiniTx-rescue Q 0 0 Y Y 1 F N
 F0 "Q" 200 75 50 H V L CNN
-F1 "ARDF-2-Band-MiniTx-rescue_AFT05MS004N" 200 0 50 H V L CNN
+F1 "AFT05MS004N-ARDF-2-Band-MiniTx-rescue" 200 0 50 H V L CNN
 F2 "TO_SOT_Packages_THT:TO-92_Molded_Narrow" 200 -75 50 H I L CIN
 F3 "" 0 0 50 H I L CNN
 $FPLIST
@@ -105,11 +105,11 @@ X D 3 100 200 100 D 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_ATMEGA328P-A
+# ATMEGA328P-A-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_ATMEGA328P-A IC 0 40 Y Y 1 F N
+DEF ATMEGA328P-A-ARDF-2-Band-MiniTx-rescue IC 0 40 Y Y 1 F N
 F0 "IC" -750 1250 50 H V L BNN
-F1 "ARDF-2-Band-MiniTx-rescue_ATMEGA328P-A" 400 -1400 50 H V L BNN
+F1 "ATMEGA328P-A-ARDF-2-Band-MiniTx-rescue" 400 -1400 50 H V L BNN
 F2 "TQFP32" 0 0 50 H V C CIN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -149,11 +149,11 @@ X (PCINT21/OC0B/T1)PD5 9 1000 -1000 150 L 40 40 1 1 B
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_Battery_Single_Cell
+# Battery_Single_Cell-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_Battery_Single_Cell BT 0 0 N Y 1 F N
+DEF Battery_Single_Cell-ARDF-2-Band-MiniTx-rescue BT 0 0 N Y 1 F N
 F0 "BT" 100 50 50 H V L CNN
-F1 "ARDF-2-Band-MiniTx-rescue_Battery_Single_Cell" 100 -25 50 H V L CNN
+F1 "Battery_Single_Cell-ARDF-2-Band-MiniTx-rescue" 100 -25 50 H V L CNN
 F2 "" 0 40 50 V V C CNN
 F3 "" 0 40 50 V V C CNN
 DRAW
@@ -168,11 +168,11 @@ X ~ 2 0 -150 100 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_CONN_01X01
+# CONN_01X01-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_CONN_01X01 J 0 40 Y N 1 F N
+DEF CONN_01X01-ARDF-2-Band-MiniTx-rescue J 0 40 Y N 1 F N
 F0 "J" 0 100 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_CONN_01X01" 100 0 50 V V C CNN
+F1 "CONN_01X01-ARDF-2-Band-MiniTx-rescue" 100 0 50 V V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -188,11 +188,11 @@ X P1 1 -200 0 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_CONN_01X02
+# CONN_01X02-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_CONN_01X02 J 0 40 Y N 1 F N
+DEF CONN_01X02-ARDF-2-Band-MiniTx-rescue J 0 40 Y N 1 F N
 F0 "J" 0 150 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_CONN_01X02" 100 0 50 V V C CNN
+F1 "CONN_01X02-ARDF-2-Band-MiniTx-rescue" 100 0 50 V V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -210,11 +210,11 @@ X P2 2 -200 -50 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_CONN_01X03
+# CONN_01X03-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_CONN_01X03 J 0 40 Y N 1 F N
+DEF CONN_01X03-ARDF-2-Band-MiniTx-rescue J 0 40 Y N 1 F N
 F0 "J" 0 200 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_CONN_01X03" 100 0 50 V V C CNN
+F1 "CONN_01X03-ARDF-2-Band-MiniTx-rescue" 100 0 50 V V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -234,11 +234,11 @@ X P3 3 -200 -100 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_CONN_01X06
+# CONN_01X06-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_CONN_01X06 J 0 40 Y N 1 F N
+DEF CONN_01X06-ARDF-2-Band-MiniTx-rescue J 0 40 Y N 1 F N
 F0 "J" 0 350 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_CONN_01X06" 100 0 50 V V C CNN
+F1 "CONN_01X06-ARDF-2-Band-MiniTx-rescue" 100 0 50 V V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -264,11 +264,11 @@ X P6 6 -200 -250 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_CONN_01X10
+# CONN_01X10-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_CONN_01X10 J 0 40 Y N 1 F N
+DEF CONN_01X10-ARDF-2-Band-MiniTx-rescue J 0 40 Y N 1 F N
 F0 "J" 0 550 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_CONN_01X10" 100 0 50 V V C CNN
+F1 "CONN_01X10-ARDF-2-Band-MiniTx-rescue" 100 0 50 V V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -302,11 +302,11 @@ X P9 9 -200 -350 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_CONN_02X03
+# CONN_02X03-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_CONN_02X03 J 0 1 Y N 1 F N
+DEF CONN_02X03-ARDF-2-Band-MiniTx-rescue J 0 1 Y N 1 F N
 F0 "J" 0 200 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_CONN_02X03" 0 -200 50 H V C CNN
+F1 "CONN_02X03-ARDF-2-Band-MiniTx-rescue" 0 -200 50 H V C CNN
 F2 "" 0 -1200 50 H I C CNN
 F3 "" 0 -1200 50 H I C CNN
 $FPLIST
@@ -333,11 +333,11 @@ X P6 6 250 -100 150 L 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_CONN_02X06
+# CONN_02X06-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_CONN_02X06 J 0 1 Y N 1 F N
+DEF CONN_02X06-ARDF-2-Band-MiniTx-rescue J 0 1 Y N 1 F N
 F0 "J" 0 350 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_CONN_02X06" 0 -350 50 H V C CNN
+F1 "CONN_02X06-ARDF-2-Band-MiniTx-rescue" 0 -350 50 H V C CNN
 F2 "" 0 -1200 50 H I C CNN
 F3 "" 0 -1200 50 H I C CNN
 $FPLIST
@@ -376,11 +376,11 @@ X P9 9 -250 -150 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_DAC081C085
+# DAC081C085-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_DAC081C085 U 0 40 Y Y 1 F N
+DEF DAC081C085-ARDF-2-Band-MiniTx-rescue U 0 40 Y Y 1 F N
 F0 "U" 150 450 50 H V L CNN
-F1 "ARDF-2-Band-MiniTx-rescue_DAC081C085" 150 350 50 H V L CNN
+F1 "DAC081C085-ARDF-2-Band-MiniTx-rescue" 150 350 50 H V L CNN
 F2 "" 0 0 50 H V C CIN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -396,11 +396,11 @@ X VOUT 8 500 150 150 L 50 50 1 1 O
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_D_Schottky_x2_KCom_Dual
+# D_Schottky_x2_KCom_Dual-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_D_Schottky_x2_KCom_Dual D 0 30 Y N 2 L N
+DEF D_Schottky_x2_KCom_Dual-ARDF-2-Band-MiniTx-rescue D 0 30 Y N 2 L N
 F0 "D" 50 -100 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_D_Schottky_x2_KCom_Dual" 0 100 50 H V C CNN
+F1 "D_Schottky_x2_KCom_Dual-ARDF-2-Band-MiniTx-rescue" 0 100 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -423,11 +423,11 @@ X A1 5 250 0 100 L 50 50 2 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_GNDIF
+# GNDIF-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_GNDIF #PWR 0 0 Y Y 1 F P
+DEF GNDIF-ARDF-2-Band-MiniTx-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -250 50 H I C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_GNDIF" 0 -150 50 H V C CNN
+F1 "GNDIF-ARDF-2-Band-MiniTx-rescue" 0 -150 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -436,11 +436,11 @@ X GNDIF 1 0 0 0 D 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_GND_L0
+# GND_L0-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_GND_L0 #PWR 0 0 Y Y 1 F P
+DEF GND_L0-ARDF-2-Band-MiniTx-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -250 50 H I C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_GND_L0" 0 -150 50 H V C CNN
+F1 "GND_L0-ARDF-2-Band-MiniTx-rescue" 0 -150 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -449,11 +449,11 @@ X GND_L0 1 0 0 0 D 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_GND_L1
+# GND_L1-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_GND_L1 #PWR 0 0 Y Y 1 F P
+DEF GND_L1-ARDF-2-Band-MiniTx-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -250 50 H I C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_GND_L1" 0 -150 50 H V C CNN
+F1 "GND_L1-ARDF-2-Band-MiniTx-rescue" 0 -150 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -462,11 +462,11 @@ X GND_L1 1 0 0 0 D 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_GND_L2
+# GND_L2-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_GND_L2 #PWR 0 0 Y Y 1 F P
+DEF GND_L2-ARDF-2-Band-MiniTx-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -250 50 H I C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_GND_L2" 0 -150 50 H V C CNN
+F1 "GND_L2-ARDF-2-Band-MiniTx-rescue" 0 -150 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -475,11 +475,11 @@ X GND_L2 1 0 0 0 D 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_GND_L3
+# GND_L3-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_GND_L3 #PWR 0 0 Y Y 1 F P
+DEF GND_L3-ARDF-2-Band-MiniTx-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -250 50 H I C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_GND_L3" 0 -150 50 H V C CNN
+F1 "GND_L3-ARDF-2-Band-MiniTx-rescue" 0 -150 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -488,11 +488,11 @@ X GND_L3 1 0 0 0 D 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_GND_L8
+# GND_L8-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_GND_L8 #PWR 0 0 Y Y 1 F P
+DEF GND_L8-ARDF-2-Band-MiniTx-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -250 50 H I C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_GND_L8" 0 -150 50 H V C CNN
+F1 "GND_L8-ARDF-2-Band-MiniTx-rescue" 0 -150 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -501,11 +501,11 @@ X GND_L8 1 0 0 0 D 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_INDUCTOR_CT
+# INDUCTOR_CT-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_INDUCTOR_CT L 0 40 Y N 1 F N
+DEF INDUCTOR_CT-ARDF-2-Band-MiniTx-rescue L 0 40 Y N 1 F N
 F0 "L" -50 0 50 V V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_INDUCTOR_CT" 250 50 50 V V C CNN
+F1 "INDUCTOR_CT-ARDF-2-Band-MiniTx-rescue" 250 50 50 V V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -521,11 +521,11 @@ X 3 3 0 -300 100 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_INDUCTOR_SMALL
+# INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_INDUCTOR_SMALL L 0 0 N N 1 F N
+DEF INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue L 0 0 N N 1 F N
 F0 "L" 0 100 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_INDUCTOR_SMALL" 0 -50 50 H V C CNN
+F1 "INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue" 0 -50 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -538,11 +538,11 @@ X 2 2 250 0 50 L 30 30 1 1 I
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_IRF610_TO220
+# IRF610_TO220-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_IRF610_TO220 Q 0 0 Y Y 1 F N
+DEF IRF610_TO220-ARDF-2-Band-MiniTx-rescue Q 0 0 Y Y 1 F N
 F0 "Q" 200 75 50 H V L CNN
-F1 "ARDF-2-Band-MiniTx-rescue_IRF610_TO220" 200 0 50 H V L CNN
+F1 "IRF610_TO220-ARDF-2-Band-MiniTx-rescue" 200 0 50 H V L CNN
 F2 "" 200 -75 50 H I L CIN
 F3 "" 0 0 50 H I L CNN
 $FPLIST
@@ -571,11 +571,11 @@ X S 3 100 -200 100 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_LM5134
+# LM5134-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_LM5134 U 0 20 Y Y 1 F N
+DEF LM5134-ARDF-2-Band-MiniTx-rescue U 0 20 Y Y 1 F N
 F0 "U" -60 415 61 H V R CNB
-F1 "ARDF-2-Band-MiniTx-rescue_LM5134" -60 340 61 H V R CNB
+F1 "LM5134-ARDF-2-Band-MiniTx-rescue" -60 340 61 H V R CNB
 F2 "" 150 -850 50 H I L CNN
 F3 "" 200 -300 50 H I C CNN
 DRAW
@@ -593,11 +593,11 @@ X In 6 -300 100 100 R 50 50 1 1 I
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_LMN200B01
+# LMN200B01-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_LMN200B01 Q 0 0 Y Y 1 F N
+DEF LMN200B01-ARDF-2-Band-MiniTx-rescue Q 0 0 Y Y 1 F N
 F0 "Q" 130 560 50 H V L CNN
-F1 "ARDF-2-Band-MiniTx-rescue_LMN200B01" 135 475 50 H V L CNN
+F1 "LMN200B01-ARDF-2-Band-MiniTx-rescue" 135 475 50 H V L CNN
 F2 "" 15 -200 50 H V L CNN
 F3 "" 15 -200 50 H V L CNN
 $FPLIST
@@ -656,11 +656,11 @@ X C 6 250 -100 94 L 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_LTC3600
+# LTC3600-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_LTC3600 U 0 40 Y Y 1 F N
+DEF LTC3600-ARDF-2-Band-MiniTx-rescue U 0 40 Y Y 1 F N
 F0 "U" 350 600 61 H V C CNB
-F1 "ARDF-2-Band-MiniTx-rescue_LTC3600" 450 500 61 H V C CNB
+F1 "LTC3600-ARDF-2-Band-MiniTx-rescue" 450 500 61 H V C CNB
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -681,11 +681,11 @@ X BOOST 9 550 0 146 L 50 50 1 1 I
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_MBD54DWT1G_Schottky_Ind
+# MBD54DWT1G_Schottky_Ind-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_MBD54DWT1G_Schottky_Ind D 0 30 Y N 2 F N
+DEF MBD54DWT1G_Schottky_Ind-ARDF-2-Band-MiniTx-rescue D 0 30 Y N 2 F N
 F0 "D" 25 350 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_MBD54DWT1G_Schottky_Ind" 25 275 50 H V C CNN
+F1 "MBD54DWT1G_Schottky_Ind-ARDF-2-Band-MiniTx-rescue" 25 275 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 $FPLIST
@@ -706,11 +706,11 @@ X A 4 -200 0 100 R 50 50 2 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_MIC5219
+# MIC5219-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_MIC5219 U 0 40 Y Y 1 F N
+DEF MIC5219-ARDF-2-Band-MiniTx-rescue U 0 40 Y Y 1 F N
 F0 "U" 0 300 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_MIC5219" 0 200 50 H V C CNN
+F1 "MIC5219-ARDF-2-Band-MiniTx-rescue" 0 200 50 H V C CNN
 F2 "SOT-23-5" 0 100 50 H I C CIN
 F3 "" 0 0 50 H V C CNN
 $FPLIST
@@ -726,11 +726,11 @@ X VOUT 5 400 50 100 L 40 40 1 1 w
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_OPA171
+# OPA171-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_OPA171 U 0 20 Y Y 1 F N
+DEF OPA171-ARDF-2-Band-MiniTx-rescue U 0 20 Y Y 1 F N
 F0 "U" 0 250 61 H V L CNB
-F1 "ARDF-2-Band-MiniTx-rescue_OPA171" 0 150 61 H V L CNB
+F1 "OPA171-ARDF-2-Band-MiniTx-rescue" 0 150 61 H V L CNB
 F2 "" 50 200 50 H V C CNN
 F3 "" 0 250 50 H V C CNN
 DRAW
@@ -743,11 +743,11 @@ X V+ 5 -100 300 150 D 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_SN74CB3Q3305
+# SN74CB3Q3305-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_SN74CB3Q3305 U 0 40 Y Y 1 F N
+DEF SN74CB3Q3305-ARDF-2-Band-MiniTx-rescue U 0 40 Y Y 1 F N
 F0 "U" 100 300 61 H V C CNB
-F1 "ARDF-2-Band-MiniTx-rescue_SN74CB3Q3305" 450 400 61 H V C CNB
+F1 "SN74CB3Q3305-ARDF-2-Band-MiniTx-rescue" 450 400 61 H V C CNB
 F2 "" 0 -400 50 H I C CNN
 F3 "" 0 50 50 H I C CNN
 $FPLIST
@@ -767,11 +767,11 @@ X Vcc 8 0 300 100 D 50 39 1 1 W
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_TEST_1P
+# TEST_1P-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_TEST_1P J 0 30 N N 1 F N
+DEF TEST_1P-ARDF-2-Band-MiniTx-rescue J 0 30 N N 1 F N
 F0 "J" 0 270 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_TEST_1P" 0 200 50 H V C CNN
+F1 "TEST_1P-ARDF-2-Band-MiniTx-rescue" 0 200 50 H V C CNN
 F2 "" 200 0 50 H I C CNN
 F3 "" 200 0 50 H I C CNN
 DRAW
@@ -780,11 +780,11 @@ X 1 1 0 0 100 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_TEST_SCOPE
+# TEST_SCOPE-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_TEST_SCOPE TP 0 30 N N 1 F N
+DEF TEST_SCOPE-ARDF-2-Band-MiniTx-rescue TP 0 30 N N 1 F N
 F0 "TP" 50 250 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_TEST_SCOPE" 50 -100 50 H V C CNN
+F1 "TEST_SCOPE-ARDF-2-Band-MiniTx-rescue" 50 -100 50 H V C CNN
 F2 "" 200 0 50 H I C CNN
 F3 "" 200 0 50 H I C CNN
 DRAW
@@ -796,11 +796,11 @@ X GND 2 100 0 100 U 50 50 1 1 I
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_TS5A3159
+# TS5A3159-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_TS5A3159 U 0 40 Y Y 1 F N
+DEF TS5A3159-ARDF-2-Band-MiniTx-rescue U 0 40 Y Y 1 F N
 F0 "U" -100 325 50 H V R CNN
-F1 "ARDF-2-Band-MiniTx-rescue_TS5A3159" -100 250 50 H V R CNN
+F1 "TS5A3159-ARDF-2-Band-MiniTx-rescue" -100 250 50 H V R CNN
 F2 "" 50 -250 50 H I L CNN
 F3 "" 100 0 50 H I C CNN
 $FPLIST
@@ -818,11 +818,11 @@ X IN 6 400 100 100 L 50 50 1 1 I
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_TVS
+# TVS-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_TVS D 0 40 Y Y 1 F N
+DEF TVS-ARDF-2-Band-MiniTx-rescue D 0 40 Y Y 1 F N
 F0 "D" 0 150 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_TVS" 0 -150 50 H V C CNN
+F1 "TVS-ARDF-2-Band-MiniTx-rescue" 0 -150 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -834,11 +834,11 @@ X ~ 2 300 0 300 L 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_Vproc
+# Vproc-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_Vproc #PWR 0 0 Y Y 1 F P
+DEF Vproc-ARDF-2-Band-MiniTx-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -150 50 H I C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_Vproc" 0 150 50 H V C CNN
+F1 "Vproc-ARDF-2-Band-MiniTx-rescue" 0 150 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -849,11 +849,11 @@ X Vproc 1 0 0 0 U 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# ARDF-2-Band-MiniTx-rescue_ZENER
+# ZENER-ARDF-2-Band-MiniTx-rescue
 #
-DEF ARDF-2-Band-MiniTx-rescue_ZENER D 0 40 N N 1 F N
+DEF ZENER-ARDF-2-Band-MiniTx-rescue D 0 40 N N 1 F N
 F0 "D" 0 100 50 H V C CNN
-F1 "ARDF-2-Band-MiniTx-rescue_ZENER" 0 -100 50 H V C CNN
+F1 "ZENER-ARDF-2-Band-MiniTx-rescue" 0 -100 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 $FPLIST
@@ -866,428 +866,6 @@ P 5 0 1 8 -70 50 -50 30 -50 -30 -30 -50 -30 -50 N
 P 5 0 1 0 -50 0 50 50 50 -50 -50 0 -50 0 F
 X K 1 -200 0 150 R 50 50 1 1 P
 X A 2 200 0 150 L 50 50 1 1 P
-ENDDRAW
-ENDDEF
-#
-# Device_C
-#
-DEF Device_C C 0 10 N Y 1 F N
-F0 "C" 25 100 50 H V L CNN
-F1 "Device_C" 25 -100 50 H V L CNN
-F2 "" 38 -150 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-$FPLIST
- C_*
-$ENDFPLIST
-DRAW
-P 2 0 1 20 -80 -30 80 -30 N
-P 2 0 1 20 -80 30 80 30 N
-X ~ 1 0 150 110 D 50 50 1 1 P
-X ~ 2 0 -150 110 U 50 50 1 1 P
-ENDDRAW
-ENDDEF
-#
-# Device_CP1_Small
-#
-DEF Device_CP1_Small C 0 10 N N 1 F N
-F0 "C" 10 70 50 H V L CNN
-F1 "Device_CP1_Small" 10 -80 50 H V L CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-$FPLIST
- CP_*
-$ENDFPLIST
-DRAW
-A 0 -140 125 1186 614 0 1 12 N -60 -30 60 -30
-P 2 0 1 12 -60 20 60 20 N
-P 2 0 1 0 -50 60 -30 60 N
-P 2 0 1 0 -40 50 -40 70 N
-X ~ 1 0 100 80 D 50 50 1 1 P
-X ~ 2 0 -100 80 U 50 50 1 1 P
-ENDDRAW
-ENDDEF
-#
-# Device_C_Small
-#
-DEF Device_C_Small C 0 10 N N 1 F N
-F0 "C" 10 70 50 H V L CNN
-F1 "Device_C_Small" 10 -80 50 H V L CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-$FPLIST
- C_*
-$ENDFPLIST
-DRAW
-P 2 0 1 13 -60 -20 60 -20 N
-P 2 0 1 12 -60 20 60 20 N
-X ~ 1 0 100 80 D 50 50 1 1 P
-X ~ 2 0 -100 80 U 50 50 1 1 P
-ENDDRAW
-ENDDEF
-#
-# Device_D_Schottky
-#
-DEF Device_D_Schottky D 0 40 N N 1 F N
-F0 "D" 0 100 50 H V C CNN
-F1 "Device_D_Schottky" 0 -100 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-$FPLIST
- TO-???*
- *_Diode_*
- *SingleDiode*
- D_*
-$ENDFPLIST
-DRAW
-P 2 0 1 0 50 0 -50 0 N
-P 4 0 1 10 50 50 50 -50 -50 0 50 50 N
-P 6 0 1 10 -75 25 -75 50 -50 50 -50 -50 -25 -50 -25 -25 N
-X K 1 -150 0 100 R 50 50 1 1 P
-X A 2 150 0 100 L 50 50 1 1 P
-ENDDRAW
-ENDDEF
-#
-# Device_Jumper_NC_Small
-#
-DEF Device_Jumper_NC_Small JP 0 30 N N 1 F N
-F0 "JP" 0 80 50 H V C CNN
-F1 "Device_Jumper_NC_Small" 10 -60 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-$FPLIST
- SolderJumper*Bridged*
- Jumper*
- TestPoint*2Pads*
- TestPoint*Bridge*
-$ENDFPLIST
-DRAW
-A 0 -10 57 450 1350 0 1 0 N 40 30 -40 30
-C -40 0 20 0 1 0 N
-C 40 0 20 0 1 0 N
-X 1 1 -100 0 40 R 50 50 0 1 P
-X 2 2 100 0 40 L 50 50 0 1 P
-ENDDRAW
-ENDDEF
-#
-# Device_Jumper_NO_Small
-#
-DEF Device_Jumper_NO_Small JP 0 30 N N 1 F N
-F0 "JP" 0 80 50 H V C CNN
-F1 "Device_Jumper_NO_Small" 10 -60 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-$FPLIST
- SolderJumper*Open*
- Jumper*
- TestPoint*2Pads*
- TestPoint*Bridge*
-$ENDFPLIST
-DRAW
-C -40 0 20 0 1 0 N
-C 40 0 20 0 1 0 N
-X 1 1 -100 0 40 R 50 50 0 1 P
-X 2 2 100 0 40 L 50 50 0 1 P
-ENDDRAW
-ENDDEF
-#
-# Device_R
-#
-DEF Device_R R 0 0 N Y 1 F N
-F0 "R" 80 0 50 V V C CNN
-F1 "Device_R" 0 0 50 V V C CNN
-F2 "" -70 0 50 V I C CNN
-F3 "" 0 0 50 H I C CNN
-$FPLIST
- R_*
-$ENDFPLIST
-DRAW
-S -40 -100 40 100 0 1 10 N
-X ~ 1 0 150 50 D 50 50 1 1 P
-X ~ 2 0 -150 50 U 50 50 1 1 P
-ENDDRAW
-ENDDEF
-#
-# power_+12V
-#
-DEF power_+12V #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -150 50 H I C CNN
-F1 "power_+12V" 0 140 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-DRAW
-P 2 0 1 0 -30 50 0 100 N
-P 2 0 1 0 0 0 0 100 N
-P 2 0 1 0 0 100 30 50 N
-X +12V 1 0 0 0 U 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# power_GND
-#
-DEF power_GND #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -250 50 H I C CNN
-F1 "power_GND" 0 -150 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-DRAW
-P 6 0 1 0 0 0 0 -50 50 -50 0 -100 -50 -50 0 -50 N
-X GND 1 0 0 0 D 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# power_GNDA
-#
-DEF power_GNDA #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -250 50 H I C CNN
-F1 "power_GNDA" 0 -150 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-DRAW
-P 6 0 1 0 0 0 0 -50 50 -50 0 -100 -50 -50 0 -50 N
-X GNDA 1 0 0 0 D 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# power_GNDD
-#
-DEF power_GNDD #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -250 50 H I C CNN
-F1 "power_GNDD" 0 -125 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-DRAW
-S -50 -60 50 -80 0 1 10 F
-P 2 0 1 0 0 0 0 -60 N
-X GNDD 1 0 0 0 D 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# power_PWR_FLAG
-#
-DEF power_PWR_FLAG #FLG 0 0 N N 1 F P
-F0 "#FLG" 0 75 50 H I C CNN
-F1 "power_PWR_FLAG" 0 150 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-DRAW
-P 6 0 1 0 0 0 0 50 -40 75 0 100 40 75 0 50 N
-X pwr 1 0 0 0 U 50 50 0 0 w
-ENDDRAW
-ENDDEF
-#
-# special_ASTX-H11
-#
-DEF special_ASTX-H11 X 0 40 Y Y 1 F N
-F0 "X" 0 500 70 H V C CNN
-F1 "special_ASTX-H11" -50 350 70 H V C CNN
-F2 "" 0 0 60 H V C CNN
-F3 "" 0 0 60 H V C CNN
-DRAW
-S -400 -250 400 250 0 1 0 f
-X NC 1 500 -150 100 L 60 60 1 1 N
-X GND 2 -500 -150 100 R 60 60 1 1 W
-X OUT 3 500 150 100 L 60 60 1 1 O
-X Vcc 4 -500 150 100 R 60 60 1 1 W
-ENDDRAW
-ENDDEF
-#
-# special_CHASSIS_BOX
-#
-DEF special_CHASSIS_BOX BOX 0 0 N N 1 F N
-F0 "BOX" 0 300 50 H V C CNN
-F1 "special_CHASSIS_BOX" 0 -50 50 H V C CNN
-F2 "" 0 0 50 H V C CNN
-F3 "" 0 0 50 H V C CNN
-DRAW
-P 3 0 1 0 -250 200 -200 250 300 250 N
-P 4 0 1 0 250 0 300 50 300 250 250 200 N
-P 6 0 1 0 -250 200 -250 0 200 0 250 0 250 200 -250 200 N
-ENDDRAW
-ENDDEF
-#
-# special_Circuit_Board
-#
-DEF special_Circuit_Board PCB 0 10 N N 1 F N
-F0 "PCB" -80 425 50 H V L CNN
-F1 "special_Circuit_Board" -235 -445 50 H V L CNN
-F2 "" 840 160 50 H V C CNN
-F3 "" 840 160 50 H V C CNN
-DRAW
-S -515 -350 520 335 0 1 0 F
-P 2 0 1 0 -540 -375 -515 -350 N
-P 5 0 1 0 -515 335 -540 305 -540 -380 500 -380 520 -355 N
-ENDDRAW
-ENDDEF
-#
-# special_DS3231
-#
-DEF special_DS3231 U 0 30 Y Y 1 F N
-F0 "U" 250 500 60 H V C CNN
-F1 "special_DS3231" 350 400 60 H V C CNN
-F2 "" 0 0 60 H V C CNN
-F3 "" 0 0 60 H V C CNN
-$FPLIST
- SO16*
-$ENDFPLIST
-DRAW
-S -250 300 250 -300 0 1 0 f
-X 32kHz 1 -400 200 146 R 50 39 1 1 O C
-X ~ 10 100 -450 146 U 50 50 1 1 P X
-X ~ 11 150 -450 146 U 50 50 1 1 P X
-X ~ 12 200 -450 146 U 50 50 1 1 P X
-X GND 13 0 -450 146 U 50 39 1 1 W
-X Vbat 14 400 150 146 L 50 50 1 1 I
-X SDA 15 -400 -50 146 R 50 39 1 1 B
-X SCL 16 -400 50 146 R 50 39 1 1 I C
-X Vcc 2 0 450 146 D 50 39 1 1 W
-X ~INT~/SQW 3 400 -100 146 L 50 39 1 1 O I
-X ~RST 4 -400 -200 146 R 50 39 1 1 I
-X ~ 5 -200 -450 146 U 50 50 1 1 P X
-X ~ 6 -150 -450 146 U 50 50 1 1 P X
-X ~ 7 -100 -450 146 U 50 50 1 1 P X
-X ~ 8 -50 -450 146 U 50 50 1 1 P X
-X ~ 9 50 -450 146 U 50 50 1 1 P X
-ENDDRAW
-ENDDEF
-#
-# special_HUZZAH_ESP8266_Breakout
-#
-DEF special_HUZZAH_ESP8266_Breakout MOD 0 40 Y Y 1 F N
-F0 "MOD" -100 100 50 H V C CNN
-F1 "special_HUZZAH_ESP8266_Breakout" 0 600 50 H V C CNN
-F2 "" 0 0 50 H V C CNN
-F3 "" 0 0 50 H V C CNN
-$FPLIST
- Pin_Header_Straight_1X08
- Pin_Header_Angled_1X08
- Socket_Strip_Straight_1X08
- Socket_Strip_Angled_1X08
-$ENDFPLIST
-DRAW
-S -500 -500 500 500 0 1 0 f
-X ~RST~ 1 -650 450 150 R 50 50 1 1 I
-X GND 10 -650 -450 150 R 50 50 1 1 W
-X GND 11 650 -450 150 L 50 50 1 1 W
-X LDO 12 650 -350 150 L 50 50 1 1 I
-X 3V 13 650 -250 150 L 50 50 1 1 w
-X #15 14 650 -150 150 L 50 50 1 1 B
-X #2 15 650 -50 150 L 50 50 1 1 B
-X #0 16 650 50 150 L 50 50 1 1 B
-X #4 17 650 150 150 L 50 50 1 1 B
-X #5 18 650 250 150 L 50 50 1 1 B
-X RX 19 650 350 150 L 50 50 1 1 I
-X A 2 -650 350 150 R 50 50 1 1 I
-X TX 20 650 450 150 L 50 50 1 1 O
-X GND 21 250 -650 150 U 50 50 1 1 W
-X CTS 22 150 -650 150 U 50 50 1 1 P
-X V+ 23 50 -650 150 U 50 50 1 1 W
-X RX 24 -50 -650 150 U 50 50 1 1 O
-X TX 25 -150 -650 150 U 50 50 1 1 O
-X RTS 26 -250 -650 150 U 50 50 1 1 P
-X EN 3 -650 250 150 R 50 50 1 1 I
-X #16 4 -650 150 150 R 50 50 1 1 B
-X #14 5 -650 50 150 R 50 50 1 1 B
-X #12 6 -650 -50 150 R 50 50 1 1 B
-X #13 7 -650 -150 150 R 50 50 1 1 B
-X V+ 8 -650 -250 150 R 50 50 1 1 W
-X VBat 9 -650 -350 150 R 50 50 1 1 W
-ENDDRAW
-ENDDEF
-#
-# special_Heat-sink
-#
-DEF special_Heat-sink HS 0 0 Y Y 1 F N
-F0 "HS" -550 125 50 H V L CNN
-F1 "special_Heat-sink" -550 50 50 H V L CNN
-F2 "" -550 -25 50 H I L CIN
-F3 "" 0 0 50 H I L CNN
-$FPLIST
- TO-263*
-$ENDFPLIST
-DRAW
-S -100 50 -50 50 0 1 0 N
-S -100 50 150 0 0 1 0 F
-S -100 150 -100 50 0 1 0 N
-S -50 50 -50 150 0 1 0 N
-S -50 50 0 50 0 1 0 N
-S 0 50 0 150 0 1 0 N
-S 0 50 50 50 0 1 0 N
-S 50 50 50 150 0 1 0 N
-S 50 50 100 50 0 1 0 N
-S 100 50 100 150 0 1 0 N
-S 100 50 150 50 0 1 0 N
-S 150 50 150 150 0 1 0 N
-ENDDRAW
-ENDDEF
-#
-# special_SCREW
-#
-DEF special_SCREW SCREW 0 0 N N 1 F N
-F0 "SCREW" 5 285 50 H V C CNN
-F1 "special_SCREW" 0 -200 61 H V C CNB
-F2 "" 5 0 50 H V C CNN
-F3 "" 5 0 50 H V C CNN
-DRAW
-A -5 166 107 -1384 -223 0 1 0 N -85 95 95 125
-A 15 70 105 1547 450 0 1 0 N -80 115 90 145
-P 2 0 1 0 -85 95 90 125 N
-P 2 0 1 0 -80 115 -80 100 N
-P 2 0 1 0 -80 115 90 145 N
-P 2 0 1 0 -20 -100 30 -75 N
-P 2 0 1 0 -20 -75 30 -50 N
-P 2 0 1 0 -20 -50 30 -25 N
-P 2 0 1 0 -10 -120 20 -105 N
-P 2 0 1 0 -5 -140 10 -130 N
-P 2 0 1 0 30 0 -20 -25 N
-P 2 0 1 0 90 130 90 145 N
-P 4 0 1 0 30 45 30 25 -20 0 -20 45 N
-ENDDRAW
-ENDDEF
-#
-# special_SI5351
-#
-DEF special_SI5351 U 0 40 Y Y 1 F N
-F0 "U" 0 560 50 H V C CNN
-F1 "special_SI5351" 0 475 50 H V C CNN
-F2 "MODULE" 0 0 50 H I C CNN
-F3 "DOCUMENTATION" 0 0 50 H I C CNN
-DRAW
-S -550 -400 550 400 1 0 0 f
-X VDD 1 -650 200 100 R 50 50 1 1 P
-X CLK0 10 650 200 100 L 50 50 1 1 P
-X XA 2 -650 100 100 R 50 50 1 1 P
-X XB 3 -650 0 100 R 50 50 1 1 P
-X SCL 4 -650 -100 100 R 50 50 1 1 P C
-X SDA 5 -650 -200 100 R 50 50 1 1 P
-X CLK2 6 650 -200 100 L 50 50 1 1 P
-X VDDO 7 650 -100 100 L 50 50 1 1 P
-X GND 8 650 0 100 L 50 50 1 1 P
-X CLK1 9 650 100 100 L 50 50 1 1 P
-ENDDRAW
-ENDDEF
-#
-# special_THS9001
-#
-DEF special_THS9001 U 0 0 Y Y 1 F N
-F0 "U" 100 225 61 H V C CNB
-F1 "special_THS9001" 245 125 61 H V C CNB
-F2 "" -50 100 50 H V C CNN
-F3 "" 50 200 50 H V C CNN
-$FPLIST
- SOT23-6*
- SOT-23-6*
-$ENDFPLIST
-DRAW
-P 2 0 1 0 0 -150 0 -100 N
-P 2 0 1 0 0 150 0 100 N
-P 2 0 1 0 100 150 100 50 N
-P 4 0 1 10 -200 200 200 0 -200 -200 -200 200 f
-X IN 1 -300 0 100 R 50 50 1 1 I
-X GND 2 0 -300 150 U 50 50 1 1 W
-X Vs 3 -100 300 146 D 50 50 1 1 P
-X L 4 0 300 150 D 50 50 1 1 P
-X OUT 5 300 0 100 L 50 50 1 1 O
-X BIAS 6 100 300 150 D 50 50 1 1 I
 ENDDRAW
 ENDDEF
 #

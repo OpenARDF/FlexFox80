@@ -14,7 +14,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L ARDF-2-Band-MiniTx-rescue:LTC3600 U203
+L FlexFox80-rescue:LTC3600-ARDF-2-Band-MiniTx-rescue U203
 U 1 1 58B77FB4
 P 7550 2500
 F 0 "U203" H 7450 2500 61  0000 C CNB
@@ -27,8 +27,8 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=LTC3600EMSE%23PBF-ND
 	1    0    0    -1  
 $EndComp
 NoConn ~ 7650 1950
-Text Notes 7400 6950 0    118  ~ 24
-PCB: Dual-Band Transmitter (p. 2/3)
+Text Notes 7050 6950 0    118  ~ 24
+PCB: Flex Fox 80 ARDF Transmitter  (p. 2/3)
 $Comp
 L Device:C_Small C213
 U 1 1 58B7FEBD
@@ -43,7 +43,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-1365-1-ND\">Link
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR082
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR082
 U 1 1 58B7FF36
 P 8700 3100
 F 0 "#PWR082" H 8700 2850 50  0001 C CNN
@@ -54,7 +54,7 @@ F 3 "" H 8700 3100 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR083
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR083
 U 1 1 58B80A53
 P 7550 3050
 F 0 "#PWR083" H 7550 2800 50  0001 C CNN
@@ -78,7 +78,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-1395-1-ND\">Link
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:INDUCTOR_SMALL L202
+L FlexFox80-rescue:INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue L202
 U 1 1 58B80C57
 P 8850 2650
 F 0 "L202" H 8850 2750 50  0000 C CNN
@@ -91,7 +91,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=308-1328-1-ND\">Link
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR084
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR084
 U 1 1 58B81116
 P 9200 2950
 F 0 "#PWR084" H 9200 2700 50  0001 C CNN
@@ -115,7 +115,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=1276-3373-1-ND\">Lin
 	0    1    1    0   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:DAC081C085 U201
+L FlexFox80-rescue:DAC081C085-ARDF-2-Band-MiniTx-rescue U201
 U 1 1 58B84991
 P 3600 2250
 F 0 "U201" H 3600 2700 61  0000 L CNB
@@ -132,7 +132,7 @@ DI_SCL
 Text GLabel 3150 2400 0    39   Input ~ 0
 DI_SDA
 $Comp
-L ARDF-2-Band-MiniTx-rescue:+3V3_L8 #PWR085
+L FlexFox80-rescue:+3V3_L8-ARDF-2-Band-MiniTx-rescue #PWR085
 U 1 1 58B86FD9
 P 4350 1250
 F 0 "#PWR085" H 4350 1100 50  0001 C CNN
@@ -156,7 +156,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-5523-1-ND\">Link
 	0    -1   -1   0   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR086
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR086
 U 1 1 58B87220
 P 4350 2500
 F 0 "#PWR086" H 4350 2250 50  0001 C CNN
@@ -167,7 +167,7 @@ F 3 "" H 4350 2500 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR087
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR087
 U 1 1 58B88093
 P 3800 1400
 F 0 "#PWR087" H 3800 1150 50  0001 C CNN
@@ -232,7 +232,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=RMCF0805FT46K4CT-ND\
 	0    1    1    0   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR088
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR088
 U 1 1 58B8A516
 P 5900 2550
 F 0 "#PWR088" H 5900 2300 50  0001 C CNN
@@ -245,7 +245,7 @@ F 5 "https://www.digikey.com/products/en?keywords=311-100KCRCT-ND" H 5900 2550 6
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR089
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR089
 U 1 1 58B8B2D8
 P 5350 2850
 F 0 "#PWR089" H 5350 2600 50  0001 C CNN
@@ -269,7 +269,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-5523-1-ND\">Link
 	0    -1   -1   0   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR090
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR090
 U 1 1 58B8BFAD
 P 5550 1750
 F 0 "#PWR090" H 5550 1500 50  0001 C CNN
@@ -293,7 +293,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-162KCRCT-ND\">Li
 	0    1    1    0   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR091
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR091
 U 1 1 58B8D5B1
 P 8300 1750
 F 0 "#PWR091" H 8300 1500 50  0001 C CNN
@@ -317,7 +317,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-1395-1-ND\">Link
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR092
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR092
 U 1 1 58B8D9C8
 P 8700 2000
 F 0 "#PWR092" H 8700 1750 50  0001 C CNN
@@ -356,7 +356,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=RMCF0805FT49K9CT-ND\
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR093
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR093
 U 1 1 58B957C2
 P 3700 7200
 F 0 "#PWR093" H 3700 6950 50  0001 C CNN
@@ -380,7 +380,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-1395-1-ND\">Link
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR094
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR094
 U 1 1 58B957CE
 P 3450 7000
 F 0 "#PWR094" H 3450 6750 50  0001 C CNN
@@ -445,7 +445,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-100KCRCT-ND\">Li
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR097
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR097
 U 1 1 58C44803
 P 6700 2850
 F 0 "#PWR097" H 6700 2600 50  0001 C CNN
@@ -471,7 +471,7 @@ $EndComp
 Text Notes 2250 4900 2    79   ~ 16
 Auxiliary Battery\nConnector
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR099
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR099
 U 1 1 5976D077
 P 3050 5950
 F 0 "#PWR099" H 3050 5700 50  0001 C CNN
@@ -486,7 +486,7 @@ High-Efficiency Buck Power Regulator
 Text GLabel 3100 5750 2    39   Input ~ 0
 MAIN_PWR_ENABLE
 $Comp
-L ARDF-2-Band-MiniTx-rescue:OPA171 U202
+L FlexFox80-rescue:OPA171-ARDF-2-Band-MiniTx-rescue U202
 U 1 1 59D417D4
 P 6000 2200
 F 0 "U202" H 6000 2450 61  0000 L CNB
@@ -499,7 +499,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=296-37698-1-ND\">Lin
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR0100
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0100
 U 1 1 59D6B4C4
 P 3050 4800
 F 0 "#PWR0100" H 3050 4550 50  0001 C CNN
@@ -523,7 +523,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-3885-1-ND\">Link
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:CONN_01X02 P203
+L FlexFox80-rescue:CONN_01X02-ARDF-2-Band-MiniTx-rescue P203
 U 1 1 59FCFE1A
 P 2850 4850
 F 0 "P203" H 2850 5000 50  0000 C CNN
@@ -536,7 +536,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=277-1206-ND\">Link</
 	-1   0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR0101
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0101
 U 1 1 5A747983
 P 8100 2800
 F 0 "#PWR0101" H 8100 2550 50  0001 C CNN
@@ -547,9 +547,11 @@ F 3 "" H 8100 2800 50  0000 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:+2to+12V #PWR0102
+L FlexFox80-rescue:+2to+12V-ARDF-2-Band-MiniTx-rescue #PWR0102
 U 1 1 5A74F9FF
 P 9200 1400
+AR Path="/5A74F9FF" Ref="#PWR0102"  Part="1" 
+AR Path="/591BC960/5A74F9FF" Ref="#PWR0102"  Part="1" 
 F 0 "#PWR0102" H 9200 1250 50  0001 C CNN
 F 1 "+2to+12V" H 9200 1540 50  0000 C CNN
 F 2 "" H 9200 1400 50  0000 C CNN
@@ -597,7 +599,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-10457-1-ND\">Lin
 	1    0    0    -1  
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR0103
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0103
 U 1 1 5A769729
 P 6500 3900
 F 0 "#PWR0103" H 6500 3650 50  0001 C CNN
@@ -636,7 +638,7 @@ Wire Wire Line
 Wire Wire Line
 	8100 2350 8500 2350
 Wire Wire Line
-	8500 2350 8500 3300
+	8500 2350 8500 2800
 Wire Wire Line
 	8500 3300 6850 3300
 Connection ~ 8500 2800
@@ -645,14 +647,14 @@ Wire Wire Line
 Wire Wire Line
 	8100 2450 8300 2450
 Wire Wire Line
-	8100 2650 8600 2650
+	8100 2650 8300 2650
 Connection ~ 8300 2650
 Wire Wire Line
-	9200 1400 9200 2750
+	9200 1400 9200 1500
 Wire Wire Line
 	9200 2650 9100 2650
 Wire Wire Line
-	7450 1700 7450 1950
+	7450 1700 7450 1900
 Wire Wire Line
 	8100 2200 9200 2200
 Connection ~ 9200 2650
@@ -662,16 +664,16 @@ Wire Wire Line
 Wire Wire Line
 	3200 2400 3150 2400
 Wire Wire Line
-	4350 1250 4350 1400
+	4350 1250 4350 1350
 Wire Wire Line
-	4100 1350 4350 1350
+	4100 1350 4200 1350
 Connection ~ 4350 1350
 Wire Wire Line
-	5200 2100 5700 2100
+	5200 2100 5550 2100
 Wire Wire Line
 	3800 1350 3900 1350
 Wire Wire Line
-	4350 1900 4350 2300
+	4350 1900 4350 1950
 Wire Wire Line
 	4350 2200 4100 2200
 Connection ~ 4350 2200
@@ -681,7 +683,7 @@ Wire Wire Line
 	4200 2300 4200 1350
 Connection ~ 4200 1350
 Wire Wire Line
-	5900 1550 5900 1900
+	5900 1550 5900 1750
 Wire Wire Line
 	5900 2550 5900 2500
 Connection ~ 5550 2100
@@ -691,7 +693,7 @@ Wire Wire Line
 	6350 2850 6350 2200
 Connection ~ 6350 2200
 Wire Wire Line
-	5650 2850 5850 2850
+	5650 2850 5700 2850
 Connection ~ 5700 2850
 Wire Wire Line
 	5750 1750 5900 1750
@@ -706,21 +708,21 @@ Wire Wire Line
 Wire Wire Line
 	8300 1700 8350 1700
 Wire Wire Line
-	8650 1700 8750 1700
+	8650 1700 8700 1700
 Wire Wire Line
-	8700 1600 8700 1800
+	8700 1600 8700 1700
 Connection ~ 8700 1700
 Wire Wire Line
 	9050 1700 9200 1700
 Connection ~ 9200 1700
 Wire Wire Line
-	3700 6700 3700 6800
+	3700 6700 3700 6750
 Wire Wire Line
 	3700 7200 3700 7100
 Wire Wire Line
 	3450 6800 3450 6750
 Wire Wire Line
-	3450 6750 3850 6750
+	3450 6750 3700 6750
 Connection ~ 3700 6750
 Wire Wire Line
 	6700 2500 7000 2500
@@ -728,19 +730,19 @@ Wire Wire Line
 	7350 1900 7450 1900
 Connection ~ 7450 1900
 Wire Wire Line
-	3050 4900 3250 4900
+	3050 4900 3200 4900
 Wire Wire Line
 	8700 2800 8700 2900
 Wire Wire Line
-	3700 5850 3700 6400
+	3700 5850 3700 6150
 Wire Wire Line
-	3050 5850 3900 5850
+	3050 5850 3700 5850
 Wire Wire Line
 	8700 2800 8500 2800
 Wire Wire Line
-	6300 2200 7000 2200
+	6300 2200 6350 2200
 Wire Wire Line
-	4100 2100 4900 2100
+	4100 2100 4800 2100
 Wire Wire Line
 	5700 2300 5700 2850
 Wire Wire Line
@@ -750,7 +752,7 @@ Wire Wire Line
 Wire Wire Line
 	6500 3650 6500 3600
 Wire Wire Line
-	6500 2350 6500 3300
+	6500 2350 6500 3250
 Connection ~ 6500 3250
 Wire Wire Line
 	6500 3900 6500 3850
@@ -759,7 +761,7 @@ Wire Wire Line
 Wire Wire Line
 	6950 2800 7000 2800
 $Comp
-L ARDF-2-Band-MiniTx-rescue:CONN_02X06 P202
+L FlexFox80-rescue:CONN_02X06-ARDF-2-Band-MiniTx-rescue P202
 U 1 1 5AAED373
 P 2800 5700
 F 0 "P202" H 2800 6050 50  0000 C CNN
@@ -772,7 +774,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=SAM1062-06-ND\">Link
 	-1   0    0    1   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR0106
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0106
 U 1 1 5AAEF184
 P 2550 5950
 F 0 "#PWR0106" H 2550 5700 50  0001 C CNN
@@ -814,11 +816,11 @@ Connection ~ 3050 5750
 Connection ~ 3050 5850
 Connection ~ 9200 1500
 Wire Wire Line
-	3050 5450 4300 5450
+	3050 5450 3900 5450
 Wire Wire Line
 	3800 4500 3900 4500
 Wire Wire Line
-	3900 4450 3900 5450
+	3900 4450 3900 4500
 Connection ~ 3900 4500
 Wire Wire Line
 	3550 4900 3900 4900
@@ -834,7 +836,7 @@ Wire Wire Line
 Wire Wire Line
 	3800 1350 3800 1400
 $Comp
-L ARDF-2-Band-MiniTx-rescue:INDUCTOR_SMALL L201
+L FlexFox80-rescue:INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue L201
 U 1 1 5BF17B46
 P 4350 1650
 F 0 "L201" H 4350 1750 50  0000 C CNN
@@ -847,7 +849,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=445-6396-1-ND\">Link
 	0    1    1    0   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:CONN_01X02 P201
+L FlexFox80-rescue:CONN_01X02-ARDF-2-Band-MiniTx-rescue P201
 U 1 1 5BF55297
 P 2550 4850
 F 0 "P201" H 2550 5000 50  0000 C CNN
@@ -868,7 +870,7 @@ Wire Wire Line
 Wire Wire Line
 	3050 5700 3050 5650
 $Comp
-L ARDF-2-Band-MiniTx-rescue:TEST_1P W201
+L FlexFox80-rescue:TEST_1P-ARDF-2-Band-MiniTx-rescue W201
 U 1 1 5C09F516
 P 3050 5550
 F 0 "W201" V 2950 5800 50  0000 C CNN
@@ -886,7 +888,7 @@ Connection ~ 3800 5850
 Text Notes 2300 5750 2    79   ~ 16
 Power Supply Board\nConnector
 $Comp
-L ARDF-2-Band-MiniTx-rescue:TEST_SCOPE W204
+L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W204
 U 1 1 5C0F212A
 P 9400 1500
 F 0 "W204" V 9450 1750 50  0000 C CNN
@@ -901,7 +903,7 @@ $EndComp
 Wire Wire Line
 	9400 1500 9200 1500
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR0107
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0107
 U 1 1 5C0F26F3
 P 9400 1600
 F 0 "#PWR0107" H 9400 1350 50  0001 C CNN
@@ -912,7 +914,7 @@ F 3 "" H 9400 1600 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:TEST_SCOPE W203
+L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W203
 U 1 1 5C0F3BFB
 P 4050 4600
 F 0 "W203" V 4000 4850 50  0000 C CNN
@@ -925,7 +927,7 @@ F 5 "np" H 4050 4600 60  0001 C CNN "Link"
 	0    1    1    0   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR0108
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0108
 U 1 1 5C0F3C01
 P 4050 4700
 F 0 "#PWR0108" H 4050 4450 50  0001 C CNN
@@ -939,7 +941,7 @@ Wire Wire Line
 	4050 4600 3900 4600
 Connection ~ 3900 4600
 $Comp
-L ARDF-2-Band-MiniTx-rescue:TEST_SCOPE W202
+L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W202
 U 1 1 5C0F5E5F
 P 3850 6150
 F 0 "W202" V 3900 6500 50  0000 C CNN
@@ -952,7 +954,7 @@ F 5 "np" H 3850 6150 60  0001 C CNN "Link"
 	0    1    1    0   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR0109
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0109
 U 1 1 5C0F5E65
 P 3850 6250
 F 0 "#PWR0109" H 3850 6000 50  0001 C CNN
@@ -965,7 +967,7 @@ $EndComp
 Wire Wire Line
 	3850 6150 3700 6150
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR0110
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0110
 U 1 1 5C131D21
 P 6550 7550
 F 0 "#PWR0110" H 6550 7300 50  0001 C CNN
@@ -989,7 +991,7 @@ $EndComp
 Wire Wire Line
 	6550 7550 6550 7400
 Wire Wire Line
-	6550 7400 6800 7400
+	6550 7400 6700 7400
 Wire Wire Line
 	6800 7400 6800 7550
 $Comp
@@ -1007,7 +1009,7 @@ Wire Wire Line
 	6700 7300 6700 7400
 Connection ~ 6700 7400
 $Comp
-L ARDF-2-Band-MiniTx-rescue:CONN_01X01 J203
+L FlexFox80-rescue:CONN_01X01-ARDF-2-Band-MiniTx-rescue J203
 U 1 1 5C64C637
 P 9400 2200
 F 0 "J203" H 9400 2300 50  0000 C CNN
@@ -1033,7 +1035,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-27.0KCRCT-ND\">L
 	0    1    1    0   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR0113
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0113
 U 1 1 58B811D0
 P 7150 1900
 F 0 "#PWR0113" H 7150 1650 50  0001 C CNN
@@ -1070,7 +1072,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=P12.4KCCT-ND\">Link<
 	0    -1   -1   0   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR0114
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0114
 U 1 1 5C7585B6
 P 5100 5450
 F 0 "#PWR0114" H 5100 5200 50  0001 C CNN
@@ -1094,7 +1096,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-1395-1-ND\">Link
 	0    -1   -1   0   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR0115
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0115
 U 1 1 5C7585C4
 P 4900 5700
 F 0 "#PWR0115" H 4900 5450 50  0001 C CNN
@@ -1107,13 +1109,13 @@ $EndComp
 Text GLabel 4650 5300 1    39   Output ~ 0
 TX_+12_VOLTAGE
 Wire Wire Line
-	4600 5450 4700 5450
+	4600 5450 4650 5450
 Wire Wire Line
 	5100 5450 5000 5450
 Wire Wire Line
 	4650 5700 4700 5700
 Wire Wire Line
-	4650 5300 4650 5700
+	4650 5300 4650 5450
 Connection ~ 4650 5450
 $Comp
 L Device:R R211
@@ -1138,7 +1140,7 @@ Wire Wire Line
 	3200 5250 3200 4900
 Connection ~ 3200 4900
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR0116
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0116
 U 1 1 5F83A1A7
 P 4100 2400
 F 0 "#PWR0116" H 4100 2150 50  0001 C CNN
@@ -1151,7 +1153,7 @@ $EndComp
 Connection ~ 3900 5450
 Connection ~ 3900 4900
 $Comp
-L ARDF-2-Band-MiniTx-rescue:TEST_SCOPE W205
+L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W205
 U 1 1 5F84AD75
 P 4800 2250
 F 0 "W205" H 4700 2450 50  0000 C CNN
@@ -1164,7 +1166,7 @@ F 5 "np" H 4800 2250 60  0001 C CNN "Link"
 	-1   0    0    1   
 $EndComp
 $Comp
-L ARDF-2-Band-MiniTx-rescue:GND_L8 #PWR0117
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0117
 U 1 1 5F84AE20
 P 4700 2250
 F 0 "#PWR0117" H 4700 2000 50  0001 C CNN
@@ -1179,4 +1181,68 @@ Wire Wire Line
 Wire Wire Line
 	5550 1950 5550 2100
 Connection ~ 4800 2100
+Wire Wire Line
+	8500 2800 8500 3300
+Wire Wire Line
+	8300 2650 8600 2650
+Wire Wire Line
+	9200 2650 9200 2750
+Wire Wire Line
+	9200 2200 9200 2650
+Wire Wire Line
+	4350 1350 4350 1400
+Wire Wire Line
+	4350 2200 4350 2300
+Wire Wire Line
+	4200 1350 4350 1350
+Wire Wire Line
+	5550 2100 5700 2100
+Wire Wire Line
+	6350 2200 7000 2200
+Wire Wire Line
+	5700 2850 5850 2850
+Wire Wire Line
+	5900 1750 5900 1900
+Wire Wire Line
+	4350 1950 4350 2200
+Wire Wire Line
+	8700 1700 8750 1700
+Wire Wire Line
+	8700 1700 8700 1800
+Wire Wire Line
+	9200 1700 9200 2200
+Wire Wire Line
+	3700 6750 3700 6800
+Wire Wire Line
+	3700 6750 3850 6750
+Wire Wire Line
+	7450 1900 7450 1950
+Wire Wire Line
+	6500 3250 6500 3300
+Wire Wire Line
+	9200 1500 9200 1700
+Wire Wire Line
+	3900 4500 3900 4600
+Wire Wire Line
+	3700 6150 3700 6400
+Wire Wire Line
+	3700 5850 3800 5850
+Wire Wire Line
+	3800 5850 3900 5850
+Wire Wire Line
+	3900 4600 3900 4900
+Wire Wire Line
+	6700 7400 6800 7400
+Wire Wire Line
+	4650 5450 4700 5450
+Wire Wire Line
+	4650 5450 4650 5700
+Wire Wire Line
+	3200 4900 3250 4900
+Wire Wire Line
+	3900 5450 4300 5450
+Wire Wire Line
+	3900 4900 3900 5450
+Wire Wire Line
+	4800 2100 4900 2100
 $EndSCHEMATC

@@ -29,7 +29,7 @@ version=1
 version=1
 LibDir=../kicad libraries
 [eeschema/libraries]
-LibName1=ARDF 2 Band MiniTx-rescue
+LibName1=FlexFox80-rescue
 LibName2=power
 LibName3=device
 LibName4=transistors
