@@ -13,126 +13,126 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
-Text Notes 2150 4650 0    79   ~ 16
+Text Notes 2600 4450 0    79   ~ 16
 FET Driver
-Text Notes 4350 4300 0    79   ~ 16
+Text Notes 4800 4100 0    79   ~ 16
 HF Final\nAmplifier
 Text Notes 7100 6950 0    118  ~ 24
 PCB: Flex Fox 80 ARDF Transmitter (p. 1/3)
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0130
 U 1 1 58A2833C
-P 3600 2900
-F 0 "#PWR0130" H 3600 2650 50  0001 C CNN
-F 1 "GND_L8" H 3600 2750 50  0001 C CNN
-F 2 "" H 3600 2900 50  0000 C CNN
-F 3 "" H 3600 2900 50  0000 C CNN
-	1    3600 2900
+P 4050 2700
+F 0 "#PWR0130" H 4050 2450 50  0001 C CNN
+F 1 "GND_L8" H 4050 2550 50  0001 C CNN
+F 2 "" H 4050 2700 50  0000 C CNN
+F 3 "" H 4050 2700 50  0000 C CNN
+	1    4050 2700
 	0    1    1    0   
 $EndComp
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0134
 U 1 1 58A28342
-P 4200 2900
-F 0 "#PWR0134" H 4200 2650 50  0001 C CNN
-F 1 "GND_L8" H 4200 2750 50  0000 C CNN
-F 2 "" H 4200 2900 50  0000 C CNN
-F 3 "" H 4200 2900 50  0000 C CNN
-	1    4200 2900
+P 4650 2700
+F 0 "#PWR0134" H 4650 2450 50  0001 C CNN
+F 1 "GND_L8" H 4650 2550 50  0000 C CNN
+F 2 "" H 4650 2700 50  0000 C CNN
+F 3 "" H 4650 2700 50  0000 C CNN
+	1    4650 2700
 	0    -1   -1   0   
 $EndComp
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0136
 U 1 1 58A73968
-P 4250 4200
-F 0 "#PWR0136" H 4250 3950 50  0001 C CNN
-F 1 "GND_L8" H 4250 4050 50  0001 C CNN
-F 2 "" H 4250 4200 50  0000 C CNN
-F 3 "" H 4250 4200 50  0000 C CNN
-	1    4250 4200
+P 4700 4000
+F 0 "#PWR0136" H 4700 3750 50  0001 C CNN
+F 1 "GND_L8" H 4700 3850 50  0001 C CNN
+F 2 "" H 4700 4000 50  0000 C CNN
+F 3 "" H 4700 4000 50  0000 C CNN
+	1    4700 4000
 	1    0    0    -1  
 $EndComp
 $Comp
 L FlexFox80-rescue:INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue L106
 U 1 1 58A77A86
-P 5700 3600
-F 0 "L106" H 5700 3700 50  0000 C CNN
-F 1 "2.7uH" H 5700 3550 50  0000 C CNN
-F 2 "Inductors:Toroid_T-60_2TH_Vertical" H 5700 3600 50  0001 C CNN
-F 3 "" H 5700 3600 50  0001 C CNN
-F 4 "T60-2" H 5700 3600 60  0001 C CNN "Part No."
-F 5 "<a href=\"http://www.amidoncorp.com/t60-2/\">Link</a>" H 5700 3600 60  0001 C CNN "Link"
-	1    5700 3600
+P 6150 3400
+F 0 "L106" H 6150 3500 50  0000 C CNN
+F 1 "2.7uH" H 6150 3350 50  0000 C CNN
+F 2 "Inductors:Toroid_T-60_2TH_Vertical" H 6150 3400 50  0001 C CNN
+F 3 "" H 6150 3400 50  0001 C CNN
+F 4 "T60-2" H 6150 3400 60  0001 C CNN "Part No."
+F 5 "<a href=\"http://www.amidoncorp.com/t60-2/\">Link</a>" H 6150 3400 60  0001 C CNN "Link"
+	1    6150 3400
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:C_Small C123
 U 1 1 58A77CD9
-P 5350 3800
-F 0 "C123" H 5360 3870 50  0000 L CNN
-F 1 "1100pF" H 5360 3720 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 5350 3800 50  0001 C CNN
-F 3 "" H 5350 3800 50  0000 C CNN
-F 4 "399-14552-1-ND" H 5350 3800 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-14552-1-ND\">Link</a>" H 5350 3800 60  0001 C CNN "Link"
-	1    5350 3800
+P 5800 3600
+F 0 "C123" H 5810 3670 50  0000 L CNN
+F 1 "1100pF" H 5810 3520 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 5800 3600 50  0001 C CNN
+F 3 "" H 5800 3600 50  0000 C CNN
+F 4 "399-14552-1-ND" H 5800 3600 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-14552-1-ND\">Link</a>" H 5800 3600 60  0001 C CNN "Link"
+	1    5800 3600
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:C_Small C122
 U 1 1 58A78557
-P 5100 3600
-F 0 "C122" V 4900 3500 50  0000 L CNN
-F 1 "470nF" V 5000 3500 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 5100 3600 50  0001 C CNN
-F 3 "" H 5100 3600 50  0000 C CNN
-F 4 "478-9924-1-ND" H 5100 3600 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-9924-1-ND\">Link</a>" H 5100 3600 60  0001 C CNN "Link"
-	1    5100 3600
+P 5550 3400
+F 0 "C122" V 5350 3300 50  0000 L CNN
+F 1 "470nF" V 5450 3300 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 5550 3400 50  0001 C CNN
+F 3 "" H 5550 3400 50  0000 C CNN
+F 4 "478-9924-1-ND" H 5550 3400 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-9924-1-ND\">Link</a>" H 5550 3400 60  0001 C CNN "Link"
+	1    5550 3400
 	0    1    1    0   
 $EndComp
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0146
 U 1 1 58A7996F
-P 6050 3900
-F 0 "#PWR0146" H 6050 3650 50  0001 C CNN
-F 1 "GND_L8" H 6050 3750 50  0001 C CNN
-F 2 "" H 6050 3900 50  0000 C CNN
-F 3 "" H 6050 3900 50  0000 C CNN
-	1    6050 3900
+P 6500 3700
+F 0 "#PWR0146" H 6500 3450 50  0001 C CNN
+F 1 "GND_L8" H 6500 3550 50  0001 C CNN
+F 2 "" H 6500 3700 50  0000 C CNN
+F 3 "" H 6500 3700 50  0000 C CNN
+	1    6500 3700
 	1    0    0    -1  
 $EndComp
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0151
 U 1 1 58A7A1D0
-P 7050 3900
-F 0 "#PWR0151" H 7050 3650 50  0001 C CNN
-F 1 "GND_L8" H 7050 3750 50  0001 C CNN
-F 2 "" H 7050 3900 50  0000 C CNN
-F 3 "" H 7050 3900 50  0000 C CNN
-	1    7050 3900
+P 7500 3700
+F 0 "#PWR0151" H 7500 3450 50  0001 C CNN
+F 1 "GND_L8" H 7500 3550 50  0001 C CNN
+F 2 "" H 7500 3700 50  0000 C CNN
+F 3 "" H 7500 3700 50  0000 C CNN
+	1    7500 3700
 	1    0    0    -1  
 $EndComp
 $Comp
 L FlexFox80-rescue:+2to+12V-ARDF-2-Band-MiniTx-rescue #PWR0133
 U 1 1 58A9C144
-P 3900 2750
-F 0 "#PWR0133" H 3900 2600 50  0001 C CNN
-F 1 "+2to+12V" H 3950 2900 50  0000 C CNN
-F 2 "" H 3900 2750 50  0000 C CNN
-F 3 "" H 3900 2750 50  0000 C CNN
-	1    3900 2750
+P 4350 2550
+F 0 "#PWR0133" H 4350 2400 50  0001 C CNN
+F 1 "+2to+12V" H 4400 2700 50  0000 C CNN
+F 2 "" H 4350 2550 50  0000 C CNN
+F 3 "" H 4350 2550 50  0000 C CNN
+	1    4350 2550
 	1    0    0    -1  
 $EndComp
 $Comp
 L power:+12V #PWR0117
 U 1 1 58BF361E
-P 2300 2950
-F 0 "#PWR0117" H 2300 2800 50  0001 C CNN
-F 1 "+12V" H 2300 3090 50  0000 C CNN
-F 2 "" H 2300 2950 50  0000 C CNN
-F 3 "" H 2300 2950 50  0000 C CNN
-	1    2300 2950
+P 2750 2750
+F 0 "#PWR0117" H 2750 2600 50  0001 C CNN
+F 1 "+12V" H 2750 2890 50  0000 C CNN
+F 2 "" H 2750 2750 50  0000 C CNN
+F 3 "" H 2750 2750 50  0000 C CNN
+	1    2750 2750
 	1    0    0    -1  
 $EndComp
 $Sheet
@@ -141,26 +141,24 @@ U 591BC960
 F0 "ARDF Tx Continued" 60
 F1 "file591BC95F.sch" 60
 $EndSheet
-Text Notes 800  6750 1    157  ~ 31
+Text Notes 1650 4200 1    157  ~ 31
 80m RF Section
-Text Notes 800  4150 1    157  ~ 31
-2m RF Section
 Wire Wire Line
-	3800 2900 3900 2900
-Connection ~ 3900 2900
+	4250 2700 4350 2700
+Connection ~ 4350 2700
 Wire Wire Line
-	5200 3600 5350 3600
+	5650 3400 5800 3400
 Wire Wire Line
-	6050 3450 6050 3600
-Connection ~ 6050 3600
+	6500 3250 6500 3400
+Connection ~ 6500 3400
 Wire Wire Line
-	6950 3600 7050 3600
-Connection ~ 7050 3600
+	7400 3400 7500 3400
+Connection ~ 7500 3400
 Wire Wire Line
-	5350 3450 5350 3600
-Connection ~ 5350 3600
+	5800 3250 5800 3400
+Connection ~ 5800 3400
 Wire Wire Line
-	3900 2750 3900 2900
+	4350 2550 4350 2700
 Wire Wire Line
 	650  7500 650  7450
 Wire Wire Line
@@ -170,19 +168,6 @@ Wire Wire Line
 Wire Wire Line
 	850  7200 850  7350
 Connection ~ 850  7450
-$Comp
-L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0164
-U 1 1 59D53C99
-P 8700 3800
-F 0 "#PWR0164" H 8700 3550 50  0001 C CNN
-F 1 "GND_L8" H 8700 3650 50  0001 C CNN
-F 2 "" H 8700 3800 50  0000 C CNN
-F 3 "" H 8700 3800 50  0000 C CNN
-	1    8700 3800
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	8700 3800 8700 3700
 $Comp
 L FlexFox80-rescue:CONN_01X01-ARDF-2-Band-MiniTx-rescue W116
 U 1 1 59FE205E
@@ -198,60 +183,60 @@ F 5 "np" H 1050 7200 60  0001 C CNN "Link"
 $EndComp
 Connection ~ 850  7350
 Wire Wire Line
-	3150 2950 3350 2950
+	3600 2750 3800 2750
 Wire Wire Line
-	3350 2950 3350 2000
+	3800 2750 3800 1800
 Wire Wire Line
-	3350 2000 2600 2000
+	3800 1800 3050 1800
 Wire Wire Line
-	2600 2000 2600 2450
+	3050 1800 3050 2250
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0123
 U 1 1 5A7B67DA
-P 2900 2950
-F 0 "#PWR0123" H 2900 2700 50  0001 C CNN
-F 1 "GND_L8" H 3050 2800 50  0001 C CNN
-F 2 "" H 2900 2950 50  0000 C CNN
-F 3 "" H 2900 2950 50  0000 C CNN
-	1    2900 2950
+P 3350 2750
+F 0 "#PWR0123" H 3350 2500 50  0001 C CNN
+F 1 "GND_L8" H 3500 2600 50  0001 C CNN
+F 2 "" H 3350 2750 50  0000 C CNN
+F 3 "" H 3350 2750 50  0000 C CNN
+	1    3350 2750
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	2300 2950 2300 3000
+	2750 2750 2750 2800
 Wire Wire Line
-	2300 3000 2450 3000
+	2750 2800 2900 2800
 Wire Wire Line
-	2450 3000 2450 2950
-Connection ~ 2700 3450
+	2900 2800 2900 2750
+Connection ~ 3150 3250
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0140
 U 1 1 5A7DEA16
-P 5350 3900
-F 0 "#PWR0140" H 5350 3650 50  0001 C CNN
-F 1 "GND_L8" H 5350 3750 50  0001 C CNN
-F 2 "" H 5350 3900 50  0000 C CNN
-F 3 "" H 5350 3900 50  0000 C CNN
-	1    5350 3900
+P 5800 3700
+F 0 "#PWR0140" H 5800 3450 50  0001 C CNN
+F 1 "GND_L8" H 5800 3550 50  0001 C CNN
+F 2 "" H 5800 3700 50  0000 C CNN
+F 3 "" H 5800 3700 50  0000 C CNN
+	1    5800 3700
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	3000 4050 3500 4050
+	3450 3850 3950 3850
 Wire Wire Line
-	2400 4250 2400 4350
+	2850 4050 2850 4150
 $Comp
 L power:PWR_FLAG #FLG0105
 U 1 1 5A7E62FA
-P 2600 3800
-F 0 "#FLG0105" H 2600 3895 50  0001 C CNN
-F 1 "PWR_FLAG" H 2600 3980 50  0000 C CNN
-F 2 "" H 2600 3800 50  0000 C CNN
-F 3 "" H 2600 3800 50  0000 C CNN
-	1    2600 3800
+P 3050 3600
+F 0 "#FLG0105" H 3050 3695 50  0001 C CNN
+F 1 "PWR_FLAG" H 3050 3780 50  0000 C CNN
+F 2 "" H 3050 3600 50  0000 C CNN
+F 3 "" H 3050 3600 50  0000 C CNN
+	1    3050 3600
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	2700 3800 2600 3800
-Connection ~ 2700 3800
+	3150 3600 3050 3600
+Connection ~ 3150 3600
 $Comp
 L FlexFox80-rescue:TEST_1P-ARDF-2-Band-MiniTx-rescue W114
 U 1 1 5A8B3DC0
@@ -266,37 +251,35 @@ F 5 "np" H 850 7350 60  0001 C CNN "Link"
 	0    1    -1   0   
 $EndComp
 Wire Wire Line
-	1800 4050 2200 4050
+	2250 3850 2650 3850
 Wire Wire Line
-	2200 4050 2200 4000
-Connection ~ 2200 4050
+	2650 3850 2650 3800
+Connection ~ 2650 3850
 $Comp
 L FlexFox80-rescue:LM5134-ARDF-2-Band-MiniTx-rescue U107
 U 1 1 5AA8446F
-P 2700 4150
-F 0 "U107" H 3000 4550 61  0000 R CNB
-F 1 "LM5134B" H 3150 4450 61  0000 R CNB
-F 2 "TO_SOT_Packages_SMD:SOT-23-6_Handsolder" H 2850 3300 50  0001 L CNN
-F 3 "" H 2900 3850 50  0001 C CNN
-F 4 "296-40244-1-ND" H 2700 4150 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=296-40244-1-ND\">Link</a>" H 2700 4150 60  0001 C CNN "Link"
-	1    2700 4150
+P 3150 3950
+F 0 "U107" H 3450 4350 61  0000 R CNB
+F 1 "LM5134B" H 3600 4250 61  0000 R CNB
+F 2 "TO_SOT_Packages_SMD:SOT-23-6_Handsolder" H 3300 3100 50  0001 L CNN
+F 3 "" H 3350 3650 50  0001 C CNN
+F 4 "296-40244-1-ND" H 3150 3950 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=296-40244-1-ND\">Link</a>" H 3150 3950 60  0001 C CNN "Link"
+	1    3150 3950
 	1    0    0    -1  
 $EndComp
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0119
 U 1 1 5AAE6E6A
-P 2400 4350
-F 0 "#PWR0119" H 2400 4100 50  0001 C CNN
-F 1 "GND_L8" H 2400 4200 50  0001 C CNN
-F 2 "" H 2400 4350 50  0000 C CNN
-F 3 "" H 2400 4350 50  0000 C CNN
-	1    2400 4350
+P 2850 4150
+F 0 "#PWR0119" H 2850 3900 50  0001 C CNN
+F 1 "GND_L8" H 2850 4000 50  0001 C CNN
+F 2 "" H 2850 4150 50  0000 C CNN
+F 3 "" H 2850 4150 50  0000 C CNN
+	1    2850 4150
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	9200 2950 8900 2950
-Text GLabel 9250 2700 2    39   Output ~ 0
+Text GLabel 9550 2100 2    39   Output ~ 0
 ~ANT_CONNECT_INT~
 $Sheet
 S -1850 1550 1050 650 
@@ -304,317 +287,286 @@ U 5BC7F38C
 F0 "Digital" 61
 F1 "file5BC7F38B.sch" 61
 $EndSheet
-Text GLabel 1800 4050 0    39   Input ~ 0
+Text GLabel 2250 3850 0    39   Input ~ 0
 CLK1
-$Comp
-L FlexFox80-rescue:CONN_01X03-ARDF-2-Band-MiniTx-rescue P103
-U 1 1 5BCC61E7
-P 8900 3600
-F 0 "P103" H 8900 3800 50  0000 C CNN
-F 1 "Phoenix" V 9050 3600 50  0000 C CNN
-F 2 "Sockets:Phoenix_3.81mm_3pos" H 8900 3600 50  0001 C CNN
-F 3 "" H 8900 3600 50  0001 C CNN
-F 4 "277-1207-ND" H 8900 3600 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=277-1207-ND\">Link</a>" H 8900 3600 60  0001 C CNN "Link"
-	1    8900 3600
-	1    0    0    1   
-$EndComp
-Text GLabel 3000 2450 1    39   Input ~ 0
+Text GLabel 3450 2250 1    39   Input ~ 0
 HF_ENABLE
 $Comp
 L Device:C_Small C120
 U 1 1 5BE9CF68
-P 4100 2900
-F 0 "C120" V 4200 2800 50  0000 L CNN
-F 1 "470nF" V 3950 2800 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 4100 2900 50  0001 C CNN
-F 3 "" H 4100 2900 50  0000 C CNN
-F 4 "478-9924-1-ND" H 4100 2900 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-9924-1-ND\">Link</a>" H 4100 2900 60  0001 C CNN "Link"
-	1    4100 2900
+P 4550 2700
+F 0 "C120" V 4650 2600 50  0000 L CNN
+F 1 "470nF" V 4400 2600 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 4550 2700 50  0001 C CNN
+F 3 "" H 4550 2700 50  0000 C CNN
+F 4 "478-9924-1-ND" H 4550 2700 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-9924-1-ND\">Link</a>" H 4550 2700 60  0001 C CNN "Link"
+	1    4550 2700
 	0    -1   -1   0   
 $EndComp
 $Comp
 L Device:C_Small C126
 U 1 1 5BEA0426
-P 6050 3800
-F 0 "C126" H 5800 3750 50  0000 L CNN
-F 1 "1800pF" H 5750 3900 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 6050 3800 50  0001 C CNN
-F 3 "" H 6050 3800 50  0000 C CNN
-F 4 "445-5752-1-ND" H 6050 3800 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=445-5752-1-ND\">Link</a>" H 6050 3800 60  0001 C CNN "Link"
-	1    6050 3800
+P 6500 3600
+F 0 "C126" H 6250 3550 50  0000 L CNN
+F 1 "1800pF" H 6200 3700 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 6500 3600 50  0001 C CNN
+F 3 "" H 6500 3600 50  0000 C CNN
+F 4 "445-5752-1-ND" H 6500 3600 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=445-5752-1-ND\">Link</a>" H 6500 3600 60  0001 C CNN "Link"
+	1    6500 3600
 	-1   0    0    1   
 $EndComp
 $Comp
 L special:Heat-sink HS101
 U 1 1 5BEA52AC
-P 3900 3950
-F 0 "HS101" H 3700 4250 50  0000 L CNN
-F 1 "Heatsink" H 3700 4150 50  0000 L CNN
-F 2 "Heatsinks:Heatsink_HF35G" H 3350 3925 50  0001 L CIN
-F 3 "" H 3900 3950 50  0001 L CNN
-F 4 "HS220-ND" H 3900 3950 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=HS220-ND\">Link</a>" H 3900 3950 60  0001 C CNN "Link"
-	1    3900 3950
+P 4350 3750
+F 0 "HS101" H 4150 4050 50  0000 L CNN
+F 1 "Heatsink" H 4150 3950 50  0000 L CNN
+F 2 "Heatsinks:Heatsink_HF35G" H 3800 3725 50  0001 L CIN
+F 3 "" H 4350 3750 50  0001 L CNN
+F 4 "HS220-ND" H 4350 3750 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=HS220-ND\">Link</a>" H 4350 3750 60  0001 C CNN "Link"
+	1    4350 3750
 	1    0    0    -1  
 $EndComp
-Text Notes 8900 3900 0    39   ~ 8
+Text Notes 9200 3100 0    39   ~ 8
 3.5 MHz Out
-$Comp
-L FlexFox80-rescue:CONN_01X03-ARDF-2-Band-MiniTx-rescue P502
-U 1 1 5BF4992C
-P 9200 3600
-F 0 "P502" H 9200 3800 50  0000 C CNN
-F 1 "Phoenix" V 9350 3600 50  0001 C CNN
-F 2 "Oddities:Dummy_Empty_3" H 9200 3600 50  0001 C CNN
-F 3 "" H 9200 3600 50  0001 C CNN
-F 4 "277-1162-ND" H 9200 3600 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=277-1162-ND\">Link</a>" H 9200 3600 60  0001 C CNN "Link"
-	1    9200 3600
-	-1   0    0    1   
-$EndComp
-NoConn ~ 9400 3600
 $Sheet
 S -1850 2450 1050 700 
 U 5BF4C520
 F0 "Non-PCB" 39
 F1 "file5BF4C51F.sch" 39
 $EndSheet
-Text GLabel 8850 3200 2    39   Output ~ 0
+Text GLabel 9150 2350 2    39   Output ~ 0
 80M_ANTENNA_DETECT
 Wire Wire Line
-	9400 3700 9650 3700
-Wire Wire Line
-	9650 3500 9400 3500
-Wire Wire Line
-	7050 3300 7050 3600
-Text Notes 5850 2800 0    79   ~ 16
+	7500 3100 7500 3400
+Text Notes 6300 2600 0    79   ~ 16
 HF LPF
-Text Notes 8800 4050 0    79   ~ 16
+Text Notes 9050 3000 0    79   ~ 16
 HF Antenna
 $Comp
 L Device:C_Small C131
 U 1 1 5C0D126D
-P 7050 3800
-F 0 "C131" H 7060 3870 50  0000 L CNN
-F 1 "1100pF" H 6750 3700 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 7050 3800 50  0001 C CNN
-F 3 "" H 7050 3800 50  0000 C CNN
-F 4 "399-14552-1-ND" H 7050 3800 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-14552-1-ND\">Link</a>" H 7050 3800 60  0001 C CNN "Link"
-	1    7050 3800
+P 7500 3600
+F 0 "C131" H 7510 3670 50  0000 L CNN
+F 1 "1100pF" H 7200 3500 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 7500 3600 50  0001 C CNN
+F 3 "" H 7500 3600 50  0000 C CNN
+F 4 "399-14552-1-ND" H 7500 3600 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-14552-1-ND\">Link</a>" H 7500 3600 60  0001 C CNN "Link"
+	1    7500 3600
 	1    0    0    -1  
 $EndComp
-Text Notes 5750 3000 0    39   ~ 0
+Text Notes 6200 2800 0    39   ~ 0
 6th order Chebychev\n3.9MHz 3dB cut-off\nw/ node at 10.7MHz
 $Comp
 L FlexFox80-rescue:INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue L108
 U 1 1 5C0D7F1D
-P 6700 3600
-F 0 "L108" H 6700 3700 50  0000 C CNN
-F 1 "2.7uH" H 6700 3550 50  0000 C CNN
-F 2 "Inductors:Toroid_T-60_2TH_Vertical" H 6700 3600 50  0001 C CNN
-F 3 "" H 6700 3600 50  0001 C CNN
-F 4 "T60-2" H 6700 3600 60  0001 C CNN "Part No."
-F 5 "<a href=\"http://www.amidoncorp.com/t60-2/\">Link</a>" H 6700 3600 60  0001 C CNN "Link"
-	1    6700 3600
+P 7150 3400
+F 0 "L108" H 7150 3500 50  0000 C CNN
+F 1 "2.7uH" H 7150 3350 50  0000 C CNN
+F 2 "Inductors:Toroid_T-60_2TH_Vertical" H 7150 3400 50  0001 C CNN
+F 3 "" H 7150 3400 50  0001 C CNN
+F 4 "T60-2" H 7150 3400 60  0001 C CNN "Part No."
+F 5 "<a href=\"http://www.amidoncorp.com/t60-2/\">Link</a>" H 7150 3400 60  0001 C CNN "Link"
+	1    7150 3400
 	1    0    0    -1  
 $EndComp
 $Comp
 L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W105
 U 1 1 5C0EAA8C
-P 2200 4000
-F 0 "W105" V 2400 4000 50  0000 C CNN
-F 1 "T2" V 2250 4050 50  0000 C CNN
-F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 2400 4000 50  0001 C CNN
-F 3 "" H 2400 4000 50  0001 C CNN
-F 4 "np" H 2200 4000 60  0001 C CNN "Part No."
-F 5 "np" H 2200 4000 60  0001 C CNN "Link"
-	1    2200 4000
+P 2650 3800
+F 0 "W105" V 2850 3800 50  0000 C CNN
+F 1 "T2" V 2700 3850 50  0000 C CNN
+F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 2850 3800 50  0001 C CNN
+F 3 "" H 2850 3800 50  0001 C CNN
+F 4 "np" H 2650 3800 60  0001 C CNN "Part No."
+F 5 "np" H 2650 3800 60  0001 C CNN "Link"
+	1    2650 3800
 	0    -1   -1   0   
 $EndComp
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0116
 U 1 1 5C0EAA92
-P 2200 3900
-F 0 "#PWR0116" H 2200 3650 50  0001 C CNN
-F 1 "GND_L8" H 2200 3750 50  0001 C CNN
-F 2 "" H 2200 3900 50  0000 C CNN
-F 3 "" H 2200 3900 50  0000 C CNN
-	1    2200 3900
+P 2650 3700
+F 0 "#PWR0116" H 2650 3450 50  0001 C CNN
+F 1 "GND_L8" H 2650 3550 50  0001 C CNN
+F 2 "" H 2650 3700 50  0000 C CNN
+F 3 "" H 2650 3700 50  0000 C CNN
+	1    2650 3700
 	0    -1   -1   0   
 $EndComp
 $Comp
 L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W108
 U 1 1 5C0EB478
-P 3500 4200
-F 0 "W108" H 3450 4450 50  0000 C CNN
-F 1 "T4" H 3550 4250 50  0000 C CNN
-F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 3700 4200 50  0001 C CNN
-F 3 "" H 3700 4200 50  0001 C CNN
-F 4 "np" H 3500 4200 60  0001 C CNN "Part No."
-F 5 "np" H 3500 4200 60  0001 C CNN "Link"
-	1    3500 4200
+P 3950 4000
+F 0 "W108" H 3900 4250 50  0000 C CNN
+F 1 "T4" H 4000 4050 50  0000 C CNN
+F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 4150 4000 50  0001 C CNN
+F 3 "" H 4150 4000 50  0001 C CNN
+F 4 "np" H 3950 4000 60  0001 C CNN "Part No."
+F 5 "np" H 3950 4000 60  0001 C CNN "Link"
+	1    3950 4000
 	-1   0    0    1   
 $EndComp
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0126
 U 1 1 5C0EB47E
-P 3400 4200
-F 0 "#PWR0126" H 3400 3950 50  0001 C CNN
-F 1 "GND_L8" H 3400 4050 50  0001 C CNN
-F 2 "" H 3400 4200 50  0000 C CNN
-F 3 "" H 3400 4200 50  0000 C CNN
-	1    3400 4200
+P 3850 4000
+F 0 "#PWR0126" H 3850 3750 50  0001 C CNN
+F 1 "GND_L8" H 3850 3850 50  0001 C CNN
+F 2 "" H 3850 4000 50  0000 C CNN
+F 3 "" H 3850 4000 50  0000 C CNN
+	1    3850 4000
 	-1   0    0    1   
 $EndComp
 Wire Wire Line
-	3500 4200 3500 4050
-Connection ~ 3500 4050
+	3950 4000 3950 3850
+Connection ~ 3950 3850
 $Comp
 L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W111
 U 1 1 5C0EDCBD
-P 5350 3450
-F 0 "W111" H 5400 3750 50  0000 C CNN
-F 1 "T5" H 5400 3500 50  0000 C CNN
-F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 5550 3450 50  0001 C CNN
-F 3 "" H 5550 3450 50  0001 C CNN
-F 4 "np" H 5350 3450 60  0001 C CNN "Part No."
-F 5 "np" H 5350 3450 60  0001 C CNN "Link"
-	1    5350 3450
+P 5800 3250
+F 0 "W111" H 5850 3550 50  0000 C CNN
+F 1 "T5" H 5850 3300 50  0000 C CNN
+F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 6000 3250 50  0001 C CNN
+F 3 "" H 6000 3250 50  0001 C CNN
+F 4 "np" H 5800 3250 60  0001 C CNN "Part No."
+F 5 "np" H 5800 3250 60  0001 C CNN "Link"
+	1    5800 3250
 	1    0    0    -1  
 $EndComp
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0144
 U 1 1 5C0EDCC3
-P 5450 3450
-F 0 "#PWR0144" H 5450 3200 50  0001 C CNN
-F 1 "GND_L8" H 5450 3300 50  0001 C CNN
-F 2 "" H 5450 3450 50  0000 C CNN
-F 3 "" H 5450 3450 50  0000 C CNN
-	1    5450 3450
+P 5900 3250
+F 0 "#PWR0144" H 5900 3000 50  0001 C CNN
+F 1 "GND_L8" H 5900 3100 50  0001 C CNN
+F 2 "" H 5900 3250 50  0000 C CNN
+F 3 "" H 5900 3250 50  0000 C CNN
+	1    5900 3250
 	-1   0    0    -1  
 $EndComp
 $Comp
 L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W113
 U 1 1 5C0EE9E8
-P 6050 3450
-F 0 "W113" H 6100 3750 50  0000 C CNN
-F 1 "T6" H 6100 3500 50  0000 C CNN
-F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 6250 3450 50  0001 C CNN
-F 3 "" H 6250 3450 50  0001 C CNN
-F 4 "np" H 6050 3450 60  0001 C CNN "Part No."
-F 5 "np" H 6050 3450 60  0001 C CNN "Link"
-	1    6050 3450
+P 6500 3250
+F 0 "W113" H 6550 3550 50  0000 C CNN
+F 1 "T6" H 6550 3300 50  0000 C CNN
+F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 6700 3250 50  0001 C CNN
+F 3 "" H 6700 3250 50  0001 C CNN
+F 4 "np" H 6500 3250 60  0001 C CNN "Part No."
+F 5 "np" H 6500 3250 60  0001 C CNN "Link"
+	1    6500 3250
 	1    0    0    -1  
 $EndComp
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0148
 U 1 1 5C0EE9EE
-P 6150 3450
-F 0 "#PWR0148" H 6150 3200 50  0001 C CNN
-F 1 "GND_L8" H 6150 3300 50  0001 C CNN
-F 2 "" H 6150 3450 50  0000 C CNN
-F 3 "" H 6150 3450 50  0000 C CNN
-	1    6150 3450
+P 6600 3250
+F 0 "#PWR0148" H 6600 3000 50  0001 C CNN
+F 1 "GND_L8" H 6600 3100 50  0001 C CNN
+F 2 "" H 6600 3250 50  0000 C CNN
+F 3 "" H 6600 3250 50  0000 C CNN
+	1    6600 3250
 	-1   0    0    -1  
 $EndComp
 $Comp
 L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W117
 U 1 1 5C0EEADD
-P 7250 3450
-F 0 "W117" H 7300 3700 50  0000 C CNN
-F 1 "T7" H 7300 3500 50  0000 C CNN
-F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 7450 3450 50  0001 C CNN
-F 3 "" H 7450 3450 50  0001 C CNN
-F 4 "np" H 7250 3450 60  0001 C CNN "Part No."
-F 5 "np" H 7250 3450 60  0001 C CNN "Link"
-	1    7250 3450
+P 7700 3250
+F 0 "W117" H 7750 3500 50  0000 C CNN
+F 1 "T7" H 7750 3300 50  0000 C CNN
+F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 7900 3250 50  0001 C CNN
+F 3 "" H 7900 3250 50  0001 C CNN
+F 4 "np" H 7700 3250 60  0001 C CNN "Part No."
+F 5 "np" H 7700 3250 60  0001 C CNN "Link"
+	1    7700 3250
 	1    0    0    -1  
 $EndComp
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0154
 U 1 1 5C0EEAE3
-P 7350 3450
-F 0 "#PWR0154" H 7350 3200 50  0001 C CNN
-F 1 "GND_L8" H 7350 3300 50  0001 C CNN
-F 2 "" H 7350 3450 50  0000 C CNN
-F 3 "" H 7350 3450 50  0000 C CNN
-	1    7350 3450
+P 7800 3250
+F 0 "#PWR0154" H 7800 3000 50  0001 C CNN
+F 1 "GND_L8" H 7800 3100 50  0001 C CNN
+F 2 "" H 7800 3250 50  0000 C CNN
+F 3 "" H 7800 3250 50  0000 C CNN
+	1    7800 3250
 	-1   0    0    -1  
 $EndComp
 $Comp
 L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W106
 U 1 1 5C0F543D
-P 2300 3450
-F 0 "W106" V 2350 3700 50  0000 C CNN
-F 1 "T3" V 2350 3500 50  0000 C CNN
-F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 2500 3450 50  0001 C CNN
-F 3 "" H 2500 3450 50  0001 C CNN
-F 4 "np" H 2300 3450 60  0001 C CNN "Part No."
-F 5 "np" H 2300 3450 60  0001 C CNN "Link"
-	1    2300 3450
+P 2750 3250
+F 0 "W106" V 2800 3500 50  0000 C CNN
+F 1 "T3" V 2800 3300 50  0000 C CNN
+F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 2950 3250 50  0001 C CNN
+F 3 "" H 2950 3250 50  0001 C CNN
+F 4 "np" H 2750 3250 60  0001 C CNN "Part No."
+F 5 "np" H 2750 3250 60  0001 C CNN "Link"
+	1    2750 3250
 	0    -1   1    0   
 $EndComp
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0118
 U 1 1 5C0F5443
-P 2300 3550
-F 0 "#PWR0118" H 2300 3300 50  0001 C CNN
-F 1 "GND_L8" H 2300 3400 50  0001 C CNN
-F 2 "" H 2300 3550 50  0000 C CNN
-F 3 "" H 2300 3550 50  0000 C CNN
-	1    2300 3550
+P 2750 3350
+F 0 "#PWR0118" H 2750 3100 50  0001 C CNN
+F 1 "GND_L8" H 2750 3200 50  0001 C CNN
+F 2 "" H 2750 3350 50  0000 C CNN
+F 3 "" H 2750 3350 50  0000 C CNN
+	1    2750 3350
 	0    -1   1    0   
 $EndComp
 $Comp
 L Device:C_Small C128
 U 1 1 5C0F9847
-P 6650 3300
-F 0 "C128" V 6550 3200 50  0000 L CNN
-F 1 "91pF" V 6750 3200 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 6650 3300 50  0001 C CNN
-F 3 "" H 6650 3300 50  0000 C CNN
-F 4 "399-17459-1-ND" H 6650 3300 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-17459-1-ND\">Link</a>" H 6650 3300 60  0001 C CNN "Link"
-	1    6650 3300
+P 7100 3100
+F 0 "C128" V 7000 3000 50  0000 L CNN
+F 1 "91pF" V 7200 3000 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 7100 3100 50  0001 C CNN
+F 3 "" H 7100 3100 50  0000 C CNN
+F 4 "399-17459-1-ND" H 7100 3100 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-17459-1-ND\">Link</a>" H 7100 3100 60  0001 C CNN "Link"
+	1    7100 3100
 	0    1    1    0   
 $EndComp
 Wire Wire Line
-	6750 3300 7050 3300
+	7200 3100 7500 3100
 Wire Wire Line
-	6550 3300 6400 3300
+	7000 3100 6850 3100
 Wire Wire Line
-	6400 3300 6400 3600
-Connection ~ 6400 3600
+	6850 3100 6850 3400
+Connection ~ 6850 3400
 Wire Wire Line
-	5950 3600 6050 3600
+	6400 3400 6500 3400
 $Comp
 L FlexFox80-rescue:IRF610_TO220-ARDF-2-Band-MiniTx-rescue Q102
 U 1 1 5C100056
-P 4150 4000
-F 0 "Q102" H 4350 4075 50  0000 L CNN
-F 1 "IRF610" H 4350 4000 50  0000 L CNN
-F 2 "TO_SOT_Packages_THT:TO-220_Neutral123_Vertical_LargePads" H 4350 3925 50  0001 L CIN
-F 3 "" H 4150 4000 50  0001 L CNN
-F 4 "IRF610PBF-ND" H 4150 4000 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=IRF610PBF-ND\">Link</a>" H 4150 4000 60  0001 C CNN "Link"
-	1    4150 4000
+P 4600 3800
+F 0 "Q102" H 4800 3875 50  0000 L CNN
+F 1 "IRF610" H 4800 3800 50  0000 L CNN
+F 2 "TO_SOT_Packages_THT:TO-220_Neutral123_Vertical_LargePads" H 4800 3725 50  0001 L CIN
+F 3 "" H 4600 3800 50  0001 L CNN
+F 4 "IRF610PBF-ND" H 4600 3800 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=IRF610PBF-ND\">Link</a>" H 4600 3800 60  0001 C CNN "Link"
+	1    4600 3800
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:CP1_Small C119
 U 1 1 5C11AA96
-P 3700 2900
-F 0 "C119" V 3800 2850 50  0000 L CNN
-F 1 "47uF low ESR" V 3550 2550 50  0000 L CNN
-F 2 "Capacitors_SMD:C_2917_7343_Metric_HandSoldering" H 3700 2900 50  0001 C CNN
-F 3 "https://content.kemet.com/datasheets/KEM_T2009_T495.pdf" H 3700 2900 50  0001 C CNN
-F 4 "399-3885-1-ND" H 3700 2900 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-3885-1-ND\">Link</a>" H 3700 2900 60  0001 C CNN "Link"
-	1    3700 2900
+P 4150 2700
+F 0 "C119" V 4250 2650 50  0000 L CNN
+F 1 "47uF low ESR" V 4000 2350 50  0000 L CNN
+F 2 "Capacitors_SMD:C_2917_7343_Metric_HandSoldering" H 4150 2700 50  0001 C CNN
+F 3 "https://content.kemet.com/datasheets/KEM_T2009_T495.pdf" H 4150 2700 50  0001 C CNN
+F 4 "399-3885-1-ND" H 4150 2700 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-3885-1-ND\">Link</a>" H 4150 2700 60  0001 C CNN "Link"
+	1    4150 2700
 	0    1    -1   0   
 $EndComp
 $Comp
@@ -642,145 +594,59 @@ $EndComp
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0124
 U 1 1 5A7DD6BD
-P 3000 3450
-F 0 "#PWR0124" H 3000 3200 50  0001 C CNN
-F 1 "GND_L8" H 3150 3300 50  0001 C CNN
-F 2 "" H 3000 3450 50  0000 C CNN
-F 3 "" H 3000 3450 50  0000 C CNN
-	1    3000 3450
+P 3450 3250
+F 0 "#PWR0124" H 3450 3000 50  0001 C CNN
+F 1 "GND_L8" H 3600 3100 50  0001 C CNN
+F 2 "" H 3450 3250 50  0000 C CNN
+F 3 "" H 3450 3250 50  0000 C CNN
+	1    3450 3250
 	0    -1   -1   0   
 $EndComp
 $Comp
 L Device:C_Small C117
 U 1 1 5A7D307D
-P 2900 3450
-F 0 "C117" V 2800 3100 50  0000 L CNN
-F 1 "22uF" V 2800 3350 50  0000 L CNN
-F 2 "Capacitors_SMD:C_1210_HandSoldering" H 2900 3450 50  0001 C CNN
-F 3 "" H 2900 3450 50  0000 C CNN
-F 4 "1276-3373-1-ND" H 2900 3450 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=1276-3373-1-ND\">Link</a>" H 2900 3450 60  0001 C CNN "Link"
-	1    2900 3450
+P 3350 3250
+F 0 "C117" V 3250 2900 50  0000 L CNN
+F 1 "22uF" V 3250 3150 50  0000 L CNN
+F 2 "Capacitors_SMD:C_1210_HandSoldering" H 3350 3250 50  0001 C CNN
+F 3 "" H 3350 3250 50  0000 C CNN
+F 4 "1276-3373-1-ND" H 3350 3250 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=1276-3373-1-ND\">Link</a>" H 3350 3250 60  0001 C CNN "Link"
+	1    3350 3250
 	0    -1   -1   0   
 $EndComp
 $Comp
 L FlexFox80-rescue:LMN200B01-ARDF-2-Band-MiniTx-rescue Q101
 U 1 1 5C64951A
-P 2800 2700
-F 0 "Q101" V 2500 2550 61  0000 L CNB
-F 1 "LMN400E01" V 2750 1750 61  0000 L CNB
-F 2 "TO_SOT_Packages_SMD:SOT-363_Handsolder" H 2815 2500 50  0001 L CNN
-F 3 "" H 2815 2500 50  0000 L CNN
-F 4 "LMN400E01-7" H 2800 2700 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=LMN400E01DICT-ND\">Link</a>" H 2800 2700 60  0001 C CNN "Link"
-	1    2800 2700
+P 3250 2500
+F 0 "Q101" V 2950 2350 61  0000 L CNB
+F 1 "LMN400E01" V 3200 1550 61  0000 L CNB
+F 2 "TO_SOT_Packages_SMD:SOT-363_Handsolder" H 3265 2300 50  0001 L CNN
+F 3 "" H 3265 2300 50  0000 L CNN
+F 4 "LMN400E01-7" H 3250 2500 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=LMN400E01DICT-ND\">Link</a>" H 3250 2500 60  0001 C CNN "Link"
+	1    3250 2500
 	0    1    1    0   
 $EndComp
-Wire Wire Line
-	9250 2700 9200 2700
-Wire Wire Line
-	8500 3500 8650 3500
-Text Notes 1750 3250 0    39   ~ 0
+Text Notes 2200 3050 0    39   ~ 0
 Optional voltage-dropping\ndiode for batteries > 12V.\nShort across if not used.
 Wire Wire Line
-	2300 3450 2700 3450
+	2750 3250 3150 3250
 $Comp
 L FlexFox80-rescue:ZENER-ARDF-2-Band-MiniTx-rescue D102
 U 1 1 5C71D9FE
-P 2700 3150
-F 0 "D102" H 2700 3250 50  0000 C CNN
-F 1 "4.7V" H 2700 3050 50  0000 C CNN
-F 2 "Diodes_SMD:SOD-123_Handsolder" H 2700 3150 50  0001 C CNN
-F 3 "" H 2700 3150 50  0000 C CNN
-F 4 "BZT52C4V7-13FDICT-ND" H 2700 3150 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=BZT52C4V7-13FDICT-ND\">Link</a>" H 2700 3150 60  0001 C CNN "Link"
-	1    2700 3150
+P 3150 2950
+F 0 "D102" H 3150 3050 50  0000 C CNN
+F 1 "4.7V" H 3150 2850 50  0000 C CNN
+F 2 "Diodes_SMD:SOD-123_Handsolder" H 3150 2950 50  0001 C CNN
+F 3 "" H 3150 2950 50  0000 C CNN
+F 4 "BZT52C4V7-13FDICT-ND" H 3150 2950 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=BZT52C4V7-13FDICT-ND\">Link</a>" H 3150 2950 60  0001 C CNN "Link"
+	1    3150 2950
 	0    1    1    0   
 $EndComp
 Wire Wire Line
-	2700 3350 2700 3450
-$Comp
-L Device:C_Small C502
-U 1 1 5C740B6F
-P 9800 3600
-F 0 "C502" H 9810 3670 50  0000 L CNN
-F 1 "np" H 9810 3520 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 9800 3600 50  0001 C CNN
-F 3 "" H 9800 3600 50  0000 C CNN
-F 4 "np" H 9800 3600 60  0001 C CNN "Part No."
-F 5 "np" H 9800 3600 60  0001 C CNN "Link"
-	1    9800 3600
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R R502
-U 1 1 5C740B77
-P 10100 3600
-F 0 "R502" V 10000 3600 50  0000 C CNN
-F 1 "0" V 10100 3600 50  0000 C CNN
-F 2 "Resistors_SMD:Zero_Ohm_0805_HandSoldering" H 10030 3600 50  0001 C CNN
-F 3 "" H 10100 3600 50  0000 C CNN
-F 4 "np" H 10100 3600 60  0001 C CNN "Part No."
-F 5 "np" H 10100 3600 60  0001 C CNN "Link"
-	1    10100 3600
-	-1   0    0    1   
-$EndComp
-Wire Wire Line
-	9650 3400 9800 3400
-Wire Wire Line
-	10100 3400 10100 3450
-Wire Wire Line
-	9650 3800 9800 3800
-Wire Wire Line
-	10100 3800 10100 3750
-Wire Wire Line
-	9800 3500 9800 3400
-Connection ~ 9800 3400
-Wire Wire Line
-	9800 3700 9800 3800
-Connection ~ 9800 3800
-Wire Wire Line
-	9650 3400 9650 3500
-Wire Wire Line
-	9650 3700 9650 3800
-Connection ~ 10100 3800
-$Comp
-L FlexFox80-rescue:GND_L1-ARDF-2-Band-MiniTx-rescue #PWR0174
-U 1 1 5C7426BB
-P 10200 3800
-F 0 "#PWR0174" H 10200 3550 50  0001 C CNN
-F 1 "GND_L1" H 10200 3650 50  0000 C CNN
-F 2 "" H 10200 3800 50  0000 C CNN
-F 3 "" H 10200 3800 50  0000 C CNN
-	1    10200 3800
-	0    -1   -1   0   
-$EndComp
-$Comp
-L FlexFox80-rescue:CONN_01X01-ARDF-2-Band-MiniTx-rescue J503
-U 1 1 5C743B2D
-P 9800 3200
-F 0 "J503" H 9800 3300 50  0000 C CNN
-F 1 "DET" V 9900 3200 50  0001 C CNN
-F 2 "Pin_Headers:Pin_Header_Straight_1x01_circle_pad" H 9800 3200 50  0001 C CNN
-F 3 "" H 9800 3200 50  0001 C CNN
-F 4 "np" H 9800 3200 60  0001 C CNN "Part No."
-F 5 "np" H 9800 3200 60  0001 C CNN "Link"
-	1    9800 3200
-	0    -1   -1   0   
-$EndComp
-$Comp
-L FlexFox80-rescue:CONN_01X01-ARDF-2-Band-MiniTx-rescue J504
-U 1 1 5C743CAE
-P 9800 4000
-F 0 "J504" H 9800 4100 50  0000 C CNN
-F 1 "GND" V 9900 4000 50  0001 C CNN
-F 2 "Pin_Headers:Pin_Header_Straight_1x01" H 9800 4000 50  0001 C CNN
-F 3 "" H 9800 4000 50  0001 C CNN
-F 4 "np" H 9800 4000 60  0001 C CNN "Part No."
-F 5 "np" H 9800 4000 60  0001 C CNN "Link"
-	1    9800 4000
-	0    1    1    0   
-$EndComp
+	3150 3150 3150 3250
 $Comp
 L FlexFox80-rescue:GND_L1-ARDF-2-Band-MiniTx-rescue #PWR0104
 U 1 1 5C78B16C
@@ -825,240 +691,59 @@ F 3 "" H 1750 7500 50  0000 C CNN
 	1    1750 7500
 	1    0    0    -1  
 $EndComp
-Text Notes 9650 3000 0    39   ~ 0
-Strain Relief Board #2
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0156
 U 1 1 5CB334EC
-P 7900 3500
-F 0 "#PWR0156" H 7900 3250 50  0001 C CNN
-F 1 "GND_L8" H 7900 3350 50  0001 C CNN
-F 2 "" H 7900 3500 50  0000 C CNN
-F 3 "" H 7900 3500 50  0000 C CNN
-	1    7900 3500
+P 8350 2350
+F 0 "#PWR0156" H 8350 2100 50  0001 C CNN
+F 1 "GND_L8" H 8350 2200 50  0001 C CNN
+F 2 "" H 8350 2350 50  0000 C CNN
+F 3 "" H 8350 2350 50  0000 C CNN
+	1    8350 2350
 	0    1    1    0   
 $EndComp
-Connection ~ 8650 3500
 $Comp
 L FlexFox80-rescue:TVS-ARDF-2-Band-MiniTx-rescue D104
 U 1 1 5CB36EAB
-P 8200 3500
-F 0 "D104" H 8150 3750 50  0000 C CNN
-F 1 "5V" H 8150 3650 50  0000 C CNN
-F 2 "Diodes_SMD:SOD-323F_Handsolder" H 8200 3500 50  0001 C CNN
-F 3 "" H 8200 3500 50  0000 C CNN
-F 4 "641-1219-1-ND" H 8200 3500 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/product-detail/en/comchip-technology/CPDFR5V0/641-1219-1-ND/1678637\">Link</a>" H 8200 3500 60  0001 C CNN "Link"
-	1    8200 3500
+P 8650 2350
+F 0 "D104" H 8600 2600 50  0000 C CNN
+F 1 "5V" H 8600 2500 50  0000 C CNN
+F 2 "Diodes_SMD:SOD-323F_Handsolder" H 8650 2350 50  0001 C CNN
+F 3 "" H 8650 2350 50  0000 C CNN
+F 4 "641-1219-1-ND" H 8650 2350 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/product-detail/en/comchip-technology/CPDFR5V0/641-1219-1-ND/1678637\">Link</a>" H 8650 2350 60  0001 C CNN "Link"
+	1    8650 2350
 	-1   0    0    -1  
 $EndComp
 $Comp
 L FlexFox80-rescue:INDUCTOR_CT-ARDF-2-Band-MiniTx-rescue L104
 U 1 1 5CB66258
-P 4250 3600
-F 0 "L104" V 4400 3600 50  0000 C CNN
-F 1 "9T #24 Bifilar T50-43" V 4400 3500 50  0001 C CNN
-F 2 "Inductors:Toroid_T-50A_TH_BF_CT_Vertical" H 4250 3600 50  0001 C CNN
-F 3 "" H 4250 3600 50  0000 C CNN
-F 4 "Amidon FT50A-43" H 4250 3600 60  0001 C CNN "Part No."
-F 5 "<a href=\"http://www.amidoncorp.com/ft-50A-43/\">Link</a>" H 4250 3600 60  0001 C CNN "Link"
-	1    4250 3600
+P 4700 3400
+F 0 "L104" V 4850 3400 50  0000 C CNN
+F 1 "9T #24 Bifilar T50-43" V 4850 3300 50  0001 C CNN
+F 2 "Inductors:Toroid_T-50A_TH_BF_CT_Vertical" H 4700 3400 50  0001 C CNN
+F 3 "" H 4700 3400 50  0000 C CNN
+F 4 "Amidon FT50A-43" H 4700 3400 60  0001 C CNN "Part No."
+F 5 "<a href=\"http://www.amidoncorp.com/ft-50A-43/\">Link</a>" H 4700 3400 60  0001 C CNN "Link"
+	1    4700 3400
 	0    -1   -1   0   
 $EndComp
 Wire Wire Line
-	3900 3600 3950 3600
+	4350 3400 4400 3400
 Wire Wire Line
-	4250 3700 4250 3800
+	4700 3500 4700 3600
 Wire Wire Line
-	4550 3600 5000 3600
+	5000 3400 5450 3400
 Wire Wire Line
-	8850 3200 8650 3200
-Connection ~ 8650 3200
-Text Notes 5550 4150 0    39   ~ 0
+	9150 2350 8950 2350
+Connection ~ 8950 2350
+Text Notes 6000 3950 0    39   ~ 0
 L106 & L108:\n20T (46 cm) #24 T60-2 70% Coverage
-Text Notes 4450 3150 0    39   ~ 0
+Text Notes 4900 2950 0    39   ~ 0
 L104:\n9T (24 cm) #24 Bifilar FT-50A-43 or\n6T #24 Bifilar FT-50-77
 Wire Wire Line
-	7250 3450 7250 3600
-Connection ~ 7250 3600
-$Comp
-L Device:C_Small C503
-U 1 1 5CE67389
-P 5600 7250
-F 0 "C503" H 5610 7320 50  0000 L CNN
-F 1 "np" H 5610 7170 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 5600 7250 50  0001 C CNN
-F 3 "" H 5600 7250 50  0000 C CNN
-F 4 "np" H 5600 7250 60  0001 C CNN "Part No."
-F 5 "np" H 5600 7250 60  0001 C CNN "Link"
-	1    5600 7250
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R R503
-U 1 1 5CE67391
-P 5900 7250
-F 0 "R503" V 5800 7250 50  0000 C CNN
-F 1 "0" V 5900 7250 50  0000 C CNN
-F 2 "Resistors_SMD:Zero_Ohm_0805_HandSoldering" H 5830 7250 50  0001 C CNN
-F 3 "" H 5900 7250 50  0000 C CNN
-F 4 "np" H 5900 7250 60  0001 C CNN "Part No."
-F 5 "np" H 5900 7250 60  0001 C CNN "Link"
-	1    5900 7250
-	-1   0    0    1   
-$EndComp
-Wire Wire Line
-	5900 7050 5900 7100
-Wire Wire Line
-	5900 7450 5900 7400
-Wire Wire Line
-	5600 7150 5600 7050
-Connection ~ 5600 7050
-Wire Wire Line
-	5600 7350 5600 7450
-Connection ~ 5600 7450
-Connection ~ 5900 7450
-$Comp
-L FlexFox80-rescue:CONN_01X01-ARDF-2-Band-MiniTx-rescue J505
-U 1 1 5CE673AA
-P 5600 6850
-F 0 "J505" H 5600 6950 50  0000 C CNN
-F 1 "DET" V 5700 6850 50  0001 C CNN
-F 2 "Pin_Headers:Pin_Header_Straight_1x01_circle_pad" H 5600 6850 50  0001 C CNN
-F 3 "" H 5600 6850 50  0001 C CNN
-F 4 "np" H 5600 6850 60  0001 C CNN "Part No."
-F 5 "np" H 5600 6850 60  0001 C CNN "Link"
-	1    5600 6850
-	0    -1   -1   0   
-$EndComp
-$Comp
-L FlexFox80-rescue:CONN_01X01-ARDF-2-Band-MiniTx-rescue J506
-U 1 1 5CE673B2
-P 5600 7650
-F 0 "J506" H 5600 7750 50  0000 C CNN
-F 1 "GND" V 5700 7650 50  0001 C CNN
-F 2 "Pin_Headers:Pin_Header_Straight_1x01" H 5600 7650 50  0001 C CNN
-F 3 "" H 5600 7650 50  0001 C CNN
-F 4 "np" H 5600 7650 60  0001 C CNN "Part No."
-F 5 "np" H 5600 7650 60  0001 C CNN "Link"
-	1    5600 7650
-	0    1    1    0   
-$EndComp
-Text Notes 5500 6750 0    39   ~ 0
-Strain Relief Board #3
-Wire Wire Line
-	5600 7050 5900 7050
-Wire Wire Line
-	5600 7450 5900 7450
-$Comp
-L FlexFox80-rescue:GND_L2-ARDF-2-Band-MiniTx-rescue #PWR0145
-U 1 1 5CE67DE1
-P 6000 7450
-F 0 "#PWR0145" H 6000 7200 50  0001 C CNN
-F 1 "GND_L2" H 6000 7300 50  0000 C CNN
-F 2 "" H 6000 7450 50  0000 C CNN
-F 3 "" H 6000 7450 50  0000 C CNN
-	1    6000 7450
-	0    -1   -1   0   
-$EndComp
-$Comp
-L Device:C_Small C504
-U 1 1 5CE68F7C
-P 6350 7250
-F 0 "C504" H 6360 7320 50  0000 L CNN
-F 1 "np" H 6360 7170 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 6350 7250 50  0001 C CNN
-F 3 "" H 6350 7250 50  0000 C CNN
-F 4 "np" H 6350 7250 60  0001 C CNN "Part No."
-F 5 "np" H 6350 7250 60  0001 C CNN "Link"
-	1    6350 7250
-	1    0    0    -1  
-$EndComp
-$Comp
-L Device:R R504
-U 1 1 5CE68F84
-P 6650 7250
-F 0 "R504" V 6550 7250 50  0000 C CNN
-F 1 "0" V 6650 7250 50  0000 C CNN
-F 2 "Resistors_SMD:Zero_Ohm_0805_HandSoldering" H 6580 7250 50  0001 C CNN
-F 3 "" H 6650 7250 50  0000 C CNN
-F 4 "np" H 6650 7250 60  0001 C CNN "Part No."
-F 5 "np" H 6650 7250 60  0001 C CNN "Link"
-	1    6650 7250
-	-1   0    0    1   
-$EndComp
-Wire Wire Line
-	6650 7050 6650 7100
-Wire Wire Line
-	6650 7450 6650 7400
-Wire Wire Line
-	6350 7150 6350 7050
-Connection ~ 6350 7050
-Wire Wire Line
-	6350 7350 6350 7450
-Connection ~ 6350 7450
-Connection ~ 6650 7450
-$Comp
-L FlexFox80-rescue:CONN_01X01-ARDF-2-Band-MiniTx-rescue J507
-U 1 1 5CE68F93
-P 6350 6850
-F 0 "J507" H 6350 6950 50  0000 C CNN
-F 1 "DET" V 6450 6850 50  0001 C CNN
-F 2 "Pin_Headers:Pin_Header_Straight_1x01_circle_pad" H 6350 6850 50  0001 C CNN
-F 3 "" H 6350 6850 50  0001 C CNN
-F 4 "np" H 6350 6850 60  0001 C CNN "Part No."
-F 5 "np" H 6350 6850 60  0001 C CNN "Link"
-	1    6350 6850
-	0    -1   -1   0   
-$EndComp
-$Comp
-L FlexFox80-rescue:CONN_01X01-ARDF-2-Band-MiniTx-rescue J508
-U 1 1 5CE68F9B
-P 6350 7650
-F 0 "J508" H 6350 7750 50  0000 C CNN
-F 1 "GND" V 6450 7650 50  0001 C CNN
-F 2 "Pin_Headers:Pin_Header_Straight_1x01" H 6350 7650 50  0001 C CNN
-F 3 "" H 6350 7650 50  0001 C CNN
-F 4 "np" H 6350 7650 60  0001 C CNN "Part No."
-F 5 "np" H 6350 7650 60  0001 C CNN "Link"
-	1    6350 7650
-	0    1    1    0   
-$EndComp
-Text Notes 6250 6750 0    39   ~ 0
-Strain Relief Board #4
-Wire Wire Line
-	6350 7050 6650 7050
-Wire Wire Line
-	6350 7450 6650 7450
-$Comp
-L FlexFox80-rescue:GND_L3-ARDF-2-Band-MiniTx-rescue #PWR0149
-U 1 1 5CE692BA
-P 6750 7450
-F 0 "#PWR0149" H 6750 7200 50  0001 C CNN
-F 1 "GND_L3" H 6750 7300 50  0000 C CNN
-F 2 "" H 6750 7450 50  0000 C CNN
-F 3 "" H 6750 7450 50  0000 C CNN
-	1    6750 7450
-	0    -1   -1   0   
-$EndComp
-Wire Notes Line
-	5450 7750 6950 7750
-Wire Notes Line
-	5450 6750 6950 6750
-Wire Notes Line
-	5450 6750 5450 7750
-Wire Notes Line
-	6200 6750 6200 7750
-Wire Notes Line
-	6950 6750 6950 7750
-Wire Notes Line
-	9600 3100 10400 3100
-Wire Notes Line
-	9600 4100 10400 4100
-Wire Notes Line
-	10400 4100 10400 3100
-Wire Notes Line
-	9600 3100 9600 4100
+	7700 3250 7700 3400
+Connection ~ 7700 3400
 $Comp
 L FlexFox80-rescue:GND_L2-ARDF-2-Band-MiniTx-rescue #PWR0108
 U 1 1 5CE8DCED
@@ -1106,103 +791,97 @@ $EndComp
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0120
 U 1 1 5A7DF174
-P 2700 4450
-F 0 "#PWR0120" H 2700 4200 50  0001 C CNN
-F 1 "GND_L8" H 2700 4300 50  0001 C CNN
-F 2 "" H 2700 4450 50  0000 C CNN
-F 3 "" H 2700 4450 50  0000 C CNN
-	1    2700 4450
+P 3150 4250
+F 0 "#PWR0120" H 3150 4000 50  0001 C CNN
+F 1 "GND_L8" H 3150 4100 50  0001 C CNN
+F 2 "" H 3150 4250 50  0000 C CNN
+F 3 "" H 3150 4250 50  0000 C CNN
+	1    3150 4250
 	1    0    0    -1  
 $EndComp
-NoConn ~ 3000 4250
+NoConn ~ 3450 4050
 $Comp
 L FlexFox80-rescue:D_Schottky_x2_KCom_Dual-ARDF-2-Band-MiniTx-rescue D301
 U 2 1 5F8505B7
-P 8650 2950
-F 0 "D301" H 8650 3100 50  0000 C CNN
-F 1 "D_Schottky_x2_KCom_Dual" H 8650 3050 50  0001 C CNN
-F 2 "TO_SOT_Packages_SMD:SOT-363_Handsolder" H 8650 2950 50  0001 C CNN
-F 3 "" H 8650 2950 50  0000 C CNN
-F 4 "BAT54CDW-FDICT-ND" H 8650 2950 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=BAT54CDW-FDICT-ND\">Link</a>" H 8650 2950 60  0001 C CNN "Link"
-	2    8650 2950
+P 8950 2100
+F 0 "D301" H 8950 2250 50  0000 C CNN
+F 1 "D_Schottky_x2_KCom_Dual" H 8950 2200 50  0001 C CNN
+F 2 "TO_SOT_Packages_SMD:SOT-363_Handsolder" H 8950 2100 50  0001 C CNN
+F 3 "" H 8950 2100 50  0000 C CNN
+F 4 "BAT54CDW-FDICT-ND" H 8950 2100 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=BAT54CDW-FDICT-ND\">Link</a>" H 8950 2100 60  0001 C CNN "Link"
+	2    8950 2100
 	1    0    0    -1  
 $EndComp
-NoConn ~ 8400 2950
+NoConn ~ 8700 2100
 Wire Wire Line
-	8650 3100 8650 3200
-$Comp
-L Device:Jumper_NO_Small J102
-U 1 1 5F871998
-P 8550 3200
-F 0 "J102" H 8550 3280 50  0000 C CNN
-F 1 "Jumper_NO_Small" H 8560 3140 50  0001 C CNN
-F 2 "Wire_Connections_Bridges:Solder-Jumper-NO-SMD-Pad_Small" H 8550 3200 50  0001 C CNN
-F 3 "" H 8550 3200 50  0000 C CNN
-F 4 "np" H 8550 3200 60  0001 C CNN "Part No."
-F 5 "np" H 8550 3200 60  0001 C CNN "Link"
-	1    8550 3200
-	1    0    0    -1  
-$EndComp
-$Comp
-L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0160
-U 1 1 5F871B53
-P 8450 3200
-F 0 "#PWR0160" H 8450 2950 50  0001 C CNN
-F 1 "GND_L8" H 8450 3050 50  0001 C CNN
-F 2 "" H 8450 3200 50  0000 C CNN
-F 3 "" H 8450 3200 50  0000 C CNN
-	1    8450 3200
-	0    1    1    0   
-$EndComp
+	8950 2250 8950 2350
 Wire Wire Line
-	3900 2900 4000 2900
+	4350 2700 4450 2700
 Wire Wire Line
-	3900 2900 3900 3600
+	4350 2700 4350 3400
 Wire Wire Line
-	6050 3600 6050 3700
+	6500 3400 6500 3500
 Wire Wire Line
-	6050 3600 6400 3600
+	6500 3400 6850 3400
 Wire Wire Line
-	7050 3600 7250 3600
+	7500 3400 7700 3400
 Wire Wire Line
-	7050 3600 7050 3700
+	7500 3400 7500 3500
 Wire Wire Line
-	5350 3600 5450 3600
+	5800 3400 5900 3400
 Wire Wire Line
-	5350 3600 5350 3700
+	5800 3400 5800 3500
 Wire Wire Line
 	850  7450 950  7450
 Wire Wire Line
 	850  7350 850  7450
 Wire Wire Line
-	2700 3450 2800 3450
+	3150 3250 3250 3250
 Wire Wire Line
-	2700 3450 2700 3800
+	3150 3250 3150 3600
 Wire Wire Line
-	2700 3800 2700 3850
+	3150 3600 3150 3650
 Wire Wire Line
-	2200 4050 2400 4050
+	2650 3850 2850 3850
 Wire Wire Line
-	3500 4050 3950 4050
+	3950 3850 4400 3850
 Wire Wire Line
-	6400 3600 6450 3600
+	6850 3400 6900 3400
 Wire Wire Line
-	9200 2700 9200 2950
+	8950 2350 8950 2900
+$Comp
+L Connector:DIN-5_180degree J101
+U 1 1 61BDEA6F
+P 8500 3000
+F 0 "J101" H 8650 3250 50  0000 C CNN
+F 1 "DIN-5_180degree" H 8500 2634 50  0001 C CNN
+F 2 "" H 8500 3000 50  0001 C CNN
+F 3 "http://www.mouser.com/ds/2/18/40_c091_abd_e-75918.pdf" H 8500 3000 50  0001 C CNN
+	1    8500 3000
+	1    0    0    -1  
+$EndComp
+NoConn ~ 8200 3000
+$Comp
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0145
+U 1 1 61C04BAD
+P 8500 2700
+F 0 "#PWR0145" H 8500 2450 50  0001 C CNN
+F 1 "GND_L8" H 8500 2550 50  0001 C CNN
+F 2 "" H 8500 2700 50  0000 C CNN
+F 3 "" H 8500 2700 50  0000 C CNN
+	1    8500 2700
+	-1   0    0    1   
+$EndComp
 Wire Wire Line
-	9800 3400 10100 3400
+	8950 3400 8950 3000
 Wire Wire Line
-	9800 3800 10100 3800
+	8950 3000 8800 3000
 Wire Wire Line
-	10100 3800 10200 3800
+	7700 3400 8950 3400
 Wire Wire Line
-	8650 3500 8700 3500
+	8800 2900 8950 2900
+NoConn ~ 8200 2900
 Wire Wire Line
-	8650 3200 8650 3500
-Wire Wire Line
-	7250 3600 8700 3600
-Wire Wire Line
-	5900 7450 6000 7450
-Wire Wire Line
-	6650 7450 6750 7450
+	9200 2100 9550 2100
 $EndSCHEMATC
