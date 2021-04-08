@@ -752,14 +752,10 @@ Wire Wire Line
 	11100 10200 11350 10200
 Wire Wire Line
 	11550 9850 11550 10050
-Wire Wire Line
-	7950 5450 7800 5450
 Text GLabel 7950 3950 2    39   Input ~ 0
 TX_BATTERY_VOLTAGE
 Text GLabel 7950 4050 2    39   Input ~ 0
 TX_PA_VOLTAGE
-Wire Wire Line
-	7950 5550 7800 5550
 Text GLabel 7950 6750 2    39   Output ~ 0
 MAIN_PWR_ENABLE
 Text GLabel 7950 6850 2    39   Output ~ 0
@@ -893,19 +889,6 @@ Wire Wire Line
 	11600 10050 11550 10050
 Connection ~ 11550 10050
 $Comp
-L FlexFox80-rescue:CONN_01X03-ARDF-2-Band-MiniTx-rescue TP301
-U 1 1 5A0894A0
-P 10550 3800
-F 0 "TP301" V 10650 3500 50  0000 C CNN
-F 1 "I2C" V 10650 3800 50  0000 C CNN
-F 2 "Pin_Headers:Pin_Header_Straight_1x03" H 10550 3800 50  0001 C CNN
-F 3 "" H 10550 3800 50  0001 C CNN
-F 4 "np" H 10550 3800 60  0001 C CNN "Part No."
-F 5 "np" H 10550 3800 60  0001 C CNN "Link"
-	1    10550 3800
-	0    1    -1   0   
-$EndComp
-$Comp
 L power:GNDD #PWR0139
 U 1 1 5A0895E4
 P 10650 4000
@@ -986,7 +969,7 @@ Text GLabel 12600 2250 1    39   Output ~ 0
 CLK1
 Text GLabel 12500 2250 1    39   Output ~ 0
 CLK0
-Text GLabel 7950 5650 2    39   Output ~ 0
+Text GLabel 7950 6550 2    39   Output ~ 0
 HF_ENABLE
 $Comp
 L FlexFox80-rescue:Battery_Single_Cell-ARDF-2-Band-MiniTx-rescue BT301
@@ -1641,13 +1624,13 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=1276-1763-1-ND\">Lin
 	1    15450 6950
 	-1   0    0    1   
 $EndComp
-Text GLabel 8050 5500 2    39   Input ~ 0
+Text GLabel 8350 3700 2    39   Input ~ 0
 80M_ANTENNA_DETECT
 Wire Wire Line
-	8050 5500 7950 5500
+	8350 3700 8250 3700
 Wire Wire Line
-	7950 5450 7950 5500
-Connection ~ 7950 5500
+	8250 3650 8250 3700
+Connection ~ 8250 3700
 Text GLabel 12500 3350 2    39   Output ~ 0
 CLK2
 $Comp
@@ -1880,7 +1863,7 @@ Wire Wire Line
 Wire Wire Line
 	13500 7750 13800 7750
 Wire Wire Line
-	7950 5500 7950 5550
+	8250 3700 8250 3750
 Wire Wire Line
 	2450 3500 2750 3500
 Wire Wire Line
@@ -1995,8 +1978,6 @@ Wire Wire Line
 Wire Wire Line
 	7800 6850 7950 6850
 Wire Wire Line
-	7800 5650 7950 5650
-Wire Wire Line
 	5600 4850 5450 4850
 Connection ~ 5450 4850
 Text GLabel 5550 5550 0    39   Input ~ 0
@@ -2034,20 +2015,20 @@ PROC_HT_AUDIO_IN
 Wire Wire Line
 	7950 3850 7800 3850
 Text Label 7500 3950 0    39   ~ 0
-ADC4
+ADC5
 Entry Wire Line
 	7700 6050 7800 5950
 NoConn ~ 7800 4750
 Text Label 7500 3850 0    39   ~ 0
-ADC3
+ADC4
 Text Label 7800 4150 0    39   ~ 0
 ADC7
 Text Label 7800 4050 0    39   ~ 0
 ADC6
 Text Label 7800 3950 0    39   ~ 0
-ADC4
+ADC5
 Text Label 7800 3850 0    39   ~ 0
-ADC3
+ADC4
 Text Label 7800 6150 0    39   ~ 0
 RXD0
 Text Label 7800 6250 0    39   ~ 0
@@ -2085,9 +2066,9 @@ Wire Wire Line
 Wire Wire Line
 	9000 5350 9000 4350
 Wire Wire Line
-	9000 4350 9600 4350
+	9000 4350 9250 4350
 Wire Wire Line
-	8900 4250 9500 4250
+	8900 4250 9150 4250
 Wire Wire Line
 	9500 4550 9500 4250
 Connection ~ 9500 4250
@@ -2110,8 +2091,6 @@ Text Label 7500 3550 0    39   ~ 0
 PA1
 Text Label 7500 3650 0    39   ~ 0
 PA2
-Text Label 7500 3750 0    39   ~ 0
-PA3
 Text GLabel 7950 4350 2    39   Output ~ 0
 PROC_PTT_OUT
 Wire Wire Line
@@ -2147,8 +2126,6 @@ F 3 "" H 5200 5850 50  0000 C CNN
 $EndComp
 Wire Wire Line
 	5500 5950 5600 5950
-NoConn ~ 7800 3750
-NoConn ~ 7800 6550
 $Comp
 L Connector:DB9_Female J301
 U 1 1 619A55E4
@@ -2192,34 +2169,34 @@ NoConn ~ 7800 4450
 $Comp
 L Device:LED_ALT D304
 U 1 1 61B9E05F
-P 8550 2950
-F 0 "D304" H 8550 2850 50  0000 C CNN
-F 1 "GREEN" H 8600 3050 50  0000 C CNN
-F 2 "" H 8550 2950 50  0001 C CNN
-F 3 "~" H 8550 2950 50  0001 C CNN
-	1    8550 2950
+P 10450 5550
+F 0 "D304" H 10450 5450 50  0000 C CNN
+F 1 "GREEN" H 10500 5650 50  0000 C CNN
+F 2 "" H 10450 5550 50  0001 C CNN
+F 3 "~" H 10450 5550 50  0001 C CNN
+	1    10450 5550
 	-1   0    0    1   
 $EndComp
 $Comp
 L Device:LED_ALT D305
 U 1 1 61BA0B72
-P 8550 3250
-F 0 "D305" H 8550 3350 50  0000 C CNN
-F 1 "RED" H 8600 3150 50  0000 C CNN
-F 2 "" H 8550 3250 50  0001 C CNN
-F 3 "~" H 8550 3250 50  0001 C CNN
-	1    8550 3250
+P 10450 5850
+F 0 "D305" H 10450 5950 50  0000 C CNN
+F 1 "RED" H 10500 5750 50  0000 C CNN
+F 2 "" H 10450 5850 50  0001 C CNN
+F 3 "~" H 10450 5850 50  0001 C CNN
+	1    10450 5850
 	-1   0    0    1   
 $EndComp
 $Comp
 L Switch:SPST_small SW301
 U 1 1 61BA254A
-P 8350 2700
-F 0 "SW301" H 8350 2940 50  0000 C CNN
-F 1 "Sync" H 8350 2849 50  0000 C CNN
-F 2 "" H 8350 2700 50  0000 C CNN
-F 3 "" H 8350 2700 50  0000 C CNN
-	1    8350 2700
+P 10250 5300
+F 0 "SW301" H 10250 5540 50  0000 C CNN
+F 1 "Sync" H 10250 5449 50  0000 C CNN
+F 2 "" H 10250 5300 50  0000 C CNN
+F 3 "" H 10250 5300 50  0000 C CNN
+	1    10250 5300
 	1    0    0    -1  
 $EndComp
 Text GLabel 8400 8950 0    39   Input ~ 0
@@ -2230,78 +2207,145 @@ NoConn ~ 8400 9150
 $Comp
 L Device:R R301
 U 1 1 61C7B255
-P 8250 2950
-F 0 "R301" V 8330 2950 50  0000 C CNN
-F 1 "10k" V 8250 2950 50  0000 C CNN
-F 2 "Resistors_SMD:R_0805_HandSoldering" H 8180 2950 50  0001 C CNN
-F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 8250 2950 50  0001 C CNN
-F 4 "311-10.0KCRCT-ND" H 8250 2950 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-10.0KCRCT-ND\">Link</a>" H 8250 2950 60  0001 C CNN "Link"
-	1    8250 2950
+P 10150 5550
+F 0 "R301" V 10230 5550 50  0000 C CNN
+F 1 "470" V 10150 5550 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 10080 5550 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 10150 5550 50  0001 C CNN
+F 4 "311-10.0KCRCT-ND" H 10150 5550 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-10.0KCRCT-ND\">Link</a>" H 10150 5550 60  0001 C CNN "Link"
+	1    10150 5550
 	0    1    1    0   
 $EndComp
 $Comp
 L Device:R R302
 U 1 1 61C8FCFC
-P 8250 3250
-F 0 "R302" V 8330 3250 50  0000 C CNN
-F 1 "10k" V 8250 3250 50  0000 C CNN
-F 2 "Resistors_SMD:R_0805_HandSoldering" H 8180 3250 50  0001 C CNN
-F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 8250 3250 50  0001 C CNN
-F 4 "311-10.0KCRCT-ND" H 8250 3250 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-10.0KCRCT-ND\">Link</a>" H 8250 3250 60  0001 C CNN "Link"
-	1    8250 3250
+P 10150 5850
+F 0 "R302" V 10230 5850 50  0000 C CNN
+F 1 "470" V 10150 5850 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 10080 5850 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 10150 5850 50  0001 C CNN
+F 4 "311-10.0KCRCT-ND" H 10150 5850 60  0001 C CNN "Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-10.0KCRCT-ND\">Link</a>" H 10150 5850 60  0001 C CNN "Link"
+	1    10150 5850
 	0    1    1    0   
 $EndComp
 $Comp
 L power:GNDD #PWR?
 U 1 1 61CAFDE2
-P 8600 2700
-F 0 "#PWR?" H 8600 2450 50  0001 C CNN
-F 1 "GNDD" H 8600 2550 50  0000 C CNN
-F 2 "" H 8600 2700 50  0000 C CNN
-F 3 "" H 8600 2700 50  0000 C CNN
-	1    8600 2700
+P 10500 5300
+F 0 "#PWR?" H 10500 5050 50  0001 C CNN
+F 1 "GNDD" H 10500 5150 50  0000 C CNN
+F 2 "" H 10500 5300 50  0000 C CNN
+F 3 "" H 10500 5300 50  0000 C CNN
+	1    10500 5300
 	0    -1   -1   0   
 $EndComp
 $Comp
 L power:GNDD #PWR?
 U 1 1 61CB2436
-P 8700 2950
-F 0 "#PWR?" H 8700 2700 50  0001 C CNN
-F 1 "GNDD" H 8700 2800 50  0000 C CNN
-F 2 "" H 8700 2950 50  0000 C CNN
-F 3 "" H 8700 2950 50  0000 C CNN
-	1    8700 2950
+P 10600 5550
+F 0 "#PWR?" H 10600 5300 50  0001 C CNN
+F 1 "GNDD" H 10600 5400 50  0000 C CNN
+F 2 "" H 10600 5550 50  0000 C CNN
+F 3 "" H 10600 5550 50  0000 C CNN
+	1    10600 5550
 	0    -1   -1   0   
 $EndComp
 $Comp
 L power:GNDD #PWR?
 U 1 1 61CB3557
-P 8700 3250
-F 0 "#PWR?" H 8700 3000 50  0001 C CNN
-F 1 "GNDD" H 8700 3100 50  0000 C CNN
-F 2 "" H 8700 3250 50  0000 C CNN
-F 3 "" H 8700 3250 50  0000 C CNN
-	1    8700 3250
+P 10600 5850
+F 0 "#PWR?" H 10600 5600 50  0001 C CNN
+F 1 "GNDD" H 10600 5700 50  0000 C CNN
+F 2 "" H 10600 5850 50  0000 C CNN
+F 3 "" H 10600 5850 50  0000 C CNN
+	1    10600 5850
 	0    -1   -1   0   
 $EndComp
 Wire Wire Line
-	7800 3450 7800 2700
+	9700 5300 10000 5300
 Wire Wire Line
-	7800 2700 8100 2700
+	7800 6550 7950 6550
 Wire Wire Line
-	7800 3550 7900 3550
+	7800 5450 9700 5450
 Wire Wire Line
-	7900 3550 7900 2950
+	9700 5450 9700 5300
 Wire Wire Line
-	7900 2950 8100 2950
+	7800 5550 10000 5550
 Wire Wire Line
-	7800 3650 8000 3650
+	9700 5650 9700 5850
 Wire Wire Line
-	8000 3650 8000 3250
+	7800 5650 9700 5650
 Wire Wire Line
-	8000 3250 8100 3250
+	9700 5850 10000 5850
+Wire Wire Line
+	7800 3650 8250 3650
+Wire Wire Line
+	7800 3750 8250 3750
+Text Label 7800 3750 0    39   ~ 0
+ADC3
+Text Label 7500 3750 0    39   ~ 0
+ADC3
+Text Label 7800 3650 0    39   ~ 0
+PA2
+NoConn ~ 7800 3450
+NoConn ~ 7800 3550
+$Comp
+L power:GNDD #PWR?
+U 1 1 60878579
+P 9450 4000
+F 0 "#PWR?" H 9450 3750 50  0001 C CNN
+F 1 "GNDD" H 9600 3850 50  0001 C CNN
+F 2 "" H 9450 4000 50  0000 C CNN
+F 3 "" H 9450 4000 50  0000 C CNN
+	1    9450 4000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9150 4000 9150 4250
+Wire Wire Line
+	9250 4000 9250 4350
+Connection ~ 9150 4250
+Wire Wire Line
+	9150 4250 9500 4250
+Connection ~ 9250 4350
+Wire Wire Line
+	9250 4350 9600 4350
+NoConn ~ 5400 6300
+$Comp
+L FlexFox80-rescue:Vproc-ARDF-2-Band-MiniTx-rescue #PWR?
+U 1 1 608A7865
+P 9350 4000
+F 0 "#PWR?" H 9350 3850 50  0001 C CNN
+F 1 "Vproc" H 9350 4150 50  0000 C CNN
+F 2 "" H 9350 4000 50  0000 C CNN
+F 3 "" H 9350 4000 50  0000 C CNN
+	1    9350 4000
+	-1   0    0    1   
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x04 TP302
+U 1 1 608ADA8E
+P 9350 3800
+F 0 "TP302" V 9550 3650 50  0000 L CNN
+F 1 "I2C0" V 9450 3650 50  0000 L CNN
+F 2 "" H 9350 3800 50  0001 C CNN
+F 3 "~" H 9350 3800 50  0001 C CNN
+	1    9350 3800
+	0    1    -1   0   
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x03 TP301
+U 1 1 608CC2B9
+P 10550 3800
+F 0 "TP301" V 10750 3700 50  0000 L CNN
+F 1 "I2C1" V 10650 3700 50  0000 L CNN
+F 2 "" H 10550 3800 50  0001 C CNN
+F 3 "~" H 10550 3800 50  0001 C CNN
+	1    10550 3800
+	0    1    -1   0   
+$EndComp
 Wire Bus Line
 	7700 3250 7700 7050
 $EndSCHEMATC
