@@ -60,7 +60,7 @@ F 0 "L106" H 6150 3500 50  0000 C CNN
 F 1 "2.7uH" H 6150 3350 50  0000 C CNN
 F 2 "Inductors:Toroid_T-60_2TH_Vertical" H 6150 3400 50  0001 C CNN
 F 3 "" H 6150 3400 50  0001 C CNN
-F 4 "T60-2" H 6150 3400 60  0001 C CNN "Part No."
+F 4 "T60-2 (Amidon)" H 6150 3400 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"http://www.amidoncorp.com/t60-2/\">Link</a>" H 6150 3400 60  0001 C CNN "Link"
 F 6 "TH" H 6150 3400 50  0001 C CNN "Manufacturer"
 F 7 "TH" H 6150 3400 50  0001 C CNN "Manufacturer PN"
@@ -76,7 +76,7 @@ F 0 "C123" H 5810 3670 50  0000 L CNN
 F 1 "1100pF" H 5810 3520 50  0000 L CNN
 F 2 "Capacitors_SMD:C_0805" H 5800 3600 50  0001 C CNN
 F 3 "" H 5800 3600 50  0000 C CNN
-F 4 "399-14552-1-ND" H 5800 3600 60  0001 C CNN "Part No."
+F 4 "399-14552-1-ND" H 5800 3600 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-14552-1-ND\">Link</a>" H 5800 3600 60  0001 C CNN "Link"
 F 6 "KEMET" H 5800 3600 50  0001 C CNN "Manufacturer"
 F 7 "C0805C112J5GAC7800" H 5800 3600 50  0001 C CNN "Manufacturer PN"
@@ -256,7 +256,7 @@ F 0 "U107" H 3450 4350 61  0000 R CNB
 F 1 "LM5134B" H 3600 4250 61  0000 R CNB
 F 2 "TO_SOT_Packages_SMD:SOT-23-6_Handsolder" H 3300 3100 50  0001 L CNN
 F 3 "" H 3350 3650 50  0001 C CNN
-F 4 "LM5134BMFX/NOPB-ND" H 3150 3950 60  0001 C CNN "Part No."
+F 4 "LM5134BMFX/NOPB-ND" H 3150 3950 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=LM5134BMFX/NOPB-ND\">Link</a>" H 3150 3950 60  0001 C CNN "Link"
 F 6 "Texas Instruments" H 3150 3950 50  0001 C CNN "Manufacturer"
 F 7 "LM5134BMFX/NOPB" H 3150 3950 50  0001 C CNN "Manufacturer PN"
@@ -295,7 +295,7 @@ F 0 "C120" V 4650 2600 50  0000 L CNN
 F 1 "470nF" V 4400 2600 50  0000 L CNN
 F 2 "Capacitors_SMD:C_0805" H 4550 2700 50  0001 C CNN
 F 3 "" H 4550 2700 50  0001 C CNN
-F 4 "478-9924-1-ND" H 4550 2700 60  0001 C CNN "Part No."
+F 4 "478-9924-1-ND" H 4550 2700 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-9924-1-ND\">Link</a>" H 4550 2700 60  0001 C CNN "Link"
 F 6 "AVX Corporation" V 4550 2700 50  0001 C CNN "Manufacturer"
 F 7 "08051C474K4Z2A" V 4550 2700 50  0001 C CNN "Manufacturer PN"
@@ -311,7 +311,7 @@ F 0 "C126" H 6250 3550 50  0000 L CNN
 F 1 "1800pF" H 6200 3700 50  0000 L CNN
 F 2 "Capacitors_SMD:C_0805" H 6500 3600 50  0001 C CNN
 F 3 "" H 6500 3600 50  0000 C CNN
-F 4 "445-5752-1-ND" H 6500 3600 60  0001 C CNN "Part No."
+F 4 "445-5752-1-ND" H 6500 3600 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=445-5752-1-ND\">Link</a>" H 6500 3600 60  0001 C CNN "Link"
 F 6 "TDK Corporation" H 6500 3600 50  0001 C CNN "Manufacturer"
 F 7 "CGA4F2C0G2A182J085AA" H 6500 3600 50  0001 C CNN "Manufacturer PN"
@@ -327,7 +327,7 @@ F 0 "HS101" H 4150 4050 50  0000 L CNN
 F 1 "Heatsink" H 4150 3950 50  0000 L CNN
 F 2 "Heatsinks:Heatsink_HF35G" H 3800 3725 50  0001 L CIN
 F 3 "" H 4350 3750 50  0001 L CNN
-F 4 "HS220-ND" H 4350 3750 60  0001 C CNN "Part No."
+F 4 "HS220-ND" H 4350 3750 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=HS220-ND\">Link</a>" H 4350 3750 60  0001 C CNN "Link"
 F 6 "TH" H 4350 3750 50  0001 C CNN "Manufacturer"
 F 7 "TH" H 4350 3750 50  0001 C CNN "Manufacturer PN"
@@ -361,7 +361,7 @@ F 0 "L108" H 7150 3500 50  0000 C CNN
 F 1 "2.7uH" H 7150 3350 50  0000 C CNN
 F 2 "Inductors:Toroid_T-60_2TH_Vertical" H 7150 3400 50  0001 C CNN
 F 3 "" H 7150 3400 50  0001 C CNN
-F 4 "T60-2" H 7150 3400 60  0001 C CNN "Part No."
+F 4 "T60-2 (Amidon)" H 7150 3400 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"http://www.amidoncorp.com/t60-2/\">Link</a>" H 7150 3400 60  0001 C CNN "Link"
 F 6 "TH" H 7150 3400 50  0001 C CNN "Manufacturer"
 F 7 "TH" H 7150 3400 50  0001 C CNN "Manufacturer PN"
@@ -377,7 +377,7 @@ F 0 "W105" V 2850 3800 50  0000 C CNN
 F 1 "T2" V 2700 3850 50  0000 C CNN
 F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 2850 3800 50  0001 C CNN
 F 3 "" H 2850 3800 50  0001 C CNN
-F 4 "np" H 2650 3800 60  0001 C CNN "Part No."
+F 4 "np" H 2650 3800 50  0001 C CNN "Digi-Key Part No."
 F 5 "np" H 2650 3800 60  0001 C CNN "Link"
 	1    2650 3800
 	0    -1   -1   0   
@@ -401,7 +401,7 @@ F 0 "W108" H 3900 4250 50  0000 C CNN
 F 1 "T4" H 4000 4050 50  0000 C CNN
 F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 4150 4000 50  0001 C CNN
 F 3 "" H 4150 4000 50  0001 C CNN
-F 4 "np" H 3950 4000 60  0001 C CNN "Part No."
+F 4 "np" H 3950 4000 50  0001 C CNN "Digi-Key Part No."
 F 5 "np" H 3950 4000 60  0001 C CNN "Link"
 	1    3950 4000
 	-1   0    0    1   
@@ -428,7 +428,7 @@ F 0 "W111" H 5850 3550 50  0000 C CNN
 F 1 "T5" H 5850 3300 50  0000 C CNN
 F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 6000 3250 50  0001 C CNN
 F 3 "" H 6000 3250 50  0001 C CNN
-F 4 "np" H 5800 3250 60  0001 C CNN "Part No."
+F 4 "np" H 5800 3250 50  0001 C CNN "Digi-Key Part No."
 F 5 "np" H 5800 3250 60  0001 C CNN "Link"
 	1    5800 3250
 	1    0    0    -1  
@@ -452,7 +452,7 @@ F 0 "W113" H 6550 3550 50  0000 C CNN
 F 1 "T6" H 6550 3300 50  0000 C CNN
 F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 6700 3250 50  0001 C CNN
 F 3 "" H 6700 3250 50  0001 C CNN
-F 4 "np" H 6500 3250 60  0001 C CNN "Part No."
+F 4 "np" H 6500 3250 50  0001 C CNN "Digi-Key Part No."
 F 5 "np" H 6500 3250 60  0001 C CNN "Link"
 	1    6500 3250
 	1    0    0    -1  
@@ -476,7 +476,7 @@ F 0 "W117" H 7750 3500 50  0000 C CNN
 F 1 "T7" H 7750 3300 50  0000 C CNN
 F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 7900 3250 50  0001 C CNN
 F 3 "" H 7900 3250 50  0001 C CNN
-F 4 "np" H 7700 3250 60  0001 C CNN "Part No."
+F 4 "np" H 7700 3250 50  0001 C CNN "Digi-Key Part No."
 F 5 "np" H 7700 3250 60  0001 C CNN "Link"
 	1    7700 3250
 	1    0    0    -1  
@@ -500,7 +500,7 @@ F 0 "W106" V 2800 3500 50  0000 C CNN
 F 1 "T3" V 2800 3300 50  0000 C CNN
 F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small" H 2950 3250 50  0001 C CNN
 F 3 "" H 2950 3250 50  0001 C CNN
-F 4 "np" H 2750 3250 60  0001 C CNN "Part No."
+F 4 "np" H 2750 3250 50  0001 C CNN "Digi-Key Part No."
 F 5 "np" H 2750 3250 60  0001 C CNN "Link"
 	1    2750 3250
 	0    -1   1    0   
@@ -524,7 +524,7 @@ F 0 "C128" V 7000 3000 50  0000 L CNN
 F 1 "91pF" V 7200 3000 50  0000 L CNN
 F 2 "Capacitors_SMD:C_0805" H 7100 3100 50  0001 C CNN
 F 3 "" H 7100 3100 50  0000 C CNN
-F 4 "399-17459-1-ND" H 7100 3100 60  0001 C CNN "Part No."
+F 4 "399-17459-1-ND" H 7100 3100 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-17459-1-ND\">Link</a>" H 7100 3100 60  0001 C CNN "Link"
 F 6 "KEMET" V 7100 3100 50  0001 C CNN "Manufacturer"
 F 7 "C0805C910J1GAC7800" V 7100 3100 50  0001 C CNN "Manufacturer PN"
@@ -549,7 +549,7 @@ F 0 "Q102" H 4800 3875 50  0000 L CNN
 F 1 "IRF610" H 4800 3800 50  0000 L CNN
 F 2 "TO_SOT_Packages_THT:TO-220_Neutral123_Vertical_LargePads" H 4800 3725 50  0001 L CIN
 F 3 "" H 4600 3800 50  0001 L CNN
-F 4 "IRF610PBF-ND" H 4600 3800 60  0001 C CNN "Part No."
+F 4 "IRF610PBF-ND" H 4600 3800 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=IRF610PBF-ND\">Link</a>" H 4600 3800 60  0001 C CNN "Link"
 F 6 "TH" H 4600 3800 50  0001 C CNN "Manufacturer"
 F 7 "TH" H 4600 3800 50  0001 C CNN "Manufacturer PN"
@@ -564,11 +564,11 @@ P 4150 2700
 F 0 "C119" V 4250 2650 50  0000 L CNN
 F 1 "47uF low ESR" V 4000 2350 50  0000 L CNN
 F 2 "Capacitors_SMD:C_2917_7343_Metric_HandSoldering" H 4150 2700 50  0001 C CNN
-F 3 "https://content.kemet.com/datasheets/KEM_T2009_T495.pdf" H 4150 2700 50  0001 C CNN
-F 4 "399-3885-1-ND" H 4150 2700 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-3885-1-ND\">Link</a>" H 4150 2700 60  0001 C CNN "Link"
+F 3 "" H 4150 2700 50  0001 C CNN
+F 4 "399-3904-1-ND" H 4150 2700 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-3904-1-ND\">Link</a>" H 4150 2700 60  0001 C CNN "Link"
 F 6 "KEMET" V 4150 2700 50  0001 C CNN "Manufacturer"
-F 7 "T495D476K020ATE175" V 4150 2700 50  0001 C CNN "Manufacturer PN"
+F 7 "T495X476K020ATE150" V 4150 2700 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP TANT 47UF 10% 20V 2917" V 4150 2700 50  0001 C CNN "Description"
 	1    4150 2700
 	0    1    -1   0   
@@ -614,7 +614,7 @@ F 0 "C117" V 3250 2900 50  0000 L CNN
 F 1 "22uF" V 3250 3150 50  0000 L CNN
 F 2 "Capacitors_SMD:C_1210" H 3350 3250 50  0001 C CNN
 F 3 "" H 3350 3250 50  0001 C CNN
-F 4 "1276-3373-1-ND" H 3350 3250 60  0001 C CNN "Part No."
+F 4 "1276-3373-1-ND" H 3350 3250 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=1276-3373-1-ND\">Link</a>" H 3350 3250 60  0001 C CNN "Link"
 F 6 "Samsung Electro-Mechanics" V 3350 3250 50  0001 C CNN "Manufacturer"
 F 7 "CL32A226MAJNNNE" V 3350 3250 50  0001 C CNN "Manufacturer PN"
@@ -630,7 +630,7 @@ F 0 "Q101" V 2950 2350 61  0000 L CNB
 F 1 "LMN200B02" V 3200 1550 61  0000 L CNB
 F 2 "TO_SOT_Packages_SMD:SOT-363-0.65" H 3265 2300 50  0001 L CNN
 F 3 "https://www.diodes.com/assets/Datasheets/ds30658.pdf" H 3265 2300 50  0001 L CNN
-F 4 "LMN200B02DICT-ND" H 3250 2500 60  0001 C CNN "Part No."
+F 4 "LMN200B02DICT-ND" H 3250 2500 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=LMN200B02DICT-ND\">Link</a>" H 3250 2500 60  0001 C CNN "Link"
 F 6 "Diodes Incorporated" V 3250 2500 50  0001 C CNN "Manufacturer"
 F 7 "LMN200B02-7" V 3250 2500 50  0001 C CNN "Manufacturer PN"
@@ -650,7 +650,7 @@ F 0 "D102" H 3150 3050 50  0000 C CNN
 F 1 "4.7V" H 3150 2850 50  0000 C CNN
 F 2 "Diodes_SMD:SOD-123_Handsolder" H 3150 2950 50  0001 C CNN
 F 3 "" H 3150 2950 50  0001 C CNN
-F 4 "BZT52C4V7-13FDICT-ND" H 3150 2950 60  0001 C CNN "Part No."
+F 4 "BZT52C4V7-13FDICT-ND" H 3150 2950 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=BZT52C4V7-13FDICT-ND\">Link</a>" H 3150 2950 60  0001 C CNN "Link"
 F 6 "Diodes Incorporated" H 3150 2950 50  0001 C CNN "Manufacturer"
 F 7 "BZT52C4V7-13-F" H 3150 2950 50  0001 C CNN "Manufacturer PN"
@@ -723,7 +723,7 @@ F 0 "D104" H 8600 2600 50  0000 C CNN
 F 1 "5V" H 8600 2500 50  0000 C CNN
 F 2 "Capacitors_SMD:C_0603" H 8650 2350 50  0001 C CNN
 F 3 "" H 8650 2350 50  0001 C CNN
-F 4 "CG0603MLC-05LECT-ND" H 8650 2350 60  0001 C CNN "Part No."
+F 4 "CG0603MLC-05LECT-ND" H 8650 2350 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=CG0603MLC-05LECT-ND\">Link</a>" H 8650 2350 60  0001 C CNN "Link"
 F 6 "Bourns Inc." H 8650 2350 50  0001 C CNN "Manufacturer"
 F 7 "CG0603MLC-05LE" H 8650 2350 50  0001 C CNN "Manufacturer PN"
@@ -739,7 +739,7 @@ F 0 "L104" V 4850 3400 50  0000 C CNN
 F 1 "9T #24 Bifilar T50-43" V 4850 3300 50  0001 C CNN
 F 2 "Inductors:Toroid_T-50A_TH_BF_CT_Vertical" H 4700 3400 50  0001 C CNN
 F 3 "" H 4700 3400 50  0000 C CNN
-F 4 "Amidon FT50A-43" H 4700 3400 60  0001 C CNN "Part No."
+F 4 "FT50A-43 (Amidon)" H 4700 3400 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"http://www.amidoncorp.com/ft-50A-43/\">Link</a>" H 4700 3400 60  0001 C CNN "Link"
 F 6 "TH" V 4700 3400 50  0001 C CNN "Manufacturer"
 F 7 "TH" V 4700 3400 50  0001 C CNN "Manufacturer PN"
@@ -861,7 +861,7 @@ F 0 "J101" H 8650 3250 50  0000 C CNN
 F 1 "DIN-5_180degree" H 8500 2634 50  0001 C CNN
 F 2 "" H 8500 3000 50  0001 C CNN
 F 3 "" H 8500 3000 50  0001 C CNN
-F 4 "CP-7050-ND" H 8500 3000 50  0001 C CNN "Part No."
+F 4 "CP-7050-ND" H 8500 3000 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=CP-7050-ND\">Link</a>" H 8500 3000 50  0001 C CNN "Link"
 F 6 "TH" H 8500 3000 50  0001 C CNN "Manufacturer"
 F 7 "TH" H 8500 3000 50  0001 C CNN "Manufacturer PN"
@@ -895,16 +895,18 @@ Wire Wire Line
 Wire Wire Line
 	8950 2100 8950 2350
 $Comp
-L Device:D_Schottky_ALT D?
+L Device:D_Schottky_ALT D101
 U 1 1 607D3A52
 P 9150 2100
-F 0 "D?" H 9150 2317 50  0000 C CNN
+F 0 "D101" H 9150 2317 50  0000 C CNN
 F 1 "Dual Schottky" H 9150 2226 50  0001 C CNN
 F 2 "TO_SOT_Packages_SMD:SOT-363-0.65" H 9150 2100 50  0001 C CNN
 F 3 "" H 9150 2100 50  0001 C CNN
-F 4 "ON Semiconductor" H 9150 2100 50  0001 C CNN "Manufacturer"
-F 5 "MBD54DWT1G" H 9150 2100 50  0001 C CNN "Manufacturer PN"
-F 6 "DIODE ARRAY SCHOTTKY 30V SC88" H 9150 2100 50  0001 C CNN "Description"
+F 4 "MBD54DWT1GOSCT-ND" H 9150 2100 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=MBD54DWT1GOSCT-ND\">Link</a>" H 9150 2100 50  0001 C CNN "Link"
+F 6 "ON Semiconductor" H 9150 2100 50  0001 C CNN "Manufacturer"
+F 7 "MBD54DWT1G" H 9150 2100 50  0001 C CNN "Manufacturer PN"
+F 8 "DIODE ARRAY SCHOTTKY 30V SC88" H 9150 2100 50  0001 C CNN "Description"
 	1    9150 2100
 	1    0    0    -1  
 $EndComp
@@ -918,7 +920,7 @@ F 0 "C122" V 5650 3300 50  0000 L CNN
 F 1 "470nF" V 5400 3300 50  0000 L CNN
 F 2 "Capacitors_SMD:C_0805" H 5550 3400 50  0001 C CNN
 F 3 "" H 5550 3400 50  0001 C CNN
-F 4 "478-9924-1-ND" H 5550 3400 60  0001 C CNN "Part No."
+F 4 "478-9924-1-ND" H 5550 3400 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-9924-1-ND\">Link</a>" H 5550 3400 60  0001 C CNN "Link"
 F 6 "AVX Corporation" V 5550 3400 50  0001 C CNN "Manufacturer"
 F 7 "08051C474K4Z2A" V 5550 3400 50  0001 C CNN "Manufacturer PN"

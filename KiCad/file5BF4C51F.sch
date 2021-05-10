@@ -122,10 +122,10 @@ Header sockets for Huzzah board
 Text Notes 7200 6750 0    118  ~ 24
 BOM-ONLY: Flex Fox 80 ARDF Transmitter
 $Comp
-L Device:PinlessHardware PH?
+L Device:PinlessHardware PH401
 U 1 1 607EA3F6
 P 5700 3000
-F 0 "PH?" H 5878 3179 61  0000 L CNB
+F 0 "PH401" H 5878 3179 61  0000 L CNB
 F 1 "Power Pole Staple" H 5878 3071 61  0000 L CNB
 F 2 "" H 5700 3000 39  0001 C CNN
 F 3 "" H 5700 3000 39  0001 C CNN
@@ -138,10 +138,10 @@ F 8 "TH" H 5700 3000 50  0001 C CNN "Description"
 	1    0    0    -1  
 $EndComp
 $Comp
-L Device:PinlessHardware PH?
+L Device:PinlessHardware PH402
 U 1 1 607EC98E
 P 5550 3600
-F 0 "PH?" H 5728 3779 61  0000 L CNB
+F 0 "PH402" H 5728 3779 61  0000 L CNB
 F 1 "Power Pole Pin" H 5728 3671 61  0000 L CNB
 F 2 "" H 5550 3600 39  0001 C CNN
 F 3 "" H 5550 3600 39  0001 C CNN
@@ -154,10 +154,10 @@ F 8 "TH" H 5550 3600 50  0001 C CNN "Description"
 	1    0    0    -1  
 $EndComp
 $Comp
-L Device:PinlessHardware PH?
+L Device:PinlessHardware PH403
 U 1 1 607ED223
 P 5550 3850
-F 0 "PH?" H 5728 4029 61  0000 L CNB
+F 0 "PH403" H 5728 4029 61  0000 L CNB
 F 1 "Power Pole Pin" H 5728 3921 61  0000 L CNB
 F 2 "" H 5550 3850 39  0001 C CNN
 F 3 "" H 5550 3850 39  0001 C CNN
