@@ -202,6 +202,9 @@ F 2 "Housings_SSOP:MSOP-10_3x3mm_Pitch0.5mm_Handsolder" H 11850 3150 50  0001 C 
 F 3 "http://www.silabs.com/Support%20Documents/TechnicalDocs/Si5351-B.pdf" H 11850 3150 50  0001 C CNN
 F 4 "336-2399-5-ND" H 11850 3150 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=336-2399-5-ND\">Link</a>" H 11850 3150 60  0001 C CNN "Link"
+F 6 "Silicon Labs" H 11850 3150 50  0001 C CNN "Manufacturer"
+F 7 "SI5351A-B-GT" H 11850 3150 50  0001 C CNN "Manufacturer PN"
+F 8 "IC CLK GENERATOR 200MHZ 10MSOP" H 11850 3150 50  0001 C CNN "Description"
 	1    11850 3150
 	1    0    0    -1  
 $EndComp
@@ -217,6 +220,9 @@ F 2 "Pin_Headers:SM_Pin_Header_Straight_2x03" H 4100 4400 50  0001 C CNN
 F 3 "http://katalog.we-online.de/em/datasheet/6100xx21121.pdf" H 4100 4400 50  0001 C CNN
 F 4 "609-3487-1-ND" H 4100 5600 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=609-3487-1-ND\">Link</a>" H 4100 5600 60  0001 C CNN "Link"
+F 6 "Amphenol ICC (FCI)" H 4100 5600 50  0001 C CNN "Manufacturer"
+F 7 "95278-101A06LF" H 4100 5600 50  0001 C CNN "Manufacturer PN"
+F 8 "CONN HEADER SMD 6POS 2.54MM" H 4100 5600 50  0001 C CNN "Description"
 	1    4100 5600
 	1    0    0    -1  
 $EndComp
@@ -270,10 +276,13 @@ U 1 1 57B42379
 P 10950 2650
 F 0 "C310" V 10800 2500 50  0000 L CNN
 F 1 "470nF" V 11100 2550 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 10988 2500 50  0001 C CNN
+F 2 "Capacitors_SMD:C_0805" H 10988 2500 50  0001 C CNN
 F 3 "" H 10950 2650 50  0001 C CNN
-F 4 "478-9924-1-ND" H 10950 2650 60  0001 C CNN "Part No."
+F 4 "478-9924-1-ND" H 10950 2650 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-9924-1-ND\">Link</a>" H 10950 2650 60  0001 C CNN "Link"
+F 6 "AVX Corporation" H 10950 2650 50  0001 C CNN "Manufacturer"
+F 7 "08051C474K4Z2A" H 10950 2650 50  0001 C CNN "Manufacturer PN"
+F 8 "CAP CER 0.47UF 100V X7R 0805" H 10950 2650 50  0001 C CNN "Description"
 	1    10950 2650
 	0    1    1    0   
 $EndComp
@@ -287,19 +296,6 @@ F 2 "" H 10700 2700 50  0000 C CNN
 F 3 "" H 10700 2700 50  0000 C CNN
 	1    10700 2700
 	1    0    0    -1  
-$EndComp
-$Comp
-L Device:C C312
-U 1 1 57B42FC2
-P 13100 3450
-F 0 "C312" H 13125 3550 50  0000 L CNN
-F 1 "470nF" H 13125 3350 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 13138 3300 50  0001 C CNN
-F 3 "" H 13100 3450 50  0001 C CNN
-F 4 "478-9924-1-ND" H 13100 3450 60  0001 C CNN "Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-9924-1-ND\">Link</a>" H 13100 3450 60  0001 C CNN "Link"
-	1    13100 3450
-	-1   0    0    1   
 $EndComp
 $Comp
 L power:GNDD #PWR0177
@@ -365,9 +361,12 @@ P 5450 5000
 F 0 "C304" H 5500 4900 50  0000 L CNN
 F 1 "10uF" H 5550 5050 50  0000 L CNN
 F 2 "Capacitors_SMD:C_0805_HandSoldering" H 5450 5000 50  0001 C CNN
-F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 5450 5000 50  0001 C CNN
-F 4 "490-5523-1-ND" H 5450 5000 60  0001 C CNN "Part No."
+F 3 "" H 5450 5000 50  0001 C CNN
+F 4 "490-5523-1-ND" H 5450 5000 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-5523-1-ND\">Link</a>" H 5450 5000 60  0001 C CNN "Link"
+F 6 "Murata Electronics" H 5450 5000 50  0001 C CNN "Manufacturer"
+F 7 "GRM21BR61E106KA73L" H 5450 5000 50  0001 C CNN "Manufacturer PN"
+F 8 "CAP CER 10UF 25V X5R 0805" H 5450 5000 50  0001 C CNN "Description"
 	1    5450 5000
 	-1   0    0    1   
 $EndComp
@@ -400,10 +399,13 @@ U 1 1 58755171
 P 10400 3200
 F 0 "X301" H 10400 3550 61  0000 C CNB
 F 1 "ASTX-H11-25.MHZ" H 10400 3200 61  0000 C CNB
-F 2 "Crystals:ASTX-H11" H 10400 3200 60  0001 C CNN
-F 3 "" H 10400 3200 60  0000 C CNN
+F 2 "Crystals:ASTX-H11-25.000MHZ" H 10400 3200 60  0001 C CNN
+F 3 "https://abracon.com/Oscillators/ASTX-H11.pdf" H 10400 3200 60  0001 C CNN
 F 4 "535-12039-1-ND" H 10400 3200 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=535-12039-1-ND\">Link</a>" H 10400 3200 60  0001 C CNN "Link"
+F 6 "Abracon LLC" H 10400 3200 50  0001 C CNN "Manufacturer"
+F 7 "ASTX-H11-25.000MHZ-T" H 10400 3200 50  0001 C CNN "Manufacturer PN"
+F 8 "XTAL OSC TCXO 25.0000MHZ HCMOS" H 10400 3200 50  0001 C CNN "Description"
 	1    10400 3200
 	1    0    0    -1  
 $EndComp
@@ -807,8 +809,9 @@ F 0 "W307" H 11800 9950 50  0000 C CNN
 F 1 "CONN_01X01" V 11900 9850 50  0001 C CNN
 F 2 "Pin_Headers:Pin_Header_Straight_1x01" H 11800 9850 50  0001 C CNN
 F 3 "" H 11800 9850 50  0001 C CNN
-F 4 "np" H 11800 9850 60  0001 C CNN "Part No."
+F 4 "np" H 11800 9850 50  0001 C CNN "Digi-Key Part No."
 F 5 "np" H 11800 9850 60  0001 C CNN "Link"
+F 6 "np" H 11800 9850 50  0001 C CNN "Manufacturer"
 	1    11800 9850
 	1    0    0    -1  
 $EndComp
@@ -820,8 +823,9 @@ F 0 "W308" H 11800 10150 50  0000 C CNN
 F 1 "CONN_01X01" V 11900 10050 50  0001 C CNN
 F 2 "Pin_Headers:Pin_Header_Straight_1x01" H 11800 10050 50  0001 C CNN
 F 3 "" H 11800 10050 50  0001 C CNN
-F 4 "np" H 11800 10050 60  0001 C CNN "Part No."
+F 4 "np" H 11800 10050 50  0001 C CNN "Digi-Key Part No."
 F 5 "np" H 11800 10050 60  0001 C CNN "Link"
+F 6 "np" H 11800 10050 50  0001 C CNN "Manufacturer"
 	1    11800 10050
 	1    0    0    -1  
 $EndComp
@@ -984,6 +988,9 @@ F 2 "Oddities:Adafruit_HUZZAH_ESP8266_Breakout_SM" H 12750 7100 50  0001 C CNN
 F 3 "" H 12750 7100 50  0001 C CNN
 F 4 "1528-1223-ND" H 12750 7100 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=1528-1223-ND\">Link</a>" H 12750 7100 60  0001 C CNN "Link"
+F 6 "Adafruit Industries LLC" H 12750 7100 50  0001 C CNN "Manufacturer"
+F 7 "2471" H 12750 7100 50  0001 C CNN "Manufacturer PN"
+F 8 "ESP8266 HUZZAH BREAKOUT BOARD" H 12750 7100 50  0001 C CNN "Description"
 	1    12750 7100
 	-1   0    0    1   
 $EndComp
@@ -1021,8 +1028,9 @@ F 0 "P304" H 12750 6200 50  0000 C CNN
 F 1 "Header" V 12850 5850 50  0001 C CNN
 F 2 "Pin_Headers:Pin_Header_Straight_1x06" H 12750 5850 50  0001 C CNN
 F 3 "" H 12750 5850 50  0001 C CNN
-F 4 "np" H 12750 5850 60  0001 C CNN "Part No."
+F 4 "np" H 12750 5850 50  0001 C CNN "Digi-Key Part No."
 F 5 "np" H 12750 5850 60  0001 C CNN "Link"
+F 6 "np" H 12750 5850 50  0001 C CNN "Manufacturer"
 	1    12750 5850
 	0    -1   -1   0   
 $EndComp
@@ -1250,6 +1258,9 @@ F 2 "TO_SOT_Packages_SMD:SOT-23-5" H 11050 7650 50  0001 C CNN
 F 3 "" H 11050 7650 50  0001 C CNN
 F 4 "MC74HC1G08DTT1GOSCT-ND" H 11050 7650 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=MC74HC1G08DTT1GOSCT-ND\">Link</a>" H 11050 7650 60  0001 C CNN "Link"
+F 6 "ON Semiconductor" H 11050 7650 50  0001 C CNN "Manufacturer"
+F 7 "MC74HC1G08DTT1G" H 11050 7650 50  0001 C CNN "Manufacturer PN"
+F 8 "IC GATE AND 1CH 2-INP 5TSOP" H 11050 7650 50  0001 C CNN "Description"
 	1    11050 7650
 	-1   0    0    -1  
 $EndComp
@@ -1382,6 +1393,9 @@ F 2 "Housings_SSOP:TSSOP-8_3x3mm_Pitch0.65mm_Handsolder" H 10050 3850 50  0001 C
 F 3 "" H 10050 4300 50  0001 C CNN
 F 4 "296-16809-1-ND" H 10050 4250 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=296-16809-1-ND\">Link</a>" H 10050 4250 60  0001 C CNN "Link"
+F 6 "Texas Instruments" H 10050 4250 50  0001 C CNN "Manufacturer"
+F 7 "SN74CB3Q3305PWR" H 10050 4250 50  0001 C CNN "Manufacturer PN"
+F 8 "IC BUS SWITCH 1 X 1:1 8TSSOP" H 10050 4250 50  0001 C CNN "Description"
 	1    10050 4250
 	1    0    0    -1  
 $EndComp
@@ -1849,9 +1863,13 @@ U 1 1 617DD630
 P 5400 5850
 F 0 "Y301" V 5200 5750 50  0000 C CNN
 F 1 "20 MHz" V 5600 5950 50  0000 C CNN
-F 2 "" H 5375 5850 50  0001 C CNN
-F 3 "~" H 5375 5850 50  0001 C CNN
-F 4 "CSTNE20M0V53Z000R0" H 5400 5850 50  0001 C CNN "Part No."
+F 2 "Crystals:CSTNE20M0V53Z000R0" H 5375 5850 50  0001 C CNN
+F 3 "" H 5375 5850 50  0001 C CNN
+F 4 "490-17955-1-ND" H 5400 5850 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-17955-1-ND\">Link</a>" H 5400 5850 50  0001 C CNN "Link"
+F 6 "Murata Electronics" H 5400 5850 50  0001 C CNN "Manufacturer"
+F 7 "CSTNE20M0V53Z000R0" H 5400 5850 50  0001 C CNN "Manufacturer PN"
+F 8 "CERAMIC RES 20.0000MHZ 15PF SMD" H 5400 5850 50  0001 C CNN "Description"
 	1    5400 5850
 	0    1    1    0   
 $EndComp
@@ -2067,7 +2085,10 @@ P 9350 3800
 F 0 "TP302" V 9550 3650 50  0000 L CNN
 F 1 "I2C0" V 9450 3650 50  0000 L CNN
 F 2 "" H 9350 3800 50  0001 C CNN
-F 3 "~" H 9350 3800 50  0001 C CNN
+F 3 "" H 9350 3800 50  0001 C CNN
+F 4 "np" H 9350 3800 50  0001 C CNN "Digi-Key Part No."
+F 5 "np" H 9350 3800 50  0001 C CNN "Link"
+F 6 "np" H 9350 3800 50  0001 C CNN "Manufacturer"
 	1    9350 3800
 	0    1    -1   0   
 $EndComp
@@ -2078,7 +2099,10 @@ P 10550 3800
 F 0 "TP301" V 10750 3700 50  0000 L CNN
 F 1 "I2C1" V 10650 3700 50  0000 L CNN
 F 2 "" H 10550 3800 50  0001 C CNN
-F 3 "~" H 10550 3800 50  0001 C CNN
+F 3 "" H 10550 3800 50  0001 C CNN
+F 4 "np" H 10550 3800 50  0001 C CNN "Digi-Key Part No."
+F 5 "np" H 10550 3800 50  0001 C CNN "Link"
+F 6 "np" H 10550 3800 50  0001 C CNN "Manufacturer"
 	1    10550 3800
 	0    1    -1   0   
 $EndComp
@@ -2424,9 +2448,14 @@ L Diode:ESD9B5.0ST5G D306
 U 1 1 612F5B15
 P 3750 9800
 F 0 "D306" V 3704 9879 50  0000 L CNN
-F 1 "MBD54DWT1GOSCT-ND" V 3795 9879 50  0000 L CNN
-F 2 "TO_SOT_Packages_SMD:SOT-363-0.65" H 3750 9800 50  0001 C CNN
-F 3 "https://www.onsemi.com/pub/Collateral/MBD54DWT1-D.PDF" H 3750 9800 50  0001 C CNN
+F 1 "ESD" V 3795 9879 50  0000 L CNN
+F 2 "Resistors_SMD:R_0603" H 3750 9800 50  0001 C CNN
+F 3 "" H 3750 9800 50  0001 C CNN
+F 4 "CG0603MLC-05LECT-ND" H 3750 9800 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=CG0603MLC-05LECT-ND\">Link</a>" H 3750 9800 50  0001 C CNN "Link"
+F 6 "Bourns Inc." H 3750 9800 50  0001 C CNN "Manufacturer"
+F 7 "CG0603MLC-05LE" H 3750 9800 50  0001 C CNN "Manufacturer PN"
+F 8 "VARISTOR 0603" H 3750 9800 50  0001 C CNN "Description"
 	1    3750 9800
 	0    1    1    0   
 $EndComp
@@ -2440,17 +2469,6 @@ F 2 "" H 3750 9950 50  0000 C CNN
 F 3 "" H 3750 9950 50  0000 C CNN
 	1    3750 9950
 	1    0    0    -1  
-$EndComp
-$Comp
-L Diode:ESD9B5.0ST5G D307
-U 1 1 61314FD3
-P 4100 9800
-F 0 "D307" V 4054 9879 50  0000 L CNN
-F 1 "MBD54DWT1GOSCT-ND" V 4145 9879 50  0000 L CNN
-F 2 "TO_SOT_Packages_SMD:SOT-363-0.65" H 4100 9800 50  0001 C CNN
-F 3 "https://www.onsemi.com/pub/Collateral/MBD54DWT1-D.PDF" H 4100 9800 50  0001 C CNN
-	1    4100 9800
-	0    1    1    0   
 $EndComp
 $Comp
 L power:GNDD #PWR0214
@@ -2866,6 +2884,38 @@ F 6 "Yageo" H 2450 7400 50  0001 C CNN "Manufacturer"
 F 7 "RC0805FR-07100KL" H 2450 7400 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 10K OHM 1% 1/8W 0805" H 2450 7400 50  0001 C CNN "Description"
 	1    2450 7400
+	1    0    0    -1  
+$EndComp
+$Comp
+L Diode:ESD9B5.0ST5G D307
+U 1 1 609FB9B8
+P 4100 9800
+F 0 "D307" V 4054 9879 50  0000 L CNN
+F 1 "ESD" V 4145 9879 50  0000 L CNN
+F 2 "Resistors_SMD:R_0603" H 4100 9800 50  0001 C CNN
+F 3 "" H 4100 9800 50  0001 C CNN
+F 4 "CG0603MLC-05LECT-ND" H 4100 9800 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=CG0603MLC-05LECT-ND\">Link</a>" H 4100 9800 50  0001 C CNN "Link"
+F 6 "Bourns Inc." H 4100 9800 50  0001 C CNN "Manufacturer"
+F 7 "CG0603MLC-05LE" H 4100 9800 50  0001 C CNN "Manufacturer PN"
+F 8 "VARISTOR 0603" H 4100 9800 50  0001 C CNN "Description"
+	1    4100 9800
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:C C312
+U 1 1 60A6094C
+P 13100 3450
+F 0 "C312" V 12950 3300 50  0000 L CNN
+F 1 "470nF" V 13250 3350 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805" H 13138 3300 50  0001 C CNN
+F 3 "" H 13100 3450 50  0001 C CNN
+F 4 "478-9924-1-ND" H 13100 3450 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-9924-1-ND\">Link</a>" H 13100 3450 60  0001 C CNN "Link"
+F 6 "AVX Corporation" H 13100 3450 50  0001 C CNN "Manufacturer"
+F 7 "08051C474K4Z2A" H 13100 3450 50  0001 C CNN "Manufacturer PN"
+F 8 "CAP CER 0.47UF 100V X7R 0805" H 13100 3450 50  0001 C CNN "Description"
+	1    13100 3450
 	1    0    0    -1  
 $EndComp
 Wire Bus Line

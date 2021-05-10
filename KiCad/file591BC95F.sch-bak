@@ -1030,10 +1030,10 @@ F 0 "R214" V 2230 6200 50  0000 C CNN
 F 1 "10k" V 2150 6200 50  0000 C CNN
 F 2 "Resistors_SMD:R_0805" V 2080 6200 50  0001 C CNN
 F 3 "" H 2150 6200 50  0000 C CNN
-F 4 "311-10.0KCRCT-ND" H 2150 6200 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-10.0KCRCT-ND\">Link</a>" H 2150 6200 60  0001 C CNN "Link"
+F 4 "311-10KLGCT-ND" H 2150 6200 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-10KLGCT-ND\">Link</a>" H 2150 6200 60  0001 C CNN "Link"
 F 6 "Yageo" H 2150 6200 50  0001 C CNN "Manufacturer"
-F 7 "RC0805FR-0710KL" H 2150 6200 50  0001 C CNN "Manufacturer PN"
+F 7 "AC0805FR-0710KL" H 2150 6200 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 10K OHM 1% 1/8W 0805" H 2150 6200 50  0001 C CNN "Description"
 	1    2150 6200
 	-1   0    0    1   

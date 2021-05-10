@@ -1,4 +1,4 @@
-3993153464914330
+3993202688668330
 Air_Coils_SML_NEOSID
 Neosid_Air-Coil_SML_1turn_HDM0131A
 Neosid, Air-Coil, SML, 1turn, HDM0131A,
@@ -3661,12 +3661,19 @@ smd crystal
 2
 2
 Crystals
-ASTX-H11
+ASTX-H11-25.000MHZ
 
 
 0
 4
 4
+Crystals
+CSTNE20M0V53Z000R0
+
+
+0
+3
+3
 Crystals
 Crystal_ABLSG
 Abracon Crystal ABLSG
@@ -3821,13 +3828,6 @@ Crystal_Watch
 0
 2
 2
-Crystals
-FOX-924B
-
-
-0
-4
-4
 Crystals
 HC-18UH
 Quartz boitier HC-18 horizontal
