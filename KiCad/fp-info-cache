@@ -1,4 +1,4 @@
-3993202688668330
+3998114071859330
 Air_Coils_SML_NEOSID
 Neosid_Air-Coil_SML_1turn_HDM0131A
 Neosid, Air-Coil, SML, 1turn, HDM0131A,
@@ -654,6 +654,13 @@ Capacitors_SMD
 C_2413_6032_Metric_HandSoldering
 Capacitor SMD 2225, hand soldering
 capacitor 2225
+0
+2
+2
+Capacitors_SMD
+C_2917
+Capacitor SMD 2917
+capacitor 2917
 0
 2
 2
@@ -2603,6 +2610,13 @@ SATA-22_SMD
 0
 26
 22
+Connect
+SDF-50J
+SDF-50J, standard DIN connector, 5 pins, midi
+SDF-50J DIN 5-pins connector midi
+0
+7
+5
 Connect
 SDS-50J
 SDS-50J, standard DIN connector, 5 pins, midi
@@ -14897,6 +14911,13 @@ SOT-23-5
 5
 TO_SOT_Packages_SMD
 SOT-23-6
+6-pin SOT-23 package
+SOT-23-6
+0
+6
+6
+TO_SOT_Packages_SMD
+SOT-23-6-LM5134
 6-pin SOT-23 package
 SOT-23-6
 0

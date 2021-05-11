@@ -352,7 +352,7 @@ U 1 1 59D849C5
 P 9200 2850
 F 0 "C214" H 8900 2850 50  0000 L CNN
 F 1 "47uF low ESR" H 9350 2850 50  0000 L CNN
-F 2 "Capacitors_SMD:C_2917_7343_Metric_HandSoldering" H 9200 2850 50  0001 C CNN
+F 2 "Capacitors_SMD:C_2917" H 9200 2850 50  0001 C CNN
 F 3 "" H 9200 2850 50  0001 C CNN
 F 4 "399-3904-1-ND" H 9200 2850 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-3904-1-ND\">Link</a>" H 9200 2850 60  0001 C CNN "Link"
@@ -1151,7 +1151,7 @@ U 1 1 60EA8041
 P 1850 4950
 F 0 "C215" V 2000 4850 50  0000 L CNN
 F 1 "150uF low ESR" V 2100 4550 50  0000 L CNN
-F 2 "Capacitors_SMD:C_2917_7343_Metric_HandSoldering" H 1850 4950 50  0001 C CNN
+F 2 "Capacitors_SMD:C_2917" H 1850 4950 50  0001 C CNN
 F 3 "" H 1850 4950 50  0001 C CNN
 F 4 "478-5253-1-ND" H 1850 4950 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-5253-1-ND\">Link</a>" H 1850 4950 60  0001 C CNN "Link"
@@ -1277,7 +1277,7 @@ U 1 1 58B957BC
 P 4450 4750
 F 0 "R202" V 4530 4750 50  0000 C CNN
 F 1 "49.9k" V 4450 4750 50  0000 C CNN
-F 2 "Resistors_SMD:R_0805_HandSoldering" V 4380 4750 50  0001 C CNN
+F 2 "Resistors_SMD:R_0805" V 4380 4750 50  0001 C CNN
 F 3 "" H 4450 4750 50  0001 C CNN
 F 4 "YAG4990CT-ND" H 4450 4750 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=YAG4990CT-ND\">Link</a>" H 4450 4750 60  0001 C CNN "Link"
@@ -1330,7 +1330,7 @@ Wire Wire Line
 Wire Wire Line
 	4250 4500 4250 4750
 Text GLabel 4700 6150 2    39   Input ~ 0
-BOOST_ENABLE
+MAIN_PWR_ENABLE
 Wire Wire Line
 	4700 6150 4650 6150
 Wire Wire Line
@@ -1341,7 +1341,7 @@ Close to pin 6
 Text Notes 1300 6600 0    39   ~ 0
 +11.5V => 15k & 1.8k\n+12.5V => 10k & 1.1k\n+12.8V => 14k & 1.5k\n+13.6V => 15k & 1.5k
 Text GLabel 2700 3850 0    39   Input ~ 0
-BOOST_ENABLE
+MAIN_PWR_ENABLE
 $Comp
 L Device:D_Schottky_ALT D202
 U 1 1 607D94BA
@@ -1526,7 +1526,7 @@ U 1 1 60C002F1
 P 1850 4750
 F 0 "C209" V 1600 4650 50  0000 L CNN
 F 1 "150uF low ESR" V 1700 4350 50  0000 L CNN
-F 2 "Capacitors_SMD:C_2917_7343_Metric_HandSoldering" H 1850 4750 50  0001 C CNN
+F 2 "Capacitors_SMD:C_2917" H 1850 4750 50  0001 C CNN
 F 3 "" H 1850 4750 50  0001 C CNN
 F 4 "478-5253-1-ND" H 1850 4750 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-5253-1-ND\">Link</a>" H 1850 4750 60  0001 C CNN "Link"
@@ -1677,7 +1677,7 @@ U 1 1 60A1F6F5
 P 4350 5950
 F 0 "C217" V 4200 5850 50  0000 L CNN
 F 1 "47uF low ESR" V 4500 5550 50  0000 L CNN
-F 2 "Capacitors_SMD:C_2917_7343_Metric_HandSoldering" H 4350 5950 50  0001 C CNN
+F 2 "Capacitors_SMD:C_2917" H 4350 5950 50  0001 C CNN
 F 3 "" H 4350 5950 50  0001 C CNN
 F 4 "399-3904-1-ND" H 4350 5950 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-3904-1-ND\">Link</a>" H 4350 5950 60  0001 C CNN "Link"

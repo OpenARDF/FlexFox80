@@ -254,7 +254,7 @@ U 1 1 5AA8446F
 P 3150 3950
 F 0 "U107" H 3450 4350 61  0000 R CNB
 F 1 "LM5134B" H 3600 4250 61  0000 R CNB
-F 2 "TO_SOT_Packages_SMD:SOT-23-6_Handsolder" H 3300 3100 50  0001 L CNN
+F 2 "TO_SOT_Packages_SMD:SOT-23-6-LM5134" H 3300 3100 50  0001 L CNN
 F 3 "" H 3350 3650 50  0001 C CNN
 F 4 "LM5134BMFX/NOPB-ND" H 3150 3950 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=LM5134BMFX/NOPB-ND\">Link</a>" H 3150 3950 60  0001 C CNN "Link"
@@ -563,7 +563,7 @@ U 1 1 5C11AA96
 P 4150 2700
 F 0 "C119" V 4250 2650 50  0000 L CNN
 F 1 "47uF low ESR" V 4000 2350 50  0000 L CNN
-F 2 "Capacitors_SMD:C_2917_7343_Metric_HandSoldering" H 4150 2700 50  0001 C CNN
+F 2 "Capacitors_SMD:C_2917" H 4150 2700 50  0001 C CNN
 F 3 "" H 4150 2700 50  0001 C CNN
 F 4 "399-3904-1-ND" H 4150 2700 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-3904-1-ND\">Link</a>" H 4150 2700 60  0001 C CNN "Link"

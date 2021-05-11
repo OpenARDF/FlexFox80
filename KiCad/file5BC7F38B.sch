@@ -198,7 +198,7 @@ U 1 1 57ABD6C6
 P 11850 3150
 F 0 "U304" H 11850 3650 60  0000 C CNB
 F 1 "SI5351A" H 11850 3150 60  0000 C CNB
-F 2 "Housings_SSOP:MSOP-10_3x3mm_Pitch0.5mm_Handsolder" H 11850 3150 50  0001 C CNN
+F 2 "Housings_SSOP:MSOP-10_3x3mm_Pitch0.5mm" H 11850 3150 50  0001 C CNN
 F 3 "http://www.silabs.com/Support%20Documents/TechnicalDocs/Si5351-B.pdf" H 11850 3150 50  0001 C CNN
 F 4 "336-2399-5-ND" H 11850 3150 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=336-2399-5-ND\">Link</a>" H 11850 3150 60  0001 C CNN "Link"
@@ -360,7 +360,7 @@ U 1 1 57B43F7B
 P 5450 5000
 F 0 "C304" H 5500 4900 50  0000 L CNN
 F 1 "10uF" H 5550 5050 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 5450 5000 50  0001 C CNN
+F 2 "Capacitors_SMD:C_0805" H 5450 5000 50  0001 C CNN
 F 3 "" H 5450 5000 50  0001 C CNN
 F 4 "490-5523-1-ND" H 5450 5000 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-5523-1-ND\">Link</a>" H 5450 5000 60  0001 C CNN "Link"
@@ -370,12 +370,6 @@ F 8 "CAP CER 10UF 25V X5R 0805" H 5450 5000 50  0001 C CNN "Description"
 	1    5450 5000
 	-1   0    0    1   
 $EndComp
-Text Label 4350 5600 0    39   ~ 0
-PB3
-Text Label 3850 5500 2    39   ~ 0
-PB4
-Text Label 3850 5600 2    39   ~ 0
-PB5
 Text Notes 10750 2300 0    79   ~ 16
 SI5351 Clock
 $Comp
@@ -855,8 +849,6 @@ Wire Wire Line
 	10550 4000 10550 4350
 Connection ~ 10550 4350
 Wire Wire Line
-	12500 2250 12500 2950
-Wire Wire Line
 	12600 2250 12600 3050
 $Comp
 L Device:R R306
@@ -906,8 +898,6 @@ F 3 "" H 2150 5000 50  0000 C CNN
 $EndComp
 Text GLabel 12600 2250 1    39   Output ~ 0
 CLK1
-Text GLabel 12500 2250 1    39   Output ~ 0
-CLK0
 Text GLabel 7950 6550 2    39   Output ~ 0
 HF_ENABLE
 $Comp
@@ -1392,7 +1382,7 @@ U 1 1 5C75D7C5
 P 10050 4250
 F 0 "U307" H 10200 4500 61  0000 C CNB
 F 1 "SN74CB3Q3305" H 10450 4000 61  0000 C CNB
-F 2 "Housings_SSOP:TSSOP-8_3x3mm_Pitch0.65mm_Handsolder" H 10050 3850 50  0001 C CNN
+F 2 "Housings_SSOP:TSSOP-8_3x3mm_Pitch0.65mm" H 10050 3850 50  0001 C CNN
 F 3 "" H 10050 4300 50  0001 C CNN
 F 4 "296-16809-1-ND" H 10050 4250 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=296-16809-1-ND\">Link</a>" H 10050 4250 60  0001 C CNN "Link"
@@ -1466,8 +1456,6 @@ Wire Wire Line
 Wire Wire Line
 	8250 3650 8250 3700
 Connection ~ 8250 3700
-Text GLabel 12500 3350 2    39   Output ~ 0
-CLK2
 Wire Wire Line
 	4450 3500 4450 3850
 Text Notes 12600 5400 0    79   ~ 16
@@ -2087,7 +2075,7 @@ U 1 1 608ADA8E
 P 9350 3800
 F 0 "TP302" V 9550 3650 50  0000 L CNN
 F 1 "I2C0" V 9450 3650 50  0000 L CNN
-F 2 "" H 9350 3800 50  0001 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x04" H 9350 3800 50  0001 C CNN
 F 3 "" H 9350 3800 50  0001 C CNN
 F 4 "np" H 9350 3800 50  0001 C CNN "Digi-Key Part No."
 F 5 "np" H 9350 3800 50  0001 C CNN "Link"
@@ -2101,7 +2089,7 @@ U 1 1 608CC2B9
 P 10550 3800
 F 0 "TP301" V 10750 3700 50  0000 L CNN
 F 1 "I2C1" V 10650 3700 50  0000 L CNN
-F 2 "" H 10550 3800 50  0001 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x03" H 10550 3800 50  0001 C CNN
 F 3 "" H 10550 3800 50  0001 C CNN
 F 4 "np" H 10550 3800 50  0001 C CNN "Digi-Key Part No."
 F 5 "np" H 10550 3800 50  0001 C CNN "Link"
@@ -2117,7 +2105,7 @@ U 1 1 6085EDC6
 P 2550 9700
 F 0 "R313" V 2630 9700 50  0000 C CNN
 F 1 "100k" V 2550 9700 50  0000 C CNN
-F 2 "Resistors_SMD:R_0805_HandSoldering" H 2480 9700 50  0001 C CNN
+F 2 "Resistors_SMD:R_0805" H 2480 9700 50  0001 C CNN
 F 3 "" H 2550 9700 50  0001 C CNN
 F 4 "311-100KCRCT-ND" H 2550 9700 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-100KCRCT-ND\">Link</a>" H 2550 9700 60  0001 C CNN "Link"
@@ -2228,8 +2216,11 @@ U 1 1 60B1099A
 P 2950 7000
 F 0 "SJ301" H 2950 7100 50  0000 C CNN
 F 1 "SolderJumper_2_Open" H 2950 7114 50  0001 C CNN
-F 2 "" H 2950 7000 50  0001 C CNN
+F 2 "Wire_Connections_Bridges:Solder-Jumper-NO-SMD-Pad_Small" H 2950 7000 50  0001 C CNN
 F 3 "" H 2950 7000 50  0001 C CNN
+F 4 "np" H 2950 7000 50  0001 C CNN "Digi-Key Part No."
+F 5 "np" H 2950 7000 50  0001 C CNN "Link"
+F 6 "np" H 2950 7000 50  0001 C CNN "Manufacturer"
 	1    2950 7000
 	0    -1   -1   0   
 $EndComp
@@ -2375,7 +2366,7 @@ U 1 1 60F38BF9
 P 2450 2250
 F 0 "C303" H 2200 2150 50  0000 L CNN
 F 1 "4.7uF" H 2475 2150 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 2488 2100 50  0001 C CNN
+F 2 "Capacitors_SMD:C_0805" H 2488 2100 50  0001 C CNN
 F 3 "" H 2450 2250 50  0001 C CNN
 F 4 "587-2990-1-ND" H 2450 2250 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=587-2990-1-ND\">Link</a>" H 2450 2250 60  0001 C CNN "Link"
@@ -2770,7 +2761,7 @@ F 6 "Texas Instruments" H 14750 6800 50  0001 C CNN "Manufacturer"
 F 7 "LP2992AIM5-3.3/NOPB" H 14750 6800 50  0001 C CNN "Manufacturer PN"
 F 8 "IC REG LINEAR 3.3V 250MA SOT23-5" H 14750 6800 50  0001 C CNN "Description"
 	1    14750 6800
-	1    0    0    -1  
+	-1   0    0    -1  
 $EndComp
 $Comp
 L Device:C C318
@@ -2778,7 +2769,7 @@ U 1 1 60E5E484
 P 3900 2250
 F 0 "C318" H 3650 2150 50  0000 L CNN
 F 1 "4.7uF" H 3925 2150 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 3938 2100 50  0001 C CNN
+F 2 "Capacitors_SMD:C_0805" H 3938 2100 50  0001 C CNN
 F 3 "" H 3900 2250 50  0001 C CNN
 F 4 "587-2990-1-ND" H 3900 2250 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=587-2990-1-ND\">Link</a>" H 3900 2250 60  0001 C CNN "Link"
@@ -2794,7 +2785,7 @@ U 1 1 60E7C3F3
 P 3900 3650
 F 0 "C317" H 3650 3550 50  0000 L CNN
 F 1 "4.7uF" H 3925 3550 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 3938 3500 50  0001 C CNN
+F 2 "Capacitors_SMD:C_0805" H 3938 3500 50  0001 C CNN
 F 3 "" H 3900 3650 50  0001 C CNN
 F 4 "587-2990-1-ND" H 3900 3650 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=587-2990-1-ND\">Link</a>" H 3900 3650 60  0001 C CNN "Link"
@@ -2815,7 +2806,7 @@ U 1 1 60E9A295
 P 2450 3650
 F 0 "C314" H 2200 3550 50  0000 L CNN
 F 1 "4.7uF" H 2475 3550 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 2488 3500 50  0001 C CNN
+F 2 "Capacitors_SMD:C_0805" H 2488 3500 50  0001 C CNN
 F 3 "" H 2450 3650 50  0001 C CNN
 F 4 "587-2990-1-ND" H 2450 3650 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=587-2990-1-ND\">Link</a>" H 2450 3650 60  0001 C CNN "Link"
@@ -2831,7 +2822,7 @@ U 1 1 60EB881C
 P 14000 6950
 F 0 "C313" H 13750 6850 50  0000 L CNN
 F 1 "4.7uF" H 14025 6850 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 14038 6800 50  0001 C CNN
+F 2 "Capacitors_SMD:C_0805" H 14038 6800 50  0001 C CNN
 F 3 "" H 14000 6950 50  0001 C CNN
 F 4 "587-2990-1-ND" H 14000 6950 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=587-2990-1-ND\">Link</a>" H 14000 6950 60  0001 C CNN "Link"
@@ -2847,7 +2838,7 @@ U 1 1 60ED9A37
 P 15450 6950
 F 0 "C315" H 15200 6850 50  0000 L CNN
 F 1 "4.7uF" H 15475 6850 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805_HandSoldering" H 15488 6800 50  0001 C CNN
+F 2 "Capacitors_SMD:C_0805" H 15488 6800 50  0001 C CNN
 F 3 "" H 15450 6950 50  0001 C CNN
 F 4 "587-2990-1-ND" H 15450 6950 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=587-2990-1-ND\">Link</a>" H 15450 6950 60  0001 C CNN "Link"
@@ -2879,7 +2870,7 @@ U 1 1 60FB1EB8
 P 2450 7400
 F 0 "R308" V 2530 7400 50  0000 C CNN
 F 1 "100k" V 2450 7400 50  0000 C CNN
-F 2 "Resistors_SMD:R_0805_HandSoldering" H 2380 7400 50  0001 C CNN
+F 2 "Resistors_SMD:R_0805" H 2380 7400 50  0001 C CNN
 F 3 "" H 2450 7400 50  0001 C CNN
 F 4 "311-100KCRCT-ND" H 2450 7400 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-100KCRCT-ND\">Link</a>" H 2450 7400 60  0001 C CNN "Link"
@@ -2921,6 +2912,13 @@ F 8 "CAP CER 0.47UF 100V X7R 0805" H 13100 3450 50  0001 C CNN "Description"
 	1    13100 3450
 	1    0    0    -1  
 $EndComp
+Text Label 7800 3450 0    39   ~ 0
+PA0
+Text Label 7800 3550 0    39   ~ 0
+PA1
+NoConn ~ 12500 2950
+NoConn ~ 12500 3350
+NoConn ~ 8250 6750
 Wire Bus Line
 	7700 3250 7700 7050
 $EndSCHEMATC
