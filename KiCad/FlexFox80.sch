@@ -53,7 +53,7 @@ F 3 "" H 4700 4000 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L FlexFox80-rescue:INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue L106
+L Device:INDUCTOR_SMALL L106
 U 1 1 58A77A86
 P 6150 3400
 F 0 "L106" H 6150 3500 50  0000 C CNN
@@ -249,7 +249,7 @@ Wire Wire Line
 	2650 3850 2650 3800
 Connection ~ 2650 3850
 $Comp
-L FlexFox80-rescue:LM5134-ARDF-2-Band-MiniTx-rescue U107
+L Driver_FET:LM5134 U107
 U 1 1 5AA8446F
 P 3150 3950
 F 0 "U107" H 3450 4350 61  0000 R CNB
@@ -354,7 +354,7 @@ HF Antenna
 Text Notes 6200 2800 0    39   ~ 0
 6th order Chebychev\n3.9MHz 3dB cut-off\nw/ node at 10.7MHz
 $Comp
-L FlexFox80-rescue:INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue L108
+L Device:INDUCTOR_SMALL L108
 U 1 1 5C0D7F1D
 P 7150 3400
 F 0 "L108" H 7150 3500 50  0000 C CNN
@@ -370,7 +370,7 @@ F 8 "TH" H 7150 3400 50  0001 C CNN "Description"
 	1    0    0    -1  
 $EndComp
 $Comp
-L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W105
+L special:TEST_SCOPE W105
 U 1 1 5C0EAA8C
 P 2650 3800
 F 0 "W105" V 2850 3800 50  0000 C CNN
@@ -394,7 +394,7 @@ F 3 "" H 2650 3700 50  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W108
+L special:TEST_SCOPE W108
 U 1 1 5C0EB478
 P 3950 4000
 F 0 "W108" H 3900 4250 50  0000 C CNN
@@ -421,7 +421,7 @@ Wire Wire Line
 	3950 4000 3950 3850
 Connection ~ 3950 3850
 $Comp
-L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W111
+L special:TEST_SCOPE W111
 U 1 1 5C0EDCBD
 P 5800 3250
 F 0 "W111" H 5850 3550 50  0000 C CNN
@@ -445,7 +445,7 @@ F 3 "" H 5900 3250 50  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W113
+L special:TEST_SCOPE W113
 U 1 1 5C0EE9E8
 P 6500 3250
 F 0 "W113" H 6550 3550 50  0000 C CNN
@@ -469,7 +469,7 @@ F 3 "" H 6600 3250 50  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W117
+L special:TEST_SCOPE W117
 U 1 1 5C0EEADD
 P 7700 3250
 F 0 "W117" H 7750 3500 50  0000 C CNN
@@ -493,7 +493,7 @@ F 3 "" H 7800 3250 50  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W106
+L special:TEST_SCOPE W106
 U 1 1 5C0F543D
 P 2750 3250
 F 0 "W106" V 2800 3500 50  0000 C CNN
@@ -542,7 +542,7 @@ Connection ~ 6850 3400
 Wire Wire Line
 	6400 3400 6500 3400
 $Comp
-L FlexFox80-rescue:IRF610_TO220-ARDF-2-Band-MiniTx-rescue Q102
+L Transistor_FET:IRF610_TO220 Q102
 U 1 1 5C100056
 P 4600 3800
 F 0 "Q102" H 4800 3875 50  0000 L CNN
@@ -623,7 +623,7 @@ F 8 "CAP CER 22UF 25V X5R 1210" V 3350 3250 50  0001 C CNN "Description"
 	0    -1   -1   0   
 $EndComp
 $Comp
-L FlexFox80-rescue:LMN200B01-ARDF-2-Band-MiniTx-rescue Q101
+L Power_Protection:LMN200B01 Q101
 U 1 1 5C64951A
 P 3250 2500
 F 0 "Q101" V 2950 2350 61  0000 L CNB
@@ -643,7 +643,7 @@ Optional voltage-dropping\ndiode for batteries > 12V.\nShort across if not used.
 Wire Wire Line
 	2750 3250 3150 3250
 $Comp
-L FlexFox80-rescue:ZENER-ARDF-2-Band-MiniTx-rescue D102
+L Diode:BZT52C4V7 D102
 U 1 1 5C71D9FE
 P 3150 2950
 F 0 "D102" H 3150 3050 50  0000 C CNN
@@ -716,7 +716,7 @@ F 3 "" H 8350 2350 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L FlexFox80-rescue:TVS-ARDF-2-Band-MiniTx-rescue D104
+L Power_Protection:TVS_Diode D104
 U 1 1 5CB36EAB
 P 8650 2350
 F 0 "D104" H 8600 2600 50  0000 C CNN
@@ -732,7 +732,7 @@ F 8 "VARISTOR 0603" H 8650 2350 50  0001 C CNN "Description"
 	-1   0    0    -1  
 $EndComp
 $Comp
-L FlexFox80-rescue:INDUCTOR_CT-ARDF-2-Band-MiniTx-rescue L104
+L Device:INDUCTOR_CT L104
 U 1 1 5CB66258
 P 4700 3400
 F 0 "L104" V 4850 3400 50  0000 C CNN

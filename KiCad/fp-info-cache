@@ -1,4 +1,4 @@
-3998114071859330
+3999734814343330
 Air_Coils_SML_NEOSID
 Neosid_Air-Coil_SML_1turn_HDM0131A
 Neosid, Air-Coil, SML, 1turn, HDM0131A,
@@ -2520,6 +2520,13 @@ DEV
 1
 1
 Connect
+PowerPole-ASMPP30-1x2
+
+
+0
+4
+2
+Connect
 QMS-1X52-FEMALE-SMD
 
 
@@ -2615,8 +2622,8 @@ SDF-50J
 SDF-50J, standard DIN connector, 5 pins, midi
 SDF-50J DIN 5-pins connector midi
 0
-7
-5
+9
+6
 Connect
 SDS-50J
 SDS-50J, standard DIN connector, 5 pins, midi

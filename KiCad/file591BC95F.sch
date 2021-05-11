@@ -14,7 +14,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L FlexFox80-rescue:LTC3600-ARDF-2-Band-MiniTx-rescue U203
+L Regulator_Switching:LTC3600 U203
 U 1 1 58B77FB4
 P 7550 2500
 F 0 "U203" H 7450 2500 61  0000 C CNB
@@ -98,7 +98,7 @@ F 8 "CAP CER 22UF 25V X5R 1210" V 7250 1900 50  0001 C CNN "Description"
 	0    1    1    0   
 $EndComp
 $Comp
-L FlexFox80-rescue:DAC081C085-ARDF-2-Band-MiniTx-rescue U201
+L Analog_DAC:DAC081C085 U201
 U 1 1 58B84991
 P 3600 2250
 F 0 "U201" H 3600 2700 61  0000 L CNB
@@ -320,9 +320,11 @@ External Battery\nConnector
 Text Notes 4750 1000 0    118  ~ 24
 High-Efficiency Variable Buck Power Regulator
 $Comp
-L FlexFox80-rescue:OPA171-ARDF-2-Band-MiniTx-rescue U202
+L Amplifier_Operational:OPA171 U202
 U 1 1 59D417D4
 P 6000 2200
+AR Path="/59D417D4" Ref="U202"  Part="1" 
+AR Path="/591BC960/59D417D4" Ref="U202"  Part="1" 
 F 0 "U202" H 6000 2450 61  0000 L CNB
 F 1 "OPA171" H 6000 2350 61  0000 L CNB
 F 2 "TO_SOT_Packages_SMD:SOT-23-5_MCP" H 6050 2400 50  0001 C CNN
@@ -368,7 +370,7 @@ U 1 1 59FCFE1A
 P 6000 5100
 F 0 "P203" H 6000 5250 50  0000 C CNN
 F 1 "Power Pole" V 6150 5100 50  0001 C CNN
-F 2 "" H 6000 5100 50  0001 C CNN
+F 2 "Connect:PowerPole-ASMPP30-1x2" H 6000 5100 50  0001 C CNN
 F 3 "" H 6000 5100 50  0001 C CNN
 F 4 "2243-ASMPP30-1X2-RK-ND" H 6000 5100 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=2243-ASMPP30-1X2-RK-ND\">Link</a>" H 6000 5100 60  0001 C CNN "Link"
@@ -582,7 +584,7 @@ Wire Wire Line
 Wire Wire Line
 	3800 1350 3800 1400
 $Comp
-L FlexFox80-rescue:INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue L201
+L Device:INDUCTOR_SMALL L201
 U 1 1 5BF17B46
 P 4350 1650
 F 0 "L201" H 4350 1750 50  0000 C CNN
@@ -600,7 +602,7 @@ $EndComp
 NoConn ~ 6500 5050
 NoConn ~ 6500 5150
 $Comp
-L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W204
+L special:TEST_SCOPE W204
 U 1 1 5C0F212A
 P 9400 1500
 F 0 "W204" V 9450 1750 50  0000 C CNN
@@ -771,7 +773,7 @@ F 3 "" H 4100 2400 50  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L FlexFox80-rescue:TEST_SCOPE-ARDF-2-Band-MiniTx-rescue W205
+L special:TEST_SCOPE W205
 U 1 1 5F84AD75
 P 4800 2250
 F 0 "W205" H 4700 2450 50  0000 C CNN
@@ -780,6 +782,7 @@ F 2 "Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small"
 F 3 "" H 5000 2250 50  0001 C CNN
 F 4 "np" H 4800 2250 50  0001 C CNN "Digi-Key Part No."
 F 5 "np" H 4800 2250 60  0001 C CNN "Link"
+F 6 "np" H 4800 2250 50  0001 C CNN "Manufacturer"
 	1    4800 2250
 	-1   0    0    1   
 $EndComp
@@ -1366,7 +1369,7 @@ U 1 1 607F80D4
 P 6300 5100
 F 0 "P201" H 6300 5250 50  0000 C CNN
 F 1 "Power Pole" V 6450 5100 50  0000 C CNN
-F 2 "" H 6300 5100 50  0001 C CNN
+F 2 "Oddities:Dummy_Empty_2" H 6300 5100 50  0001 C CNN
 F 3 "" H 6300 5100 50  0001 C CNN
 F 4 "2243-ASMPP30-1X2-RK-ND" H 6300 5100 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=2243-ASMPP30-1X2-RK-ND\">Link</a>" H 6300 5100 60  0001 C CNN "Link"

@@ -211,13 +211,13 @@ $EndComp
 Text GLabel 2250 8500 0    39   Input ~ 0
 ~RESET~
 $Comp
-L FlexFox80-rescue:CONN_02X03-ARDF-2-Band-MiniTx-rescue P301
+L Connector:ISP_PDI P301
 U 1 1 57AD5B1A
 P 4100 5600
 F 0 "P301" H 4100 5800 50  0000 C CNN
 F 1 "ISP/PDI" H 4100 5400 50  0000 C CNN
 F 2 "Pin_Headers:SM_Pin_Header_Straight_2x03" H 4100 4400 50  0001 C CNN
-F 3 "http://katalog.we-online.de/em/datasheet/6100xx21121.pdf" H 4100 4400 50  0001 C CNN
+F 3 "" H 4100 4400 50  0001 C CNN
 F 4 "609-3487-1-ND" H 4100 5600 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=609-3487-1-ND\">Link</a>" H 4100 5600 60  0001 C CNN "Link"
 F 6 "Amphenol ICC (FCI)" H 4100 5600 50  0001 C CNN "Manufacturer"
@@ -1377,7 +1377,7 @@ Wire Wire Line
 	9750 3900 10050 3900
 Connection ~ 10050 3900
 $Comp
-L FlexFox80-rescue:SN74CB3Q3305-ARDF-2-Band-MiniTx-rescue U307
+L Interface:SN74CB3Q3305 U307
 U 1 1 5C75D7C5
 P 10050 4250
 F 0 "U307" H 10200 4500 61  0000 C CNB
@@ -2294,7 +2294,7 @@ Wire Wire Line
 Wire Wire Line
 	4200 2050 3900 2050
 $Comp
-L FlexFox80-rescue:MIC5219-ARDF-2-Band-MiniTx-rescue U303
+L Regulator_Linear:LP2992 U303
 U 1 1 60F38BB8
 P 3150 2100
 F 0 "U303" H 3150 2400 61  0000 C CNB
@@ -2438,7 +2438,7 @@ Wire Wire Line
 Wire Wire Line
 	1000 8650 1700 8650
 $Comp
-L Diode:ESD9B5.0ST5G D306
+L Power_Protection:TVS_Diode D306
 U 1 1 612F5B15
 P 3750 9800
 F 0 "D306" V 3704 9879 50  0000 L CNN
@@ -2732,7 +2732,7 @@ F 8 "RES 470 OHM 1% 1/4W 0805" H 10150 5850 50  0001 C CNN "Description"
 	0    1    1    0   
 $EndComp
 $Comp
-L FlexFox80-rescue:MIC5219-ARDF-2-Band-MiniTx-rescue U308
+L Regulator_Linear:LP2992 U308
 U 1 1 60E1E02E
 P 3200 3550
 F 0 "U308" H 3200 3850 61  0000 C CNB
@@ -2748,7 +2748,7 @@ F 8 "IC REG LINEAR 3.3V 250MA SOT23-5" H 3200 3550 50  0001 C CNN "Description"
 	1    0    0    -1  
 $EndComp
 $Comp
-L FlexFox80-rescue:MIC5219-ARDF-2-Band-MiniTx-rescue U306
+L Regulator_Linear:LP2992 U306
 U 1 1 60E3CCEB
 P 14750 6800
 F 0 "U306" H 14750 7100 61  0000 C CNB
@@ -2881,7 +2881,7 @@ F 8 "RES SMD 10K OHM 1% 1/8W 0805" H 2450 7400 50  0001 C CNN "Description"
 	1    0    0    -1  
 $EndComp
 $Comp
-L Diode:ESD9B5.0ST5G D307
+L Power_Protection:TVS_Diode D307
 U 1 1 609FB9B8
 P 4100 9800
 F 0 "D307" V 4054 9879 50  0000 L CNN
