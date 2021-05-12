@@ -136,6 +136,7 @@ X ~ 2 0 300 100 D 50 50 1 1 P
 X ~ 3 300 0 100 L 50 50 1 1 P
 X ~ 4 -300 100 100 R 50 50 1 1 P
 X ~ 5 300 100 100 L 50 50 1 1 P
+X E E 200 -100 200 L 50 50 1 1 P N
 ENDDRAW
 ENDDEF
 #
@@ -273,6 +274,29 @@ X P3 3 -250 0 150 R 50 50 1 1 P
 X P4 4 250 0 150 L 50 50 1 1 P
 X P5 5 -250 -100 150 R 50 50 1 1 P
 X P6 6 250 -100 150 L 50 50 1 1 P
+ENDDRAW
+ENDDEF
+#
+# Connector_PowerPole_1x2_pin
+#
+DEF Connector_PowerPole_1x2_pin J 0 40 Y N 1 F N
+F0 "J" 0 150 50 H V C CNN
+F1 "Connector_PowerPole_1x2_pin" 100 0 50 V V C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+$FPLIST
+ Pin_Header_Straight_1X*
+ Pin_Header_Angled_1X*
+ Socket_Strip_Straight_1X*
+ Socket_Strip_Angled_1X*
+$ENDFPLIST
+DRAW
+S -50 -45 10 -55 0 1 0 N
+S -50 55 10 45 0 1 0 N
+S -50 100 50 -100 0 1 0 N
+X P1 1 -200 50 150 R 50 50 1 1 P
+X P2 2 -200 -50 150 R 50 50 1 1 P
+X E E 0 -100 0 U 50 50 1 1 P N
 ENDDRAW
 ENDDEF
 #

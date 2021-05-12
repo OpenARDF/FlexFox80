@@ -365,7 +365,7 @@ F 8 "CAP TANT 47UF 10% 20V 2917" H 9200 2850 50  0001 C CNN "Description"
 	1    0    0    -1  
 $EndComp
 $Comp
-L FlexFox80-rescue:CONN_01X02-ARDF-2-Band-MiniTx-rescue P203
+L Connector:PowerPole_1x2_pin P203
 U 1 1 59FCFE1A
 P 6000 5100
 F 0 "P203" H 6000 5250 50  0000 C CNN
@@ -1250,7 +1250,7 @@ F 3 "" H 3050 3650 50  0000 C CNN
 	1    0    0    1   
 $EndComp
 Text GLabel 4250 5450 2    39   Output ~ 0
-EXTERNAL_3.2V-12V_SUPPLY
+EXTERNAL_3.6V-15V_SUPPLY
 Wire Wire Line
 	4250 5450 4100 5450
 Connection ~ 4100 5450
@@ -1768,4 +1768,15 @@ $EndComp
 Connection ~ 3500 4750
 Wire Wire Line
 	3500 4750 3400 4750
+$Comp
+L power:GNDD #PWR0106
+U 1 1 60E18502
+P 6000 5200
+F 0 "#PWR0106" H 6000 4950 50  0001 C CNN
+F 1 "GNDD" H 6004 5045 50  0000 C CNN
+F 2 "" H 6000 5200 50  0001 C CNN
+F 3 "" H 6000 5200 50  0001 C CNN
+	1    6000 5200
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC

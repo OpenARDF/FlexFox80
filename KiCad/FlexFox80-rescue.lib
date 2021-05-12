@@ -208,28 +208,6 @@ X P1 1 -200 0 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# CONN_01X02-ARDF-2-Band-MiniTx-rescue
-#
-DEF CONN_01X02-ARDF-2-Band-MiniTx-rescue J 0 40 Y N 1 F N
-F0 "J" 0 150 50 H V C CNN
-F1 "CONN_01X02-ARDF-2-Band-MiniTx-rescue" 100 0 50 V V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-$FPLIST
- Pin_Header_Straight_1X*
- Pin_Header_Angled_1X*
- Socket_Strip_Straight_1X*
- Socket_Strip_Angled_1X*
-$ENDFPLIST
-DRAW
-S -50 -45 10 -55 0 1 0 N
-S -50 55 10 45 0 1 0 N
-S -50 100 50 -100 0 1 0 N
-X P1 1 -200 50 150 R 50 50 1 1 P
-X P2 2 -200 -50 150 R 50 50 1 1 P
-ENDDRAW
-ENDDEF
-#
 # CONN_01X03-ARDF-2-Band-MiniTx-rescue
 #
 DEF CONN_01X03-ARDF-2-Band-MiniTx-rescue J 0 40 Y N 1 F N
@@ -777,6 +755,29 @@ X V- 2 -100 -300 150 U 50 50 1 1 P
 X + 3 -300 100 100 R 50 50 1 1 I
 X - 4 -300 -100 100 R 50 50 1 1 I
 X V+ 5 -100 300 150 D 50 50 1 1 P
+ENDDRAW
+ENDDEF
+#
+# PowerPole_1x2_pin
+#
+DEF PowerPole_1x2_pin J 0 40 Y N 1 F N
+F0 "J" 0 150 50 H V C CNN
+F1 "PowerPole_1x2_pin" 100 0 50 V V C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+$FPLIST
+ Pin_Header_Straight_1X*
+ Pin_Header_Angled_1X*
+ Socket_Strip_Straight_1X*
+ Socket_Strip_Angled_1X*
+$ENDFPLIST
+DRAW
+S -50 -45 10 -55 0 1 0 N
+S -50 55 10 45 0 1 0 N
+S -50 100 50 -100 0 1 0 N
+X P1 1 -200 50 150 R 50 50 1 1 P
+X P2 2 -200 -50 150 R 50 50 1 1 P
+X E E 0 -100 0 U 50 50 1 1 P N
 ENDDRAW
 ENDDEF
 #

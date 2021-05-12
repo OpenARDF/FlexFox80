@@ -62,6 +62,9 @@ F 2 "Oddities:Dummy_Empty" H 3100 3650 50  0001 C CNN
 F 3 "" H 3100 3650 50  0001 C CNN
 F 4 "S5637-ND" H 3100 3650 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/product-detail/en/sullins-connector-solutions/NPPC061KFXC-RC/S5637-ND/776096\">Link</a>" H 3100 3650 60  0001 C CNN "Link"
+F 6 "Sullins Connector Solutions" H 3100 3650 50  0001 C CNN "Manufacturer"
+F 7 "NPPC061KFXC-RC" H 3100 3650 50  0001 C CNN "Manufacturer PN"
+F 8 "CONN HDR 6POS 0.1 GOLD SMD" H 3100 3650 50  0001 C CNN "Description"
 	1    3100 3650
 	1    0    0    -1  
 $EndComp
