@@ -1250,7 +1250,7 @@ F 3 "" H 3050 3650 50  0000 C CNN
 	1    0    0    1   
 $EndComp
 Text GLabel 4250 5450 2    39   Output ~ 0
-EXTERNAL_3.6V-12V_SUPPLY
+EXTERNAL_3.6V-15V_SUPPLY
 Wire Wire Line
 	4250 5450 4100 5450
 Connection ~ 4100 5450
@@ -1364,19 +1364,21 @@ $EndComp
 Wire Wire Line
 	2700 5450 2850 5450
 $Comp
-L FlexFox80-rescue:CONN_01X02-ARDF-2-Band-MiniTx-rescue P201
+L Connector_Generic:Conn_01x02 P201
 U 1 1 607F80D4
-P 6300 5100
-F 0 "P201" H 6300 5250 50  0000 C CNN
-F 1 "Power Pole" V 6450 5100 50  0000 C CNN
-F 2 "Oddities:Dummy_Empty_2" H 6300 5100 50  0001 C CNN
-F 3 "" H 6300 5100 50  0001 C CNN
-F 4 "2243-ASMPP30-1X2-RK-ND" H 6300 5100 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=2243-ASMPP30-1X2-RK-ND\">Link</a>" H 6300 5100 60  0001 C CNN "Link"
-F 6 "TH" H 6300 5100 50  0001 C CNN "Manufacturer"
-F 7 "TH" H 6300 5100 50  0001 C CNN "Manufacturer PN"
-F 8 "TH" H 6300 5100 50  0001 C CNN "Description"
-	1    6300 5100
+P 6300 5050
+AR Path="/607F80D4" Ref="P201"  Part="1" 
+AR Path="/591BC960/607F80D4" Ref="P201"  Part="1" 
+F 0 "P201" H 6300 5200 50  0000 C CNN
+F 1 "Power Pole" V 6450 5050 50  0000 C CNN
+F 2 "Oddities:Dummy_Empty_2" H 6300 5050 50  0001 C CNN
+F 3 "" H 6300 5050 50  0001 C CNN
+F 4 "2243-ASMPP30-1X2-RK-ND" H 6300 5050 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=2243-ASMPP30-1X2-RK-ND\">Link</a>" H 6300 5050 60  0001 C CNN "Link"
+F 6 "TH" H 6300 5050 50  0001 C CNN "Manufacturer"
+F 7 "TH" H 6300 5050 50  0001 C CNN "Manufacturer PN"
+F 8 "TH" H 6300 5050 50  0001 C CNN "Description"
+	1    6300 5050
 	-1   0    0    -1  
 $EndComp
 $Comp
