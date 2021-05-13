@@ -27,6 +27,8 @@ HS101 ,Heatsink,1,Heatsinks:Heatsink_HF35G,TH,HS220-ND,<a href="https://www.digi
 J101 ,DIN-5_180degree,1,Connect:SDF-50J,TH,CP-7050-ND,<a href="https://www.digikey.com/products/en?keywords=CP-7050-ND">Link</a>,TH,TH, 
 J203 ,V4,1,Pin_Headers:Pin_Header_Straight_1x01_circle_pad, ,np,np, , , 
 J301 ,DB9_Female,1,Connect:DB9F_CI,CONN D-SUB RCPT 9POS SLDR CUP,609-1525-ND,<a href="https://www.digikey.com/products/en?keywords=609-1525-ND">Link</a>,Amphenol ICC (FCI),DE09S064TLF, 
+J303 ,DB9_Male,1,Connect:DB9F_CI,9 Position D-Sub Plug  Male Pins Connector,609-5908-ND,<a href="https://www.digikey.com/products/en?keywords=609-5908-ND">Link</a>,Amphenol ICC (FCI),DE09P065TXLF, 
+J302 ,Conn_01x06,1,Pin_Headers:Pin_Header_Angled_1x06, ,929550-01-06-ND,<a href="https://www.digikey.com/products/en?keywords=929550-01-06-ND">Link</a>,TH,TH, 
 J401 ,CONN_01X06,1,Oddities:Dummy_Empty,CONN HDR 6POS 0.1 GOLD SMD,S5637-ND,<a href="https://www.digikey.com/product-detail/en/sullins-connector-solutions/NPPC061KFXC-RC/S5637-ND/776096">Link</a>,Sullins Connector Solutions,NPPC061KFXC-RC, 
 J402 J403 ,CONN_01X10,2,Oddities:Dummy_Empty,CONN HDR 10POS 0.1 GOLD SMD,S5641-ND,<a href="https://www.digikey.com/product-detail/en/sullins-connector-solutions/NPPC101KFXC-RC/S5641-ND/776100">Link</a>,Sullins Connector Solutions,NPPC101KFXC-RC, 
 L106 L108 ,2.7uH,2,Inductors:Toroid_T-60_2TH_Vertical,TH,T60-2 (Amidon),<a href="http://www.amidoncorp.com/t60-2/">Link</a>,TH,TH, 
@@ -76,7 +78,7 @@ U304 ,SI5351A,1,Housings_SSOP:MSOP-10_3x3mm_Pitch0.5mm,IC CLK GENERATOR 200MHZ 1
 U301 ,DS3231,1,SMD_Packages:SO16,IC RTC CLK/CALENDAR I2C 16-SOIC,DS3231S#T&RCT-ND,<a href="https://www.digikey.com/products/en?keywords=DS3231S%23T%26RCT-ND">Link</a>,Maxim Integrated,DS3231S#T&R, 
 U305 ,74HC1G08,1,TO_SOT_Packages_SMD:SOT-23-5,IC GATE AND 1CH 2-INP 5TSOP,MC74HC1G08DTT1GOSCT-ND,<a href="https://www.digikey.com/products/en?keywords=MC74HC1G08DTT1GOSCT-ND">Link</a>,ON Semiconductor,MC74HC1G08DTT1G, 
 U307 ,SN74CB3Q3305,1,Housings_SSOP:TSSOP-8_3x3mm_Pitch0.65mm,IC BUS SWITCH 1 X 1:1 8TSSOP,296-16809-1-ND,<a href="https://www.digikey.com/products/en?keywords=296-16809-1-ND">Link</a>,Texas Instruments,SN74CB3Q3305PWR, 
-U302 ,ATmega1284P-AU,1,Package_QFP:TQFP-44_10x10mm_P0.8mm,IC MCU 8BIT 128KB FLASH 44TQFP,ATMEGA1284P-AU-ND,<a href="https://www.digikey.com/products/en?keywords=ATMEGA1284P-AU-ND">Link</a>,Microchip Technology,ATMEGA1284P-AU, 
+U302 ,ATmega1284P-AU,1,Housings_QFP:TQFP-44_10x10mm_Pitch0.8mm,IC MCU 8BIT 128KB FLASH 44TQFP,ATMEGA1284P-AU-ND,<a href="https://www.digikey.com/products/en?keywords=ATMEGA1284P-AU-ND">Link</a>,Microchip Technology,ATMEGA1284P-AU, 
 U303 U308 U306 ,LP2992,3,TO_SOT_Packages_SMD:SOT-23-5,IC REG LINEAR 3.3V 250MA SOT23-5,LP2992AIM5-3.3/NOPBCT-ND,<a href="https://www.digikey.com/products/en?keywords=LP2992AIM5-3.3/NOPBCT-ND">Link</a>,Texas Instruments,LP2992AIM5-3.3/NOPB, 
 W116 ,GND,1,Pin_Headers:Pin_Header_Straight_1x01, , ,np, , ,np
 W114 ,GND,1,Measurement_Points:Measurement_Point_Round-SMD-Pad_Small, , ,np, , ,np
