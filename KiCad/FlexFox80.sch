@@ -818,7 +818,6 @@ F 3 "" H 3150 4250 50  0000 C CNN
 	1    3150 4250
 	1    0    0    -1  
 $EndComp
-NoConn ~ 3450 4050
 Wire Wire Line
 	4350 2700 4450 2700
 Wire Wire Line
@@ -953,6 +952,31 @@ F 1 "GNDD" H 8704 2945 50  0000 C CNN
 F 2 "" H 8700 3100 50  0001 C CNN
 F 3 "" H 8700 3100 50  0001 C CNN
 	1    8700 3100
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x02 J102
+U 1 1 60A40AAA
+P 3650 4150
+F 0 "J102" H 3650 3950 50  0000 C CNN
+F 1 "Conn_01x02" H 3568 3916 50  0001 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x02" H 3650 4150 50  0001 C CNN
+F 3 "" H 3650 4150 50  0001 C CNN
+F 4 "np" H 3650 4150 50  0001 C CNN "Digi-Key Part No."
+F 5 "np" H 3650 4150 50  0001 C CNN "Link"
+F 6 "np" H 3650 4150 50  0001 C CNN "Manufacturer"
+	1    3650 4150
+	1    0    0    1   
+$EndComp
+$Comp
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0216
+U 1 1 60A416FC
+P 3450 4150
+F 0 "#PWR0216" H 3450 3900 50  0001 C CNN
+F 1 "GND_L8" H 3450 4000 50  0001 C CNN
+F 2 "" H 3450 4150 50  0000 C CNN
+F 3 "" H 3450 4150 50  0000 C CNN
+	1    3450 4150
 	1    0    0    -1  
 $EndComp
 $EndSCHEMATC

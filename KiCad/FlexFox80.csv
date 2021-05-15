@@ -25,6 +25,7 @@ D301 ,MBD54DWT1GOSCT-ND,1,TO_SOT_Packages_SMD:SOT-363-0.65,DIODE ARRAY SCHOTTKY 
 D306 D307 ,ESD,2,Resistors_SMD:R_0603,VARISTOR 0603,CG0603MLC-05LECT-ND,<a href="https://www.digikey.com/products/en?keywords=CG0603MLC-05LECT-ND">Link</a>,Bourns Inc.,CG0603MLC-05LE, 
 HS101 ,Heatsink,1,Heatsinks:Heatsink_HF35G,TH,HS220-ND,<a href="https://www.digikey.com/products/en?keywords=HS220-ND">Link</a>,TH,TH, 
 J101 ,DIN-5_180degree,1,Connect:SDF-50J,TH,CP-7050-ND,<a href="https://www.digikey.com/products/en?keywords=CP-7050-ND">Link</a>,TH,TH, 
+J102 ,Conn_01x02,1,Pin_Headers:Pin_Header_Straight_1x02, ,np,np,np, , 
 J203 ,V4,1,Pin_Headers:Pin_Header_Straight_1x01_circle_pad, ,np,np, , , 
 J301 ,DB9_Female,1,Connect:DB9F_CI,CONN D-SUB RCPT 9POS SLDR CUP,609-1525-ND,<a href="https://www.digikey.com/products/en?keywords=609-1525-ND">Link</a>,Amphenol ICC (FCI),DE09S064TLF, 
 J303 ,DB9_Male,1,Connect:DB9F_CI,9 Position D-Sub Plug  Male Pins Connector,609-5908-ND,<a href="https://www.digikey.com/products/en?keywords=609-5908-ND">Link</a>,Amphenol ICC (FCI),DE09P065TXLF, 
