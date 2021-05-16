@@ -2,7 +2,7 @@
 <export version="D">
   <design>
     <source>/Users/Charles/Documents/GitHub/FlexFox80/KiCad/FlexFox80.sch</source>
-    <date>Friday, May 14, 2021 at 09:22:32 PM</date>
+    <date>Saturday, May 15, 2021 at 09:20:00 AM</date>
     <tool>Eeschema (5.1.9-0-10_14)</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -113,8 +113,8 @@
       <footprint>TO_SOT_Packages_SMD:SOT-23-6-LM5134</footprint>
       <fields>
         <field name="Description">IC GATE DRVR LOW-SIDE SOT23-6</field>
-        <field name="Digi-Key Part No.">LM5134BMFX/NOPB-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=LM5134BMFX/NOPB-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Digi-Key Part No.">296-40244-1-ND</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=296-40244-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Texas Instruments</field>
         <field name="Manufacturer PN">LM5134BMFX/NOPB</field>
       </fields>
@@ -330,8 +330,8 @@
       <tstamp>5C71D9FE</tstamp>
     </comp>
     <comp ref="D104">
-      <value>5V</value>
-      <footprint>Capacitors_SMD:C_0603</footprint>
+      <value>ESD</value>
+      <footprint>Resistors_SMD:R_0603</footprint>
       <fields>
         <field name="Description">VARISTOR 0603</field>
         <field name="Digi-Key Part No.">CG0603MLC-05LECT-ND</field>
@@ -373,7 +373,7 @@
       <tstamp>61BDEA6F</tstamp>
     </comp>
     <comp ref="D101">
-      <value>Dual Schottky</value>
+      <value>MBD54</value>
       <footprint>TO_SOT_Packages_SMD:SOT-363-0.65</footprint>
       <fields>
         <field name="Description">DIODE ARRAY SCHOTTKY 30V SC88</field>
@@ -1658,7 +1658,7 @@
       <value>100k</value>
       <footprint>Resistors_SMD:R_0805</footprint>
       <fields>
-        <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
+        <field name="Description">RES SMD 100K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-100KCRCT-ND</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-100KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
@@ -1766,7 +1766,7 @@
       <tstamp>60F38BF9</tstamp>
     </comp>
     <comp ref="D301">
-      <value>MBD54DWT1GOSCT-ND</value>
+      <value>MBD54</value>
       <footprint>TO_SOT_Packages_SMD:SOT-363-0.65</footprint>
       <fields>
         <field name="Description">DIODE ARRAY SCHOTTKY 30V SC88</field>
@@ -2105,7 +2105,7 @@
       <value>100k</value>
       <footprint>Resistors_SMD:R_0805</footprint>
       <fields>
-        <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
+        <field name="Description">RES SMD 100K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-100KCRCT-ND</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-100KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
