@@ -2918,7 +2918,6 @@ Text Label 7800 3550 0    39   ~ 0
 PA1
 NoConn ~ 12500 2950
 NoConn ~ 12500 3350
-NoConn ~ 8250 6750
 $Comp
 L Connector:DB9_Male J303
 U 1 1 609FE9A1

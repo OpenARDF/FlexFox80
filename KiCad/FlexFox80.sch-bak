@@ -256,8 +256,8 @@ F 0 "U107" H 3450 4350 61  0000 R CNB
 F 1 "LM5134B" H 3600 4250 61  0000 R CNB
 F 2 "TO_SOT_Packages_SMD:SOT-23-6-LM5134" H 3300 3100 50  0001 L CNN
 F 3 "" H 3350 3650 50  0001 C CNN
-F 4 "LM5134BMFX/NOPB-ND" H 3150 3950 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=LM5134BMFX/NOPB-ND\">Link</a>" H 3150 3950 60  0001 C CNN "Link"
+F 4 "296-40244-1-ND" H 3150 3950 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=296-40244-1-ND\">Link</a>" H 3150 3950 60  0001 C CNN "Link"
 F 6 "Texas Instruments" H 3150 3950 50  0001 C CNN "Manufacturer"
 F 7 "LM5134BMFX/NOPB" H 3150 3950 50  0001 C CNN "Manufacturer PN"
 F 8 "IC GATE DRVR LOW-SIDE SOT23-6" H 3150 3950 50  0001 C CNN "Description"
