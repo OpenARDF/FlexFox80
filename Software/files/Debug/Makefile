@@ -119,9 +119,9 @@ src/Drivers/i2c.d \
 src/Drivers/si5351.d \
 src/ASF/common/boards/user_board/init.d
 
-OUTPUT_FILE_PATH +=RDP.elf
+OUTPUT_FILE_PATH +=FlexFox80.elf
 
-OUTPUT_FILE_PATH_AS_ARGS +=RDP.elf
+OUTPUT_FILE_PATH_AS_ARGS +=FlexFox80.elf
 
 ADDITIONAL_DEPENDENCIES:=
 
@@ -229,13 +229,13 @@ all: $(OUTPUT_FILE_PATH) $(ADDITIONAL_DEPENDENCIES)
 $(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP) $(LIB_DEP) $(LINKER_SCRIPT_DEP)
 	@echo Building target: $@
 	@echo Invoking: AVR/GNU Linker : 5.4.0
-	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="RDP.map" -Wl,--start-group -Wl,-lm  -Wl,--end-group -mmcu=atmega328p -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\gcc\dev\atmega328p" -Wl,--relax -Wl,--defsym,STACK_SIZE=0x400  
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="FlexFox80.map" -Wl,--start-group -Wl,-lm  -Wl,--end-group -mmcu=atmega328p -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.0.106\gcc\dev\atmega328p" -Wl,--relax -Wl,--defsym,STACK_SIZE=0x400  
 	@echo Finished building target: $@
-	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature -R .user_signatures  "RDP.elf" "RDP.hex"
-	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objcopy.exe" -j .eeprom  --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0  --no-change-warnings -O ihex "RDP.elf" "RDP.eep" || exit 0
-	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objdump.exe" -h -S "RDP.elf" > "RDP.lss"
-	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O srec -R .eeprom -R .fuse -R .lock -R .signature -R .user_signatures "RDP.elf" "RDP.srec"
-	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-size.exe" "RDP.elf"
+	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature -R .user_signatures  "FlexFox80.elf" "FlexFox80.hex"
+	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objcopy.exe" -j .eeprom  --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0  --no-change-warnings -O ihex "FlexFox80.elf" "FlexFox80.eep" || exit 0
+	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objdump.exe" -h -S "FlexFox80.elf" > "FlexFox80.lss"
+	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O srec -R .eeprom -R .fuse -R .lock -R .signature -R .user_signatures "FlexFox80.elf" "FlexFox80.srec"
+	"C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-size.exe" "FlexFox80.elf"
 	
 	
 
@@ -247,5 +247,5 @@ $(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP) $(LIB_DEP) $(LINKER
 clean:
 	-$(RM) $(OBJS_AS_ARGS) $(EXECUTABLES)  
 	-$(RM) $(C_DEPS_AS_ARGS)   
-	rm -rf "RDP.elf" "RDP.a" "RDP.hex" "RDP.lss" "RDP.eep" "RDP.map" "RDP.srec" "RDP.usersignatures"
+	rm -rf "FlexFox80.elf" "FlexFox80.a" "FlexFox80.hex" "FlexFox80.lss" "FlexFox80.eep" "FlexFox80.map" "FlexFox80.srec" "FlexFox80.usersignatures"
 	

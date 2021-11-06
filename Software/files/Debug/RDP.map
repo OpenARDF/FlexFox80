@@ -1553,28 +1553,28 @@ END GROUP
  .debug_frame   0x00000ac8      0x44c src/Drivers/si5351.o
  .debug_frame   0x00000f14       0x24 src/ASF/common/boards/user_board/init.o
 
-.debug_str      0x00000000    0x1549a
+.debug_str      0x00000000    0x15499
  *(.debug_str)
- .debug_str     0x00000000     0xa3fe src/Core/linkbus.o
-                               0xa610 (size before relaxing)
- .debug_str     0x0000a3fe     0x9ae7 src/Core/main.o
-                              0x1410b (size before relaxing)
- .debug_str     0x00013ee5      0x111 src/Core/morse.o
-                               0x80c8 (size before relaxing)
- .debug_str     0x00013ff6      0x551 src/Core/transmitter.o
-                               0xa5c0 (size before relaxing)
- .debug_str     0x00014547       0x13 src/Core/util.o
-                               0x8950 (size before relaxing)
- .debug_str     0x0001455a      0x530 src/Drivers/ds3231.o
-                               0x8ea1 (size before relaxing)
- .debug_str     0x00014a8a       0x25 src/Drivers/huzzah.o
-                               0x7c30 (size before relaxing)
- .debug_str     0x00014aaf      0x665 src/Drivers/i2c.o
-                               0x9a52 (size before relaxing)
- .debug_str     0x00015114      0x350 src/Drivers/si5351.o
-                               0xa367 (size before relaxing)
- .debug_str     0x00015464       0x36 src/ASF/common/boards/user_board/init.o
-                               0xf758 (size before relaxing)
+ .debug_str     0x00000000     0xa3fd src/Core/linkbus.o
+                               0xa60f (size before relaxing)
+ .debug_str     0x0000a3fd     0x9ae7 src/Core/main.o
+                              0x1410a (size before relaxing)
+ .debug_str     0x00013ee4      0x111 src/Core/morse.o
+                               0x80c7 (size before relaxing)
+ .debug_str     0x00013ff5      0x551 src/Core/transmitter.o
+                               0xa5bf (size before relaxing)
+ .debug_str     0x00014546       0x13 src/Core/util.o
+                               0x894f (size before relaxing)
+ .debug_str     0x00014559      0x530 src/Drivers/ds3231.o
+                               0x8ea0 (size before relaxing)
+ .debug_str     0x00014a89       0x25 src/Drivers/huzzah.o
+                               0x7c2f (size before relaxing)
+ .debug_str     0x00014aae      0x665 src/Drivers/i2c.o
+                               0x9a51 (size before relaxing)
+ .debug_str     0x00015113      0x350 src/Drivers/si5351.o
+                               0xa366 (size before relaxing)
+ .debug_str     0x00015463       0x36 src/ASF/common/boards/user_board/init.o
+                               0xf757 (size before relaxing)
 
 .debug_loc      0x00000000     0x691e
  *(.debug_loc)
