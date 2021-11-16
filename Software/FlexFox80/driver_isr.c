@@ -146,6 +146,4 @@ ISR(USART1_DRE_vect)
 			linkbus_end_tx();
 		}
 	}
-	
-	USART1.STATUS |= 1 << USART_TXCIF_bp;
 }
