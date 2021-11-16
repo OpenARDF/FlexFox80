@@ -35,6 +35,7 @@
 
 #include <driver_init.h>
 #include <compiler.h>
+#include <ctype.h> /* toupper() */
 #include "src/linkbus.h"
 #include "include/usart_basic.h"
 
@@ -111,10 +112,106 @@ ISR(TCB3_INT_vect)
 */
 ISR(USART1_RXC_vect)
 {
-	static int x = 0;
-	char y;
-	x++;
-	y = USART1_get_data();
+	static LinkbusRxBuffer* buff = NULL;
+	static uint8_t charIndex = 0;
+	static uint8_t field_index = 0;
+	static uint8_t field_len = 0;
+	static uint32_t msg_ID = 0;
+	static BOOL receiving_msg = FALSE;
+	uint8_t rx_char;
+
+	rx_char = USART1_get_data();
+
+	if(!buff)
+	{
+		buff = nextEmptyRxBuffer();
+	}
+
+	if(buff)
+	{
+		rx_char = toupper(rx_char);
+//		SMCR = 0x00;                                /* exit power-down mode */
+
+		if((rx_char == '$') || (rx_char == '!'))    /* start of new message = $ */
+		{
+			charIndex = 0;
+			buff->type = (rx_char == '!') ? LINKBUS_MSG_REPLY : LINKBUS_MSG_COMMAND;
+			field_len = 0;
+			msg_ID = LINKBUS_MSG_UNKNOWN;
+			receiving_msg = TRUE;
+
+			/* Empty the field buffers */
+			for(field_index = 0; field_index < LINKBUS_MAX_MSG_NUMBER_OF_FIELDS; field_index++)
+			{
+				buff->fields[field_index][0] = '\0';
+			}
+
+			field_index = 0;
+		}
+		else if(receiving_msg)
+		{
+			if((rx_char == ',') || (rx_char == ';') || (rx_char == '?'))    /* new field = ,; end of message = ; */
+			{
+				/* if(field_index == 0) // message ID received */
+				if(field_index > 0)
+				{
+					buff->fields[field_index - 1][field_len] = 0;
+				}
+
+				field_index++;
+				field_len = 0;
+
+				if(rx_char == ';')
+				{
+					if(charIndex > LINKBUS_MIN_MSG_LENGTH)
+					{
+						buff->id = (LBMessageID)msg_ID;
+					}
+					receiving_msg = FALSE;
+				}
+				else if(rx_char == '?')
+				{
+					buff->type = LINKBUS_MSG_QUERY;
+					if(charIndex > LINKBUS_MIN_MSG_LENGTH)
+					{
+						buff->id = msg_ID;
+					}
+					receiving_msg = FALSE;
+				}
+
+				if(!receiving_msg)
+				{
+					buff = 0;
+				}
+			}
+			else
+			{
+				if(field_index == 0)    /* message ID received */
+				{
+					msg_ID = msg_ID * 10 + rx_char;
+				}
+				else
+				{
+					buff->fields[field_index - 1][field_len++] = rx_char;
+				}
+			}
+		}
+		else if(rx_char == 0x0D)    /* Handle carriage return */
+		{
+			buff->id = LINKBUS_MSG_UNKNOWN;
+			charIndex = LINKBUS_MAX_MSG_LENGTH;
+			field_len = 0;
+			msg_ID = LINKBUS_MSG_UNKNOWN;
+			field_index = 0;
+			buff = NULL;
+		}
+
+		if(++charIndex >= LINKBUS_MAX_MSG_LENGTH)
+		{
+			receiving_msg = FALSE;
+			charIndex = 0;
+		}
+	}
 }
 
 
