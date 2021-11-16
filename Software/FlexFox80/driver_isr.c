@@ -121,7 +121,7 @@ ISR(USART1_RXC_vect)
 /**
 
 */
-ISR(USART1_TXC_vect)
+ISR(USART1_DRE_vect)
 {
 	static LinkbusTxBuffer* buff = 0;
 	static uint8_t charIndex = 0;

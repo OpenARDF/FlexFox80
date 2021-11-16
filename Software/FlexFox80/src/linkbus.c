@@ -185,7 +185,7 @@ void linkbus_end_tx(void)
 {
 	if(linkbus_tx_active)
 	{
-		USART1.CTRLA &= ~(1 << USART_TXCIE_bp); /* Transmit Complete Interrupt Enable: disable */
+		USART1.CTRLA &= ~(1 << USART_DREIE_bp); /* Transmit Data Register Empty Interrupt Enable: disable */
 		linkbus_tx_active = FALSE;
 	}
 }
@@ -298,7 +298,7 @@ BOOL linkbus_send_text(char* text)
 			sprintf(*buff, text);
 
 			linkbus_start_tx();
-			USART1.TXDATAL = "\n";
+//			USART1.TXDATAL = (*buff)[0]; /* send the first character */
 			err = FALSE;
 		}
 	}

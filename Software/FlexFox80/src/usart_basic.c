@@ -50,23 +50,22 @@
  */
 int8_t USART1_init(uint32_t baud)
 {
-
 	USART1.BAUD = (uint16_t)USART1_BAUD_RATE(baud); /* set baud rate register */
 
 	USART1.CTRLA = 0 << USART_ABEIE_bp /* Auto-baud Error Interrupt Enable: disabled */
-			 | 0 << USART_DREIE_bp /* Data Register Empty Interrupt Enable: disabled */
 			 | 0 << USART_LBME_bp /* Loop-back Mode Enable: disabled */
 			 | USART_RS485_DISABLE_gc /* RS485 Mode disabled */
-			 | 1 << USART_RXCIE_bp /* Receive Complete Interrupt Enable: enable */
 			 | 0 << USART_RXSIE_bp /* Receiver Start Frame Interrupt Enable: disabled */
-			 | 1 << USART_TXCIE_bp; /* Transmit Complete Interrupt Enable: disable */
+			 | 0 << USART_DREIE_bp /* Data Register Empty Interrupt Enable: disabled */
+			 | 0 << USART_TXCIE_bp /* Transmit Complete Interrupt Enable: disable */
+			 | 1 << USART_RXCIE_bp; /* Receive Complete Interrupt Enable: enable */
 
 	USART1.CTRLB = 0 << USART_MPCM_bp       /* Multi-processor Communication Mode: disabled */
 	               | 0 << USART_ODME_bp     /* Open Drain Mode Enable: disabled */
-	               | 1 << USART_RXEN_bp     /* Receiver Enable: enable */
 	               | USART_RXMODE_NORMAL_gc /* Normal mode */
 	               | 0 << USART_SFDEN_bp    /* Start Frame Detection Enable: disabled */
-	               | 1 << USART_TXEN_bp;    /* Transmitter Enable: enable */
+	               | 1 << USART_TXEN_bp    /* Transmitter Enable: enable */
+	               | 1 << USART_RXEN_bp;     /* Receiver Enable: enable */
 
 	// USART1.CTRLC = USART_CMODE_ASYNCHRONOUS_gc /* Asynchronous Mode */
 	//		 | USART_CHSIZE_8BIT_gc /* Character size: 8 bit */
@@ -117,9 +116,9 @@ void USART1_enable_rx()
  */
 void USART1_enable_tx()
 {
-	USART1.CTRLA |= 1 << USART_TXCIE_bp; /* Transmit Complete Interrupt Enable: enable */
-	USART1.STATUS |= 1 << USART_TXEN_bp; /* Clear any existing flag setting */
 	USART1.CTRLB |= USART_TXEN_bm;
+	USART1.CTRLA |= 1 << USART_DREIE_bp; /* Transmit Data Ready Interrupt Enable: enable */
+//	USART1.STATUS |= 1 << USART_TXEN_bp; /* Clear any existing flag setting */
 }
 
 /**

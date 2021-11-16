@@ -10,7 +10,7 @@ int main(void)
 	/* Initializes MCU, drivers and middleware */
 	atmel_start_init();
 	
-	linkbus_send_text("ABC...\r");
+	linkbus_send_text("ABC...\n");
 	/* Replace with your application code */
 	while (1) {
 	}
