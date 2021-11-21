@@ -40,6 +40,7 @@
 #include "include/usart_basic.h"
 #include "include/morse.h"
 
+
 ISR(TCA0_OVF_vect)
 {
 	/* Insert your TCA overflow interrupt handling code */
@@ -65,31 +66,6 @@ ISR(TCB2_INT_vect)
     }
 }
 
-
-/**
-One-second counter based on CPU clock.
-*/
-ISR(TCB3_INT_vect)
-{
- 	static uint16_t cnt = 0;
-	
-    /* Insert your TCB interrupt handling code */
-    /**
-     * The interrupt flag is cleared by writing 1 to it, or when the Capture register
-     * is read in Capture mode
-     */
-
-    if(TCB3.INTFLAGS & TCB_CAPT_bm)
-    {
-		if(cnt++ == 299)
-		{
-			cnt = 0;
-			LED_toggle_level();
-		}
-
-        TCB3.INTFLAGS = TCB_CAPT_bm;
-    }
-}
 
 /**
 
