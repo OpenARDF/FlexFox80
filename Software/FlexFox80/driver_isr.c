@@ -36,8 +36,9 @@
 #include <driver_init.h>
 #include <compiler.h>
 #include <ctype.h> /* toupper() */
-#include "src/linkbus.h"
+#include "include/linkbus.h"
 #include "include/usart_basic.h"
+#include "include/morse.h"
 
 ISR(TCA0_OVF_vect)
 {
@@ -46,23 +47,6 @@ ISR(TCA0_OVF_vect)
 
 	/* The interrupt flag has to be cleared manually */
 	TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;
-}
-
-/**
-Periodic tasks not requiring precise timing. Rate = 300 Hz
-*/
-ISR(TCB0_INT_vect)
-{
-    /* Insert your TCB interrupt handling code */
-    /**
-     * The interrupt flag is cleared by writing 1 to it, or when the Capture register
-     * is read in Capture mode
-     */
-
-    if(TCB0.INTFLAGS & TCB_CAPT_bm)
-    {
-        TCB0.INTFLAGS = TCB_CAPT_bm;
-    }
 }
 
 ISR(TCB1_INT_vect)
@@ -83,7 +67,7 @@ ISR(TCB2_INT_vect)
 
 
 /**
-One second counter based on CPU clock.
+One-second counter based on CPU clock.
 */
 ISR(TCB3_INT_vect)
 {

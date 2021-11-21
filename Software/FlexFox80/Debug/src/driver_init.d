@@ -25,7 +25,8 @@ src/driver_init.d src/driver_init.o: ../src/driver_init.c ../defs.h \
  ../include/cpuint.h ../include/tcb.h ../include/bod.h \
  ../include/system.h ../include/ccp.h ../include/protected_io.h \
  ../include/port.h ../include/usart_basic.h ../atmel_start.h \
- ../include/driver_init.h ../include/atmel_start_pins.h ../src/linkbus.h
+ ../include/driver_init.h ../include/atmel_start_pins.h \
+ ../include/linkbus.h
 
 ../defs.h:
 
@@ -107,4 +108,4 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 
 ../include/atmel_start_pins.h:
 
-../src/linkbus.h:
+../include/linkbus.h:

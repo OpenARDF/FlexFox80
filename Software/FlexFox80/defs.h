@@ -48,17 +48,17 @@
    #define INCLUDE_SI5351_SUPPORT // Silicon Labs Programmable Clock
    #define INCLUDE_DS3231_SUPPORT // Maxim RTC
    #define INCLUDE_TRANSMITTER_SUPPORT
-   #define INCLUDE_DAC081C085_SUPPORT
+//   #define INCLUDE_DAC081C085_SUPPORT
 //   #define ENABLE_PIN_CHANGE_INTERRUPT_0
 //   #define ENABLE_PIN_CHANGE_INTERRUPT_1
 //   #define ENABLE_PIN_CHANGE_INTERRUPT_2
 
-#ifdef INCLUDE_DAC081C085_SUPPORT
-   #define PA_DAC DAC081C_I2C_SLAVE_ADDR_A0
-#endif
+// #ifdef INCLUDE_DAC081C085_SUPPORT
+//    #define PA_DAC DAC081C_I2C_SLAVE_ADDR_A0
+// #endif
 
 //   #define AM_DAC DAC081C_I2C_SLAVE_ADDR_A1
-   #define BIAS_POT MCP4552_I2C_SLAVE_ADDR_A0
+//   #define BIAS_POT MCP4552_I2C_SLAVE_ADDR_A0
 
 /*******************************************************/
 /* Error Codes                                                                   */
@@ -193,8 +193,8 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 
 /******************************************************
  * General definitions for making the code easier to understand */
-#define         SDA_PIN (1 << PINC4)
-#define         SCL_PIN (1 << PINC5)
+#define         SDA_PIN 1 /* (1 << PINC4) */
+#define         SCL_PIN 1 /* (1 << PINC5) */
 #define         I2C_PINS (SCL_PIN | SDA_PIN)
 
 #ifndef FALSE
@@ -404,6 +404,9 @@ typedef enum
 	PATTERN_TEXT,
 	STATION_ID
 } TextIndex;
+
+#define MAX_PATTERN_TEXT_LENGTH 20
+
 
 #endif  /* DEFS_H */
 

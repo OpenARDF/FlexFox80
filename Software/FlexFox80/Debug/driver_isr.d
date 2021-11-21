@@ -22,12 +22,12 @@ driver_isr.d driver_isr.o: .././driver_isr.c ../include/driver_init.h \
  ../include/clkctrl.h ../include/slpctrl.h ../include/cpuint.h \
  ../include/tcb.h ../include/bod.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\ctype.h \
- .././src/linkbus.h ../defs.h \
+ .././include/linkbus.h ../defs.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\util\delay.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\util\delay_basic.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\math.h \
  .././include/usart_basic.h ../atmel_start.h ../include/driver_init.h \
- ../include/atmel_start_pins.h
+ ../include/atmel_start_pins.h .././include/morse.h
 
 ../include/driver_init.h:
 
@@ -87,7 +87,7 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\ctype.h:
 
-.././src/linkbus.h:
+.././include/linkbus.h:
 
 ../defs.h:
 
@@ -104,3 +104,5 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 ../include/driver_init.h:
 
 ../include/atmel_start_pins.h:
+
+.././include/morse.h:
