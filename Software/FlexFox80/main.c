@@ -135,13 +135,13 @@ ISR(TCB3_INT_vect)
 
     if(TCB3.INTFLAGS & TCB_CAPT_bm)
     {
-		if(cnt++ == 299)
+		if(cnt++ == 299) /* check for 1-second interval */
 		{
 			cnt = 0;
 			LED_toggle_level();
 		}
 
-        TCB3.INTFLAGS = TCB_CAPT_bm;
+        TCB3.INTFLAGS = TCB_CAPT_bm; /* clear interrupt flag */
     }
 }
 
@@ -309,7 +309,7 @@ ISR(TCB0_INT_vect)
 			conversionInProcess = FALSE;
 		}
 
-        TCB0.INTFLAGS = TCB_CAPT_bm;
+        TCB0.INTFLAGS = TCB_CAPT_bm; /* clear interrupt flag */
     }
 }
 
@@ -319,7 +319,7 @@ int main(void)
 	/* Initializes MCU, drivers and middleware */
 	atmel_start_init();
 	
-	linkbus_send_text("ABC...\n");
+//	linkbus_send_text("ABC...\n");
 	/* Replace with your application code */
 	while (1) {
 	}

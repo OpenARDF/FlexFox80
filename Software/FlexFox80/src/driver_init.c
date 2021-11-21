@@ -38,6 +38,7 @@
 #include <system.h>
 #include "usart_basic.h"
 #include "linkbus.h"
+#include "dac0.h"
 
 
 /**
@@ -47,10 +48,11 @@ void system_init()
 {
 	mcu_init();
 
-	/* PORT setting on PC6 */
+	CLKCTRL_init(); /* Set CPU clock speed appropriately */
+	TIMERB_init(); /* Timers must be initialized before utility_delay functions will work */
+	CPUINT_init(); /* Interrupts must also be enabled before timer interrupts will function */
 
 	// Set pin direction to output
-
 	LED_set_level(
 	    // <y> Initial level
 	    // <id> pad_initial_level
@@ -60,13 +62,13 @@ void system_init()
 
 	LED_set_dir(PORT_DIR_OUT);
 
-	CLKCTRL_init();
 
 	SLPCTRL_init();
+	
+	DAC0_init();
 
 	CPUINT_init();
 
-	TIMERB_init();
 	linkbus_init();
 
 	BOD_init();

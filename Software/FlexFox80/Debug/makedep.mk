@@ -14,6 +14,8 @@ src\clkctrl.c
 
 src\cpuint.c
 
+src\dac0.c
+
 src\driver_init.c
 
 src\ds3231.c

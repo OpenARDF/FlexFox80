@@ -35,6 +35,7 @@ extern "C" {
 #endif
 
 int8_t TIMERB_init();
+bool util_delay_ms(uint32_t delayValue);
 
 #ifdef __cplusplus
 }

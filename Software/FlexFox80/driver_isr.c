@@ -41,23 +41,6 @@
 #include "include/morse.h"
 
 
-ISR(TCA0_OVF_vect)
-{
-	/* Insert your TCA overflow interrupt handling code */
-//	LED_toggle_level();
-
-	/* The interrupt flag has to be cleared manually */
-	TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;
-}
-
-ISR(TCB1_INT_vect)
-{
-    if(TCB1.INTFLAGS & TCB_CAPT_bm)
-    {
-        TCB1.INTFLAGS = TCB_CAPT_bm;
-    }
-}
-
 ISR(TCB2_INT_vect)
 {
 	if(TCB2.INTFLAGS & TCB_CAPT_bm)
