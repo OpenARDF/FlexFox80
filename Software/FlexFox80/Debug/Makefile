@@ -59,6 +59,7 @@ C_SRCS +=  \
 ../atmel_start.c \
 ../driver_isr.c \
 ../main.c \
+../src/adc.c \
 ../src/bod.c \
 ../src/clkctrl.c \
 ../src/cpuint.c \
@@ -86,6 +87,7 @@ OBJS +=  \
 atmel_start.o \
 driver_isr.o \
 main.o \
+src/adc.o \
 src/bod.o \
 src/clkctrl.o \
 src/cpuint.o \
@@ -106,6 +108,7 @@ OBJS_AS_ARGS +=  \
 atmel_start.o \
 driver_isr.o \
 main.o \
+src/adc.o \
 src/bod.o \
 src/clkctrl.o \
 src/cpuint.o \
@@ -126,6 +129,7 @@ C_DEPS +=  \
 atmel_start.d \
 driver_isr.d \
 main.d \
+src/adc.d \
 src/bod.d \
 src/clkctrl.d \
 src/cpuint.d \
@@ -146,6 +150,7 @@ C_DEPS_AS_ARGS +=  \
 atmel_start.d \
 driver_isr.d \
 main.d \
+src/adc.d \
 src/bod.d \
 src/clkctrl.d \
 src/cpuint.d \
@@ -191,6 +196,13 @@ LINKER_SCRIPT_DEP+=
 	
 
 ./main.o: .././main.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG -DF_CPU=24000000  -I"../Config" -I"../include" -I"../utils" -I"../utils/assembler" -I".." -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\AVR-Dx_DFP\1.8.95\include"  -Og -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=avr128da48 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\AVR-Dx_DFP\1.8.95\gcc\dev\avr128da48" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+src/adc.o: ../src/adc.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG -DF_CPU=24000000  -I"../Config" -I"../include" -I"../utils" -I"../utils/assembler" -I".." -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\AVR-Dx_DFP\1.8.95\include"  -Og -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=avr128da48 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\Atmel\AVR-Dx_DFP\1.8.95\gcc\dev\avr128da48" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 

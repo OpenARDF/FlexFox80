@@ -8,6 +8,8 @@ driver_isr.c
 
 main.c
 
+src\adc.c
+
 src\bod.c
 
 src\clkctrl.c

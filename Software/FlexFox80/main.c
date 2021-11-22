@@ -9,6 +9,8 @@
 #include "include/transmitter.h"
 #include "include/ds3231.h"
 #include "include/morse.h"
+#include "adc.h"
+#include "Goertzel.h"
 
 
 /* ADC Defines */
@@ -96,6 +98,7 @@ static uint16_t g_filterADCValue[NUMBER_OF_POLLED_ADC_CHANNELS] = { 500, 500, 50
 static volatile BOOL g_adcUpdated[NUMBER_OF_POLLED_ADC_CHANNELS] = { FALSE, FALSE, FALSE, FALSE, FALSE };
 static volatile uint16_t g_lastConversionResult[NUMBER_OF_POLLED_ADC_CHANNELS];
 
+extern Goertzel g_goertzel;
 
 /***********************************************************************
  * Private Function Prototypes
@@ -316,12 +319,18 @@ ISR(TCB0_INT_vect)
 
 int main(void)
 {
+	uint16_t count = 0;
 	/* Initializes MCU, drivers and middleware */
 	atmel_start_init();
 	
-//	linkbus_send_text("ABC...\n");
-	/* Replace with your application code */
+	linkbus_send_text("ABC...\n");
+	
+	ADC0_startConversions();
+
 	while (1) {
+		while(util_delay_ms(1000));
+		sprintf(g_tempStr, "Seconds: %d\n", count++);
+		linkbus_send_text(g_tempStr);
 	}
 }
 

@@ -22,8 +22,10 @@ static void VREF_init(void);
 
 static void VREF_init(void)
 {
-	VREF.DAC0REF = VREF_REFSEL_2V048_gc /* Select the 2.048V Internal Voltage Reference for DAC */
-	| VREF_ALWAYSON_bm;    /* Set the Voltage Reference in Always On mode */
+//	VREF.DAC0REF = VREF_REFSEL_2V048_gc /* Select the 2.048V Internal Voltage Reference for DAC */
+//	VREF.DAC0REF = VREF_REFSEL_2V500_gc /* Select the 2.048V Internal Voltage Reference for DAC */
+//	| VREF_ALWAYSON_bm;    /* Set the Voltage Reference in Always On mode */
+	VREF.DAC0REF = VREF_REFSEL_2V500_gc; /* Select the 2.048V Internal Voltage Reference for DAC */
 	/* Wait VREF start-up time */
 	while(util_delay_ms(VREF_STARTUP_TIME_MS));
 }
