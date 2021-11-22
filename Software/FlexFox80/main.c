@@ -10,7 +10,7 @@
 #include "include/ds3231.h"
 #include "include/morse.h"
 #include "adc.h"
-#include "Goertzel.h"
+// #include "Goertzel.h"
 
 
 /* ADC Defines */
@@ -98,7 +98,7 @@ static uint16_t g_filterADCValue[NUMBER_OF_POLLED_ADC_CHANNELS] = { 500, 500, 50
 static volatile BOOL g_adcUpdated[NUMBER_OF_POLLED_ADC_CHANNELS] = { FALSE, FALSE, FALSE, FALSE, FALSE };
 static volatile uint16_t g_lastConversionResult[NUMBER_OF_POLLED_ADC_CHANNELS];
 
-extern Goertzel g_goertzel;
+// extern Goertzel g_goertzel;
 
 /***********************************************************************
  * Private Function Prototypes

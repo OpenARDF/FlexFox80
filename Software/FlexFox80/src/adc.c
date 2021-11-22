@@ -10,18 +10,18 @@
 #include <stdbool.h>
 #include <driver_init.h>
 #include <compiler.h>
-#include "Goertzel.h"
+// #include "Goertzel.h"
 
-#define SAMPLE_RATE 24096
-#define Goertzel_N 201
-const int N = Goertzel_N;
-const float threshold = 500000. * (Goertzel_N / 100);
-const float sampling_freq = SAMPLE_RATE;
-const float x_frequencies[4] = { 1209., 1336., 1477., 1633. };
-const float y_frequencies[4] = { 697., 770., 852., 941. };
-
-volatile int16_t g_adcVal;
-Goertzel g_goertzel(N, sampling_freq);
+// #define SAMPLE_RATE 24096
+// #define Goertzel_N 201
+// const int N = Goertzel_N;
+// const float threshold = 500000. * (Goertzel_N / 100);
+// const float sampling_freq = SAMPLE_RATE;
+// const float x_frequencies[4] = { 1209., 1336., 1477., 1633. };
+// const float y_frequencies[4] = { 697., 770., 852., 941. };
+// 
+// volatile int16_t g_adcVal;
+// Goertzel g_goertzel(N, sampling_freq);
 
 static void PORT_init(void);
 static void VREF0_init(void);
@@ -104,10 +104,11 @@ void ADC0_startConversions(void)
 
 ISR(ADC0_RESRDY_vect)
 {
-	int16_t val = ADC0.RES;
-	if(g_goertzel.DataPoint(val))
-	{
-		ADC0.INTCTRL = 0x00; /* disable ADC interrupt */
-	}
+// 	int16_t val = ADC0.RES;
+// 	if(g_goertzel.DataPoint(val))
+// 	{
+// 		ADC0.INTCTRL = 0x00; /* disable ADC interrupt */
+// 	}
+	int16_t data = ADC0_read();
 	/* Clear the interrupt flag by reading the result */
 }

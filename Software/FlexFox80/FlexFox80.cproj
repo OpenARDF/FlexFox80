@@ -242,9 +242,6 @@
     <None Include="modules\timer\doc\tca.rst">
       <SubType>compile</SubType>
     </None>
-    <None Include="src\Goertzel.cpp">
-      <SubType>compile</SubType>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="atmel_start.c">
@@ -290,9 +287,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="include\ds3231.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="include\Goertzel.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="include\i2c.h">
