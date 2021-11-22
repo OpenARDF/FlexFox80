@@ -62,12 +62,9 @@ void system_init()
 
 	LED_set_dir(PORT_DIR_OUT);
 
-
 	SLPCTRL_init();
 	
 	DAC0_init();
-
-	CPUINT_init();
 
 	linkbus_init();
 

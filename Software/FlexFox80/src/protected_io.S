@@ -36,7 +36,7 @@
  *@{
  */
 
-#include <assembler.h>
+#include "assembler.h"
 
 /*
 	 * GNU and IAR use different calling conventions. Since this is

@@ -1,7 +1,7 @@
-#include <atmel_start.h>
+#include "atmel_start.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <util/delay.h>
+//#include <util/delay.h>
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
@@ -323,7 +323,7 @@ int main(void)
 	/* Initializes MCU, drivers and middleware */
 	atmel_start_init();
 	
-	linkbus_send_text("ABC...\n");
+	linkbus_send_text((char*)"ABC...\n");
 	
 	ADC0_startConversions();
 
@@ -439,7 +439,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 						if(g_waiting_for_next_event)
 						{
 //							calibrateOscillator(0);                                 /* Abort baud calibration */
-							lb_send_msg(LINKBUS_MSG_REPLY, MESSAGE_ESP_LABEL, "1"); /* Request next scheduled event */
+							lb_send_msg(LINKBUS_MSG_REPLY, (char *)MESSAGE_ESP_LABEL, (char *)"1"); /* Request next scheduled event */
 						}
 						/* Send WiFi the current time */
 						sprintf(g_tempStr, "%lu", time(NULL));
@@ -893,7 +893,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 
 			case MESSAGE_VER:
 			{
-				lb_send_msg(LINKBUS_MSG_REPLY, MESSAGE_VER_LABEL, SW_REVISION);
+				lb_send_msg(LINKBUS_MSG_REPLY, MESSAGE_VER_LABEL, (char *)SW_REVISION);
 			}
 			break;
 
@@ -909,7 +909,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 		lb_buff->id = MESSAGE_EMPTY;
 		if(send_ack)
 		{
-			linkbus_send_text(MESSAGE_ACK);
+			linkbus_send_text((char *)MESSAGE_ACK);
 		}
 	}
 }

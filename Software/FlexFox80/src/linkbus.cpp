@@ -311,7 +311,7 @@ BOOL linkbus_send_text(char* text)
  *  Support for creating and sending various Linkbus messages is provided below.
  ************************************************************************************/
 
-void lb_send_msg(LBMessageType msgType, char* msgLabel, char* msgStr)
+void lb_send_msg(LBMessageType msgType, const char* msgLabel, char* msgStr)
 {
 	char prefix = '$';
 	char terminus = ';';
@@ -338,7 +338,7 @@ void lb_send_sync(void)
 }
 
 
-void lb_broadcast_num(uint16_t data, char* str)
+void lb_broadcast_num(uint16_t data, const char* str)
 {
 	char t[6] = "\0";
 

@@ -76,21 +76,10 @@ typedef int16_t Attenuation;
 #define BUCK_5V 75
 #define BUCK_0V 0
                                                /*  0,10,100,200,300,400,500,600,800,1000,1500,2000,2500,3000,4000,5000 */
-#define DEFAULT_80M_POWER_TABLE ((const uint8_t[]){0, 2, 20, 40, 54, 62, 70, 78, 91, 100, 130, 155, 180, 200, 245, 254})
+#define DEFAULT_80M_POWER_TABLE {0, 2, 20, 40, 54, 62, 70, 78, 91, 100, 130, 155, 180, 200, 245, 254}
 
-                                                 /*  0,10,100,200,300,400,500,600,800,1000,1500,2000,2500,3000,4000,5000 */
-#define DEFAULT_2M_AM_POWER_TABLE ((const uint8_t[]){0, 4, 30, 43, 63, 80,100,115,135, 155, 200, 240, 240, 240, 240, 254})
-#define DEFAULT_2M_AM_DRIVE_HIGH_TABLE ((const uint8_t[]){180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180, 180})
-#define DEFAULT_2M_AM_DRIVE_LOW_TABLE  ((const uint8_t[]){ 50,  50,  50,  50,  50,  50,  50,  50,  50,  50,  50,  50,  50,  50,  50,  50})
-
-                                                 /*  0,10,100,200,300,400,500,600,800,1000,1500,2000,2500,3000,4000,5000 */
-#define DEFAULT_2M_CW_POWER_TABLE ((const uint8_t[]){0, 4, 30, 43, 63, 80,100,115,135, 155, 200, 240, 240, 240, 240, 254})
-#define DEFAULT_2M_CW_DRIVE_TABLE ((const uint8_t[]){250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250, 250})
-
-#define TX_MINIMUM_2M_FREQUENCY 144000000
-#define TX_MAXIMUM_2M_FREQUENCY 148000000
 #define TX_MINIMUM_80M_FREQUENCY 3500000
-#define TX_MAXIMUM_80M_FREQUENCY 8000000
+#define TX_MAXIMUM_80M_FREQUENCY 4000000
 
 typedef enum
 {

@@ -29,7 +29,7 @@
 #endif
 
 #include <avr/io.h>
-#include <util/delay.h>
+//#include <util/delay.h>
 #include <avr/interrupt.h>
 
 /******************************************************
@@ -119,6 +119,48 @@ typedef enum {
 	SLEEP_AFTER_WIFI_GOES_OFF,
 	SLEEP_FOREVER
 	} SleepType;
+	
+	
+/*******************************************************/
+
+#ifndef uint16_t_defined
+#define uint16_t_defined
+typedef unsigned int uint16_t;
+#endif
+
+#ifndef uint32_t_defined
+#define uint32_t_defined
+typedef unsigned long uint32_t;
+#endif
+
+#ifndef unit8_t_defined
+#define unit8_t_defined
+typedef unsigned char uint8_t;
+#endif
+
+#ifndef null
+#define null 0
+#endif
+
+#ifndef PI
+#define PI 3.141592653589793
+#endif
+
+#ifndef MINUTE
+#define MINUTE 60UL
+#endif
+
+#ifndef HOUR
+#define HOUR 3600UL
+#endif
+
+#ifndef DAY
+#define DAY 86400UL
+#endif
+
+#ifndef YEAR
+#define YEAR 31536000UL
+#endif
 
 /*******************************************************/
 /*******************************************************

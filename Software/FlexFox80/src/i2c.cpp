@@ -27,7 +27,7 @@
 #include <avr/power.h>
 #include <avr/io.h>
 #include <avr/sfr_defs.h>
-#include <util/delay.h>
+//#include <util/delay.h>
 #include <util/atomic.h>
 
 #include "si5351.h"

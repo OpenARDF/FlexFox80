@@ -57,7 +57,7 @@ int8_t CLKCTRL_init()
 	//		 | CLKCTRL_MULFAC_DISABLE_gc /* 1 */
 	//		 | 0 << CLKCTRL_SOURCE_bp /* Select Source for PLL: disabled */);
 
-	ccp_write_io((void*)&(CLKCTRL.OSCHFCTRLA),CLKCTRL_FREQSEL_24M_gc /* 4 */
+	ccp_write_io((void*)&(CLKCTRL.OSCHFCTRLA),CLKCTRL_FRQSEL_24M_gc /* 4 */
 			 | 0 << CLKCTRL_AUTOTUNE_bp /* Auto-Tune enable: disabled */
 			 | 0 << CLKCTRL_RUNSTDBY_bp /* Run standby: disabled */);
 

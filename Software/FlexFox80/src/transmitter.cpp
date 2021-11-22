@@ -201,7 +201,7 @@
 	{
 		EC code;
 
-		if((code = si5351_init(SI5351_CRYSTAL_LOAD_6PF, 0)))
+		if((code = (EC)si5351_init(SI5351_CRYSTAL_LOAD_6PF, 0)))
 		{
 			return( code);
 		}
@@ -277,15 +277,13 @@
 
 	void saveAllTransmitterEEPROM(void)
 	{
-		uint8_t table[22];
+		uint8_t table[16] = DEFAULT_80M_POWER_TABLE;
 
 		eeprom_update_dword((uint32_t*)&ee_active_80m_frequency, g_80m_frequency);
 		eeprom_update_word(&ee_80m_power_level_mW, g_80m_power_level_mW);
 		eeprom_update_dword((uint32_t*)&ee_cw_offset_frequency, g_rtty_offset);
 		eeprom_update_dword((uint32_t*)&ee_si5351_ref_correction, si5351_get_correction());
-		memcpy(table, DEFAULT_80M_POWER_TABLE, sizeof(table));
 		eeprom_write_block(table, ee_80m_power_table, sizeof(table));
-		memcpy(table, DEFAULT_2M_AM_POWER_TABLE, sizeof(table));
 	}
 
 

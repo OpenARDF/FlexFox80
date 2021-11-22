@@ -112,7 +112,7 @@ typedef enum
 	MESSAGE_RESET = 'R' * 100 + 'S' * 10 + 'T',		/* Processor reset */
 	MESSAGE_WIFI = 'W' * 10 + 'I',					/* Enable/disable WiFi */
 	MESSAGE_BIAS = 'B',
-	INVALID_MESSAGE = UINT16_MAX					/* This value must never overlap a valid message ID */
+	INVALID_MESSAGE = MAX_UINT16					/* This value must never overlap a valid message ID */
 } LBMessageID;
 
 #define MESSAGE_CLOCK_LABEL "TIM"
@@ -226,10 +226,10 @@ void lb_send_ESP(LBMessageType msgType, char* msg);
 
 /**
  */
-void lb_send_msg(LBMessageType msgType, char* msgLabel, char* msgStr);
+void lb_send_msg(LBMessageType msgType, const char* msgLabel, char* msgStr);
 
 /**
  */
-void lb_broadcast_num(uint16_t data, char* str);
+void lb_broadcast_num(uint16_t data, const char* str);
 
 #endif  /* LINKBUS_H_ */

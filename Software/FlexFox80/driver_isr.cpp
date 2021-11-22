@@ -59,7 +59,7 @@ ISR(USART1_RXC_vect)
 	static uint8_t charIndex = 0;
 	static uint8_t field_index = 0;
 	static uint8_t field_len = 0;
-	static uint32_t msg_ID = 0;
+	static uint32_t tempMsg_ID = 0;
 	static BOOL receiving_msg = FALSE;
 	uint8_t rx_char;
 
@@ -80,7 +80,7 @@ ISR(USART1_RXC_vect)
 			charIndex = 0;
 			buff->type = (rx_char == '!') ? LINKBUS_MSG_REPLY : LINKBUS_MSG_COMMAND;
 			field_len = 0;
-			msg_ID = LINKBUS_MSG_UNKNOWN;
+			tempMsg_ID = 0;
 			receiving_msg = TRUE;
 
 			/* Empty the field buffers */
@@ -108,7 +108,7 @@ ISR(USART1_RXC_vect)
 				{
 					if(charIndex > LINKBUS_MIN_MSG_LENGTH)
 					{
-						buff->id = (LBMessageID)msg_ID;
+						buff->id = (LBMessageID)tempMsg_ID;
 					}
 					receiving_msg = FALSE;
 				}
@@ -117,7 +117,7 @@ ISR(USART1_RXC_vect)
 					buff->type = LINKBUS_MSG_QUERY;
 					if(charIndex > LINKBUS_MIN_MSG_LENGTH)
 					{
-						buff->id = msg_ID;
+						buff->id = (LBMessageID)tempMsg_ID;
 					}
 					receiving_msg = FALSE;
 				}
@@ -131,7 +131,7 @@ ISR(USART1_RXC_vect)
 			{
 				if(field_index == 0)    /* message ID received */
 				{
-					msg_ID = msg_ID * 10 + rx_char;
+					tempMsg_ID = tempMsg_ID * 10 + rx_char;
 				}
 				else
 				{
@@ -139,12 +139,12 @@ ISR(USART1_RXC_vect)
 				}
 			}
 		}
-		else if(rx_char == 0x0D)    /* Handle carriage return */
+		else if(rx_char == 0x0D)    /* Carriage return resets any message in progress */
 		{
-			buff->id = LINKBUS_MSG_UNKNOWN;
+			buff->id = MESSAGE_EMPTY;
 			charIndex = LINKBUS_MAX_MSG_LENGTH;
 			field_len = 0;
-			msg_ID = LINKBUS_MSG_UNKNOWN;
+			tempMsg_ID = 0;
 			field_index = 0;
 			buff = NULL;
 		}
