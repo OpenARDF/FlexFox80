@@ -10,7 +10,7 @@
 #include "include/ds3231.h"
 #include "include/morse.h"
 #include "adc.h"
-// #include "Goertzel.h"
+#include "Goertzel.h"
 
 
 /* ADC Defines */
@@ -98,7 +98,7 @@ static uint16_t g_filterADCValue[NUMBER_OF_POLLED_ADC_CHANNELS] = { 500, 500, 50
 static volatile BOOL g_adcUpdated[NUMBER_OF_POLLED_ADC_CHANNELS] = { FALSE, FALSE, FALSE, FALSE, FALSE };
 static volatile uint16_t g_lastConversionResult[NUMBER_OF_POLLED_ADC_CHANNELS];
 
-// extern Goertzel g_goertzel;
+extern Goertzel g_goertzel;
 
 /***********************************************************************
  * Private Function Prototypes
@@ -325,12 +325,16 @@ int main(void)
 	
 	linkbus_send_text((char*)"ABC...\n");
 	
-	ADC0_startConversions();
+	ADC0_setADCChannel(ADCAudioInput);
 
 	while (1) {
 		while(util_delay_ms(1000));
 		sprintf(g_tempStr, "Seconds: %d\n", count++);
 		linkbus_send_text(g_tempStr);
+		if(g_goertzel.SamplesReady())
+		{
+			ADC0.INTCTRL = 0x01; /* enable ADC interrupt */
+		}
 	}
 }
 

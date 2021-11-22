@@ -29,7 +29,9 @@ main.d main.o: .././main.cpp .././atmel_start.h \
  .././include/linkbus.h ../defs.h .././include/transmitter.h \
  ../include/si5351.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\eeprom.h \
- .././include/ds3231.h .././include/morse.h ../include/adc.h
+ .././include/ds3231.h .././include/morse.h ../include/adc.h \
+ ../include/Goertzel.h \
+ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\math.h
 
 .././atmel_start.h:
 
@@ -116,3 +118,7 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 .././include/morse.h:
 
 ../include/adc.h:
+
+../include/Goertzel.h:
+
+c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\math.h:
