@@ -47,6 +47,7 @@ C_SRCS +=  \
 ../driver_isr.cpp \
 ../main.cpp \
 ../src/adc.cpp \
+../src/binio.cpp \
 ../src/bod.cpp \
 ../src/clkctrl.cpp \
 ../src/cpuint.cpp \
@@ -57,7 +58,6 @@ C_SRCS +=  \
 ../src/huzzah.cpp \
 ../src/i2c.cpp \
 ../src/linkbus.cpp \
-../src/mcp23017.cpp \
 ../src/morse.cpp \
 ../src/si5351.cpp \
 ../src/slpctrl.cpp \
@@ -79,6 +79,7 @@ atmel_start.o \
 driver_isr.o \
 main.o \
 src/adc.o \
+src/binio.o \
 src/bod.o \
 src/clkctrl.o \
 src/cpuint.o \
@@ -89,7 +90,6 @@ src/Goertzel.o \
 src/huzzah.o \
 src/i2c.o \
 src/linkbus.o \
-src/mcp23017.o \
 src/morse.o \
 src/protected_io.o \
 src/si5351.o \
@@ -104,6 +104,7 @@ atmel_start.o \
 driver_isr.o \
 main.o \
 src/adc.o \
+src/binio.o \
 src/bod.o \
 src/clkctrl.o \
 src/cpuint.o \
@@ -114,7 +115,6 @@ src/Goertzel.o \
 src/huzzah.o \
 src/i2c.o \
 src/linkbus.o \
-src/mcp23017.o \
 src/morse.o \
 src/protected_io.o \
 src/si5351.o \
@@ -129,6 +129,7 @@ atmel_start.d \
 driver_isr.d \
 main.d \
 src/adc.d \
+src/binio.d \
 src/bod.d \
 src/clkctrl.d \
 src/cpuint.d \
@@ -139,7 +140,6 @@ src/Goertzel.d \
 src/huzzah.d \
 src/i2c.d \
 src/linkbus.d \
-src/mcp23017.d \
 src/morse.d \
 src/protected_io.d \
 src/si5351.d \
@@ -154,6 +154,7 @@ atmel_start.d \
 driver_isr.d \
 main.d \
 src/adc.d \
+src/binio.d \
 src/bod.d \
 src/clkctrl.d \
 src/cpuint.d \
@@ -164,7 +165,6 @@ src/Goertzel.d \
 src/huzzah.d \
 src/i2c.d \
 src/linkbus.d \
-src/mcp23017.d \
 src/morse.d \
 src/protected_io.d \
 src/si5351.d \
@@ -210,6 +210,13 @@ LINKER_SCRIPT_DEP+=
 	
 
 src/adc.o: ../src/adc.cpp
+	@echo Building file: $<
+	@echo Invoking: AVR8/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -funsigned-char -funsigned-bitfields -DDEBUG  -I"../Config" -I"../include" -I"../utils" -I"../utils/assembler" -I".." -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\AVR-Dx_DFP\1.9.103\include"  -Og -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=avr128da48 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\AVR-Dx_DFP\1.9.103\gcc\dev\avr128da48" -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+src/binio.o: ../src/binio.cpp
 	@echo Building file: $<
 	@echo Invoking: AVR8/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -funsigned-char -funsigned-bitfields -DDEBUG  -I"../Config" -I"../include" -I"../utils" -I"../utils/assembler" -I".." -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\AVR-Dx_DFP\1.9.103\include"  -Og -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=avr128da48 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\AVR-Dx_DFP\1.9.103\gcc\dev\avr128da48" -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
@@ -280,13 +287,6 @@ src/i2c.o: ../src/i2c.cpp
 	
 
 src/linkbus.o: ../src/linkbus.cpp
-	@echo Building file: $<
-	@echo Invoking: AVR8/GNU C Compiler : 5.4.0
-	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -funsigned-char -funsigned-bitfields -DDEBUG  -I"../Config" -I"../include" -I"../utils" -I"../utils/assembler" -I".." -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\AVR-Dx_DFP\1.9.103\include"  -Og -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=avr128da48 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\AVR-Dx_DFP\1.9.103\gcc\dev\avr128da48" -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
-	@echo Finished building: $<
-	
-
-src/mcp23017.o: ../src/mcp23017.cpp
 	@echo Building file: $<
 	@echo Invoking: AVR8/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -funsigned-char -funsigned-bitfields -DDEBUG  -I"../Config" -I"../include" -I"../utils" -I"../utils/assembler" -I".." -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\AVR-Dx_DFP\1.9.103\include"  -Og -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=avr128da48 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\AVR-Dx_DFP\1.9.103\gcc\dev\avr128da48" -c -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 

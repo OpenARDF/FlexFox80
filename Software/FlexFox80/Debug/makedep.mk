@@ -10,6 +10,8 @@ main.cpp
 
 src\adc.cpp
 
+src\binio.cpp
+
 src\bod.cpp
 
 src\clkctrl.cpp
@@ -29,8 +31,6 @@ src\huzzah.cpp
 src\i2c.cpp
 
 src\linkbus.cpp
-
-src\mcp23017.cpp
 
 src\morse.cpp
 

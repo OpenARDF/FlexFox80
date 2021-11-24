@@ -52,7 +52,7 @@ static volatile uint16_t g_maximum_battery = 0;
 volatile BatteryType g_battery_type = BATTERY_UNKNOWN;
 
 static volatile BOOL g_antenna_connection_changed = TRUE;
-static volatile AntConnType g_antenna_connect_state = ANT_CONNECTION_UNDETERMINED;
+volatile AntConnType g_antenna_connect_state = ANT_CONNECTION_UNDETERMINED;
 
 static volatile int32_t g_on_the_air = 0;
 static volatile int g_sendID_seconds_countdown = 0;
@@ -155,12 +155,6 @@ Periodic tasks not requiring precise timing. Rate = 300 Hz
 */
 ISR(TCB0_INT_vect)
 {
-    /* Insert your TCB interrupt handling code */
-    /**
-     * The interrupt flag is cleared by writing 1 to it, or when the Capture register
-     * is read in Capture mode
-     */
-
     if(TCB0.INTFLAGS & TCB_CAPT_bm)
     {
 		static BOOL conversionInProcess = FALSE;
@@ -222,7 +216,7 @@ ISR(TCB0_INT_vect)
 
 		/**
 		 * Handle Periodic ADC Readings
-		 * The following algorithm allows multipe ADC channel readings to be performed at different polling intervals. */
+		 * The following algorithm allows multiple ADC channel readings to be performed at different polling intervals. */
 		if(!conversionInProcess)
 		{
 			/* Note: countdowns will pause while a conversion is in process. Conversions are so fast that this should not be an issue though. */
@@ -319,7 +313,9 @@ ISR(TCB0_INT_vect)
 
 int main(void)
 {
-	uint16_t count = 0;
+// 	static uint16_t count = 0;
+// 	static int16_t tempC = 0;
+
 	/* Initializes MCU, drivers and middleware */
 	atmel_start_init();
 	
@@ -328,13 +324,19 @@ int main(void)
 	ADC0_setADCChannel(ADCAudioInput);
 
 	while (1) {
-		while(util_delay_ms(1000));
-		sprintf(g_tempStr, "Seconds: %d\n", count++);
-		linkbus_send_text(g_tempStr);
-		if(g_goertzel.SamplesReady())
+		while(util_delay_ms(1000))
 		{
-			ADC0.INTCTRL = 0x01; /* enable ADC interrupt */
+// 			if(g_goertzel.SamplesReady())
+// 			{
+// 				ADC0.INTCTRL = 0x01; /* enable ADC interrupt */
+// 			}
+
+			handleLinkBusMsgs();
 		}
+		
+//		tempC = temperatureC();
+//		sprintf(g_tempStr, "Seconds: %d: %d\n", count++, tempC);
+//		linkbus_send_text(g_tempStr);
 	}
 }
 
@@ -707,6 +709,15 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					if(g_messages_text[STATION_ID][0])
 					{
 						g_time_needed_for_ID = (500 + timeRequiredToSendStrAtWPM(g_messages_text[STATION_ID], g_id_codespeed)) / 1000;
+					}
+				}
+				else
+				{
+					if(g_messages_text[STATION_ID][0])
+					{
+						sprintf(g_tempStr, "!ID,%s;\n", g_messages_text[STATION_ID]);
+						linkbus_send_text(g_tempStr);
+						send_ack = false;
 					}
 				}
 			}

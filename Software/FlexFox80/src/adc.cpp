@@ -1,9 +1,26 @@
 /*
- * adc.c
+ *  MIT License
  *
- * Created: 11/21/2021 3:52:44 PM
- *  Author: charl
- */ 
+ *  Copyright (c) 2022 DigitalConfections
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in all
+ *  copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
+ */
 
 #include "defs.h"
 #include "adc.h"
@@ -67,6 +84,13 @@ void ADC0_setADCChannel(ADC_Active_Channel_t chan)
 		}
 		break;
 		
+		case ADCTemperature:
+		{
+			ADC0_SYSTEM_init(SINGLE_CONVERSION);
+			ADC0.MUXPOS = ADC_MUXPOS_TEMPSENSE_gc;
+		}
+		break;
+		
 		default:
 		{
 			ADC0_SYSTEM_shutdown();
@@ -93,6 +117,37 @@ bool ADC0_conversionDone(void)
 int ADC0_read(void)
 {
 	return ADC0.RES; 	/* Reading the result also clears the interrupt flag */
+}
+
+int16_t temperatureC()
+{
+	uint16_t sigrow_offset = SIGROW.TEMPSENSE1; // Read unsigned value from signature row
+	uint16_t sigrow_slope = SIGROW.TEMPSENSE0; // Read unsigned value from signature row
+	static uint32_t wait = 100000;
+	uint16_t adc_reading;
+	int16_t temperature_in_C = -273.15;
+	uint8_t holdMux;
+	
+	holdMux = ADC0.MUXPOS;
+	ADC0_SYSTEM_init(SINGLE_CONVERSION);
+	ADC0.MUXPOS = ADC_MUXPOS_TEMPSENSE_gc;
+	ADC0_startConversion();
+	
+	while((!ADC0_conversionDone()) && wait--);
+	
+	if(wait)
+	{
+		adc_reading = ADC0.RES;
+		uint32_t temp = sigrow_offset - adc_reading;
+		temp *= sigrow_slope; // Result will overflow 16-bit variable
+		temp += 0x0800; // Add 4096/2 to get correct rounding on division below
+		temp >>= 12; // Round off to nearest degree in Kelvin, by dividing with 2^12 (4096)
+		temperature_in_C += temp;
+	}
+	
+	ADC0.MUXPOS = holdMux; /* Restore ADC registers */
+	
+	return(temperature_in_C);
 }
 
 
@@ -165,6 +220,7 @@ ISR(ADC0_RESRDY_vect)
 {
 	/* Clear the interrupt flag by reading the result */
 	int val = ADC0_read();
+//	LED_toggle_level();
 	if(g_goertzel.DataPoint(val))
 	{
 		ADC0.INTCTRL = 0x00; /* disable ADC interrupt */

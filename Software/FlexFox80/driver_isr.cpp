@@ -115,7 +115,7 @@ ISR(USART1_RXC_vect)
 				else if(rx_char == '?')
 				{
 					buff->type = LINKBUS_MSG_QUERY;
-					if(charIndex > LINKBUS_MIN_MSG_LENGTH)
+					if(charIndex >= LINKBUS_MIN_MSG_LENGTH)
 					{
 						buff->id = (LBMessageID)tempMsg_ID;
 					}
