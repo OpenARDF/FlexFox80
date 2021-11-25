@@ -230,6 +230,9 @@
     <Compile Include="include\rstctrl.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="include\serialbus.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="include\si5351.h">
       <SubType>compile</SubType>
     </Compile>
@@ -294,6 +297,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\protected_io.S">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\serialbus.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\si5351.cpp">

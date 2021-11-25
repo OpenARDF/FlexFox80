@@ -34,6 +34,31 @@ extern "C" {
 #endif
 
 /* Normal Mode, Baud register value */
+#define USART0_BAUD_RATE(BAUD_RATE) ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
+
+int8_t USART0_init(uint32_t baud);
+
+void USART0_enable();
+
+void USART0_enable_rx();
+
+void USART0_enable_tx();
+
+void USART0_disable();
+
+uint8_t USART0_get_data();
+
+bool USART0_is_tx_ready();
+
+bool USART0_is_rx_ready();
+
+bool USART0_is_tx_busy();
+
+uint8_t USART0_read(void);
+
+void USART0_write(const uint8_t data);
+
+/* Normal Mode, Baud register value */
 #define USART1_BAUD_RATE(BAUD_RATE) ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
 
 int8_t USART1_init(uint32_t baud);

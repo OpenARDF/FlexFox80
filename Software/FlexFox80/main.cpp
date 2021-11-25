@@ -5,10 +5,11 @@
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
-#include "include/linkbus.h"
-#include "include/transmitter.h"
-#include "include/ds3231.h"
-#include "include/morse.h"
+#include "linkbus.h"
+#include "serialbus.h"
+#include "transmitter.h"
+#include "ds3231.h"
+#include "morse.h"
 #include "adc.h"
 #include "Goertzel.h"
 
@@ -319,7 +320,7 @@ int main(void)
 	/* Initializes MCU, drivers and middleware */
 	atmel_start_init();
 	
-	linkbus_send_text((char*)"ABC...\n");
+	lb_send_text((char*)"ABC...\n");
 	
 	ADC0_setADCChannel(ADCAudioInput);
 
@@ -336,7 +337,7 @@ int main(void)
 		
 //		tempC = temperatureC();
 //		sprintf(g_tempStr, "Seconds: %d: %d\n", count++, tempC);
-//		linkbus_send_text(g_tempStr);
+//		lb_send_text(g_tempStr);
 	}
 }
 
@@ -347,19 +348,19 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 	static uint8_t event_parameter_count = 0;
 	BOOL send_ack = TRUE;
 
-	while((lb_buff = nextFullRxBuffer()))
+	while((lb_buff = nextFullLBRxBuffer()))
 	{
 		LBMessageID msg_id = lb_buff->id;
 
 		switch(msg_id)
 		{
-			case MESSAGE_WIFI:
+			case LB_MESSAGE_WIFI:
 			{
 				BOOL result;
 
-				if(lb_buff->fields[FIELD1][0])
+				if(lb_buff->fields[LB_MSG_FIELD1][0])
 				{
-					result = atoi(lb_buff->fields[FIELD1]);
+					result = atoi(lb_buff->fields[LB_MSG_FIELD1]);
 
 					suspendEvent();
 					linkbus_disable();
@@ -373,7 +374,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 			}
 			break;
 
-			case MESSAGE_RESET:
+			case LB_MESSAGE_RESET:
 			{
 #ifndef TRANQUILIZE_WATCHDOG
 					wdt_init(WD_FORCE_RESET);
@@ -427,9 +428,9 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 // 			}
 // 			break;
 
-			case MESSAGE_ESP_COMM:
+			case LB_MESSAGE_ESP_COMM:
 			{
-				char f1 = lb_buff->fields[FIELD1][0];
+				char f1 = lb_buff->fields[LB_MSG_FIELD1][0];
 
 				g_wifi_active = TRUE;
 
@@ -445,11 +446,11 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 						if(g_waiting_for_next_event)
 						{
 //							calibrateOscillator(0);                                 /* Abort baud calibration */
-							lb_send_msg(LINKBUS_MSG_REPLY, (char *)MESSAGE_ESP_LABEL, (char *)"1"); /* Request next scheduled event */
+							lb_send_msg(LINKBUS_MSG_REPLY, (char *)LB_MESSAGE_ESP_LABEL, (char *)"1"); /* Request next scheduled event */
 						}
 						/* Send WiFi the current time */
 						sprintf(g_tempStr, "%lu", time(NULL));
-						lb_send_msg(LINKBUS_MSG_REPLY, MESSAGE_CLOCK_LABEL, g_tempStr);
+						lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_CLOCK_LABEL, g_tempStr);
 					}
 					else if(f1 == '3')                      /* ESP is ready for power off" */
 					{
@@ -489,22 +490,22 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 // 			}
 // 			break;
 
-			case MESSAGE_TX_POWER:
+			case LB_MESSAGE_TX_POWER:
 			{
 				static uint16_t pwr_mW;
 
-				if(lb_buff->fields[FIELD1][0])
+				if(lb_buff->fields[LB_MSG_FIELD1][0])
 				{
 					EC ec;
 
-					if((lb_buff->fields[FIELD1][0] == 'M') && (lb_buff->fields[FIELD2][0]))
+					if((lb_buff->fields[LB_MSG_FIELD1][0] == 'M') && (lb_buff->fields[LB_MSG_FIELD2][0]))
 					{
-						pwr_mW = (uint16_t)atoi(lb_buff->fields[FIELD2]);
+						pwr_mW = (uint16_t)atoi(lb_buff->fields[LB_MSG_FIELD2]);
 						event_parameter_count++;
 					}
 					else
 					{
-						pwr_mW = (uint16_t)atoi(lb_buff->fields[FIELD1]);
+						pwr_mW = (uint16_t)atoi(lb_buff->fields[LB_MSG_FIELD1]);
 					}
 
 					ec = txSetParameters(&pwr_mW, NULL);
@@ -514,21 +515,21 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					}
 
 					sprintf(g_tempStr, "M,%u", pwr_mW);
-					lb_send_msg(LINKBUS_MSG_REPLY, MESSAGE_TX_POWER_LABEL, g_tempStr);
+					lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_TX_POWER_LABEL, g_tempStr);
 				}
 			}
 			break;
 
-			case MESSAGE_PERM:
+			case LB_MESSAGE_PERM:
 			{
 				storeTransmitterValues();
 				saveAllEEPROM();
 			}
 			break;
 
-			case MESSAGE_GO:
+			case LB_MESSAGE_GO:
 			{
-				char f1 = lb_buff->fields[FIELD1][0];
+				char f1 = lb_buff->fields[LB_MSG_FIELD1][0];
 
 				if((f1 == '1') || (f1 == '2'))
 				{
@@ -602,15 +603,15 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 			}
 			break;
 
-			case MESSAGE_STARTFINISH:
+			case LB_MESSAGE_STARTFINISH:
 			{
 				time_t mtime = 0;
 
-				if(lb_buff->fields[FIELD1][0] == 'S')
+				if(lb_buff->fields[LB_MSG_FIELD1][0] == 'S')
 				{
-					if(lb_buff->fields[FIELD2][0])
+					if(lb_buff->fields[LB_MSG_FIELD2][0])
 					{
-						mtime = atol(lb_buff->fields[FIELD2]);
+						mtime = atol(lb_buff->fields[LB_MSG_FIELD2]);
 					}
 
 					if(mtime)
@@ -624,11 +625,11 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 				}
 				else
 				{
-					if(lb_buff->fields[FIELD1][0] == 'F')
+					if(lb_buff->fields[LB_MSG_FIELD1][0] == 'F')
 					{
-						if(lb_buff->fields[FIELD2][0])
+						if(lb_buff->fields[LB_MSG_FIELD2][0])
 						{
-							mtime = atol(lb_buff->fields[FIELD2]);
+							mtime = atol(lb_buff->fields[LB_MSG_FIELD2]);
 						}
 
 						if(mtime)
@@ -641,42 +642,42 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 			}
 			break;
 
-			case MESSAGE_CLOCK:
+			case LB_MESSAGE_CLOCK:
 			{
 				g_wifi_active = TRUE;
 
 				if(lb_buff->type == LINKBUS_MSG_COMMAND)    /* ignore replies since, as the time source, we should never be sending queries anyway */
 				{
-					if(lb_buff->fields[FIELD1][0])
+					if(lb_buff->fields[LB_MSG_FIELD1][0])
 					{
-						strncpy(g_tempStr, lb_buff->fields[FIELD1], 20);
+						strncpy(g_tempStr, lb_buff->fields[LB_MSG_FIELD1], 20);
 						ds3231_set_date_time(g_tempStr, RTC_CLOCK);
 						set_system_time(ds3231_get_epoch(NULL));    /* update system clock */
 					}
 					else
 					{
 						sprintf(g_tempStr, "%lu", time(NULL));
-						lb_send_msg(LINKBUS_MSG_REPLY, MESSAGE_CLOCK_LABEL, g_tempStr);
+						lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_CLOCK_LABEL, g_tempStr);
 					}
 				}
 				else
 				{
 					if(lb_buff->type == LINKBUS_MSG_QUERY)
 					{
-						if(lb_buff->fields[FIELD1][0] == 'X')
+						if(lb_buff->fields[LB_MSG_FIELD1][0] == 'X')
 						{
 							int8_t age = 0;
 
-							if(lb_buff->fields[FIELD2][0])
+							if(lb_buff->fields[LB_MSG_FIELD2][0])
 							{
-								age = (int8_t)atoi(lb_buff->fields[FIELD2]);
+								age = (int8_t)atoi(lb_buff->fields[LB_MSG_FIELD2]);
 								ds3231_set_aging(&age);
 							}
 							else
 							{
 								age = ds3231_get_aging();
 								sprintf(g_tempStr, "X,%d", age);
-								lb_send_msg(LINKBUS_MSG_REPLY, MESSAGE_CLOCK_LABEL, g_tempStr);
+								lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_CLOCK_LABEL, g_tempStr);
 							}
 						}
 						else
@@ -689,7 +690,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 							if(temp_time != lastTime)
 							{
 								sprintf(g_tempStr, "%lu", temp_time);
-								lb_send_msg(LINKBUS_MSG_REPLY, MESSAGE_CLOCK_LABEL, g_tempStr);
+								lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_CLOCK_LABEL, g_tempStr);
 								lastTime = temp_time;
 							}
 						}
@@ -698,13 +699,13 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 			}
 			break;
 
-			case MESSAGE_SET_STATION_ID:
+			case LB_MESSAGE_SET_STATION_ID:
 			{
 				event_parameter_count++;    /* Any ID or no ID is acceptable */
 
-				if(lb_buff->fields[FIELD1][0])
+				if(lb_buff->fields[LB_MSG_FIELD1][0])
 				{
-					strncpy(g_messages_text[STATION_ID], lb_buff->fields[FIELD1], MAX_PATTERN_TEXT_LENGTH);
+					strncpy(g_messages_text[STATION_ID], lb_buff->fields[LB_MSG_FIELD1], MAX_PATTERN_TEXT_LENGTH);
 
 					if(g_messages_text[STATION_ID][0])
 					{
@@ -716,22 +717,22 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					if(g_messages_text[STATION_ID][0])
 					{
 						sprintf(g_tempStr, "!ID,%s;\n", g_messages_text[STATION_ID]);
-						linkbus_send_text(g_tempStr);
+						lb_send_text(g_tempStr);
 						send_ack = false;
 					}
 				}
 			}
 			break;
 
-			case MESSAGE_CODE_SPEED:
+			case LB_MESSAGE_CODE_SPEED:
 			{
 				uint8_t speed = g_pattern_codespeed;
 
-				if(lb_buff->fields[FIELD1][0] == 'I')
+				if(lb_buff->fields[LB_MSG_FIELD1][0] == 'I')
 				{
-					if(lb_buff->fields[FIELD2][0])
+					if(lb_buff->fields[LB_MSG_FIELD2][0])
 					{
-						speed = atol(lb_buff->fields[FIELD2]);
+						speed = atol(lb_buff->fields[LB_MSG_FIELD2]);
 						g_id_codespeed = CLAMP(5, speed, 20);
 						event_parameter_count++;
 
@@ -741,11 +742,11 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 						}
 					}
 				}
-				else if(lb_buff->fields[FIELD1][0] == 'P')
+				else if(lb_buff->fields[LB_MSG_FIELD1][0] == 'P')
 				{
-					if(lb_buff->fields[FIELD2][0])
+					if(lb_buff->fields[LB_MSG_FIELD2][0])
 					{
-						speed = atol(lb_buff->fields[FIELD2]);
+						speed = atol(lb_buff->fields[LB_MSG_FIELD2]);
 						g_pattern_codespeed = CLAMP(5, speed, 20);
 						event_parameter_count++;
 						g_code_throttle = throttleValue(g_pattern_codespeed);
@@ -754,42 +755,42 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 			}
 			break;
 
-			case MESSAGE_TIME_INTERVAL:
+			case LB_MESSAGE_TIME_INTERVAL:
 			{
 				uint16_t time = 0;
 
-				if(lb_buff->fields[FIELD1][0] == '0')
+				if(lb_buff->fields[LB_MSG_FIELD1][0] == '0')
 				{
-					if(lb_buff->fields[FIELD2][0])
+					if(lb_buff->fields[LB_MSG_FIELD2][0])
 					{
-						time = atol(lb_buff->fields[FIELD2]);
+						time = atol(lb_buff->fields[LB_MSG_FIELD2]);
 						g_off_air_seconds = time;
 						event_parameter_count++;
 					}
 				}
-				else if(lb_buff->fields[FIELD1][0] == '1')
+				else if(lb_buff->fields[LB_MSG_FIELD1][0] == '1')
 				{
-					if(lb_buff->fields[FIELD2][0])
+					if(lb_buff->fields[LB_MSG_FIELD2][0])
 					{
-						time = atol(lb_buff->fields[FIELD2]);
+						time = atol(lb_buff->fields[LB_MSG_FIELD2]);
 						g_on_air_seconds = time;
 						event_parameter_count++;
 					}
 				}
-				else if(lb_buff->fields[FIELD1][0] == 'I')
+				else if(lb_buff->fields[LB_MSG_FIELD1][0] == 'I')
 				{
-					if(lb_buff->fields[FIELD2][0])
+					if(lb_buff->fields[LB_MSG_FIELD2][0])
 					{
-						time = atol(lb_buff->fields[FIELD2]);
+						time = atol(lb_buff->fields[LB_MSG_FIELD2]);
 						g_ID_period_seconds = time;
 						event_parameter_count++;
 					}
 				}
-				else if(lb_buff->fields[FIELD1][0] == 'D')
+				else if(lb_buff->fields[LB_MSG_FIELD1][0] == 'D')
 				{
-					if(lb_buff->fields[FIELD2][0])
+					if(lb_buff->fields[LB_MSG_FIELD2][0])
 					{
-						time = atol(lb_buff->fields[FIELD2]);
+						time = atol(lb_buff->fields[LB_MSG_FIELD2]);
 						g_intra_cycle_delay_time = time;
 						event_parameter_count++;
 					}
@@ -797,24 +798,24 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 			}
 			break;
 
-			case MESSAGE_SET_PATTERN:
+			case LB_MESSAGE_SET_PATTERN:
 			{
-				if(lb_buff->fields[FIELD1][0])
+				if(lb_buff->fields[LB_MSG_FIELD1][0])
 				{
-					strncpy(g_messages_text[PATTERN_TEXT], lb_buff->fields[FIELD1], MAX_PATTERN_TEXT_LENGTH);
+					strncpy(g_messages_text[PATTERN_TEXT], lb_buff->fields[LB_MSG_FIELD1], MAX_PATTERN_TEXT_LENGTH);
 					event_parameter_count++;
 				}
 			}
 			break;
 
-			case MESSAGE_SET_FREQ:
+			case LB_MESSAGE_SET_FREQ:
 			{
 				Frequency_Hz transmitter_freq = 0;
 
-				if(lb_buff->fields[FIELD1][0])
+				if(lb_buff->fields[LB_MSG_FIELD1][0])
 				{
 					static Frequency_Hz f;
-					f = atol(lb_buff->fields[FIELD1]);
+					f = atol(lb_buff->fields[LB_MSG_FIELD1]);
 
 					Frequency_Hz ff = f;
 					if(txSetFrequency(&ff, TRUE))
@@ -831,7 +832,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 				if(transmitter_freq)
 				{
 					sprintf(g_tempStr, "%ld,", transmitter_freq);
-					lb_send_msg(LINKBUS_MSG_REPLY, MESSAGE_SET_FREQ_LABEL, g_tempStr);
+					lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_SET_FREQ_LABEL, g_tempStr);
 				}
 			}
 			break;
@@ -875,7 +876,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 // 			}
 // 			break;
 
-			case MESSAGE_BAT:
+			case LB_MESSAGE_BAT:
 			{
 				uint16_t bat;
 
@@ -896,7 +897,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 			}
 			break;
 
-			case MESSAGE_TEMP:
+			case LB_MESSAGE_TEMP:
 			{
 				int16_t v;
 				if(!ds3231_get_temp(&v))
@@ -906,9 +907,9 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 			}
 			break;
 
-			case MESSAGE_VER:
+			case LB_MESSAGE_VER:
 			{
-				lb_send_msg(LINKBUS_MSG_REPLY, MESSAGE_VER_LABEL, (char *)SW_REVISION);
+				lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_VER_LABEL, (char *)SW_REVISION);
 			}
 			break;
 
@@ -921,10 +922,10 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 			break;
 		}
 
-		lb_buff->id = MESSAGE_EMPTY;
+		lb_buff->id = LB_MESSAGE_EMPTY;
 		if(send_ack)
 		{
-			linkbus_send_text((char *)MESSAGE_ACK);
+			lb_send_text((char *)LB_MESSAGE_ACK);
 		}
 	}
 }

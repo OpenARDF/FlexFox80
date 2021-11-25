@@ -36,9 +36,16 @@
 #include <driver_init.h>
 #include <compiler.h>
 #include <ctype.h> /* toupper() */
-#include "include/linkbus.h"
-#include "include/usart_basic.h"
-#include "include/morse.h"
+#include <string.h>
+#include "linkbus.h"
+#include "serialbus.h"
+#include "usart_basic.h"
+#include "morse.h"
+
+void serial_Rx(uint8_t rx_char);
+void serial_Tx(uint8_t rx_char);
+void linkbus_Rx(uint8_t rx_char);
+void linkbus_Tx(uint8_t rx_char);
 
 
 ISR(TCB2_INT_vect)
@@ -49,11 +56,267 @@ ISR(TCB2_INT_vect)
     }
 }
 
+ISR(USART0_RXC_vect)
+{
+	uint8_t rx_char = USART0_get_data();
+	serial_Rx(rx_char);
+}
+
+void serial_Rx(uint8_t rx_char)
+{
+	static char textBuff[SERIALBUS_MAX_MSG_LENGTH];
+	static SerialbusRxBuffer* buff = NULL;
+	static uint8_t charIndex = 0;
+	static uint8_t field_index = 0;
+	static uint8_t field_len = 0;
+	static int msg_ID = 0;
+	static BOOL receiving_msg = FALSE;
+
+	if(!buff)
+	{
+		buff = nextEmptySBRxBuffer();
+	}
+
+	if(buff)
+	{
+		static uint8_t ignoreCount = 0;
+		rx_char = toupper(rx_char);
+
+		if(ignoreCount)
+		{
+			rx_char = '\0';
+			ignoreCount--;
+		}
+		else if(rx_char == 0x1B)    /* Ignore ESC sequences */
+		{
+			rx_char = '\0';
+
+			if(charIndex < SERIALBUS_MAX_MSG_FIELD_LENGTH)
+			{
+				rx_char = textBuff[charIndex];
+			}
+
+			ignoreCount = 2;        /* throw out the next two characters */
+		}
+		else if(rx_char == 0x0D)    /* Handle carriage return */
+		{
+			if(receiving_msg)
+			{
+				if(charIndex > 0)
+				{
+					buff->type = SERIALBUS_MSG_QUERY;
+					buff->id = (SBMessageID)msg_ID;
+
+					if(field_index > 0) /* terminate the last field */
+					{
+						buff->fields[field_index - 1][field_len] = 0;
+					}
+
+					textBuff[charIndex] = '\0'; /* terminate last-message buffer */
+				}
+
+				sb_send_NewLine();
+			}
+			else
+			{
+				buff->id = SB_INVALID_MESSAGE; /* print help message */
+			}
+
+			charIndex = 0;
+			field_len = 0;
+			msg_ID = LB_MESSAGE_EMPTY;
+
+			field_index = 0;
+			buff = NULL;
+
+			receiving_msg = FALSE;
+		}
+		else if(rx_char)
+		{
+			textBuff[charIndex] = rx_char;  /* hold the characters for re-use */
+
+			if(charIndex)
+			{
+				if(rx_char == 0x7F)         /* Handle backspace */
+				{
+					charIndex--;
+					if(field_index == 0)
+					{
+						msg_ID -= textBuff[charIndex];
+						msg_ID /= 10;
+					}
+					else if(field_len)
+					{
+						field_len--;
+						buff->fields[field_index - 1][field_len] = '\0';
+					}
+					else if(textBuff[charIndex] == ' ')
+					{
+						field_index--;
+						field_len = strlen(buff->fields[field_index]);
+					}
+					else
+					{
+						buff->fields[field_index][0] = '\0';
+						field_index--;
+					}
+
+					textBuff[charIndex] = '\0'; /* replace deleted char with null */
+
+					if(charIndex == 0)
+					{
+						receiving_msg = FALSE;
+					}
+				}
+				else
+				{
+					if(rx_char == ' ')
+					{
+						if((textBuff[charIndex - 1] == ' ') || ((field_index + 1) >= LINKBUS_MAX_MSG_NUMBER_OF_FIELDS))
+						{
+							rx_char = '\0';
+						}
+						else
+						{
+							if(field_index > 0)
+							{
+								buff->fields[field_index - 1][field_len] = '\0';
+							}
+
+							field_index++;
+							field_len = 0;
+							charIndex = MIN(charIndex + 1, (LINKBUS_MAX_MSG_LENGTH - 1));
+						}
+					}
+					else if(field_len < LINKBUS_MAX_MSG_FIELD_LENGTH)
+					{
+						if(field_index == 0)    /* message ID received */
+						{
+							msg_ID = msg_ID * 10 + rx_char;
+							field_len++;
+						}
+						else
+						{
+							buff->fields[field_index - 1][field_len++] = rx_char;
+							buff->fields[field_index - 1][field_len] = '\0';
+						}
+
+						charIndex = MIN(charIndex + 1, (LINKBUS_MAX_MSG_LENGTH - 1));
+					}
+					else
+					{
+						rx_char = '\0';
+					}
+				}
+			}
+			else
+			{
+				if(rx_char == 0x7F) /* Handle Backspace */
+				{
+					if(msg_ID <= 0)
+					{
+						rx_char = '\0';
+					}
+
+					msg_ID = 0;
+				}
+				else if(rx_char == ' ') /* Handle Space */
+				{
+					rx_char = '\0';
+				}
+				else                    /* start of new message */
+				{
+					uint8_t i;
+					field_index = 0;
+					msg_ID = rx_char;
+
+					/* Empty the field buffers */
+					for(i = 0; i < LINKBUS_MAX_MSG_NUMBER_OF_FIELDS; i++)
+					{
+						buff->fields[i][0] = '\0';
+					}
+
+					receiving_msg = TRUE;
+					charIndex++;
+				}
+			}
+
+			if(rx_char)
+			{
+				sb_echo_char(rx_char);
+			}
+		}
+	}	
+}
+
+/**
+
+*/
+ISR(USART0_DRE_vect)
+{
+	static SerialbusTxBuffer* buff = 0;
+	static uint8_t charIndex = 0;
+
+	if(!buff)
+	{
+		buff = nextFullSBTxBuffer();
+	}
+
+	if((*buff)[charIndex])
+	{
+		/* Put data into buffer, sends the data */
+		USART0.TXDATAL = (*buff)[charIndex++];
+	}
+	else
+	{
+		charIndex = 0;
+		(*buff)[0] = '\0';
+		buff = nextFullSBTxBuffer();
+		if(!buff)
+		{
+			linkbus_end_tx();
+		}
+	}
+}
+
+void serial_Tx()
+{
+	static SerialbusTxBuffer* buff = 0;
+	static uint8_t charIndex = 0;
+
+	if(!buff)
+	{
+		buff = nextFullSBTxBuffer();
+	}
+
+	if((*buff)[charIndex])
+	{
+		/* Put data into buffer, sends the data */
+		USART0.TXDATAL = (*buff)[charIndex++];
+	}
+	else
+	{
+		charIndex = 0;
+		(*buff)[0] = '\0';
+		buff = nextFullSBTxBuffer();
+		if(!buff)
+		{
+			linkbus_end_tx();
+		}
+	}
+}
+
 
 /**
 
 */
 ISR(USART1_RXC_vect)
+{
+	uint8_t rx_char = USART1_get_data();	
+	linkbus_Rx(rx_char);
+}
+
+void linkbus_Rx(uint8_t rx_char)
 {
 	static LinkbusRxBuffer* buff = NULL;
 	static uint8_t charIndex = 0;
@@ -61,19 +324,16 @@ ISR(USART1_RXC_vect)
 	static uint8_t field_len = 0;
 	static uint32_t tempMsg_ID = 0;
 	static BOOL receiving_msg = FALSE;
-	uint8_t rx_char;
-
-	rx_char = USART1_get_data();
 
 	if(!buff)
 	{
-		buff = nextEmptyRxBuffer();
+		buff = nextEmptyLBRxBuffer();
 	}
 
 	if(buff)
 	{
 		rx_char = toupper(rx_char);
-//		SMCR = 0x00;                                /* exit power-down mode */
+		//		SMCR = 0x00;                                /* exit power-down mode */
 
 		if((rx_char == '$') || (rx_char == '!'))    /* start of new message = $ */
 		{
@@ -141,7 +401,7 @@ ISR(USART1_RXC_vect)
 		}
 		else if(rx_char == 0x0D)    /* Carriage return resets any message in progress */
 		{
-			buff->id = MESSAGE_EMPTY;
+			buff->id = LB_MESSAGE_EMPTY;
 			charIndex = LINKBUS_MAX_MSG_LENGTH;
 			field_len = 0;
 			tempMsg_ID = 0;
@@ -168,7 +428,7 @@ ISR(USART1_DRE_vect)
 
 	if(!buff)
 	{
-		buff = nextFullTxBuffer();
+		buff = nextFullLBTxBuffer();
 	}
 
 	if((*buff)[charIndex])
@@ -180,7 +440,7 @@ ISR(USART1_DRE_vect)
 	{
 		charIndex = 0;
 		(*buff)[0] = '\0';
-		buff = nextFullTxBuffer();
+		buff = nextFullLBTxBuffer();
 		if(!buff)
 		{
 			linkbus_end_tx();

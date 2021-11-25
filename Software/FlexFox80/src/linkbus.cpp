@@ -45,7 +45,7 @@ static volatile BOOL linkbus_tx_active = FALSE; // volatile is required to ensur
 static LinkbusTxBuffer tx_buffer[LINKBUS_NUMBER_OF_TX_MSG_BUFFERS];
 static LinkbusRxBuffer rx_buffer[LINKBUS_NUMBER_OF_RX_MSG_BUFFERS];
 
-LinkbusTxBuffer* nextFullTxBuffer(void)
+LinkbusTxBuffer* nextFullLBTxBuffer(void)
 {
 	BOOL found = TRUE;
 	static uint8_t bufferIndex = 0;
@@ -74,7 +74,7 @@ LinkbusTxBuffer* nextFullTxBuffer(void)
 	return(NULL);
 }
 
-LinkbusTxBuffer* nextEmptyTxBuffer(void)
+LinkbusTxBuffer* nextEmptyLBTxBuffer(void)
 {
 	BOOL found = TRUE;
 	static uint8_t bufferIndex = 0;
@@ -103,13 +103,13 @@ LinkbusTxBuffer* nextEmptyTxBuffer(void)
 	return(NULL);
 }
 
-LinkbusRxBuffer* nextEmptyRxBuffer(void)
+LinkbusRxBuffer* nextEmptyLBRxBuffer(void)
 {
 	BOOL found = TRUE;
 	static uint8_t bufferIndex = 0;
 	uint8_t count = 0;
 
-	while(rx_buffer[bufferIndex].id != MESSAGE_EMPTY)
+	while(rx_buffer[bufferIndex].id != LB_MESSAGE_EMPTY)
 	{
 		if(++count >= LINKBUS_NUMBER_OF_RX_MSG_BUFFERS)
 		{
@@ -132,13 +132,13 @@ LinkbusRxBuffer* nextEmptyRxBuffer(void)
 	return(NULL);
 }
 
-LinkbusRxBuffer* nextFullRxBuffer(void)
+LinkbusRxBuffer* nextFullLBRxBuffer(void)
 {
 	BOOL found = TRUE;
 	static uint8_t bufferIndex = 0;
 	uint8_t count = 0;
 
-	while(rx_buffer[bufferIndex].id == MESSAGE_EMPTY)
+	while(rx_buffer[bufferIndex].id == LB_MESSAGE_EMPTY)
 	{
 		if(++count >= LINKBUS_NUMBER_OF_RX_MSG_BUFFERS)
 		{
@@ -240,7 +240,7 @@ void linkbus_init()
 	}
 
 	/*Set baud rate */
-	USART1_initialization(BAUD);
+	USART1_initialization(LB_BAUD);
 	g_bus_disabled = FALSE;
 }
 
@@ -275,7 +275,7 @@ void linkbus_enable(void)
 }
 
 
-BOOL linkbus_send_text(char* text)
+BOOL lb_send_text(char* text)
 {
 	BOOL err = TRUE;
 	uint16_t tries = 200;
@@ -284,7 +284,7 @@ BOOL linkbus_send_text(char* text)
 
 	if(text)
 	{
-		LinkbusTxBuffer* buff = nextEmptyTxBuffer();
+		LinkbusTxBuffer* buff = nextEmptyLBTxBuffer();
 
 		while(!buff && tries)
 		{
@@ -292,7 +292,7 @@ BOOL linkbus_send_text(char* text)
 			{
 				if(tries) tries--;   /* wait until transmit finishes */
 			}
-			buff = nextEmptyTxBuffer();
+			buff = nextEmptyLBTxBuffer();
 		}
 
 		if(buff)
@@ -329,14 +329,14 @@ void lb_send_msg(LBMessageType msgType, const char* msgLabel, char* msgStr)
 
 	sprintf(g_tempMsgBuff, "%c%s,%s%c", prefix, msgLabel, msgStr, terminus);
 
-	linkbus_send_text(g_tempMsgBuff);
+	lb_send_text(g_tempMsgBuff);
 }
 
 
 void lb_send_sync(void)
 {
 	sprintf(g_tempMsgBuff, ".....");
-	linkbus_send_text(g_tempMsgBuff);
+	lb_send_text(g_tempMsgBuff);
 }
 
 
@@ -352,5 +352,5 @@ void lb_broadcast_num(uint16_t data, const char* str)
 		sprintf(g_tempMsgBuff, "%s,%s;", str, t);
 	}
 
-	if(g_tempMsgBuff[0]) linkbus_send_text(g_tempMsgBuff);
+	if(g_tempMsgBuff[0]) lb_send_text(g_tempMsgBuff);
 }

@@ -1,4 +1,4 @@
-src/driver_init.d src/driver_init.o: ../src/driver_init.cpp ../defs.h \
+src/serialbus.d src/serialbus.o: ../src/serialbus.cpp ../defs.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\io.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\sfr_defs.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\inttypes.h \
@@ -12,6 +12,7 @@ src/driver_init.d src/driver_init.o: ../src/driver_init.cpp ../defs.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\fuse.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\lock.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\interrupt.h \
+ ../include/serialbus.h ../include/usart_basic.h ../atmel_start.h \
  ../include/driver_init.h ../utils\compiler.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\builtins.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdbool.h \
@@ -20,11 +21,10 @@ src/driver_init.d src/driver_init.o: ../src/driver_init.cpp ../defs.h \
  ../utils/interrupt_avr8.h ../Config/clock_config.h ../include/port.h \
  ../utils/compiler.h ../include/atmel_start_pins.h ../include/clkctrl.h \
  ../include/slpctrl.h ../include/cpuint.h ../include/tcb.h \
- ../include/bod.h ../include/system.h ../include/ccp.h \
- ../include/protected_io.h ../include/port.h ../include/usart_basic.h \
- ../atmel_start.h ../include/driver_init.h ../include/atmel_start_pins.h \
- ../include/linkbus.h ../include/serialbus.h ../include/dac0.h \
- ../include/binio.h
+ ../include/bod.h ../include/atmel_start_pins.h \
+ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\string.h \
+ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdio.h \
+ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdarg.h
 
 ../defs.h:
 
@@ -53,6 +53,12 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\lock.h:
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\interrupt.h:
+
+../include/serialbus.h:
+
+../include/usart_basic.h:
+
+../atmel_start.h:
 
 ../include/driver_init.h:
 
@@ -86,26 +92,10 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 
 ../include/bod.h:
 
-../include/system.h:
-
-../include/ccp.h:
-
-../include/protected_io.h:
-
-../include/port.h:
-
-../include/usart_basic.h:
-
-../atmel_start.h:
-
-../include/driver_init.h:
-
 ../include/atmel_start_pins.h:
 
-../include/linkbus.h:
+c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\string.h:
 
-../include/serialbus.h:
+c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdio.h:
 
-../include/dac0.h:
-
-../include/binio.h:
+c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdarg.h:

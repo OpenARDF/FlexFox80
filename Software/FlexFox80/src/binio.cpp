@@ -38,7 +38,7 @@ binio::~binio()
 } //~binio
 
 
-/** 
+/**
 Handle switch closure interrupts
 */
 ISR(PORTC_PORT_vect)
@@ -50,7 +50,32 @@ ISR(PORTC_PORT_vect)
 		count++;
 	}
 	
+	if(PORTC.INTFLAGS & (1 << X32KHZ_SQUAREWAVE))
+	{
+		count++;
+	}
+	
 	PORTC.INTFLAGS = 0xFF; /* Clear all flags */
+}
+
+/**
+
+*/
+ISR(PORTA_PORT_vect)
+{
+	static int count = 0;
+	
+	if(PORTA.INTFLAGS & (1 << RTC_SQW))
+	{
+		count++;
+	}
+	
+	if(PORTA.INTFLAGS & (1 << ANT_CONNECT_INT))
+	{
+		count++;
+	}	
+	
+	PORTA.INTFLAGS = 0xFF; /* Clear all flags */
 }
 
 void BINIO_init(void)

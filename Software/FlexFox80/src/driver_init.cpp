@@ -28,6 +28,7 @@
 #include <system.h>
 #include "usart_basic.h"
 #include "linkbus.h"
+#include "serialbus.h"
 #include "dac0.h"
 #include "binio.h"
 
