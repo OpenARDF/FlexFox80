@@ -154,12 +154,6 @@ Discarded input sections
  .text          0x00000000        0x0 driver_isr.o
  .data          0x00000000        0x0 driver_isr.o
  .bss           0x00000000        0x0 driver_isr.o
- .text._Z9serial_Txv
-                0x00000000       0x58 driver_isr.o
- .bss._ZZ9serial_TxvE9charIndex
-                0x00000000        0x1 driver_isr.o
- .bss._ZZ9serial_TxvE4buff
-                0x00000000        0x2 driver_isr.o
  .text          0x00000000        0x0 main.o
  .data          0x00000000        0x0 main.o
  .bss           0x00000000        0x0 main.o
@@ -1120,15 +1114,15 @@ END GROUP
  .text._Z9serial_Rxh
                 0x000002aa      0x31c driver_isr.o
                 0x000002aa                _Z9serial_Rxh
- .text.__vector_19
-                0x000005c6       0x54 driver_isr.o
-                0x000005c6                __vector_19
  .text.__vector_20
-                0x0000061a       0xa2 driver_isr.o
-                0x0000061a                __vector_20
+                0x000005c6       0xa2 driver_isr.o
+                0x000005c6                __vector_20
  .text._Z10linkbus_Rxh
-                0x000006bc      0x200 driver_isr.o
-                0x000006bc                _Z10linkbus_Rxh
+                0x00000668      0x200 driver_isr.o
+                0x00000668                _Z10linkbus_Rxh
+ .text.__vector_19
+                0x00000868       0x54 driver_isr.o
+                0x00000868                __vector_19
  .text.__vector_31
                 0x000008bc       0x54 driver_isr.o
                 0x000008bc                __vector_31
@@ -2016,232 +2010,232 @@ END GROUP
 .debug_sfnames
  *(.debug_sfnames)
 
-.debug_aranges  0x00000000      0x848
+.debug_aranges  0x00000000      0x840
  *(.debug_aranges)
  .debug_aranges
                 0x00000000       0x20 atmel_start.o
  .debug_aranges
-                0x00000020       0x58 driver_isr.o
+                0x00000020       0x50 driver_isr.o
  .debug_aranges
-                0x00000078       0xa0 main.o
+                0x00000070       0xa0 main.o
  .debug_aranges
-                0x00000118       0x88 src/adc.o
+                0x00000110       0x88 src/adc.o
  .debug_aranges
-                0x000001a0       0x40 src/binio.o
+                0x00000198       0x40 src/binio.o
  .debug_aranges
-                0x000001e0       0x20 src/bod.o
+                0x000001d8       0x20 src/bod.o
  .debug_aranges
-                0x00000200       0x20 src/clkctrl.o
+                0x000001f8       0x20 src/clkctrl.o
  .debug_aranges
-                0x00000220       0x20 src/cpuint.o
+                0x00000218       0x20 src/cpuint.o
  .debug_aranges
-                0x00000240       0x30 src/dac0.o
+                0x00000238       0x30 src/dac0.o
  .debug_aranges
-                0x00000270       0x28 src/driver_init.o
+                0x00000268       0x28 src/driver_init.o
  .debug_aranges
-                0x00000298       0x48 src/ds3231.o
+                0x00000290       0x48 src/ds3231.o
  .debug_aranges
-                0x000002e0       0x60 src/Goertzel.o
+                0x000002d8       0x60 src/Goertzel.o
  .debug_aranges
-                0x00000340       0x78 src/i2c.o
+                0x00000338       0x78 src/i2c.o
  .debug_aranges
-                0x000003b8       0x98 src/linkbus.o
+                0x000003b0       0x98 src/linkbus.o
  .debug_aranges
-                0x00000450       0x30 src/morse.o
+                0x00000448       0x30 src/morse.o
  .debug_aranges
-                0x00000480       0x20 src/protected_io.o
+                0x00000478       0x20 src/protected_io.o
  .debug_aranges
-                0x000004a0       0xa0 src/serialbus.o
+                0x00000498       0xa0 src/serialbus.o
  .debug_aranges
-                0x00000540       0xb8 src/si5351.o
+                0x00000538       0xb8 src/si5351.o
  .debug_aranges
-                0x000005f8       0x28 src/slpctrl.o
+                0x000005f0       0x28 src/slpctrl.o
  .debug_aranges
-                0x00000620       0x30 src/tcb.o
+                0x00000618       0x30 src/tcb.o
  .debug_aranges
-                0x00000650       0x70 src/transmitter.o
+                0x00000648       0x70 src/transmitter.o
  .debug_aranges
-                0x000006c0       0xc8 src/usart_basic.o
+                0x000006b8       0xc8 src/usart_basic.o
  .debug_aranges
-                0x00000788       0x20 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eerd_byte.o)
+                0x00000780       0x20 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eerd_byte.o)
  .debug_aranges
-                0x000007a8       0x20 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_dword.o)
+                0x000007a0       0x20 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_dword.o)
  .debug_aranges
-                0x000007c8       0x20 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_word.o)
+                0x000007c0       0x20 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_word.o)
  .debug_aranges
-                0x000007e8       0x20 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_block.o)
+                0x000007e0       0x20 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_block.o)
  .debug_aranges
-                0x00000808       0x20 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_byte.o)
+                0x00000800       0x20 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_byte.o)
  .debug_aranges
-                0x00000828       0x20 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_byte.o)
+                0x00000820       0x20 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_byte.o)
 
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x00000000     0xda1b
+.debug_info     0x00000000     0xd9ea
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x00000000     0x2c24 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4/crtavr128da48.o
  .debug_info    0x00002c24       0x99 atmel_start.o
- .debug_info    0x00002cbd      0xa1f driver_isr.o
- .debug_info    0x000036dc     0x1b61 main.o
- .debug_info    0x0000523d      0xe72 src/adc.o
- .debug_info    0x000060af      0xe22 src/binio.o
- .debug_info    0x00006ed1      0x188 src/bod.o
- .debug_info    0x00007059      0x2cd src/clkctrl.o
- .debug_info    0x00007326       0x8d src/cpuint.o
- .debug_info    0x000073b3      0x464 src/dac0.o
- .debug_info    0x00007817      0x565 src/driver_init.o
- .debug_info    0x00007d7c      0x62c src/ds3231.o
- .debug_info    0x000083a8      0x6a7 src/Goertzel.o
- .debug_info    0x00008a4f      0x5dd src/i2c.o
- .debug_info    0x0000902c      0xdfc src/linkbus.o
- .debug_info    0x00009e28      0x2e8 src/morse.o
- .debug_info    0x0000a110       0x7f src/protected_io.o
- .debug_info    0x0000a18f      0xe2e src/serialbus.o
- .debug_info    0x0000afbd     0x12cb src/si5351.o
- .debug_info    0x0000c288      0x135 src/slpctrl.o
- .debug_info    0x0000c3bd      0x2e3 src/tcb.o
- .debug_info    0x0000c6a0      0xb16 src/transmitter.o
- .debug_info    0x0000d1b6      0x4a6 src/usart_basic.o
- .debug_info    0x0000d65c       0x9f C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eerd_byte.o)
- .debug_info    0x0000d6fb       0xa1 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_dword.o)
- .debug_info    0x0000d79c       0xa0 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_word.o)
- .debug_info    0x0000d83c       0xa0 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_block.o)
- .debug_info    0x0000d8dc       0x9f C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_byte.o)
- .debug_info    0x0000d97b       0xa0 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_byte.o)
+ .debug_info    0x00002cbd      0x9ee driver_isr.o
+ .debug_info    0x000036ab     0x1b61 main.o
+ .debug_info    0x0000520c      0xe72 src/adc.o
+ .debug_info    0x0000607e      0xe22 src/binio.o
+ .debug_info    0x00006ea0      0x188 src/bod.o
+ .debug_info    0x00007028      0x2cd src/clkctrl.o
+ .debug_info    0x000072f5       0x8d src/cpuint.o
+ .debug_info    0x00007382      0x464 src/dac0.o
+ .debug_info    0x000077e6      0x565 src/driver_init.o
+ .debug_info    0x00007d4b      0x62c src/ds3231.o
+ .debug_info    0x00008377      0x6a7 src/Goertzel.o
+ .debug_info    0x00008a1e      0x5dd src/i2c.o
+ .debug_info    0x00008ffb      0xdfc src/linkbus.o
+ .debug_info    0x00009df7      0x2e8 src/morse.o
+ .debug_info    0x0000a0df       0x7f src/protected_io.o
+ .debug_info    0x0000a15e      0xe2e src/serialbus.o
+ .debug_info    0x0000af8c     0x12cb src/si5351.o
+ .debug_info    0x0000c257      0x135 src/slpctrl.o
+ .debug_info    0x0000c38c      0x2e3 src/tcb.o
+ .debug_info    0x0000c66f      0xb16 src/transmitter.o
+ .debug_info    0x0000d185      0x4a6 src/usart_basic.o
+ .debug_info    0x0000d62b       0x9f C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eerd_byte.o)
+ .debug_info    0x0000d6ca       0xa1 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_dword.o)
+ .debug_info    0x0000d76b       0xa0 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_word.o)
+ .debug_info    0x0000d80b       0xa0 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_block.o)
+ .debug_info    0x0000d8ab       0x9f C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_byte.o)
+ .debug_info    0x0000d94a       0xa0 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_byte.o)
 
-.debug_abbrev   0x00000000     0x5331
+.debug_abbrev   0x00000000     0x5335
  *(.debug_abbrev)
  .debug_abbrev  0x00000000     0x29ce C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4/crtavr128da48.o
  .debug_abbrev  0x000029ce       0x61 atmel_start.o
- .debug_abbrev  0x00002a2f      0x259 driver_isr.o
- .debug_abbrev  0x00002c88      0x3ae main.o
- .debug_abbrev  0x00003036      0x382 src/adc.o
- .debug_abbrev  0x000033b8      0x258 src/binio.o
- .debug_abbrev  0x00003610       0xaf src/bod.o
- .debug_abbrev  0x000036bf      0x115 src/clkctrl.o
- .debug_abbrev  0x000037d4       0x51 src/cpuint.o
- .debug_abbrev  0x00003825      0x151 src/dac0.o
- .debug_abbrev  0x00003976      0x1a6 src/driver_init.o
- .debug_abbrev  0x00003b1c      0x1e4 src/ds3231.o
- .debug_abbrev  0x00003d00      0x2b1 src/Goertzel.o
- .debug_abbrev  0x00003fb1      0x18c src/i2c.o
- .debug_abbrev  0x0000413d      0x37d src/linkbus.o
- .debug_abbrev  0x000044ba      0x147 src/morse.o
- .debug_abbrev  0x00004601       0x14 src/protected_io.o
- .debug_abbrev  0x00004615      0x3bb src/serialbus.o
- .debug_abbrev  0x000049d0      0x2a8 src/si5351.o
- .debug_abbrev  0x00004c78       0xc2 src/slpctrl.o
- .debug_abbrev  0x00004d3a      0x141 src/tcb.o
- .debug_abbrev  0x00004e7b      0x298 src/transmitter.o
- .debug_abbrev  0x00005113      0x1a6 src/usart_basic.o
- .debug_abbrev  0x000052b9       0x14 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eerd_byte.o)
- .debug_abbrev  0x000052cd       0x14 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_dword.o)
- .debug_abbrev  0x000052e1       0x14 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_word.o)
- .debug_abbrev  0x000052f5       0x14 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_block.o)
- .debug_abbrev  0x00005309       0x14 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_byte.o)
- .debug_abbrev  0x0000531d       0x14 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_byte.o)
+ .debug_abbrev  0x00002a2f      0x25d driver_isr.o
+ .debug_abbrev  0x00002c8c      0x3ae main.o
+ .debug_abbrev  0x0000303a      0x382 src/adc.o
+ .debug_abbrev  0x000033bc      0x258 src/binio.o
+ .debug_abbrev  0x00003614       0xaf src/bod.o
+ .debug_abbrev  0x000036c3      0x115 src/clkctrl.o
+ .debug_abbrev  0x000037d8       0x51 src/cpuint.o
+ .debug_abbrev  0x00003829      0x151 src/dac0.o
+ .debug_abbrev  0x0000397a      0x1a6 src/driver_init.o
+ .debug_abbrev  0x00003b20      0x1e4 src/ds3231.o
+ .debug_abbrev  0x00003d04      0x2b1 src/Goertzel.o
+ .debug_abbrev  0x00003fb5      0x18c src/i2c.o
+ .debug_abbrev  0x00004141      0x37d src/linkbus.o
+ .debug_abbrev  0x000044be      0x147 src/morse.o
+ .debug_abbrev  0x00004605       0x14 src/protected_io.o
+ .debug_abbrev  0x00004619      0x3bb src/serialbus.o
+ .debug_abbrev  0x000049d4      0x2a8 src/si5351.o
+ .debug_abbrev  0x00004c7c       0xc2 src/slpctrl.o
+ .debug_abbrev  0x00004d3e      0x141 src/tcb.o
+ .debug_abbrev  0x00004e7f      0x298 src/transmitter.o
+ .debug_abbrev  0x00005117      0x1a6 src/usart_basic.o
+ .debug_abbrev  0x000052bd       0x14 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eerd_byte.o)
+ .debug_abbrev  0x000052d1       0x14 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_dword.o)
+ .debug_abbrev  0x000052e5       0x14 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_word.o)
+ .debug_abbrev  0x000052f9       0x14 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_block.o)
+ .debug_abbrev  0x0000530d       0x14 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_byte.o)
+ .debug_abbrev  0x00005321       0x14 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_byte.o)
 
-.debug_line     0x00000000     0x58f3
+.debug_line     0x00000000     0x58ac
  *(.debug_line .debug_line.* .debug_line_end)
  .debug_line    0x00000000      0x1f3 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4/crtavr128da48.o
  .debug_line    0x000001f3       0x64 atmel_start.o
- .debug_line    0x00000257      0x60c driver_isr.o
- .debug_line    0x00000863      0xb56 main.o
- .debug_line    0x000013b9      0x416 src/adc.o
- .debug_line    0x000017cf      0x292 src/binio.o
- .debug_line    0x00001a61      0x10f src/bod.o
- .debug_line    0x00001b70      0x13d src/clkctrl.o
- .debug_line    0x00001cad       0xad src/cpuint.o
- .debug_line    0x00001d5a      0x17b src/dac0.o
- .debug_line    0x00001ed5      0x2b2 src/driver_init.o
- .debug_line    0x00002187      0x362 src/ds3231.o
- .debug_line    0x000024e9      0x29e src/Goertzel.o
- .debug_line    0x00002787      0x48e src/i2c.o
- .debug_line    0x00002c15      0x5cd src/linkbus.o
- .debug_line    0x000031e2      0x873 src/morse.o
- .debug_line    0x00003a55       0x5b src/protected_io.o
- .debug_line    0x00003ab0      0x5f9 src/serialbus.o
- .debug_line    0x000040a9      0x916 src/si5351.o
- .debug_line    0x000049bf      0x123 src/slpctrl.o
- .debug_line    0x00004ae2      0x227 src/tcb.o
- .debug_line    0x00004d09      0x55b src/transmitter.o
- .debug_line    0x00005264      0x378 src/usart_basic.o
- .debug_line    0x000055dc       0x79 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eerd_byte.o)
- .debug_line    0x00005655       0x7b C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_dword.o)
- .debug_line    0x000056d0       0x62 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_word.o)
- .debug_line    0x00005732       0x80 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_block.o)
- .debug_line    0x000057b2       0xc1 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_byte.o)
- .debug_line    0x00005873       0x80 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_byte.o)
+ .debug_line    0x00000257      0x5c5 driver_isr.o
+ .debug_line    0x0000081c      0xb56 main.o
+ .debug_line    0x00001372      0x416 src/adc.o
+ .debug_line    0x00001788      0x292 src/binio.o
+ .debug_line    0x00001a1a      0x10f src/bod.o
+ .debug_line    0x00001b29      0x13d src/clkctrl.o
+ .debug_line    0x00001c66       0xad src/cpuint.o
+ .debug_line    0x00001d13      0x17b src/dac0.o
+ .debug_line    0x00001e8e      0x2b2 src/driver_init.o
+ .debug_line    0x00002140      0x362 src/ds3231.o
+ .debug_line    0x000024a2      0x29e src/Goertzel.o
+ .debug_line    0x00002740      0x48e src/i2c.o
+ .debug_line    0x00002bce      0x5cd src/linkbus.o
+ .debug_line    0x0000319b      0x873 src/morse.o
+ .debug_line    0x00003a0e       0x5b src/protected_io.o
+ .debug_line    0x00003a69      0x5f9 src/serialbus.o
+ .debug_line    0x00004062      0x916 src/si5351.o
+ .debug_line    0x00004978      0x123 src/slpctrl.o
+ .debug_line    0x00004a9b      0x227 src/tcb.o
+ .debug_line    0x00004cc2      0x55b src/transmitter.o
+ .debug_line    0x0000521d      0x378 src/usart_basic.o
+ .debug_line    0x00005595       0x79 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eerd_byte.o)
+ .debug_line    0x0000560e       0x7b C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_dword.o)
+ .debug_line    0x00005689       0x62 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_word.o)
+ .debug_line    0x000056eb       0x80 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_block.o)
+ .debug_line    0x0000576b       0xc1 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eewr_byte.o)
+ .debug_line    0x0000582c       0x80 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4\libavr128da48.a(eeupd_byte.o)
 
-.debug_frame    0x00000000     0x1600
+.debug_frame    0x00000000     0x15f0
  *(.debug_frame)
  .debug_frame   0x00000000       0x24 atmel_start.o
- .debug_frame   0x00000024      0x1e8 driver_isr.o
- .debug_frame   0x0000020c      0x1c0 main.o
- .debug_frame   0x000003cc      0x194 src/adc.o
- .debug_frame   0x00000560       0x8c src/binio.o
- .debug_frame   0x000005ec       0x24 src/bod.o
- .debug_frame   0x00000610       0x24 src/clkctrl.o
- .debug_frame   0x00000634       0x24 src/cpuint.o
- .debug_frame   0x00000658       0x44 src/dac0.o
- .debug_frame   0x0000069c       0x34 src/driver_init.o
- .debug_frame   0x000006d0      0x134 src/ds3231.o
- .debug_frame   0x00000804      0x184 src/Goertzel.o
- .debug_frame   0x00000988      0x144 src/i2c.o
- .debug_frame   0x00000acc      0x190 src/linkbus.o
- .debug_frame   0x00000c5c       0x74 src/morse.o
- .debug_frame   0x00000cd0      0x180 src/serialbus.o
- .debug_frame   0x00000e50      0x454 src/si5351.o
- .debug_frame   0x000012a4       0x34 src/slpctrl.o
- .debug_frame   0x000012d8       0x70 src/tcb.o
- .debug_frame   0x00001348      0x144 src/transmitter.o
- .debug_frame   0x0000148c      0x174 src/usart_basic.o
+ .debug_frame   0x00000024      0x1d8 driver_isr.o
+ .debug_frame   0x000001fc      0x1c0 main.o
+ .debug_frame   0x000003bc      0x194 src/adc.o
+ .debug_frame   0x00000550       0x8c src/binio.o
+ .debug_frame   0x000005dc       0x24 src/bod.o
+ .debug_frame   0x00000600       0x24 src/clkctrl.o
+ .debug_frame   0x00000624       0x24 src/cpuint.o
+ .debug_frame   0x00000648       0x44 src/dac0.o
+ .debug_frame   0x0000068c       0x34 src/driver_init.o
+ .debug_frame   0x000006c0      0x134 src/ds3231.o
+ .debug_frame   0x000007f4      0x184 src/Goertzel.o
+ .debug_frame   0x00000978      0x144 src/i2c.o
+ .debug_frame   0x00000abc      0x190 src/linkbus.o
+ .debug_frame   0x00000c4c       0x74 src/morse.o
+ .debug_frame   0x00000cc0      0x180 src/serialbus.o
+ .debug_frame   0x00000e40      0x454 src/si5351.o
+ .debug_frame   0x00001294       0x34 src/slpctrl.o
+ .debug_frame   0x000012c8       0x70 src/tcb.o
+ .debug_frame   0x00001338      0x144 src/transmitter.o
+ .debug_frame   0x0000147c      0x174 src/usart_basic.o
 
-.debug_str      0x00000000     0x545b
+.debug_str      0x00000000     0x545c
  *(.debug_str)
  .debug_str     0x00000000     0x1320 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/AVR-Dx_DFP/1.9.103/gcc/dev/avr128da48/avrxmega4/crtavr128da48.o
  .debug_str     0x00001320      0x192 atmel_start.o
                                 0x1c6 (size before relaxing)
- .debug_str     0x000014b2      0x689 driver_isr.o
-                                0x89f (size before relaxing)
- .debug_str     0x00001b3b     0x1301 main.o
+ .debug_str     0x000014b2      0x68f driver_isr.o
+                                0x8a5 (size before relaxing)
+ .debug_str     0x00001b41     0x12fc main.o
                                0x187e (size before relaxing)
- .debug_str     0x00002e3c      0xa04 src/adc.o
+ .debug_str     0x00002e3d      0xa04 src/adc.o
                                 0xd55 (size before relaxing)
- .debug_str     0x00003840      0x255 src/binio.o
+ .debug_str     0x00003841      0x255 src/binio.o
                                 0x599 (size before relaxing)
- .debug_str     0x00003a95       0x80 src/bod.o
+ .debug_str     0x00003a96       0x80 src/bod.o
                                 0x269 (size before relaxing)
- .debug_str     0x00003b15      0x1b8 src/clkctrl.o
+ .debug_str     0x00003b16      0x1b8 src/clkctrl.o
                                 0x39f (size before relaxing)
- .debug_str     0x00003ccd       0x1e src/cpuint.o
+ .debug_str     0x00003cce       0x1e src/cpuint.o
                                 0x1b9 (size before relaxing)
- .debug_str     0x00003ceb       0x60 src/dac0.o
+ .debug_str     0x00003cec       0x60 src/dac0.o
                                 0x465 (size before relaxing)
- .debug_str     0x00003d4b       0x72 src/driver_init.o
+ .debug_str     0x00003d4c       0x72 src/driver_init.o
                                 0x3cd (size before relaxing)
- .debug_str     0x00003dbd       0xe8 src/ds3231.o
+ .debug_str     0x00003dbe       0xe8 src/ds3231.o
                                 0x71e (size before relaxing)
- .debug_str     0x00003ea5       0xe5 src/Goertzel.o
+ .debug_str     0x00003ea6       0xe5 src/Goertzel.o
                                 0x4a3 (size before relaxing)
- .debug_str     0x00003f8a      0x294 src/i2c.o
+ .debug_str     0x00003f8b      0x294 src/i2c.o
                                 0x47f (size before relaxing)
- .debug_str     0x0000421e      0x209 src/linkbus.o
+ .debug_str     0x0000421f      0x209 src/linkbus.o
                                 0xab9 (size before relaxing)
- .debug_str     0x00004427       0xe3 src/morse.o
+ .debug_str     0x00004428       0xe3 src/morse.o
                                 0x316 (size before relaxing)
- .debug_str     0x0000450a      0x1df src/serialbus.o
+ .debug_str     0x0000450b      0x1df src/serialbus.o
                                 0x8ec (size before relaxing)
- .debug_str     0x000046e9      0x736 src/si5351.o
+ .debug_str     0x000046ea      0x736 src/si5351.o
                                 0xd4b (size before relaxing)
- .debug_str     0x00004e1f       0xbb src/slpctrl.o
+ .debug_str     0x00004e20       0xbb src/slpctrl.o
                                 0x27d (size before relaxing)
- .debug_str     0x00004eda       0xbb src/tcb.o
+ .debug_str     0x00004edb       0xbb src/tcb.o
                                 0x322 (size before relaxing)
- .debug_str     0x00004f95      0x330 src/transmitter.o
+ .debug_str     0x00004f96      0x330 src/transmitter.o
                                 0xd6a (size before relaxing)
- .debug_str     0x000052c5      0x196 src/usart_basic.o
+ .debug_str     0x000052c6      0x196 src/usart_basic.o
                                 0x48a (size before relaxing)
 
 .debug_loc      0x00000000     0x66cf
@@ -2283,29 +2277,29 @@ END GROUP
 .debug_pubtypes
  *(.debug_pubtypes)
 
-.debug_ranges   0x00000000      0x720
+.debug_ranges   0x00000000      0x718
  *(.debug_ranges)
  .debug_ranges  0x00000000       0x10 atmel_start.o
- .debug_ranges  0x00000010       0x48 driver_isr.o
- .debug_ranges  0x00000058      0x138 main.o
- .debug_ranges  0x00000190       0x78 src/adc.o
- .debug_ranges  0x00000208       0x30 src/binio.o
- .debug_ranges  0x00000238       0x10 src/bod.o
- .debug_ranges  0x00000248       0x10 src/clkctrl.o
- .debug_ranges  0x00000258       0x10 src/cpuint.o
- .debug_ranges  0x00000268       0x20 src/dac0.o
- .debug_ranges  0x00000288       0x18 src/driver_init.o
- .debug_ranges  0x000002a0       0x38 src/ds3231.o
- .debug_ranges  0x000002d8       0x50 src/Goertzel.o
- .debug_ranges  0x00000328       0x68 src/i2c.o
- .debug_ranges  0x00000390       0xa0 src/linkbus.o
- .debug_ranges  0x00000430       0x38 src/morse.o
- .debug_ranges  0x00000468       0xa8 src/serialbus.o
- .debug_ranges  0x00000510       0xc0 src/si5351.o
- .debug_ranges  0x000005d0       0x18 src/slpctrl.o
- .debug_ranges  0x000005e8       0x20 src/tcb.o
- .debug_ranges  0x00000608       0x60 src/transmitter.o
- .debug_ranges  0x00000668       0xb8 src/usart_basic.o
+ .debug_ranges  0x00000010       0x40 driver_isr.o
+ .debug_ranges  0x00000050      0x138 main.o
+ .debug_ranges  0x00000188       0x78 src/adc.o
+ .debug_ranges  0x00000200       0x30 src/binio.o
+ .debug_ranges  0x00000230       0x10 src/bod.o
+ .debug_ranges  0x00000240       0x10 src/clkctrl.o
+ .debug_ranges  0x00000250       0x10 src/cpuint.o
+ .debug_ranges  0x00000260       0x20 src/dac0.o
+ .debug_ranges  0x00000280       0x18 src/driver_init.o
+ .debug_ranges  0x00000298       0x38 src/ds3231.o
+ .debug_ranges  0x000002d0       0x50 src/Goertzel.o
+ .debug_ranges  0x00000320       0x68 src/i2c.o
+ .debug_ranges  0x00000388       0xa0 src/linkbus.o
+ .debug_ranges  0x00000428       0x38 src/morse.o
+ .debug_ranges  0x00000460       0xa8 src/serialbus.o
+ .debug_ranges  0x00000508       0xc0 src/si5351.o
+ .debug_ranges  0x000005c8       0x18 src/slpctrl.o
+ .debug_ranges  0x000005e0       0x20 src/tcb.o
+ .debug_ranges  0x00000600       0x60 src/transmitter.o
+ .debug_ranges  0x00000660       0xb8 src/usart_basic.o
 
 .debug_macro
  *(.debug_macro)

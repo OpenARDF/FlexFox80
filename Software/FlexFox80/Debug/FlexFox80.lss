@@ -15,21 +15,21 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY
   5 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  000054d0  2**2
                   CONTENTS, READONLY
-  6 .debug_aranges 00000848  00000000  00000000  00005510  2**3
+  6 .debug_aranges 00000840  00000000  00000000  00005510  2**3
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_info   0000da1b  00000000  00000000  00005d58  2**0
+  7 .debug_info   0000d9ea  00000000  00000000  00005d50  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_abbrev 00005331  00000000  00000000  00013773  2**0
+  8 .debug_abbrev 00005335  00000000  00000000  0001373a  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_line   000058f3  00000000  00000000  00018aa4  2**0
+  9 .debug_line   000058ac  00000000  00000000  00018a6f  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_frame  00001600  00000000  00000000  0001e398  2**2
+ 10 .debug_frame  000015f0  00000000  00000000  0001e31c  2**2
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_str    0000545b  00000000  00000000  0001f998  2**0
+ 11 .debug_str    0000545c  00000000  00000000  0001f90c  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_loc    000066cf  00000000  00000000  00024df3  2**0
+ 12 .debug_loc    000066cf  00000000  00000000  00024d68  2**0
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_ranges 00000720  00000000  00000000  0002b4c2  2**0
+ 13 .debug_ranges 00000718  00000000  00000000  0002b437  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -54,8 +54,8 @@ Disassembly of section .text:
       40:	0c 94 fd 00 	jmp	0x1fa	; 0x1fa <__bad_interrupt>
       44:	0c 94 fd 00 	jmp	0x1fa	; 0x1fa <__bad_interrupt>
       48:	0c 94 fd 00 	jmp	0x1fa	; 0x1fa <__bad_interrupt>
-      4c:	0c 94 e3 02 	jmp	0x5c6	; 0x5c6 <__vector_19>
-      50:	0c 94 0d 03 	jmp	0x61a	; 0x61a <__vector_20>
+      4c:	0c 94 34 04 	jmp	0x868	; 0x868 <__vector_19>
+      50:	0c 94 e3 02 	jmp	0x5c6	; 0x5c6 <__vector_20>
       54:	0c 94 fd 00 	jmp	0x1fa	; 0x1fa <__bad_interrupt>
       58:	0c 94 fd 00 	jmp	0x1fa	; 0x1fa <__bad_interrupt>
       5c:	0c 94 fd 00 	jmp	0x1fa	; 0x1fa <__bad_interrupt>
@@ -320,23 +320,28 @@ void atmel_start_init(void)
      282:	08 95       	ret
 
 00000284 <__vector_30>:
-		charIndex = 0;
-		(*buff)[0] = '\0';
-		buff = nextFullSBTxBuffer();
-		if(!buff)
-		{
-			linkbus_end_tx();
+
+static bool g_serial_comms_on_USART1 = true;
+
+
+ISR(TCB2_INT_vect)
+{
      284:	1f 92       	push	r1
      286:	0f 92       	push	r0
      288:	0f b6       	in	r0, 0x3f	; 63
      28a:	0f 92       	push	r0
      28c:	11 24       	eor	r1, r1
      28e:	8f 93       	push	r24
+	if(TCB2.INTFLAGS & TCB_CAPT_bm)
      290:	80 91 26 0b 	lds	r24, 0x0B26	; 0x800b26 <__TEXT_REGION_LENGTH__+0x7e0b26>
      294:	80 ff       	sbrs	r24, 0
      296:	03 c0       	rjmp	.+6      	; 0x29e <__vector_30+0x1a>
+    {
+        TCB2.INTFLAGS = TCB_CAPT_bm;
      298:	81 e0       	ldi	r24, 0x01	; 1
      29a:	80 93 26 0b 	sts	0x0B26, r24	; 0x800b26 <__TEXT_REGION_LENGTH__+0x7e0b26>
+    }
+}
      29e:	8f 91       	pop	r24
      2a0:	0f 90       	pop	r0
      2a2:	0f be       	out	0x3f, r0	; 63
@@ -345,56 +350,102 @@ void atmel_start_init(void)
      2a8:	18 95       	reti
 
 000002aa <_Z9serial_Rxh>:
+		serial_Rx(rx_char);
+	}
+}
+
+void serial_Rx(uint8_t rx_char)
+{
      2aa:	1f 93       	push	r17
      2ac:	cf 93       	push	r28
      2ae:	df 93       	push	r29
      2b0:	18 2f       	mov	r17, r24
+	static uint8_t field_index = 0;
+	static uint8_t field_len = 0;
+	static int msg_ID = 0;
+	static BOOL receiving_msg = FALSE;
+
+	if(!buff)
      2b2:	80 91 0f 41 	lds	r24, 0x410F	; 0x80410f <_ZZ9serial_RxhE4buff>
      2b6:	90 91 10 41 	lds	r25, 0x4110	; 0x804110 <_ZZ9serial_RxhE4buff+0x1>
      2ba:	89 2b       	or	r24, r25
      2bc:	31 f4       	brne	.+12     	; 0x2ca <_Z9serial_Rxh+0x20>
+	{
+		buff = nextEmptySBRxBuffer();
      2be:	0e 94 1a 18 	call	0x3034	; 0x3034 <nextEmptySBRxBuffer>
      2c2:	80 93 0f 41 	sts	0x410F, r24	; 0x80410f <_ZZ9serial_RxhE4buff>
      2c6:	90 93 10 41 	sts	0x4110, r25	; 0x804110 <_ZZ9serial_RxhE4buff+0x1>
+	}
+
+	if(buff)
      2ca:	c0 91 0f 41 	lds	r28, 0x410F	; 0x80410f <_ZZ9serial_RxhE4buff>
      2ce:	d0 91 10 41 	lds	r29, 0x4110	; 0x804110 <_ZZ9serial_RxhE4buff+0x1>
      2d2:	20 97       	sbiw	r28, 0x00	; 0
      2d4:	09 f4       	brne	.+2      	; 0x2d8 <_Z9serial_Rxh+0x2e>
      2d6:	73 c1       	rjmp	.+742    	; 0x5be <__LOCK_REGION_LENGTH__+0x1be>
+	{
+		static uint8_t ignoreCount = 0;
+		rx_char = toupper(rx_char);
      2d8:	81 2f       	mov	r24, r17
      2da:	90 e0       	ldi	r25, 0x00	; 0
      2dc:	0e 94 0b 26 	call	0x4c16	; 0x4c16 <toupper>
      2e0:	ac 01       	movw	r20, r24
      2e2:	28 2f       	mov	r18, r24
+
+		if(ignoreCount)
      2e4:	90 91 0e 41 	lds	r25, 0x410E	; 0x80410e <_ZZ9serial_RxhE11ignoreCount>
      2e8:	99 23       	and	r25, r25
      2ea:	21 f0       	breq	.+8      	; 0x2f4 <_Z9serial_Rxh+0x4a>
+		{
+			rx_char = '\0';
+			ignoreCount--;
      2ec:	91 50       	subi	r25, 0x01	; 1
      2ee:	90 93 0e 41 	sts	0x410E, r25	; 0x80410e <_ZZ9serial_RxhE11ignoreCount>
      2f2:	65 c1       	rjmp	.+714    	; 0x5be <__LOCK_REGION_LENGTH__+0x1be>
+		}
+		else if(rx_char == 0x1B)    /* Ignore ESC sequences */
      2f4:	4b 31       	cpi	r20, 0x1B	; 27
      2f6:	21 f4       	brne	.+8      	; 0x300 <_Z9serial_Rxh+0x56>
+			if(charIndex < SERIALBUS_MAX_MSG_FIELD_LENGTH)
+			{
+				rx_char = textBuff[charIndex];
+			}
+
+			ignoreCount = 2;        /* throw out the next two characters */
      2f8:	82 e0       	ldi	r24, 0x02	; 2
      2fa:	80 93 0e 41 	sts	0x410E, r24	; 0x80410e <_ZZ9serial_RxhE11ignoreCount>
      2fe:	5f c1       	rjmp	.+702    	; 0x5be <__LOCK_REGION_LENGTH__+0x1be>
+		}
+		else if(rx_char == 0x0D)    /* Handle carriage return */
      300:	4d 30       	cpi	r20, 0x0D	; 13
      302:	09 f0       	breq	.+2      	; 0x306 <_Z9serial_Rxh+0x5c>
      304:	3f c0       	rjmp	.+126    	; 0x384 <_Z9serial_Rxh+0xda>
+		{
+			if(receiving_msg)
      306:	80 91 da 40 	lds	r24, 0x40DA	; 0x8040da <_ZZ9serial_RxhE13receiving_msg>
      30a:	88 23       	and	r24, r24
      30c:	31 f1       	breq	.+76     	; 0x35a <_Z9serial_Rxh+0xb0>
+			{
+				if(charIndex > 0)
      30e:	e0 91 0d 41 	lds	r30, 0x410D	; 0x80410d <_ZZ9serial_RxhE9charIndex>
      312:	ee 23       	and	r30, r30
      314:	f9 f0       	breq	.+62     	; 0x354 <_Z9serial_Rxh+0xaa>
+				{
+					buff->type = SERIALBUS_MSG_QUERY;
      316:	82 e0       	ldi	r24, 0x02	; 2
      318:	88 83       	st	Y, r24
+					buff->id = (SBMessageID)msg_ID;
      31a:	80 91 d8 40 	lds	r24, 0x40D8	; 0x8040d8 <_ZZ9serial_RxhE6msg_ID>
      31e:	90 91 d9 40 	lds	r25, 0x40D9	; 0x8040d9 <_ZZ9serial_RxhE6msg_ID+0x1>
      322:	89 83       	std	Y+1, r24	; 0x01
      324:	9a 83       	std	Y+2, r25	; 0x02
+
+					if(field_index > 0) /* terminate the last field */
      326:	80 91 d7 40 	lds	r24, 0x40D7	; 0x8040d7 <_ZZ9serial_RxhE11field_index>
      32a:	88 23       	and	r24, r24
      32c:	79 f0       	breq	.+30     	; 0x34c <_Z9serial_Rxh+0xa2>
+					{
+						buff->fields[field_index - 1][field_len] = 0;
      32e:	90 e0       	ldi	r25, 0x00	; 0
      330:	01 97       	sbiw	r24, 0x01	; 1
      332:	40 91 d6 40 	lds	r20, 0x40D6	; 0x8040d6 <_ZZ9serial_RxhE9field_len>
@@ -409,28 +460,52 @@ void atmel_start_init(void)
      346:	c4 0f       	add	r28, r20
      348:	d1 1d       	adc	r29, r1
      34a:	1b 82       	std	Y+3, r1	; 0x03
+					}
+
+					textBuff[charIndex] = '\0'; /* terminate last-message buffer */
      34c:	f0 e0       	ldi	r31, 0x00	; 0
      34e:	e5 52       	subi	r30, 0x25	; 37
      350:	ff 4b       	sbci	r31, 0xBF	; 191
      352:	10 82       	st	Z, r1
+				}
+
+				sb_send_NewLine();
      354:	0e 94 9b 18 	call	0x3136	; 0x3136 <sb_send_NewLine>
      358:	04 c0       	rjmp	.+8      	; 0x362 <_Z9serial_Rxh+0xb8>
+			}
+			else
+			{
+				buff->id = SB_INVALID_MESSAGE; /* print help message */
      35a:	8f ef       	ldi	r24, 0xFF	; 255
      35c:	9f ef       	ldi	r25, 0xFF	; 255
      35e:	89 83       	std	Y+1, r24	; 0x01
      360:	9a 83       	std	Y+2, r25	; 0x02
+			}
+
+			charIndex = 0;
      362:	10 92 0d 41 	sts	0x410D, r1	; 0x80410d <_ZZ9serial_RxhE9charIndex>
+			field_len = 0;
      366:	10 92 d6 40 	sts	0x40D6, r1	; 0x8040d6 <_ZZ9serial_RxhE9field_len>
+			msg_ID = LB_MESSAGE_EMPTY;
      36a:	10 92 d8 40 	sts	0x40D8, r1	; 0x8040d8 <_ZZ9serial_RxhE6msg_ID>
      36e:	10 92 d9 40 	sts	0x40D9, r1	; 0x8040d9 <_ZZ9serial_RxhE6msg_ID+0x1>
+
+			field_index = 0;
      372:	10 92 d7 40 	sts	0x40D7, r1	; 0x8040d7 <_ZZ9serial_RxhE11field_index>
+			buff = NULL;
      376:	10 92 0f 41 	sts	0x410F, r1	; 0x80410f <_ZZ9serial_RxhE4buff>
      37a:	10 92 10 41 	sts	0x4110, r1	; 0x804110 <_ZZ9serial_RxhE4buff+0x1>
+
+			receiving_msg = FALSE;
      37e:	10 92 da 40 	sts	0x40DA, r1	; 0x8040da <_ZZ9serial_RxhE13receiving_msg>
      382:	1d c1       	rjmp	.+570    	; 0x5be <__LOCK_REGION_LENGTH__+0x1be>
+		}
+		else if(rx_char)
      384:	44 23       	and	r20, r20
      386:	09 f4       	brne	.+2      	; 0x38a <_Z9serial_Rxh+0xe0>
      388:	1a c1       	rjmp	.+564    	; 0x5be <__LOCK_REGION_LENGTH__+0x1be>
+		{
+			textBuff[charIndex] = rx_char;  /* hold the characters for re-use */
      38a:	e0 91 0d 41 	lds	r30, 0x410D	; 0x80410d <_ZZ9serial_RxhE9charIndex>
      38e:	8e 2f       	mov	r24, r30
      390:	90 e0       	ldi	r25, 0x00	; 0
@@ -438,17 +513,26 @@ void atmel_start_init(void)
      394:	a5 52       	subi	r26, 0x25	; 37
      396:	bf 4b       	sbci	r27, 0xBF	; 191
      398:	4c 93       	st	X, r20
+
+			if(charIndex)
      39a:	ee 23       	and	r30, r30
      39c:	09 f4       	brne	.+2      	; 0x3a0 <_Z9serial_Rxh+0xf6>
      39e:	d7 c0       	rjmp	.+430    	; 0x54e <__LOCK_REGION_LENGTH__+0x14e>
+			{
+				if(rx_char == 0x7F)         /* Handle backspace */
      3a0:	4f 37       	cpi	r20, 0x7F	; 127
      3a2:	09 f0       	breq	.+2      	; 0x3a6 <_Z9serial_Rxh+0xfc>
      3a4:	5f c0       	rjmp	.+190    	; 0x464 <__LOCK_REGION_LENGTH__+0x64>
+				{
+					charIndex--;
      3a6:	e1 50       	subi	r30, 0x01	; 1
      3a8:	e0 93 0d 41 	sts	0x410D, r30	; 0x80410d <_ZZ9serial_RxhE9charIndex>
+					if(field_index == 0)
      3ac:	80 91 d7 40 	lds	r24, 0x40D7	; 0x8040d7 <_ZZ9serial_RxhE11field_index>
      3b0:	81 11       	cpse	r24, r1
      3b2:	13 c0       	rjmp	.+38     	; 0x3da <_Z9serial_Rxh+0x130>
+					{
+						msg_ID -= textBuff[charIndex];
      3b4:	f0 e0       	ldi	r31, 0x00	; 0
      3b6:	e5 52       	subi	r30, 0x25	; 37
      3b8:	ff 4b       	sbci	r31, 0xBF	; 191
@@ -457,18 +541,24 @@ void atmel_start_init(void)
      3c0:	90 91 d9 40 	lds	r25, 0x40D9	; 0x8040d9 <_ZZ9serial_RxhE6msg_ID+0x1>
      3c4:	83 1b       	sub	r24, r19
      3c6:	91 09       	sbc	r25, r1
+						msg_ID /= 10;
      3c8:	6a e0       	ldi	r22, 0x0A	; 10
      3ca:	70 e0       	ldi	r23, 0x00	; 0
      3cc:	0e 94 1e 24 	call	0x483c	; 0x483c <__divmodhi4>
      3d0:	60 93 d8 40 	sts	0x40D8, r22	; 0x8040d8 <_ZZ9serial_RxhE6msg_ID>
      3d4:	70 93 d9 40 	sts	0x40D9, r23	; 0x8040d9 <_ZZ9serial_RxhE6msg_ID+0x1>
      3d8:	39 c0       	rjmp	.+114    	; 0x44c <__LOCK_REGION_LENGTH__+0x4c>
+					}
+					else if(field_len)
      3da:	90 91 d6 40 	lds	r25, 0x40D6	; 0x8040d6 <_ZZ9serial_RxhE9field_len>
      3de:	99 23       	and	r25, r25
      3e0:	91 f0       	breq	.+36     	; 0x406 <__LOCK_REGION_LENGTH__+0x6>
+					{
+						field_len--;
      3e2:	3f ef       	ldi	r19, 0xFF	; 255
      3e4:	39 0f       	add	r19, r25
      3e6:	30 93 d6 40 	sts	0x40D6, r19	; 0x8040d6 <_ZZ9serial_RxhE9field_len>
+						buff->fields[field_index - 1][field_len] = '\0';
      3ea:	90 e0       	ldi	r25, 0x00	; 0
      3ec:	01 97       	sbiw	r24, 0x01	; 1
      3ee:	64 e1       	ldi	r22, 0x14	; 20
@@ -483,14 +573,19 @@ void atmel_start_init(void)
      400:	d1 1d       	adc	r29, r1
      402:	1b 82       	std	Y+3, r1	; 0x03
      404:	23 c0       	rjmp	.+70     	; 0x44c <__LOCK_REGION_LENGTH__+0x4c>
+					}
+					else if(textBuff[charIndex] == ' ')
      406:	f0 e0       	ldi	r31, 0x00	; 0
      408:	e5 52       	subi	r30, 0x25	; 37
      40a:	ff 4b       	sbci	r31, 0xBF	; 191
      40c:	90 81       	ld	r25, Z
      40e:	90 32       	cpi	r25, 0x20	; 32
      410:	a1 f4       	brne	.+40     	; 0x43a <__LOCK_REGION_LENGTH__+0x3a>
+					{
+						field_index--;
      412:	81 50       	subi	r24, 0x01	; 1
      414:	80 93 d7 40 	sts	0x40D7, r24	; 0x8040d7 <_ZZ9serial_RxhE11field_index>
+						field_len = strlen(buff->fields[field_index]);
      418:	34 e1       	ldi	r19, 0x14	; 20
      41a:	83 9f       	mul	r24, r19
      41c:	c0 01       	movw	r24, r0
@@ -507,26 +602,45 @@ void atmel_start_init(void)
      432:	fd 0b       	sbc	r31, r29
      434:	e0 93 d6 40 	sts	0x40D6, r30	; 0x8040d6 <_ZZ9serial_RxhE9field_len>
      438:	09 c0       	rjmp	.+18     	; 0x44c <__LOCK_REGION_LENGTH__+0x4c>
+					}
+					else
+					{
+						buff->fields[field_index][0] = '\0';
      43a:	94 e1       	ldi	r25, 0x14	; 20
      43c:	89 9f       	mul	r24, r25
      43e:	c0 0d       	add	r28, r0
      440:	d1 1d       	adc	r29, r1
      442:	11 24       	eor	r1, r1
      444:	1b 82       	std	Y+3, r1	; 0x03
+						field_index--;
      446:	81 50       	subi	r24, 0x01	; 1
      448:	80 93 d7 40 	sts	0x40D7, r24	; 0x8040d7 <_ZZ9serial_RxhE11field_index>
+					}
+
+					textBuff[charIndex] = '\0'; /* replace deleted char with null */
      44c:	80 91 0d 41 	lds	r24, 0x410D	; 0x80410d <_ZZ9serial_RxhE9charIndex>
      450:	e8 2f       	mov	r30, r24
      452:	f0 e0       	ldi	r31, 0x00	; 0
      454:	e5 52       	subi	r30, 0x25	; 37
      456:	ff 4b       	sbci	r31, 0xBF	; 191
      458:	10 82       	st	Z, r1
+
+					if(charIndex == 0)
      45a:	81 11       	cpse	r24, r1
      45c:	ab c0       	rjmp	.+342    	; 0x5b4 <__LOCK_REGION_LENGTH__+0x1b4>
+					{
+						receiving_msg = FALSE;
      45e:	10 92 da 40 	sts	0x40DA, r1	; 0x8040da <_ZZ9serial_RxhE13receiving_msg>
      462:	a8 c0       	rjmp	.+336    	; 0x5b4 <__LOCK_REGION_LENGTH__+0x1b4>
+					}
+				}
+				else
+				{
+					if(rx_char == ' ')
      464:	40 32       	cpi	r20, 0x20	; 32
      466:	81 f5       	brne	.+96     	; 0x4c8 <__LOCK_REGION_LENGTH__+0xc8>
+					{
+						if((textBuff[charIndex - 1] == ' ') || ((field_index + 1) >= LINKBUS_MAX_MSG_NUMBER_OF_FIELDS))
      468:	fc 01       	movw	r30, r24
      46a:	e6 52       	subi	r30, 0x26	; 38
      46c:	ff 4b       	sbci	r31, 0xBF	; 191
@@ -544,8 +658,16 @@ void atmel_start_init(void)
      486:	71 05       	cpc	r23, r1
      488:	0c f0       	brlt	.+2      	; 0x48c <__LOCK_REGION_LENGTH__+0x8c>
      48a:	8f c0       	rjmp	.+286    	; 0x5aa <__LOCK_REGION_LENGTH__+0x1aa>
+						{
+							rx_char = '\0';
+						}
+						else
+						{
+							if(field_index > 0)
      48c:	33 23       	and	r19, r19
      48e:	79 f0       	breq	.+30     	; 0x4ae <__LOCK_REGION_LENGTH__+0xae>
+							{
+								buff->fields[field_index - 1][field_len] = '\0';
      490:	41 50       	subi	r20, 0x01	; 1
      492:	51 09       	sbc	r21, r1
      494:	e0 91 d6 40 	lds	r30, 0x40D6	; 0x8040d6 <_ZZ9serial_RxhE9field_len>
@@ -560,9 +682,14 @@ void atmel_start_init(void)
      4a8:	ce 0f       	add	r28, r30
      4aa:	d1 1d       	adc	r29, r1
      4ac:	1b 82       	std	Y+3, r1	; 0x03
+							}
+
+							field_index++;
      4ae:	3f 5f       	subi	r19, 0xFF	; 255
      4b0:	30 93 d7 40 	sts	0x40D7, r19	; 0x8040d7 <_ZZ9serial_RxhE11field_index>
+							field_len = 0;
      4b4:	10 92 d6 40 	sts	0x40D6, r1	; 0x8040d6 <_ZZ9serial_RxhE9field_len>
+							charIndex = MIN(charIndex + 1, (LINKBUS_MAX_MSG_LENGTH - 1));
      4b8:	01 96       	adiw	r24, 0x01	; 1
      4ba:	81 33       	cpi	r24, 0x31	; 49
      4bc:	91 05       	cpc	r25, r1
@@ -570,13 +697,20 @@ void atmel_start_init(void)
      4c0:	81 e3       	ldi	r24, 0x31	; 49
      4c2:	80 93 0d 41 	sts	0x410D, r24	; 0x80410d <_ZZ9serial_RxhE9charIndex>
      4c6:	76 c0       	rjmp	.+236    	; 0x5b4 <__LOCK_REGION_LENGTH__+0x1b4>
+						}
+					}
+					else if(field_len < LINKBUS_MAX_MSG_FIELD_LENGTH)
      4c8:	80 91 d6 40 	lds	r24, 0x40D6	; 0x8040d6 <_ZZ9serial_RxhE9field_len>
      4cc:	85 31       	cpi	r24, 0x15	; 21
      4ce:	08 f0       	brcs	.+2      	; 0x4d2 <__LOCK_REGION_LENGTH__+0xd2>
      4d0:	6e c0       	rjmp	.+220    	; 0x5ae <__LOCK_REGION_LENGTH__+0x1ae>
+					{
+						if(field_index == 0)    /* message ID received */
      4d2:	60 91 d7 40 	lds	r22, 0x40D7	; 0x8040d7 <_ZZ9serial_RxhE11field_index>
      4d6:	61 11       	cpse	r22, r1
      4d8:	19 c0       	rjmp	.+50     	; 0x50c <__LOCK_REGION_LENGTH__+0x10c>
+						{
+							msg_ID = msg_ID * 10 + rx_char;
      4da:	60 91 d8 40 	lds	r22, 0x40D8	; 0x8040d8 <_ZZ9serial_RxhE6msg_ID>
      4de:	70 91 d9 40 	lds	r23, 0x40D9	; 0x8040d9 <_ZZ9serial_RxhE6msg_ID+0x1>
      4e2:	fb 01       	movw	r30, r22
@@ -594,9 +728,14 @@ void atmel_start_init(void)
      4fa:	71 1d       	adc	r23, r1
      4fc:	60 93 d8 40 	sts	0x40D8, r22	; 0x8040d8 <_ZZ9serial_RxhE6msg_ID>
      500:	70 93 d9 40 	sts	0x40D9, r23	; 0x8040d9 <_ZZ9serial_RxhE6msg_ID+0x1>
+							field_len++;
      504:	8f 5f       	subi	r24, 0xFF	; 255
      506:	80 93 d6 40 	sts	0x40D6, r24	; 0x8040d6 <_ZZ9serial_RxhE9field_len>
      50a:	16 c0       	rjmp	.+44     	; 0x538 <__LOCK_REGION_LENGTH__+0x138>
+						}
+						else
+						{
+							buff->fields[field_index - 1][field_len++] = rx_char;
      50c:	70 e0       	ldi	r23, 0x00	; 0
      50e:	61 50       	subi	r22, 0x01	; 1
      510:	71 09       	sbc	r23, r1
@@ -615,9 +754,13 @@ void atmel_start_init(void)
      52c:	e8 0f       	add	r30, r24
      52e:	f1 1d       	adc	r31, r1
      530:	43 83       	std	Z+3, r20	; 0x03
+							buff->fields[field_index - 1][field_len] = '\0';
      532:	c9 0f       	add	r28, r25
      534:	d1 1d       	adc	r29, r1
      536:	1b 82       	std	Y+3, r1	; 0x03
+						}
+
+						charIndex = MIN(charIndex + 1, (LINKBUS_MAX_MSG_LENGTH - 1));
      538:	80 91 0d 41 	lds	r24, 0x410D	; 0x80410d <_ZZ9serial_RxhE9charIndex>
      53c:	90 e0       	ldi	r25, 0x00	; 0
      53e:	01 96       	adiw	r24, 0x01	; 1
@@ -627,26 +770,53 @@ void atmel_start_init(void)
      546:	81 e3       	ldi	r24, 0x31	; 49
      548:	80 93 0d 41 	sts	0x410D, r24	; 0x80410d <_ZZ9serial_RxhE9charIndex>
      54c:	33 c0       	rjmp	.+102    	; 0x5b4 <__LOCK_REGION_LENGTH__+0x1b4>
+					}
+				}
+			}
+			else
+			{
+				if(rx_char == 0x7F) /* Handle Backspace */
      54e:	4f 37       	cpi	r20, 0x7F	; 127
      550:	69 f4       	brne	.+26     	; 0x56c <__LOCK_REGION_LENGTH__+0x16c>
+				{
+					if(msg_ID <= 0)
      552:	80 91 d8 40 	lds	r24, 0x40D8	; 0x8040d8 <_ZZ9serial_RxhE6msg_ID>
      556:	90 91 d9 40 	lds	r25, 0x40D9	; 0x8040d9 <_ZZ9serial_RxhE6msg_ID+0x1>
      55a:	18 16       	cp	r1, r24
      55c:	19 06       	cpc	r1, r25
      55e:	0c f0       	brlt	.+2      	; 0x562 <__LOCK_REGION_LENGTH__+0x162>
+					{
+						rx_char = '\0';
      560:	20 e0       	ldi	r18, 0x00	; 0
+					}
+
+					msg_ID = 0;
      562:	10 92 d8 40 	sts	0x40D8, r1	; 0x8040d8 <_ZZ9serial_RxhE6msg_ID>
      566:	10 92 d9 40 	sts	0x40D9, r1	; 0x8040d9 <_ZZ9serial_RxhE6msg_ID+0x1>
      56a:	24 c0       	rjmp	.+72     	; 0x5b4 <__LOCK_REGION_LENGTH__+0x1b4>
+				}
+				else if(rx_char == ' ') /* Handle Space */
      56c:	40 32       	cpi	r20, 0x20	; 32
      56e:	09 f1       	breq	.+66     	; 0x5b2 <__LOCK_REGION_LENGTH__+0x1b2>
+					rx_char = '\0';
+				}
+				else                    /* start of new message */
+				{
+					uint8_t i;
+					field_index = 0;
      570:	10 92 d7 40 	sts	0x40D7, r1	; 0x8040d7 <_ZZ9serial_RxhE11field_index>
+					msg_ID = rx_char;
      574:	55 27       	eor	r21, r21
      576:	40 93 d8 40 	sts	0x40D8, r20	; 0x8040d8 <_ZZ9serial_RxhE6msg_ID>
      57a:	50 93 d9 40 	sts	0x40D9, r21	; 0x8040d9 <_ZZ9serial_RxhE6msg_ID+0x1>
+
+					/* Empty the field buffers */
+					for(i = 0; i < LINKBUS_MAX_MSG_NUMBER_OF_FIELDS; i++)
      57e:	80 e0       	ldi	r24, 0x00	; 0
      580:	83 30       	cpi	r24, 0x03	; 3
      582:	50 f4       	brcc	.+20     	; 0x598 <__LOCK_REGION_LENGTH__+0x198>
+					{
+						buff->fields[i][0] = '\0';
      584:	de 01       	movw	r26, r28
      586:	34 e1       	ldi	r19, 0x14	; 20
      588:	83 9f       	mul	r24, r19
@@ -655,30 +825,78 @@ void atmel_start_init(void)
      58e:	11 24       	eor	r1, r1
      590:	13 96       	adiw	r26, 0x03	; 3
      592:	1c 92       	st	X, r1
+					uint8_t i;
+					field_index = 0;
+					msg_ID = rx_char;
+
+					/* Empty the field buffers */
+					for(i = 0; i < LINKBUS_MAX_MSG_NUMBER_OF_FIELDS; i++)
      594:	8f 5f       	subi	r24, 0xFF	; 255
      596:	f4 cf       	rjmp	.-24     	; 0x580 <__LOCK_REGION_LENGTH__+0x180>
+					{
+						buff->fields[i][0] = '\0';
+					}
+
+					receiving_msg = TRUE;
      598:	81 e0       	ldi	r24, 0x01	; 1
      59a:	80 93 da 40 	sts	0x40DA, r24	; 0x8040da <_ZZ9serial_RxhE13receiving_msg>
+					charIndex++;
      59e:	ef 5f       	subi	r30, 0xFF	; 255
      5a0:	e0 93 0d 41 	sts	0x410D, r30	; 0x80410d <_ZZ9serial_RxhE9charIndex>
      5a4:	07 c0       	rjmp	.+14     	; 0x5b4 <__LOCK_REGION_LENGTH__+0x1b4>
+				{
+					if(rx_char == ' ')
+					{
+						if((textBuff[charIndex - 1] == ' ') || ((field_index + 1) >= LINKBUS_MAX_MSG_NUMBER_OF_FIELDS))
+						{
+							rx_char = '\0';
      5a6:	20 e0       	ldi	r18, 0x00	; 0
      5a8:	05 c0       	rjmp	.+10     	; 0x5b4 <__LOCK_REGION_LENGTH__+0x1b4>
      5aa:	20 e0       	ldi	r18, 0x00	; 0
      5ac:	03 c0       	rjmp	.+6      	; 0x5b4 <__LOCK_REGION_LENGTH__+0x1b4>
+
+						charIndex = MIN(charIndex + 1, (LINKBUS_MAX_MSG_LENGTH - 1));
+					}
+					else
+					{
+						rx_char = '\0';
      5ae:	20 e0       	ldi	r18, 0x00	; 0
      5b0:	01 c0       	rjmp	.+2      	; 0x5b4 <__LOCK_REGION_LENGTH__+0x1b4>
+
+					msg_ID = 0;
+				}
+				else if(rx_char == ' ') /* Handle Space */
+				{
+					rx_char = '\0';
      5b2:	20 e0       	ldi	r18, 0x00	; 0
+					receiving_msg = TRUE;
+					charIndex++;
+				}
+			}
+
+			if(rx_char)
      5b4:	22 23       	and	r18, r18
      5b6:	19 f0       	breq	.+6      	; 0x5be <__LOCK_REGION_LENGTH__+0x1be>
+			{
+				sb_echo_char(rx_char);
      5b8:	82 2f       	mov	r24, r18
      5ba:	0e 94 a4 18 	call	0x3148	; 0x3148 <sb_echo_char>
+			}
+		}
+	}	
+}
      5be:	df 91       	pop	r29
      5c0:	cf 91       	pop	r28
      5c2:	1f 91       	pop	r17
      5c4:	08 95       	ret
 
-000005c6 <__vector_19>:
+000005c6 <__vector_20>:
+
+/**
+
+*/
+ISR(USART0_DRE_vect)
+{
      5c6:	1f 92       	push	r1
      5c8:	0f 92       	push	r0
      5ca:	0f b6       	in	r0, 0x3f	; 63
@@ -698,404 +916,450 @@ void atmel_start_init(void)
      5e6:	bf 93       	push	r27
      5e8:	ef 93       	push	r30
      5ea:	ff 93       	push	r31
-     5ec:	0e 94 85 21 	call	0x430a	; 0x430a <USART0_get_data>
-     5f0:	0e 94 55 01 	call	0x2aa	; 0x2aa <_Z9serial_Rxh>
-     5f4:	ff 91       	pop	r31
-     5f6:	ef 91       	pop	r30
-     5f8:	bf 91       	pop	r27
-     5fa:	af 91       	pop	r26
-     5fc:	9f 91       	pop	r25
-     5fe:	8f 91       	pop	r24
-     600:	7f 91       	pop	r23
-     602:	6f 91       	pop	r22
-     604:	5f 91       	pop	r21
-     606:	4f 91       	pop	r20
-     608:	3f 91       	pop	r19
-     60a:	2f 91       	pop	r18
-     60c:	0f 90       	pop	r0
-     60e:	0b be       	out	0x3b, r0	; 59
-     610:	0f 90       	pop	r0
-     612:	0f be       	out	0x3f, r0	; 63
-     614:	0f 90       	pop	r0
-     616:	1f 90       	pop	r1
-     618:	18 95       	reti
+	if(g_serial_comms_on_USART1)
+	{
+		static LinkbusTxBuffer* buff = 0;
+		static uint8_t charIndex = 0;
 
-0000061a <__vector_20>:
-     61a:	1f 92       	push	r1
-     61c:	0f 92       	push	r0
-     61e:	0f b6       	in	r0, 0x3f	; 63
-     620:	0f 92       	push	r0
-     622:	11 24       	eor	r1, r1
-     624:	0b b6       	in	r0, 0x3b	; 59
-     626:	0f 92       	push	r0
-     628:	2f 93       	push	r18
-     62a:	3f 93       	push	r19
-     62c:	4f 93       	push	r20
-     62e:	5f 93       	push	r21
-     630:	6f 93       	push	r22
-     632:	7f 93       	push	r23
-     634:	8f 93       	push	r24
-     636:	9f 93       	push	r25
-     638:	af 93       	push	r26
-     63a:	bf 93       	push	r27
-     63c:	ef 93       	push	r30
-     63e:	ff 93       	push	r31
-     640:	80 91 d4 40 	lds	r24, 0x40D4	; 0x8040d4 <_ZZ11__vector_20E4buff>
-     644:	90 91 d5 40 	lds	r25, 0x40D5	; 0x8040d5 <_ZZ11__vector_20E4buff+0x1>
-     648:	89 2b       	or	r24, r25
-     64a:	31 f4       	brne	.+12     	; 0x658 <__vector_20+0x3e>
-     64c:	0e 94 c2 17 	call	0x2f84	; 0x2f84 <nextFullSBTxBuffer>
-     650:	80 93 d4 40 	sts	0x40D4, r24	; 0x8040d4 <_ZZ11__vector_20E4buff>
-     654:	90 93 d5 40 	sts	0x40D5, r25	; 0x8040d5 <_ZZ11__vector_20E4buff+0x1>
-     658:	e0 91 d4 40 	lds	r30, 0x40D4	; 0x8040d4 <_ZZ11__vector_20E4buff>
-     65c:	f0 91 d5 40 	lds	r31, 0x40D5	; 0x8040d5 <_ZZ11__vector_20E4buff+0x1>
-     660:	80 91 d3 40 	lds	r24, 0x40D3	; 0x8040d3 <_ZZ11__vector_20E9charIndex>
-     664:	df 01       	movw	r26, r30
-     666:	a8 0f       	add	r26, r24
-     668:	b1 1d       	adc	r27, r1
-     66a:	9c 91       	ld	r25, X
-     66c:	99 23       	and	r25, r25
-     66e:	31 f0       	breq	.+12     	; 0x67c <__vector_20+0x62>
-     670:	8f 5f       	subi	r24, 0xFF	; 255
-     672:	80 93 d3 40 	sts	0x40D3, r24	; 0x8040d3 <_ZZ11__vector_20E9charIndex>
-     676:	90 93 02 08 	sts	0x0802, r25	; 0x800802 <__TEXT_REGION_LENGTH__+0x7e0802>
-     67a:	0d c0       	rjmp	.+26     	; 0x696 <__vector_20+0x7c>
-     67c:	10 92 d3 40 	sts	0x40D3, r1	; 0x8040d3 <_ZZ11__vector_20E9charIndex>
-     680:	10 82       	st	Z, r1
-     682:	0e 94 c2 17 	call	0x2f84	; 0x2f84 <nextFullSBTxBuffer>
-     686:	80 93 d4 40 	sts	0x40D4, r24	; 0x8040d4 <_ZZ11__vector_20E4buff>
-     68a:	90 93 d5 40 	sts	0x40D5, r25	; 0x8040d5 <_ZZ11__vector_20E4buff+0x1>
-     68e:	89 2b       	or	r24, r25
-     690:	11 f4       	brne	.+4      	; 0x696 <__vector_20+0x7c>
-     692:	0e 94 79 14 	call	0x28f2	; 0x28f2 <_Z14linkbus_end_txv>
-     696:	ff 91       	pop	r31
-     698:	ef 91       	pop	r30
-     69a:	bf 91       	pop	r27
-     69c:	af 91       	pop	r26
-     69e:	9f 91       	pop	r25
-     6a0:	8f 91       	pop	r24
-     6a2:	7f 91       	pop	r23
-     6a4:	6f 91       	pop	r22
-     6a6:	5f 91       	pop	r21
-     6a8:	4f 91       	pop	r20
-     6aa:	3f 91       	pop	r19
-     6ac:	2f 91       	pop	r18
-     6ae:	0f 90       	pop	r0
-     6b0:	0b be       	out	0x3b, r0	; 59
-     6b2:	0f 90       	pop	r0
-     6b4:	0f be       	out	0x3f, r0	; 63
-     6b6:	0f 90       	pop	r0
-     6b8:	1f 90       	pop	r1
-     6ba:	18 95       	reti
+		if(!buff)
+     5ec:	80 91 d4 40 	lds	r24, 0x40D4	; 0x8040d4 <_ZZ11__vector_20E4buff>
+     5f0:	90 91 d5 40 	lds	r25, 0x40D5	; 0x8040d5 <_ZZ11__vector_20E4buff+0x1>
+     5f4:	89 2b       	or	r24, r25
+     5f6:	31 f4       	brne	.+12     	; 0x604 <__vector_20+0x3e>
+		{
+			buff = nextFullLBTxBuffer();
+     5f8:	0e 94 b4 13 	call	0x2768	; 0x2768 <_Z18nextFullLBTxBufferv>
+     5fc:	80 93 d4 40 	sts	0x40D4, r24	; 0x8040d4 <_ZZ11__vector_20E4buff>
+     600:	90 93 d5 40 	sts	0x40D5, r25	; 0x8040d5 <_ZZ11__vector_20E4buff+0x1>
+		}
 
-000006bc <_Z10linkbus_Rxh>:
-	uint8_t rx_char = USART1_get_data();	
-	linkbus_Rx(rx_char);
+		if((*buff)[charIndex])
+     604:	e0 91 d4 40 	lds	r30, 0x40D4	; 0x8040d4 <_ZZ11__vector_20E4buff>
+     608:	f0 91 d5 40 	lds	r31, 0x40D5	; 0x8040d5 <_ZZ11__vector_20E4buff+0x1>
+     60c:	80 91 d3 40 	lds	r24, 0x40D3	; 0x8040d3 <_ZZ11__vector_20E9charIndex>
+     610:	df 01       	movw	r26, r30
+     612:	a8 0f       	add	r26, r24
+     614:	b1 1d       	adc	r27, r1
+     616:	9c 91       	ld	r25, X
+     618:	99 23       	and	r25, r25
+     61a:	31 f0       	breq	.+12     	; 0x628 <__vector_20+0x62>
+		{
+			/* Put data into buffer, sends the data */
+			USART1.TXDATAL = (*buff)[charIndex++];
+     61c:	8f 5f       	subi	r24, 0xFF	; 255
+     61e:	80 93 d3 40 	sts	0x40D3, r24	; 0x8040d3 <_ZZ11__vector_20E9charIndex>
+     622:	90 93 22 08 	sts	0x0822, r25	; 0x800822 <__TEXT_REGION_LENGTH__+0x7e0822>
+     626:	0d c0       	rjmp	.+26     	; 0x642 <__vector_20+0x7c>
+		}
+		else
+		{
+			charIndex = 0;
+     628:	10 92 d3 40 	sts	0x40D3, r1	; 0x8040d3 <_ZZ11__vector_20E9charIndex>
+			(*buff)[0] = '\0';
+     62c:	10 82       	st	Z, r1
+			buff = nextFullLBTxBuffer();
+     62e:	0e 94 b4 13 	call	0x2768	; 0x2768 <_Z18nextFullLBTxBufferv>
+     632:	80 93 d4 40 	sts	0x40D4, r24	; 0x8040d4 <_ZZ11__vector_20E4buff>
+     636:	90 93 d5 40 	sts	0x40D5, r25	; 0x8040d5 <_ZZ11__vector_20E4buff+0x1>
+			if(!buff)
+     63a:	89 2b       	or	r24, r25
+     63c:	11 f4       	brne	.+4      	; 0x642 <__vector_20+0x7c>
+			{
+				linkbus_end_tx();
+     63e:	0e 94 79 14 	call	0x28f2	; 0x28f2 <_Z14linkbus_end_txv>
+			{
+				linkbus_end_tx();
+			}
+		}
+	}
+}
+     642:	ff 91       	pop	r31
+     644:	ef 91       	pop	r30
+     646:	bf 91       	pop	r27
+     648:	af 91       	pop	r26
+     64a:	9f 91       	pop	r25
+     64c:	8f 91       	pop	r24
+     64e:	7f 91       	pop	r23
+     650:	6f 91       	pop	r22
+     652:	5f 91       	pop	r21
+     654:	4f 91       	pop	r20
+     656:	3f 91       	pop	r19
+     658:	2f 91       	pop	r18
+     65a:	0f 90       	pop	r0
+     65c:	0b be       	out	0x3b, r0	; 59
+     65e:	0f 90       	pop	r0
+     660:	0f be       	out	0x3f, r0	; 63
+     662:	0f 90       	pop	r0
+     664:	1f 90       	pop	r1
+     666:	18 95       	reti
+
+00000668 <_Z10linkbus_Rxh>:
+		linkbus_Rx(rx_char);
+	}
 }
 
 void linkbus_Rx(uint8_t rx_char)
 {
-     6bc:	0f 93       	push	r16
-     6be:	1f 93       	push	r17
-     6c0:	cf 93       	push	r28
-     6c2:	df 93       	push	r29
-     6c4:	18 2f       	mov	r17, r24
+     668:	0f 93       	push	r16
+     66a:	1f 93       	push	r17
+     66c:	cf 93       	push	r28
+     66e:	df 93       	push	r29
+     670:	18 2f       	mov	r17, r24
 	static uint8_t field_index = 0;
 	static uint8_t field_len = 0;
 	static uint32_t tempMsg_ID = 0;
 	static BOOL receiving_msg = FALSE;
 
 	if(!buff)
-     6c6:	80 91 d1 40 	lds	r24, 0x40D1	; 0x8040d1 <_ZZ10linkbus_RxhE4buff>
-     6ca:	90 91 d2 40 	lds	r25, 0x40D2	; 0x8040d2 <_ZZ10linkbus_RxhE4buff+0x1>
-     6ce:	89 2b       	or	r24, r25
-     6d0:	31 f4       	brne	.+12     	; 0x6de <_Z10linkbus_Rxh+0x22>
+     672:	80 91 d1 40 	lds	r24, 0x40D1	; 0x8040d1 <_ZZ10linkbus_RxhE4buff>
+     676:	90 91 d2 40 	lds	r25, 0x40D2	; 0x8040d2 <_ZZ10linkbus_RxhE4buff+0x1>
+     67a:	89 2b       	or	r24, r25
+     67c:	31 f4       	brne	.+12     	; 0x68a <_Z10linkbus_Rxh+0x22>
 	{
 		buff = nextEmptyLBRxBuffer();
-     6d2:	0e 94 0c 14 	call	0x2818	; 0x2818 <_Z19nextEmptyLBRxBufferv>
-     6d6:	80 93 d1 40 	sts	0x40D1, r24	; 0x8040d1 <_ZZ10linkbus_RxhE4buff>
-     6da:	90 93 d2 40 	sts	0x40D2, r25	; 0x8040d2 <_ZZ10linkbus_RxhE4buff+0x1>
+     67e:	0e 94 0c 14 	call	0x2818	; 0x2818 <_Z19nextEmptyLBRxBufferv>
+     682:	80 93 d1 40 	sts	0x40D1, r24	; 0x8040d1 <_ZZ10linkbus_RxhE4buff>
+     686:	90 93 d2 40 	sts	0x40D2, r25	; 0x8040d2 <_ZZ10linkbus_RxhE4buff+0x1>
 	}
 
 	if(buff)
-     6de:	c0 91 d1 40 	lds	r28, 0x40D1	; 0x8040d1 <_ZZ10linkbus_RxhE4buff>
-     6e2:	d0 91 d2 40 	lds	r29, 0x40D2	; 0x8040d2 <_ZZ10linkbus_RxhE4buff+0x1>
-     6e6:	20 97       	sbiw	r28, 0x00	; 0
-     6e8:	09 f4       	brne	.+2      	; 0x6ec <_Z10linkbus_Rxh+0x30>
-     6ea:	e3 c0       	rjmp	.+454    	; 0x8b2 <_Z10linkbus_Rxh+0x1f6>
+     68a:	c0 91 d1 40 	lds	r28, 0x40D1	; 0x8040d1 <_ZZ10linkbus_RxhE4buff>
+     68e:	d0 91 d2 40 	lds	r29, 0x40D2	; 0x8040d2 <_ZZ10linkbus_RxhE4buff+0x1>
+     692:	20 97       	sbiw	r28, 0x00	; 0
+     694:	09 f4       	brne	.+2      	; 0x698 <_Z10linkbus_Rxh+0x30>
+     696:	e3 c0       	rjmp	.+454    	; 0x85e <_Z10linkbus_Rxh+0x1f6>
 	{
 		rx_char = toupper(rx_char);
-     6ec:	81 2f       	mov	r24, r17
-     6ee:	90 e0       	ldi	r25, 0x00	; 0
-     6f0:	0e 94 0b 26 	call	0x4c16	; 0x4c16 <toupper>
+     698:	81 2f       	mov	r24, r17
+     69a:	90 e0       	ldi	r25, 0x00	; 0
+     69c:	0e 94 0b 26 	call	0x4c16	; 0x4c16 <toupper>
 		//		SMCR = 0x00;                                /* exit power-down mode */
 
 		if((rx_char == '$') || (rx_char == '!'))    /* start of new message = $ */
-     6f4:	84 32       	cpi	r24, 0x24	; 36
-     6f6:	11 f0       	breq	.+4      	; 0x6fc <_Z10linkbus_Rxh+0x40>
-     6f8:	81 32       	cpi	r24, 0x21	; 33
-     6fa:	49 f5       	brne	.+82     	; 0x74e <_Z10linkbus_Rxh+0x92>
+     6a0:	84 32       	cpi	r24, 0x24	; 36
+     6a2:	11 f0       	breq	.+4      	; 0x6a8 <_Z10linkbus_Rxh+0x40>
+     6a4:	81 32       	cpi	r24, 0x21	; 33
+     6a6:	49 f5       	brne	.+82     	; 0x6fa <_Z10linkbus_Rxh+0x92>
 		{
 			charIndex = 0;
-     6fc:	10 92 d0 40 	sts	0x40D0, r1	; 0x8040d0 <_ZZ10linkbus_RxhE9charIndex>
+     6a8:	10 92 d0 40 	sts	0x40D0, r1	; 0x8040d0 <_ZZ10linkbus_RxhE9charIndex>
 			buff->type = (rx_char == '!') ? LINKBUS_MSG_REPLY : LINKBUS_MSG_COMMAND;
-     700:	81 32       	cpi	r24, 0x21	; 33
-     702:	11 f4       	brne	.+4      	; 0x708 <_Z10linkbus_Rxh+0x4c>
-     704:	83 e0       	ldi	r24, 0x03	; 3
-     706:	01 c0       	rjmp	.+2      	; 0x70a <_Z10linkbus_Rxh+0x4e>
-     708:	81 e0       	ldi	r24, 0x01	; 1
-     70a:	88 83       	st	Y, r24
+     6ac:	81 32       	cpi	r24, 0x21	; 33
+     6ae:	11 f4       	brne	.+4      	; 0x6b4 <_Z10linkbus_Rxh+0x4c>
+     6b0:	83 e0       	ldi	r24, 0x03	; 3
+     6b2:	01 c0       	rjmp	.+2      	; 0x6b6 <_Z10linkbus_Rxh+0x4e>
+     6b4:	81 e0       	ldi	r24, 0x01	; 1
+     6b6:	88 83       	st	Y, r24
 			field_len = 0;
-     70c:	10 92 cf 40 	sts	0x40CF, r1	; 0x8040cf <_ZZ10linkbus_RxhE9field_len>
+     6b8:	10 92 cf 40 	sts	0x40CF, r1	; 0x8040cf <_ZZ10linkbus_RxhE9field_len>
 			tempMsg_ID = 0;
-     710:	10 92 cb 40 	sts	0x40CB, r1	; 0x8040cb <_ZZ10linkbus_RxhE10tempMsg_ID>
-     714:	10 92 cc 40 	sts	0x40CC, r1	; 0x8040cc <_ZZ10linkbus_RxhE10tempMsg_ID+0x1>
-     718:	10 92 cd 40 	sts	0x40CD, r1	; 0x8040cd <_ZZ10linkbus_RxhE10tempMsg_ID+0x2>
-     71c:	10 92 ce 40 	sts	0x40CE, r1	; 0x8040ce <_ZZ10linkbus_RxhE10tempMsg_ID+0x3>
+     6bc:	10 92 cb 40 	sts	0x40CB, r1	; 0x8040cb <_ZZ10linkbus_RxhE10tempMsg_ID>
+     6c0:	10 92 cc 40 	sts	0x40CC, r1	; 0x8040cc <_ZZ10linkbus_RxhE10tempMsg_ID+0x1>
+     6c4:	10 92 cd 40 	sts	0x40CD, r1	; 0x8040cd <_ZZ10linkbus_RxhE10tempMsg_ID+0x2>
+     6c8:	10 92 ce 40 	sts	0x40CE, r1	; 0x8040ce <_ZZ10linkbus_RxhE10tempMsg_ID+0x3>
 			receiving_msg = TRUE;
-     720:	81 e0       	ldi	r24, 0x01	; 1
-     722:	80 93 ca 40 	sts	0x40CA, r24	; 0x8040ca <_ZZ10linkbus_RxhE13receiving_msg>
+     6cc:	81 e0       	ldi	r24, 0x01	; 1
+     6ce:	80 93 ca 40 	sts	0x40CA, r24	; 0x8040ca <_ZZ10linkbus_RxhE13receiving_msg>
 
 			/* Empty the field buffers */
 			for(field_index = 0; field_index < LINKBUS_MAX_MSG_NUMBER_OF_FIELDS; field_index++)
-     726:	10 92 c9 40 	sts	0x40C9, r1	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
-     72a:	80 91 c9 40 	lds	r24, 0x40C9	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
-     72e:	83 30       	cpi	r24, 0x03	; 3
-     730:	58 f4       	brcc	.+22     	; 0x748 <_Z10linkbus_Rxh+0x8c>
+     6d2:	10 92 c9 40 	sts	0x40C9, r1	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
+     6d6:	80 91 c9 40 	lds	r24, 0x40C9	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
+     6da:	83 30       	cpi	r24, 0x03	; 3
+     6dc:	58 f4       	brcc	.+22     	; 0x6f4 <_Z10linkbus_Rxh+0x8c>
 			{
 				buff->fields[field_index][0] = '\0';
-     732:	fe 01       	movw	r30, r28
-     734:	05 e1       	ldi	r16, 0x15	; 21
-     736:	80 9f       	mul	r24, r16
-     738:	e0 0d       	add	r30, r0
-     73a:	f1 1d       	adc	r31, r1
-     73c:	11 24       	eor	r1, r1
-     73e:	13 82       	std	Z+3, r1	; 0x03
+     6de:	fe 01       	movw	r30, r28
+     6e0:	05 e1       	ldi	r16, 0x15	; 21
+     6e2:	80 9f       	mul	r24, r16
+     6e4:	e0 0d       	add	r30, r0
+     6e6:	f1 1d       	adc	r31, r1
+     6e8:	11 24       	eor	r1, r1
+     6ea:	13 82       	std	Z+3, r1	; 0x03
 			field_len = 0;
 			tempMsg_ID = 0;
 			receiving_msg = TRUE;
 
 			/* Empty the field buffers */
 			for(field_index = 0; field_index < LINKBUS_MAX_MSG_NUMBER_OF_FIELDS; field_index++)
-     740:	8f 5f       	subi	r24, 0xFF	; 255
-     742:	80 93 c9 40 	sts	0x40C9, r24	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
-     746:	f1 cf       	rjmp	.-30     	; 0x72a <_Z10linkbus_Rxh+0x6e>
+     6ec:	8f 5f       	subi	r24, 0xFF	; 255
+     6ee:	80 93 c9 40 	sts	0x40C9, r24	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
+     6f2:	f1 cf       	rjmp	.-30     	; 0x6d6 <_Z10linkbus_Rxh+0x6e>
 			{
 				buff->fields[field_index][0] = '\0';
 			}
 
 			field_index = 0;
-     748:	10 92 c9 40 	sts	0x40C9, r1	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
-     74c:	a7 c0       	rjmp	.+334    	; 0x89c <_Z10linkbus_Rxh+0x1e0>
+     6f4:	10 92 c9 40 	sts	0x40C9, r1	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
+     6f8:	a7 c0       	rjmp	.+334    	; 0x848 <_Z10linkbus_Rxh+0x1e0>
 		}
 		else if(receiving_msg)
-     74e:	90 91 ca 40 	lds	r25, 0x40CA	; 0x8040ca <_ZZ10linkbus_RxhE13receiving_msg>
-     752:	99 23       	and	r25, r25
-     754:	09 f4       	brne	.+2      	; 0x758 <_Z10linkbus_Rxh+0x9c>
-     756:	8b c0       	rjmp	.+278    	; 0x86e <_Z10linkbus_Rxh+0x1b2>
+     6fa:	90 91 ca 40 	lds	r25, 0x40CA	; 0x8040ca <_ZZ10linkbus_RxhE13receiving_msg>
+     6fe:	99 23       	and	r25, r25
+     700:	09 f4       	brne	.+2      	; 0x704 <_Z10linkbus_Rxh+0x9c>
+     702:	8b c0       	rjmp	.+278    	; 0x81a <_Z10linkbus_Rxh+0x1b2>
 		{
 			if((rx_char == ',') || (rx_char == ';') || (rx_char == '?'))    /* new field = ,; end of message = ; */
-     758:	8c 32       	cpi	r24, 0x2C	; 44
-     75a:	29 f0       	breq	.+10     	; 0x766 <_Z10linkbus_Rxh+0xaa>
-     75c:	8b 33       	cpi	r24, 0x3B	; 59
-     75e:	19 f0       	breq	.+6      	; 0x766 <_Z10linkbus_Rxh+0xaa>
-     760:	8f 33       	cpi	r24, 0x3F	; 63
-     762:	09 f0       	breq	.+2      	; 0x766 <_Z10linkbus_Rxh+0xaa>
-     764:	42 c0       	rjmp	.+132    	; 0x7ea <_Z10linkbus_Rxh+0x12e>
+     704:	8c 32       	cpi	r24, 0x2C	; 44
+     706:	29 f0       	breq	.+10     	; 0x712 <_Z10linkbus_Rxh+0xaa>
+     708:	8b 33       	cpi	r24, 0x3B	; 59
+     70a:	19 f0       	breq	.+6      	; 0x712 <_Z10linkbus_Rxh+0xaa>
+     70c:	8f 33       	cpi	r24, 0x3F	; 63
+     70e:	09 f0       	breq	.+2      	; 0x712 <_Z10linkbus_Rxh+0xaa>
+     710:	42 c0       	rjmp	.+132    	; 0x796 <_Z10linkbus_Rxh+0x12e>
 			{
 				/* if(field_index == 0) // message ID received */
 				if(field_index > 0)
-     766:	90 91 c9 40 	lds	r25, 0x40C9	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
-     76a:	99 23       	and	r25, r25
-     76c:	89 f0       	breq	.+34     	; 0x790 <_Z10linkbus_Rxh+0xd4>
+     712:	90 91 c9 40 	lds	r25, 0x40C9	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
+     716:	99 23       	and	r25, r25
+     718:	89 f0       	breq	.+34     	; 0x73c <_Z10linkbus_Rxh+0xd4>
 				{
 					buff->fields[field_index - 1][field_len] = 0;
-     76e:	29 2f       	mov	r18, r25
-     770:	30 e0       	ldi	r19, 0x00	; 0
-     772:	21 50       	subi	r18, 0x01	; 1
-     774:	31 09       	sbc	r19, r1
-     776:	40 91 cf 40 	lds	r20, 0x40CF	; 0x8040cf <_ZZ10linkbus_RxhE9field_len>
-     77a:	55 e1       	ldi	r21, 0x15	; 21
-     77c:	52 9f       	mul	r21, r18
-     77e:	f0 01       	movw	r30, r0
-     780:	53 9f       	mul	r21, r19
-     782:	f0 0d       	add	r31, r0
-     784:	11 24       	eor	r1, r1
-     786:	ec 0f       	add	r30, r28
-     788:	fd 1f       	adc	r31, r29
-     78a:	e4 0f       	add	r30, r20
-     78c:	f1 1d       	adc	r31, r1
-     78e:	13 82       	std	Z+3, r1	; 0x03
+     71a:	29 2f       	mov	r18, r25
+     71c:	30 e0       	ldi	r19, 0x00	; 0
+     71e:	21 50       	subi	r18, 0x01	; 1
+     720:	31 09       	sbc	r19, r1
+     722:	40 91 cf 40 	lds	r20, 0x40CF	; 0x8040cf <_ZZ10linkbus_RxhE9field_len>
+     726:	55 e1       	ldi	r21, 0x15	; 21
+     728:	52 9f       	mul	r21, r18
+     72a:	f0 01       	movw	r30, r0
+     72c:	53 9f       	mul	r21, r19
+     72e:	f0 0d       	add	r31, r0
+     730:	11 24       	eor	r1, r1
+     732:	ec 0f       	add	r30, r28
+     734:	fd 1f       	adc	r31, r29
+     736:	e4 0f       	add	r30, r20
+     738:	f1 1d       	adc	r31, r1
+     73a:	13 82       	std	Z+3, r1	; 0x03
 				}
 
 				field_index++;
-     790:	9f 5f       	subi	r25, 0xFF	; 255
-     792:	90 93 c9 40 	sts	0x40C9, r25	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
+     73c:	9f 5f       	subi	r25, 0xFF	; 255
+     73e:	90 93 c9 40 	sts	0x40C9, r25	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
 				field_len = 0;
-     796:	10 92 cf 40 	sts	0x40CF, r1	; 0x8040cf <_ZZ10linkbus_RxhE9field_len>
+     742:	10 92 cf 40 	sts	0x40CF, r1	; 0x8040cf <_ZZ10linkbus_RxhE9field_len>
 
 				if(rx_char == ';')
-     79a:	8b 33       	cpi	r24, 0x3B	; 59
-     79c:	69 f4       	brne	.+26     	; 0x7b8 <_Z10linkbus_Rxh+0xfc>
+     746:	8b 33       	cpi	r24, 0x3B	; 59
+     748:	69 f4       	brne	.+26     	; 0x764 <_Z10linkbus_Rxh+0xfc>
 				{
 					if(charIndex > LINKBUS_MIN_MSG_LENGTH)
-     79e:	80 91 d0 40 	lds	r24, 0x40D0	; 0x8040d0 <_ZZ10linkbus_RxhE9charIndex>
-     7a2:	84 30       	cpi	r24, 0x04	; 4
-     7a4:	30 f0       	brcs	.+12     	; 0x7b2 <_Z10linkbus_Rxh+0xf6>
+     74a:	80 91 d0 40 	lds	r24, 0x40D0	; 0x8040d0 <_ZZ10linkbus_RxhE9charIndex>
+     74e:	84 30       	cpi	r24, 0x04	; 4
+     750:	30 f0       	brcs	.+12     	; 0x75e <_Z10linkbus_Rxh+0xf6>
 					{
 						buff->id = (LBMessageID)tempMsg_ID;
-     7a6:	80 91 cb 40 	lds	r24, 0x40CB	; 0x8040cb <_ZZ10linkbus_RxhE10tempMsg_ID>
-     7aa:	90 91 cc 40 	lds	r25, 0x40CC	; 0x8040cc <_ZZ10linkbus_RxhE10tempMsg_ID+0x1>
-     7ae:	89 83       	std	Y+1, r24	; 0x01
-     7b0:	9a 83       	std	Y+2, r25	; 0x02
+     752:	80 91 cb 40 	lds	r24, 0x40CB	; 0x8040cb <_ZZ10linkbus_RxhE10tempMsg_ID>
+     756:	90 91 cc 40 	lds	r25, 0x40CC	; 0x8040cc <_ZZ10linkbus_RxhE10tempMsg_ID+0x1>
+     75a:	89 83       	std	Y+1, r24	; 0x01
+     75c:	9a 83       	std	Y+2, r25	; 0x02
 					}
 					receiving_msg = FALSE;
-     7b2:	10 92 ca 40 	sts	0x40CA, r1	; 0x8040ca <_ZZ10linkbus_RxhE13receiving_msg>
-     7b6:	10 c0       	rjmp	.+32     	; 0x7d8 <_Z10linkbus_Rxh+0x11c>
+     75e:	10 92 ca 40 	sts	0x40CA, r1	; 0x8040ca <_ZZ10linkbus_RxhE13receiving_msg>
+     762:	10 c0       	rjmp	.+32     	; 0x784 <_Z10linkbus_Rxh+0x11c>
 				}
 				else if(rx_char == '?')
-     7b8:	8f 33       	cpi	r24, 0x3F	; 63
-     7ba:	71 f4       	brne	.+28     	; 0x7d8 <_Z10linkbus_Rxh+0x11c>
+     764:	8f 33       	cpi	r24, 0x3F	; 63
+     766:	71 f4       	brne	.+28     	; 0x784 <_Z10linkbus_Rxh+0x11c>
 				{
 					buff->type = LINKBUS_MSG_QUERY;
-     7bc:	82 e0       	ldi	r24, 0x02	; 2
-     7be:	88 83       	st	Y, r24
+     768:	82 e0       	ldi	r24, 0x02	; 2
+     76a:	88 83       	st	Y, r24
 					if(charIndex >= LINKBUS_MIN_MSG_LENGTH)
-     7c0:	80 91 d0 40 	lds	r24, 0x40D0	; 0x8040d0 <_ZZ10linkbus_RxhE9charIndex>
-     7c4:	83 30       	cpi	r24, 0x03	; 3
-     7c6:	30 f0       	brcs	.+12     	; 0x7d4 <_Z10linkbus_Rxh+0x118>
+     76c:	80 91 d0 40 	lds	r24, 0x40D0	; 0x8040d0 <_ZZ10linkbus_RxhE9charIndex>
+     770:	83 30       	cpi	r24, 0x03	; 3
+     772:	30 f0       	brcs	.+12     	; 0x780 <_Z10linkbus_Rxh+0x118>
 					{
 						buff->id = (LBMessageID)tempMsg_ID;
-     7c8:	80 91 cb 40 	lds	r24, 0x40CB	; 0x8040cb <_ZZ10linkbus_RxhE10tempMsg_ID>
-     7cc:	90 91 cc 40 	lds	r25, 0x40CC	; 0x8040cc <_ZZ10linkbus_RxhE10tempMsg_ID+0x1>
-     7d0:	89 83       	std	Y+1, r24	; 0x01
-     7d2:	9a 83       	std	Y+2, r25	; 0x02
+     774:	80 91 cb 40 	lds	r24, 0x40CB	; 0x8040cb <_ZZ10linkbus_RxhE10tempMsg_ID>
+     778:	90 91 cc 40 	lds	r25, 0x40CC	; 0x8040cc <_ZZ10linkbus_RxhE10tempMsg_ID+0x1>
+     77c:	89 83       	std	Y+1, r24	; 0x01
+     77e:	9a 83       	std	Y+2, r25	; 0x02
 					}
 					receiving_msg = FALSE;
-     7d4:	10 92 ca 40 	sts	0x40CA, r1	; 0x8040ca <_ZZ10linkbus_RxhE13receiving_msg>
+     780:	10 92 ca 40 	sts	0x40CA, r1	; 0x8040ca <_ZZ10linkbus_RxhE13receiving_msg>
 				}
 
 				if(!receiving_msg)
-     7d8:	80 91 ca 40 	lds	r24, 0x40CA	; 0x8040ca <_ZZ10linkbus_RxhE13receiving_msg>
-     7dc:	81 11       	cpse	r24, r1
-     7de:	5e c0       	rjmp	.+188    	; 0x89c <_Z10linkbus_Rxh+0x1e0>
+     784:	80 91 ca 40 	lds	r24, 0x40CA	; 0x8040ca <_ZZ10linkbus_RxhE13receiving_msg>
+     788:	81 11       	cpse	r24, r1
+     78a:	5e c0       	rjmp	.+188    	; 0x848 <_Z10linkbus_Rxh+0x1e0>
 				{
 					buff = 0;
-     7e0:	10 92 d1 40 	sts	0x40D1, r1	; 0x8040d1 <_ZZ10linkbus_RxhE4buff>
-     7e4:	10 92 d2 40 	sts	0x40D2, r1	; 0x8040d2 <_ZZ10linkbus_RxhE4buff+0x1>
-     7e8:	59 c0       	rjmp	.+178    	; 0x89c <_Z10linkbus_Rxh+0x1e0>
+     78c:	10 92 d1 40 	sts	0x40D1, r1	; 0x8040d1 <_ZZ10linkbus_RxhE4buff>
+     790:	10 92 d2 40 	sts	0x40D2, r1	; 0x8040d2 <_ZZ10linkbus_RxhE4buff+0x1>
+     794:	59 c0       	rjmp	.+178    	; 0x848 <_Z10linkbus_Rxh+0x1e0>
 				}
 			}
 			else
 			{
 				if(field_index == 0)    /* message ID received */
-     7ea:	20 91 c9 40 	lds	r18, 0x40C9	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
-     7ee:	21 11       	cpse	r18, r1
-     7f0:	29 c0       	rjmp	.+82     	; 0x844 <_Z10linkbus_Rxh+0x188>
+     796:	20 91 c9 40 	lds	r18, 0x40C9	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
+     79a:	21 11       	cpse	r18, r1
+     79c:	29 c0       	rjmp	.+82     	; 0x7f0 <_Z10linkbus_Rxh+0x188>
 				{
 					tempMsg_ID = tempMsg_ID * 10 + rx_char;
-     7f2:	40 91 cb 40 	lds	r20, 0x40CB	; 0x8040cb <_ZZ10linkbus_RxhE10tempMsg_ID>
-     7f6:	50 91 cc 40 	lds	r21, 0x40CC	; 0x8040cc <_ZZ10linkbus_RxhE10tempMsg_ID+0x1>
-     7fa:	60 91 cd 40 	lds	r22, 0x40CD	; 0x8040cd <_ZZ10linkbus_RxhE10tempMsg_ID+0x2>
-     7fe:	70 91 ce 40 	lds	r23, 0x40CE	; 0x8040ce <_ZZ10linkbus_RxhE10tempMsg_ID+0x3>
-     802:	44 0f       	add	r20, r20
-     804:	55 1f       	adc	r21, r21
-     806:	66 1f       	adc	r22, r22
-     808:	77 1f       	adc	r23, r23
-     80a:	8a 01       	movw	r16, r20
-     80c:	9b 01       	movw	r18, r22
-     80e:	00 0f       	add	r16, r16
-     810:	11 1f       	adc	r17, r17
-     812:	22 1f       	adc	r18, r18
-     814:	33 1f       	adc	r19, r19
-     816:	00 0f       	add	r16, r16
-     818:	11 1f       	adc	r17, r17
-     81a:	22 1f       	adc	r18, r18
-     81c:	33 1f       	adc	r19, r19
-     81e:	40 0f       	add	r20, r16
-     820:	51 1f       	adc	r21, r17
-     822:	62 1f       	adc	r22, r18
-     824:	73 1f       	adc	r23, r19
-     826:	8a 01       	movw	r16, r20
-     828:	9b 01       	movw	r18, r22
-     82a:	08 0f       	add	r16, r24
-     82c:	11 1d       	adc	r17, r1
-     82e:	21 1d       	adc	r18, r1
-     830:	31 1d       	adc	r19, r1
-     832:	00 93 cb 40 	sts	0x40CB, r16	; 0x8040cb <_ZZ10linkbus_RxhE10tempMsg_ID>
-     836:	10 93 cc 40 	sts	0x40CC, r17	; 0x8040cc <_ZZ10linkbus_RxhE10tempMsg_ID+0x1>
-     83a:	20 93 cd 40 	sts	0x40CD, r18	; 0x8040cd <_ZZ10linkbus_RxhE10tempMsg_ID+0x2>
-     83e:	30 93 ce 40 	sts	0x40CE, r19	; 0x8040ce <_ZZ10linkbus_RxhE10tempMsg_ID+0x3>
-     842:	2c c0       	rjmp	.+88     	; 0x89c <_Z10linkbus_Rxh+0x1e0>
+     79e:	40 91 cb 40 	lds	r20, 0x40CB	; 0x8040cb <_ZZ10linkbus_RxhE10tempMsg_ID>
+     7a2:	50 91 cc 40 	lds	r21, 0x40CC	; 0x8040cc <_ZZ10linkbus_RxhE10tempMsg_ID+0x1>
+     7a6:	60 91 cd 40 	lds	r22, 0x40CD	; 0x8040cd <_ZZ10linkbus_RxhE10tempMsg_ID+0x2>
+     7aa:	70 91 ce 40 	lds	r23, 0x40CE	; 0x8040ce <_ZZ10linkbus_RxhE10tempMsg_ID+0x3>
+     7ae:	44 0f       	add	r20, r20
+     7b0:	55 1f       	adc	r21, r21
+     7b2:	66 1f       	adc	r22, r22
+     7b4:	77 1f       	adc	r23, r23
+     7b6:	8a 01       	movw	r16, r20
+     7b8:	9b 01       	movw	r18, r22
+     7ba:	00 0f       	add	r16, r16
+     7bc:	11 1f       	adc	r17, r17
+     7be:	22 1f       	adc	r18, r18
+     7c0:	33 1f       	adc	r19, r19
+     7c2:	00 0f       	add	r16, r16
+     7c4:	11 1f       	adc	r17, r17
+     7c6:	22 1f       	adc	r18, r18
+     7c8:	33 1f       	adc	r19, r19
+     7ca:	40 0f       	add	r20, r16
+     7cc:	51 1f       	adc	r21, r17
+     7ce:	62 1f       	adc	r22, r18
+     7d0:	73 1f       	adc	r23, r19
+     7d2:	8a 01       	movw	r16, r20
+     7d4:	9b 01       	movw	r18, r22
+     7d6:	08 0f       	add	r16, r24
+     7d8:	11 1d       	adc	r17, r1
+     7da:	21 1d       	adc	r18, r1
+     7dc:	31 1d       	adc	r19, r1
+     7de:	00 93 cb 40 	sts	0x40CB, r16	; 0x8040cb <_ZZ10linkbus_RxhE10tempMsg_ID>
+     7e2:	10 93 cc 40 	sts	0x40CC, r17	; 0x8040cc <_ZZ10linkbus_RxhE10tempMsg_ID+0x1>
+     7e6:	20 93 cd 40 	sts	0x40CD, r18	; 0x8040cd <_ZZ10linkbus_RxhE10tempMsg_ID+0x2>
+     7ea:	30 93 ce 40 	sts	0x40CE, r19	; 0x8040ce <_ZZ10linkbus_RxhE10tempMsg_ID+0x3>
+     7ee:	2c c0       	rjmp	.+88     	; 0x848 <_Z10linkbus_Rxh+0x1e0>
 				}
 				else
 				{
 					buff->fields[field_index - 1][field_len++] = rx_char;
-     844:	30 e0       	ldi	r19, 0x00	; 0
-     846:	21 50       	subi	r18, 0x01	; 1
-     848:	31 09       	sbc	r19, r1
-     84a:	90 91 cf 40 	lds	r25, 0x40CF	; 0x8040cf <_ZZ10linkbus_RxhE9field_len>
-     84e:	41 e0       	ldi	r20, 0x01	; 1
-     850:	49 0f       	add	r20, r25
-     852:	40 93 cf 40 	sts	0x40CF, r20	; 0x8040cf <_ZZ10linkbus_RxhE9field_len>
-     856:	65 e1       	ldi	r22, 0x15	; 21
-     858:	62 9f       	mul	r22, r18
-     85a:	a0 01       	movw	r20, r0
-     85c:	63 9f       	mul	r22, r19
-     85e:	50 0d       	add	r21, r0
-     860:	11 24       	eor	r1, r1
-     862:	c4 0f       	add	r28, r20
-     864:	d5 1f       	adc	r29, r21
-     866:	c9 0f       	add	r28, r25
-     868:	d1 1d       	adc	r29, r1
-     86a:	8b 83       	std	Y+3, r24	; 0x03
-     86c:	17 c0       	rjmp	.+46     	; 0x89c <_Z10linkbus_Rxh+0x1e0>
+     7f0:	30 e0       	ldi	r19, 0x00	; 0
+     7f2:	21 50       	subi	r18, 0x01	; 1
+     7f4:	31 09       	sbc	r19, r1
+     7f6:	90 91 cf 40 	lds	r25, 0x40CF	; 0x8040cf <_ZZ10linkbus_RxhE9field_len>
+     7fa:	41 e0       	ldi	r20, 0x01	; 1
+     7fc:	49 0f       	add	r20, r25
+     7fe:	40 93 cf 40 	sts	0x40CF, r20	; 0x8040cf <_ZZ10linkbus_RxhE9field_len>
+     802:	65 e1       	ldi	r22, 0x15	; 21
+     804:	62 9f       	mul	r22, r18
+     806:	a0 01       	movw	r20, r0
+     808:	63 9f       	mul	r22, r19
+     80a:	50 0d       	add	r21, r0
+     80c:	11 24       	eor	r1, r1
+     80e:	c4 0f       	add	r28, r20
+     810:	d5 1f       	adc	r29, r21
+     812:	c9 0f       	add	r28, r25
+     814:	d1 1d       	adc	r29, r1
+     816:	8b 83       	std	Y+3, r24	; 0x03
+     818:	17 c0       	rjmp	.+46     	; 0x848 <_Z10linkbus_Rxh+0x1e0>
 				}
 			}
 		}
 		else if(rx_char == 0x0D)    /* Carriage return resets any message in progress */
-     86e:	8d 30       	cpi	r24, 0x0D	; 13
-     870:	a9 f4       	brne	.+42     	; 0x89c <_Z10linkbus_Rxh+0x1e0>
+     81a:	8d 30       	cpi	r24, 0x0D	; 13
+     81c:	a9 f4       	brne	.+42     	; 0x848 <_Z10linkbus_Rxh+0x1e0>
 		{
 			buff->id = LB_MESSAGE_EMPTY;
-     872:	19 82       	std	Y+1, r1	; 0x01
-     874:	1a 82       	std	Y+2, r1	; 0x02
+     81e:	19 82       	std	Y+1, r1	; 0x01
+     820:	1a 82       	std	Y+2, r1	; 0x02
 			charIndex = LINKBUS_MAX_MSG_LENGTH;
-     876:	82 e3       	ldi	r24, 0x32	; 50
-     878:	80 93 d0 40 	sts	0x40D0, r24	; 0x8040d0 <_ZZ10linkbus_RxhE9charIndex>
+     822:	82 e3       	ldi	r24, 0x32	; 50
+     824:	80 93 d0 40 	sts	0x40D0, r24	; 0x8040d0 <_ZZ10linkbus_RxhE9charIndex>
 			field_len = 0;
-     87c:	10 92 cf 40 	sts	0x40CF, r1	; 0x8040cf <_ZZ10linkbus_RxhE9field_len>
+     828:	10 92 cf 40 	sts	0x40CF, r1	; 0x8040cf <_ZZ10linkbus_RxhE9field_len>
 			tempMsg_ID = 0;
-     880:	10 92 cb 40 	sts	0x40CB, r1	; 0x8040cb <_ZZ10linkbus_RxhE10tempMsg_ID>
-     884:	10 92 cc 40 	sts	0x40CC, r1	; 0x8040cc <_ZZ10linkbus_RxhE10tempMsg_ID+0x1>
-     888:	10 92 cd 40 	sts	0x40CD, r1	; 0x8040cd <_ZZ10linkbus_RxhE10tempMsg_ID+0x2>
-     88c:	10 92 ce 40 	sts	0x40CE, r1	; 0x8040ce <_ZZ10linkbus_RxhE10tempMsg_ID+0x3>
+     82c:	10 92 cb 40 	sts	0x40CB, r1	; 0x8040cb <_ZZ10linkbus_RxhE10tempMsg_ID>
+     830:	10 92 cc 40 	sts	0x40CC, r1	; 0x8040cc <_ZZ10linkbus_RxhE10tempMsg_ID+0x1>
+     834:	10 92 cd 40 	sts	0x40CD, r1	; 0x8040cd <_ZZ10linkbus_RxhE10tempMsg_ID+0x2>
+     838:	10 92 ce 40 	sts	0x40CE, r1	; 0x8040ce <_ZZ10linkbus_RxhE10tempMsg_ID+0x3>
 			field_index = 0;
-     890:	10 92 c9 40 	sts	0x40C9, r1	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
+     83c:	10 92 c9 40 	sts	0x40C9, r1	; 0x8040c9 <_ZZ10linkbus_RxhE11field_index>
 			buff = NULL;
-     894:	10 92 d1 40 	sts	0x40D1, r1	; 0x8040d1 <_ZZ10linkbus_RxhE4buff>
-     898:	10 92 d2 40 	sts	0x40D2, r1	; 0x8040d2 <_ZZ10linkbus_RxhE4buff+0x1>
+     840:	10 92 d1 40 	sts	0x40D1, r1	; 0x8040d1 <_ZZ10linkbus_RxhE4buff>
+     844:	10 92 d2 40 	sts	0x40D2, r1	; 0x8040d2 <_ZZ10linkbus_RxhE4buff+0x1>
 		}
 
 		if(++charIndex >= LINKBUS_MAX_MSG_LENGTH)
-     89c:	80 91 d0 40 	lds	r24, 0x40D0	; 0x8040d0 <_ZZ10linkbus_RxhE9charIndex>
-     8a0:	8f 5f       	subi	r24, 0xFF	; 255
-     8a2:	80 93 d0 40 	sts	0x40D0, r24	; 0x8040d0 <_ZZ10linkbus_RxhE9charIndex>
-     8a6:	82 33       	cpi	r24, 0x32	; 50
-     8a8:	20 f0       	brcs	.+8      	; 0x8b2 <_Z10linkbus_Rxh+0x1f6>
+     848:	80 91 d0 40 	lds	r24, 0x40D0	; 0x8040d0 <_ZZ10linkbus_RxhE9charIndex>
+     84c:	8f 5f       	subi	r24, 0xFF	; 255
+     84e:	80 93 d0 40 	sts	0x40D0, r24	; 0x8040d0 <_ZZ10linkbus_RxhE9charIndex>
+     852:	82 33       	cpi	r24, 0x32	; 50
+     854:	20 f0       	brcs	.+8      	; 0x85e <_Z10linkbus_Rxh+0x1f6>
 		{
 			receiving_msg = FALSE;
-     8aa:	10 92 ca 40 	sts	0x40CA, r1	; 0x8040ca <_ZZ10linkbus_RxhE13receiving_msg>
+     856:	10 92 ca 40 	sts	0x40CA, r1	; 0x8040ca <_ZZ10linkbus_RxhE13receiving_msg>
 			charIndex = 0;
-     8ae:	10 92 d0 40 	sts	0x40D0, r1	; 0x8040d0 <_ZZ10linkbus_RxhE9charIndex>
+     85a:	10 92 d0 40 	sts	0x40D0, r1	; 0x8040d0 <_ZZ10linkbus_RxhE9charIndex>
 		}
 	}
 }
-     8b2:	df 91       	pop	r29
-     8b4:	cf 91       	pop	r28
-     8b6:	1f 91       	pop	r17
-     8b8:	0f 91       	pop	r16
-     8ba:	08 95       	ret
+     85e:	df 91       	pop	r29
+     860:	cf 91       	pop	r28
+     862:	1f 91       	pop	r17
+     864:	0f 91       	pop	r16
+     866:	08 95       	ret
+
+00000868 <__vector_19>:
+        TCB2.INTFLAGS = TCB_CAPT_bm;
+    }
+}
+
+ISR(USART0_RXC_vect)
+{
+     868:	1f 92       	push	r1
+     86a:	0f 92       	push	r0
+     86c:	0f b6       	in	r0, 0x3f	; 63
+     86e:	0f 92       	push	r0
+     870:	11 24       	eor	r1, r1
+     872:	0b b6       	in	r0, 0x3b	; 59
+     874:	0f 92       	push	r0
+     876:	2f 93       	push	r18
+     878:	3f 93       	push	r19
+     87a:	4f 93       	push	r20
+     87c:	5f 93       	push	r21
+     87e:	6f 93       	push	r22
+     880:	7f 93       	push	r23
+     882:	8f 93       	push	r24
+     884:	9f 93       	push	r25
+     886:	af 93       	push	r26
+     888:	bf 93       	push	r27
+     88a:	ef 93       	push	r30
+     88c:	ff 93       	push	r31
+	uint8_t rx_char = USART0_get_data();
+     88e:	0e 94 85 21 	call	0x430a	; 0x430a <USART0_get_data>
+	
+	if(g_serial_comms_on_USART1)
+	{
+		linkbus_Rx(rx_char);
+     892:	0e 94 34 03 	call	0x668	; 0x668 <_Z10linkbus_Rxh>
+	}
+	else
+	{
+		serial_Rx(rx_char);
+	}
+}
+     896:	ff 91       	pop	r31
+     898:	ef 91       	pop	r30
+     89a:	bf 91       	pop	r27
+     89c:	af 91       	pop	r26
+     89e:	9f 91       	pop	r25
+     8a0:	8f 91       	pop	r24
+     8a2:	7f 91       	pop	r23
+     8a4:	6f 91       	pop	r22
+     8a6:	5f 91       	pop	r21
+     8a8:	4f 91       	pop	r20
+     8aa:	3f 91       	pop	r19
+     8ac:	2f 91       	pop	r18
+     8ae:	0f 90       	pop	r0
+     8b0:	0b be       	out	0x3b, r0	; 59
+     8b2:	0f 90       	pop	r0
+     8b4:	0f be       	out	0x3f, r0	; 63
+     8b6:	0f 90       	pop	r0
+     8b8:	1f 90       	pop	r1
+     8ba:	18 95       	reti
 
 000008bc <__vector_31>:
 
@@ -1125,8 +1389,16 @@ ISR(USART1_RXC_vect)
      8e0:	ff 93       	push	r31
 	uint8_t rx_char = USART1_get_data();	
      8e2:	0e 94 b9 21 	call	0x4372	; 0x4372 <USART1_get_data>
-	linkbus_Rx(rx_char);
-     8e6:	0e 94 5e 03 	call	0x6bc	; 0x6bc <_Z10linkbus_Rxh>
+	
+	if(g_serial_comms_on_USART1)
+	{
+		serial_Rx(rx_char);
+     8e6:	0e 94 55 01 	call	0x2aa	; 0x2aa <_Z9serial_Rxh>
+	}
+	else
+	{
+		linkbus_Rx(rx_char);
+	}
 }
      8ea:	ff 91       	pop	r31
      8ec:	ef 91       	pop	r30
@@ -1174,22 +1446,24 @@ ISR(USART1_DRE_vect)
      930:	bf 93       	push	r27
      932:	ef 93       	push	r30
      934:	ff 93       	push	r31
-	static LinkbusTxBuffer* buff = 0;
-	static uint8_t charIndex = 0;
+	if(g_serial_comms_on_USART1)
+	{
+		static SerialbusTxBuffer* buff = 0;
+		static uint8_t charIndex = 0;
 
-	if(!buff)
+		if(!buff)
      936:	80 91 c7 40 	lds	r24, 0x40C7	; 0x8040c7 <_ZZ11__vector_32E4buff>
      93a:	90 91 c8 40 	lds	r25, 0x40C8	; 0x8040c8 <_ZZ11__vector_32E4buff+0x1>
      93e:	89 2b       	or	r24, r25
      940:	31 f4       	brne	.+12     	; 0x94e <__vector_32+0x3e>
-	{
-		buff = nextFullLBTxBuffer();
-     942:	0e 94 b4 13 	call	0x2768	; 0x2768 <_Z18nextFullLBTxBufferv>
+		{
+			buff = nextFullSBTxBuffer();
+     942:	0e 94 c2 17 	call	0x2f84	; 0x2f84 <nextFullSBTxBuffer>
      946:	80 93 c7 40 	sts	0x40C7, r24	; 0x8040c7 <_ZZ11__vector_32E4buff>
      94a:	90 93 c8 40 	sts	0x40C8, r25	; 0x8040c8 <_ZZ11__vector_32E4buff+0x1>
-	}
+		}
 
-	if((*buff)[charIndex])
+		if((*buff)[charIndex])
      94e:	e0 91 c7 40 	lds	r30, 0x40C7	; 0x8040c7 <_ZZ11__vector_32E4buff>
      952:	f0 91 c8 40 	lds	r31, 0x40C8	; 0x8040c8 <_ZZ11__vector_32E4buff+0x1>
      956:	80 91 c6 40 	lds	r24, 0x40C6	; 0x8040c6 <__data_end>
@@ -1199,30 +1473,33 @@ ISR(USART1_DRE_vect)
      960:	9c 91       	ld	r25, X
      962:	99 23       	and	r25, r25
      964:	31 f0       	breq	.+12     	; 0x972 <__vector_32+0x62>
-	{
-		/* Put data into buffer, sends the data */
-		USART1.TXDATAL = (*buff)[charIndex++];
+		{
+			/* Put data into buffer, sends the data */
+			USART0.TXDATAL = (*buff)[charIndex++];
      966:	8f 5f       	subi	r24, 0xFF	; 255
      968:	80 93 c6 40 	sts	0x40C6, r24	; 0x8040c6 <__data_end>
-     96c:	90 93 22 08 	sts	0x0822, r25	; 0x800822 <__TEXT_REGION_LENGTH__+0x7e0822>
+     96c:	90 93 02 08 	sts	0x0802, r25	; 0x800802 <__TEXT_REGION_LENGTH__+0x7e0802>
      970:	0d c0       	rjmp	.+26     	; 0x98c <__vector_32+0x7c>
-	}
-	else
-	{
-		charIndex = 0;
+		}
+		else
+		{
+			charIndex = 0;
      972:	10 92 c6 40 	sts	0x40C6, r1	; 0x8040c6 <__data_end>
-		(*buff)[0] = '\0';
+			(*buff)[0] = '\0';
      976:	10 82       	st	Z, r1
-		buff = nextFullLBTxBuffer();
-     978:	0e 94 b4 13 	call	0x2768	; 0x2768 <_Z18nextFullLBTxBufferv>
+			buff = nextFullSBTxBuffer();
+     978:	0e 94 c2 17 	call	0x2f84	; 0x2f84 <nextFullSBTxBuffer>
      97c:	80 93 c7 40 	sts	0x40C7, r24	; 0x8040c7 <_ZZ11__vector_32E4buff>
      980:	90 93 c8 40 	sts	0x40C8, r25	; 0x8040c8 <_ZZ11__vector_32E4buff+0x1>
-		if(!buff)
+			if(!buff)
      984:	89 2b       	or	r24, r25
      986:	11 f4       	brne	.+4      	; 0x98c <__vector_32+0x7c>
-		{
-			linkbus_end_tx();
+			{
+				linkbus_end_tx();
      988:	0e 94 79 14 	call	0x28f2	; 0x28f2 <_Z14linkbus_end_txv>
+			{
+				linkbus_end_tx();
+			}
 		}
 	}
 }
