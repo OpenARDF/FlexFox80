@@ -34,11 +34,14 @@
 
 /* Global Variables */
 static volatile BOOL g_bus_disabled = TRUE;
+USART_Number_t g_linkbus_usart_number = USART_NOT_SET;
 
 static char g_tempMsgBuff[LINKBUS_MAX_MSG_LENGTH];
 
 /* Local function prototypes */
-BOOL linkbus_start_tx(void);
+static BOOL linkbus_start_tx(void);
+static void USART0_initialization(uint32_t baud);
+static void USART1_initialization(uint32_t baud);
 
 /* Module global variables */
 static volatile BOOL linkbus_tx_active = FALSE; // volatile is required to ensure optimizer handles this properly
@@ -177,7 +180,15 @@ BOOL linkbus_start_tx(void)
 	if(success) /* message will be lost if transmit is busy */
 	{
 		linkbus_tx_active = TRUE;
-		USART1_enable_tx();
+		
+		if(g_linkbus_usart_number == USART_0)
+		{	
+			USART0_enable_tx();
+		}
+		else
+		{
+			USART1_enable_tx();
+		}
 	}
 
 	return(success);
@@ -187,50 +198,72 @@ void linkbus_end_tx(void)
 {
 	if(linkbus_tx_active)
 	{
-		USART1.CTRLA &= ~(1 << USART_DREIE_bp); /* Transmit Data Register Empty Interrupt Enable: disable */
+		if(g_linkbus_usart_number == USART_0)
+		{	
+			USART0.CTRLA &= ~(1 << USART_DREIE_bp); /* Transmit Data Register Empty Interrupt Enable: disable */
+		}
+		else
+		{
+			USART1.CTRLA &= ~(1 << USART_DREIE_bp); /* Transmit Data Register Empty Interrupt Enable: disable */
+		}
+		
 		linkbus_tx_active = FALSE;
 	}
 }
 
 void linkbus_reset_rx(void)
 {
-	if(USART1.CTRLB & (1 << USART_RXEN_bp))   /* perform only if rx is currently enabled */
-	{
-		USART1.CTRLB &= ~(1 << USART_RXEN_bp);
-		memset(rx_buffer, 0, sizeof(rx_buffer));
-		USART1.CTRLB |= (1 << USART_RXEN_bp);
-	}
+		if(g_linkbus_usart_number == USART_0)
+		{	
+			if(USART0.CTRLB & (1 << USART_RXEN_bp))   /* perform only if rx is currently enabled */
+			{
+				USART0.CTRLB &= ~(1 << USART_RXEN_bp);
+				memset(rx_buffer, 0, sizeof(rx_buffer));
+				USART0.CTRLB |= (1 << USART_RXEN_bp);
+			}
+		}
+		else
+		{
+			if(USART1.CTRLB & (1 << USART_RXEN_bp))   /* perform only if rx is currently enabled */
+			{
+				USART1.CTRLB &= ~(1 << USART_RXEN_bp);
+				memset(rx_buffer, 0, sizeof(rx_buffer));
+				USART1.CTRLB |= (1 << USART_RXEN_bp);
+			}
+		}
+}
+
+/* configure the pins and initialize the registers */
+void USART0_initialization(uint32_t baud)
+{
+
+	// Set Rx pin direction to input
+	PA1_set_dir(PORT_DIR_IN);
+	PA1_set_pull_mode(PORT_PULL_OFF);
+
+	// Set Tx pin direction to output
+	PA0_set_dir(PORT_DIR_OUT);
+	PA0_set_level(HIGH);
+
+	USART0_init(baud);
 }
 
 /* configure the pins and initialize the registers */
 void USART1_initialization(uint32_t baud)
 {
 
-	// Set pin direction to input
+	// Set Rx pin direction to input
 	PC1_set_dir(PORT_DIR_IN);
+	PC1_set_pull_mode(PORT_PULL_OFF);
 
-	PC1_set_pull_mode(
-	// <y> Pull configuration
-	// <id> pad_pull_config
-	// <PORT_PULL_OFF"> Off
-	// <PORT_PULL_UP"> Pull-up
-	PORT_PULL_OFF);
-
-	// Set pin direction to output
-
-	PC0_set_level(
-	// <y> Initial level
-	// <id> pad_initial_level
-	// <false"> Low
-	// <true"> High
-	false);
-
+	// Set Tx pin direction to output
 	PC0_set_dir(PORT_DIR_OUT);
+	PC0_set_level(HIGH);
 
 	USART1_init(baud);
 }
 
-void linkbus_init()
+void linkbus_init(uint32_t baud, USART_Number_t usart)
 {
 	memset(rx_buffer, 0, sizeof(rx_buffer));
 
@@ -239,8 +272,20 @@ void linkbus_init()
 		tx_buffer[bufferIndex][0] = '\0';
 	}
 
-	/*Set baud rate */
-	USART1_initialization(LB_BAUD);
+	if((usart != USART_DO_NOT_CHANGE) || (g_linkbus_usart_number == USART_NOT_SET))
+	{
+		if(usart == USART_0)
+		{
+			USART0_initialization(baud);
+		}
+		else
+		{
+			USART1_initialization(baud);
+		}
+		
+		g_linkbus_usart_number = usart;
+	}
+
 	g_bus_disabled = FALSE;
 }
 
@@ -249,7 +294,16 @@ void linkbus_disable(void)
 	uint8_t bufferIndex;
 
 	g_bus_disabled = TRUE;
-	USART1_disable();
+
+	if(g_linkbus_usart_number == USART_0)
+	{	
+		USART0_disable();
+	}
+	else
+	{
+		USART1_disable();
+	}
+	
 	linkbus_end_tx();
 	memset(rx_buffer, 0, sizeof(rx_buffer));
 
@@ -264,7 +318,15 @@ void linkbus_enable(void)
 	uint8_t bufferIndex;
 
 	g_bus_disabled = FALSE;
-	USART1_enable();
+
+	if(g_linkbus_usart_number == USART_0)
+	{	
+		USART0_enable();
+	}
+	else
+	{
+		USART1_enable();
+	}
 
 	memset(rx_buffer, 0, sizeof(rx_buffer));
 
@@ -300,7 +362,6 @@ BOOL lb_send_text(char* text)
 			sprintf(*buff, text);
 
 			linkbus_start_tx();
-//			USART1.TXDATAL = (*buff)[0]; /* send the first character */
 			err = FALSE;
 		}
 	}

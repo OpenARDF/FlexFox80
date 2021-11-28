@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <avr/eeprom.h>
 #include "transmitter.h"
 #include "i2c.h"    /* DAC on 80m VGA of Rev X1 Receiver board */
 
@@ -110,18 +111,25 @@ extern volatile AntConnType g_antenna_connect_state;
 
 	void keyTransmitter(BOOL on)
 	{
-		if(on)
-		{
-			if(!g_transmitter_keyed)
+		if(g_tx_initialized)
+		{			
+			if(on)
 			{
-				si5351_clock_enable(TX_CLOCK_HF_0, SI5351_CLK_ENABLED);
-				g_transmitter_keyed = TRUE;
+				if(!g_transmitter_keyed)
+				{
+					if(si5351_clock_enable(TX_CLOCK_HF_0, SI5351_CLK_ENABLED) == ERROR_CODE_NO_ERROR)
+					{
+						g_transmitter_keyed = TRUE;
+					}
+				}
 			}
-		}
-		else
-		{
-			si5351_clock_enable(TX_CLOCK_HF_0, SI5351_CLK_DISABLED);
-			g_transmitter_keyed = FALSE;
+			else
+			{
+				if(si5351_clock_enable(TX_CLOCK_HF_0, SI5351_CLK_DISABLED) == ERROR_CODE_NO_ERROR)
+				{
+					g_transmitter_keyed = FALSE;
+				}
+			}
 		}
 	}
 

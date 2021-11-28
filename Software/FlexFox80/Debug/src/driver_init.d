@@ -23,8 +23,8 @@ src/driver_init.d src/driver_init.o: ../src/driver_init.cpp ../defs.h \
  ../include/bod.h ../include/system.h ../include/ccp.h \
  ../include/protected_io.h ../include/port.h ../include/usart_basic.h \
  ../atmel_start.h ../include/driver_init.h ../include/atmel_start_pins.h \
- ../include/linkbus.h ../include/serialbus.h ../include/dac0.h \
- ../include/binio.h
+ ../include/linkbus.h ../include/usart_basic.h ../include/serialbus.h \
+ ../include/dac0.h ../include/binio.h
 
 ../defs.h:
 
@@ -103,6 +103,8 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 ../include/atmel_start_pins.h:
 
 ../include/linkbus.h:
+
+../include/usart_basic.h:
 
 ../include/serialbus.h:
 

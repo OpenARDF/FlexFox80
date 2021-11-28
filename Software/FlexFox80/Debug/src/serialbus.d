@@ -21,7 +21,7 @@ src/serialbus.d src/serialbus.o: ../src/serialbus.cpp ../defs.h \
  ../utils/interrupt_avr8.h ../Config/clock_config.h ../include/port.h \
  ../utils/compiler.h ../include/atmel_start_pins.h ../include/clkctrl.h \
  ../include/slpctrl.h ../include/cpuint.h ../include/tcb.h \
- ../include/bod.h ../include/atmel_start_pins.h \
+ ../include/bod.h ../include/atmel_start_pins.h ../include/usart_basic.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\string.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdio.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdarg.h
@@ -93,6 +93,8 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 ../include/bod.h:
 
 ../include/atmel_start_pins.h:
+
+../include/usart_basic.h:
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\string.h:
 

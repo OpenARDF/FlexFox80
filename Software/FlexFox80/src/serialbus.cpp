@@ -43,6 +43,7 @@
 #endif  /* ATMEL_STUDIO_7 */
 
 /* Global Variables */
+USART_Number_t g_serialbus_usart_number = USART_NOT_SET;
 static volatile BOOL g_bus_disabled = TRUE;
 static const char crlf[] = "\n";
 static char lineTerm[8] = "\n";
@@ -53,6 +54,8 @@ static char g_tempMsgBuff[SERIALBUS_MAX_MSG_LENGTH];
 /* Local function prototypes */
 BOOL serialbus_start_tx(void);
 BOOL serialbus_send_text(char* text);
+static void USART0_initialization(uint32_t baud);
+static void USART1_initialization(uint32_t baud);
 
 /* Module global variables */
 static volatile BOOL serialbus_tx_active = FALSE; /* volatile is required to ensure optimizer handles this properly */
@@ -191,7 +194,15 @@ BOOL serialbus_start_tx(void)
 	if(success) /* message will be lost if transmit is busy */
 	{
 		serialbus_tx_active = TRUE;
-		USART0_enable_tx();
+		
+		if(g_serialbus_usart_number == USART_0)
+		{
+			USART0_enable_tx();
+		}
+		else
+		{
+			USART1_enable_tx();
+		}
 	}
 
 	return(success);
@@ -201,7 +212,15 @@ void serialbus_end_tx(void)
 {
 	if(serialbus_tx_active)
 	{
-		USART0.CTRLA &= ~(1 << USART_DREIE_bp); /* Transmit Data Register Empty Interrupt Enable: disable */
+		if(g_serialbus_usart_number == USART_0)
+		{
+			USART0.CTRLA &= ~(1 << USART_DREIE_bp); /* Transmit Data Register Empty Interrupt Enable: disable */
+		}
+		else
+		{
+			USART1.CTRLA &= ~(1 << USART_DREIE_bp); /* Transmit Data Register Empty Interrupt Enable: disable */
+		}
+		
 		serialbus_tx_active = FALSE;
 	}
 }
@@ -221,32 +240,35 @@ void serialbus_end_tx(void)
 void USART0_initialization(uint32_t baud)
 {
 
-	// Set pin direction to input
+	// Set Rx pin direction to input
 	PA1_set_dir(PORT_DIR_IN);
+	PA1_set_pull_mode(PORT_PULL_OFF);
 
-	PA1_set_pull_mode(
-	// <y> Pull configuration
-	// <id> pad_pull_config
-	// <PORT_PULL_OFF"> Off
-	// <PORT_PULL_UP"> Pull-up
-	PORT_PULL_OFF);
-
-	// Set pin direction to output
-
-	PA0_set_level(
-	// <y> Initial level
-	// <id> pad_initial_level
-	// <false"> Low
-	// <true"> High
-	false);
-
+	// Set Tx pin direction to output
 	PA0_set_dir(PORT_DIR_OUT);
+	PA0_set_level(HIGH);
 
 	USART0_init(baud);
 }
 
 
-void serialbus_init(uint32_t baud)
+/* configure the pins and initialize the registers */
+void USART1_initialization(uint32_t baud)
+{
+
+	// Set Rx pin direction to input
+	PC1_set_dir(PORT_DIR_IN);
+	PC1_set_pull_mode(PORT_PULL_OFF);
+
+	// Set Tx pin direction to output
+	PC0_set_dir(PORT_DIR_OUT);
+	PC0_set_level(HIGH);
+
+	USART1_init(baud);
+}
+
+
+void serialbus_init(uint32_t baud, USART_Number_t usart)
 {
 	memset(rx_buffer, 0, sizeof(rx_buffer));
 
@@ -255,8 +277,20 @@ void serialbus_init(uint32_t baud)
 		tx_buffer[bufferIndex][0] = '\0';
 	}
 
-	/*Set baud rate */
-	USART0_initialization(SB_BAUD);
+	if((usart != USART_DO_NOT_CHANGE) || (g_serialbus_usart_number == USART_NOT_SET))
+	{
+		if(usart == USART_0)
+		{
+			USART0_initialization(baud);
+		}
+		else
+		{
+			USART1_initialization(baud);
+		}
+	
+		g_serialbus_usart_number = usart;
+	}
+
 	g_bus_disabled = FALSE;
 }
 
@@ -265,7 +299,16 @@ void serialbus_disable(void)
 	uint8_t bufferIndex;
 
 	g_bus_disabled = TRUE;
-	USART0_disable();
+
+	if(g_serialbus_usart_number == USART_0)
+	{	
+		USART0_disable();
+	}
+	else
+	{
+		USART1_disable();
+	}
+	
 	serialbus_end_tx();
 	memset(rx_buffer, 0, sizeof(rx_buffer));
 
@@ -274,21 +317,6 @@ void serialbus_disable(void)
 		tx_buffer[bufferIndex][0] = '\0';
 	}
 }
-
-// void serialbus_enable(void)
-// {
-// 	uint8_t bufferIndex;
-//
-// 	g_bus_disabled = FALSE;
-// 	UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
-//
-// 	memset(rx_buffer, 0, sizeof(rx_buffer));
-//
-// 	for(bufferIndex = 0; bufferIndex < SERIALBUS_NUMBER_OF_TX_MSG_BUFFERS; bufferIndex++)
-// 	{
-// 		tx_buffer[bufferIndex][0] = '\0';
-// 	}
-// }
 
 
 BOOL serialbus_send_text(char* text)
@@ -367,9 +395,11 @@ void sb_echo_char(uint8_t c)
 	serialbus_send_text(g_tempMsgBuff);
 }
 
-BOOL sb_send_string(char* str, BOOL wait)
+BOOL sb_send_string(char* str)
 {
 	BOOL err = FALSE;
+	uint16_t length, lengthToSend, lengthSent=0;
+	bool done = false;
 
 	if(g_bus_disabled)
 	{
@@ -386,15 +416,16 @@ BOOL sb_send_string(char* str, BOOL wait)
 		return(TRUE);
 	}
 
-	if(strlen(str) > SERIALBUS_MAX_TX_MSG_LENGTH)
-	{
-		return( TRUE);
-	}
+	length = strlen(str);
 
-	strncpy(g_tempMsgBuff, str, SERIALBUS_MAX_TX_MSG_LENGTH);
-
-	if(wait)
+	do
 	{
+		lengthToSend = MIN(length-lengthSent, (uint16_t)SERIALBUS_MAX_TX_MSG_LENGTH);
+		strncpy(g_tempMsgBuff, &str[lengthSent], lengthToSend);
+		if(lengthToSend < SERIALBUS_MAX_TX_MSG_LENGTH)
+		{
+			g_tempMsgBuff[lengthToSend] = '\0';
+		}
 		while((err = serialbus_send_text(g_tempMsgBuff)))
 		{
 			;
@@ -403,11 +434,10 @@ BOOL sb_send_string(char* str, BOOL wait)
 		{
 			;
 		}
-	}
-	else
-	{
-		err = serialbus_send_text(g_tempMsgBuff);
-	}
+		
+		lengthSent += lengthToSend;
+		done = lengthSent >= length;
+	}while(!done);
 
 	return( err);
 }

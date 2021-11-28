@@ -35,6 +35,7 @@
 #include <time.h>
 
 int32_t timeDif(time_t a, time_t b);
+BOOL only_digits(char *s);
 
 /***********************************************************************************************
  *  Print Formatting Utility Functions

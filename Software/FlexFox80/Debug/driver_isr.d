@@ -23,9 +23,9 @@ driver_isr.d driver_isr.o: .././driver_isr.cpp ../include/driver_init.h \
  ../include/cpuint.h ../include/tcb.h ../include/bod.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\ctype.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\string.h \
- ../include/linkbus.h ../defs.h ../include/serialbus.h \
- ../include/usart_basic.h ../atmel_start.h ../include/driver_init.h \
- ../include/atmel_start_pins.h ../include/morse.h
+ ../include/linkbus.h ../defs.h ../include/usart_basic.h ../atmel_start.h \
+ ../include/driver_init.h ../include/atmel_start_pins.h \
+ ../include/serialbus.h ../include/usart_basic.h ../include/morse.h
 
 ../include/driver_init.h:
 
@@ -93,8 +93,6 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 
 ../defs.h:
 
-../include/serialbus.h:
-
 ../include/usart_basic.h:
 
 ../atmel_start.h:
@@ -102,5 +100,9 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 ../include/driver_init.h:
 
 ../include/atmel_start_pins.h:
+
+../include/serialbus.h:
+
+../include/usart_basic.h:
 
 ../include/morse.h:

@@ -275,7 +275,7 @@ static inline void LED_set_inverted(const bool inverted)
  */
 static inline void LED_set_level(const bool level)
 {
-	PORTC_set_pin_level(6, level);
+	PORTC_set_pin_level(6, !level); /* Low == LED on */
 }
 
 /**

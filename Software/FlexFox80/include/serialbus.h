@@ -29,10 +29,13 @@
 #define SERIALBUS_H_
 
 #include "defs.h"
+#include "usart_basic.h"
 
 #ifdef __cplusplus
 	extern "C" {
 #endif
+
+#define SERIALBUS_USART USART_1
 
 #define SERIALBUS_MAX_MSG_LENGTH 50
 #define SERIALBUS_MIN_MSG_LENGTH 2    /* shortest message: GO */
@@ -48,8 +51,8 @@
 
 #define SERIALBUS_MIN_TX_INTERVAL_MS 100
 
-#define SB_BAUD 57600
-#define MYUBRR(b) ((F_CPU + b * 8L) / (b * 16L) - 1)
+#define SB_BAUD 9600
+//#define MYUBRR(b) ((F_CPU + b * 8L) / (b * 16L) - 1)
 
 // typedef enum
 // {
@@ -73,9 +76,6 @@ typedef enum
 
 	/*	ARDUCON MESSAGE FAMILY (SERIAL MESSAGING) */
 	SB_MESSAGE_SET_FOX = 'F' * 100 + 'O' * 10 + 'X',           /* Set the fox role to be used to define timing and signals */
-#if !SUPPORT_ONLY_80M
-	SB_MESSAGE_SET_AM_TONE = 'A' * 10 + 'M',					/* Set AM audio tone frequency */
-#endif // !SUPPORT_ONLY_80M
 	SB_MESSAGE_UTIL = 'U' * 100 + 'T' * 10 + 'I',              /* Temperature  and Voltage data */
 	SB_MESSAGE_SET_STATION_ID = 'I' * 10 + 'D',                /* Sets amateur radio callsign text */
 	SB_MESSAGE_SYNC = 'S' * 100 + 'Y' * 10 + 'N',              /* Synchronizes transmissions */
@@ -95,11 +95,11 @@ typedef enum
 	SERIALBUS_MSG_INVALID
 } SBMessageType;
 
-// typedef enum
-// {
-// 	FIELD1 = 0,
-// 	FIELD2 = 1
-// } SBMessageField;
+typedef enum
+{
+	SB_FIELD1 = 0,
+	SB_FIELD2 = 1
+} SBMessageField;
 
 typedef enum
 {
@@ -128,21 +128,17 @@ typedef struct
 } SerialbusRxBuffer;
 
 #define WAITING_FOR_UPDATE -1
+#define HELP_TEXT_TXT "\nCommands:\n  CLK [T|S|F [\"YYMMDDhhmmss\"]] - Read/set time/start/finish\n  FOX [fox]- Set fox role\n  ID [callsign] -  Set callsign\n  SYN 0-3 - Synchronize\n  PWD [pwd] - Set DTMF password\n  UTI - Read volts & temp\n  SET S|P [setting] - Set ID code speed or PTT reset\n\0"
+
 
 /**
  */
-void serialbus_init(uint32_t baud);
+void serialbus_init(uint32_t baud, USART_Number_t usart);
 
 /**
  * Immediately turns off receiver and flushes receive buffer
  */
 void serialbus_disable(void);
-
-/**
- * Undoes serialbus_disable()
- */
-// void serialbus_enable(void);
-
 
 /**
  */
@@ -186,7 +182,7 @@ void sb_echo_char(uint8_t c);
 
 /**
  */
-BOOL sb_send_string(char* str, BOOL wait);
+BOOL sb_send_string(char* str);
 
 /**
  */

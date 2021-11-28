@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 /**
  * Returns a-b
@@ -164,5 +165,22 @@ uint32_t convertTimeStringToEpoch(char * s)
 
   return result;
 }
+
+/** 
+ * Checks a string to see if it contains only numerical characters
+ */
+BOOL only_digits(char *s)
+{
+	while(*s)
+	{
+		if(isdigit(*s++) == 0)
+		{
+			return( FALSE);
+		}
+	}
+
+	return( TRUE);
+}
+
 
 #endif //  DATE_STRING_SUPPORT_ENABLED

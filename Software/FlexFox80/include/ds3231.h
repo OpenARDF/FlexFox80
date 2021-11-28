@@ -34,17 +34,22 @@
  *
  */
 
+#ifndef DS3231_H_
+#define DS3231_H_
+
 #include "defs.h"
 #include <time.h>
 
-#ifndef DS3231_H_
-#define DS3231_H_
 
 typedef enum {
 	RTC_CLOCK,
 	RTC_ALARM1,
 	RTC_ALARM2
 } ClockSetting;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  *  Reads hours, minutes and seconds from the DS3231 and returns them in the memory location pointed to by
@@ -91,17 +96,20 @@ time_t ds3231_get_epoch(EC *result);
  */
 	void ds3231_1s_sqw(BOOL enable);
 
-
 /**
  *
  */
-	void ds3231_set_aging(int8_t* data);
+	void ds3231_set_aging(int8_t data_in);
 
 /**
  *
  */
 	int8_t ds3231_get_aging(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif  /* DS3231_H_ */

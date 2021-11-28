@@ -33,6 +33,17 @@
 extern "C" {
 #endif
 
+typedef enum {
+	USART_0,
+	USART_1,
+	USART_2,
+	USART_3,
+	USART_4,
+	USART_5,
+	USART_DO_NOT_CHANGE,
+	USART_NOT_SET
+	} USART_Number_t;
+
 /* Normal Mode, Baud register value */
 #define USART0_BAUD_RATE(BAUD_RATE) ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
 

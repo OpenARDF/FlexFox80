@@ -218,7 +218,7 @@ USART1
  */
 int8_t USART1_init(uint32_t baud)
 {
-	USART1.BAUD = (uint16_t)USART1_BAUD_RATE(baud); /* set baud rate register */
+	USART1.BAUD = USART1_BAUD_RATE(baud); /* set baud rate register */
 
 	USART1.CTRLA = 0 << USART_ABEIE_bp /* Auto-baud Error Interrupt Enable: disabled */
 			 | 0 << USART_LBME_bp /* Loop-back Mode Enable: disabled */
@@ -302,7 +302,7 @@ void USART1_disable()
 }
 
 /**
- * \brief Get recieved data from USART1
+ * \brief Get received data from USART1
  *
  * \return Data register from USART1 module
  */

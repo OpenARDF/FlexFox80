@@ -29,24 +29,23 @@
 #endif
 
 #include <avr/io.h>
-//#include <util/delay.h>
 #include <avr/interrupt.h>
 
 /******************************************************
  * Set the text that gets displayed to the user */
-#define SW_REVISION "1.6"
+#define SW_REVISION "0.1"
 
 //#define TRANQUILIZE_WATCHDOG
 
-#define PRODUCT_NAME_SHORT "ARDF Tx"
-#define PRODUCT_NAME_LONG "FlexiFox 80m ARDF Transmitter"
+#define PRODUCT_NAME_SHORT "FlexFox ARDF Tx"
+#define PRODUCT_NAME_LONG "FlexFox 80m ARDF Transmitter"
 
 /*******************************************************/
 
 /******************************************************
  * Include only the necessary hardware support */
-   #define INCLUDE_SI5351_SUPPORT // Silicon Labs Programmable Clock
-   #define INCLUDE_DS3231_SUPPORT // Maxim RTC
+   #define INCLUDE_SI5351_SUPPORT TRUE // Silicon Labs Programmable Clock
+   #define INCLUDE_DS3231_SUPPORT TRUE // Maxim RTC
    #define INCLUDE_TRANSMITTER_SUPPORT
 //   #define INCLUDE_DAC081C085_SUPPORT
 //   #define ENABLE_PIN_CHANGE_INTERRUPT_0
@@ -207,7 +206,7 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 
 /******************************************************
  * EEPROM definitions */
-#define EEPROM_INITIALIZED_FLAG 0xC9
+#define EEPROM_INITIALIZED_FLAG 0x00CE
 #define EEPROM_UNINITIALIZED 0x00
 
 #define EEPROM_STATION_ID_DEFAULT "FOXBOX"
@@ -232,6 +231,25 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 #define EEPROM_CLK2_ONOFF_DEFAULT OFF
 
 #define EEPROM_BATTERY_EMPTY_MV 3430
+#define MAX_UNLOCK_CODE_LENGTH 8
+#define EEPROM_DTMF_UNLOCK_CODE_DEFAULT "1357"
+#define MIN_CODE_SPEED_WPM 5
+#define MAX_CODE_SPEED_WPM 20
+#define SECONDS_24H 86400
+#define EEPROM_START_EPOCH_DEFAULT 0
+#define EEPROM_FINISH_EPOCH_DEFAULT 0
+#define EEPROM_UTC_OFFSET_DEFAULT 0
+#define EEPROM_FOX_SETTING_DEFAULT FOX_1
+#define TEXT_SET_TIME_TXT "CLK T YYMMDDhhmmss <- Set current time\n"
+#define TEXT_SET_START_TXT "CLK S YYMMDDhhmmss <- Set start time\n"
+#define TEXT_SET_FINISH_TXT "CLK F YYMMDDhhmmss <- Set finish time\n"
+#define TEXT_SET_ID_TXT "ID [\"callsign\"] <- Set callsign\n"
+#define TEXT_ERR_FINISH_BEFORE_START_TXT "Err: Finish before start!\n"
+#define TEXT_ERR_FINISH_IN_PAST_TXT "Err: Finish in past!\n"
+#define TEXT_ERR_START_IN_PAST_TXT "Err: Start in past!\n"
+#define TEXT_ERR_INVALID_TIME_TXT "Err: Invalid time!\n"
+#define TEXT_ERR_TIME_IN_PAST_TXT "Err: Time in past!\n"
+
 
 /******************************************************
  * General definitions for making the code easier to understand */
@@ -288,10 +306,36 @@ typedef enum
 {
 	ANT_CONNECTION_UNDETERMINED,
 	ANT_ALL_DISCONNECTED,
-	ANT_2M_CONNECTED,
 	ANT_80M_CONNECTED,
-	ANT_2M_AND_80M_CONNECTED
 } AntConnType;
+
+
+typedef enum
+{
+	BEACON = 0,
+	FOX_1,
+	FOX_2,
+	FOX_3,
+	FOX_4,
+	FOX_5,
+	FOXORING,
+	SPECTATOR,
+	SPRINT_S1,
+	SPRINT_S2,
+	SPRINT_S3,
+	SPRINT_S4,
+	SPRINT_S5,
+	SPRINT_F1,
+	SPRINT_F2,
+	SPRINT_F3,
+	SPRINT_F4,
+	SPRINT_F5,
+	INVALID_FOX
+	#if SUPPORT_TEMP_AND_VOLTAGE_REPORTING
+	,
+	REPORT_BATTERY
+	#endif // SUPPORT_TEMP_AND_VOLTAGE_REPORTING
+} Fox_t;
 
 #define QUAD_MASK 0xC0
 #define QUAD_A 7
@@ -448,6 +492,37 @@ typedef enum
 } TextIndex;
 
 #define MAX_PATTERN_TEXT_LENGTH 20
+
+typedef enum
+{
+	POWER_UP,
+	PUSHBUTTON,
+	PROGRAMMATIC,
+	NO_ACTION
+} EventActionSource_t;
+
+typedef enum
+{
+	START_NOTHING,
+	START_EVENT_NOW,
+	START_TRANSMISSIONS_NOW,
+	START_EVENT_WITH_STARTFINISH_TIMES
+} EventAction_t;
+
+typedef enum
+{
+	INIT_NOT_SPECIFIED,
+	INIT_EVENT_STARTING_NOW,
+	INIT_TRANSMISSIONS_STARTING_NOW,
+	INIT_EVENT_IN_PROGRESS_WITH_STARTFINISH_TIMES
+} InitializeAction_t;
+// 
+// typedef enum
+// {
+// 	AUDIO_SAMPLING,
+// 	TEMPERATURE_SAMPLING,
+// 	VOLTAGE_SAMPLING
+// } ADCChannel_t;
 
 
 #endif  /* DEFS_H */

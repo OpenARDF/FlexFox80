@@ -29,8 +29,9 @@
 #define LINKBUS_H_
 
 #include "defs.h"
-//#include "transmitter.h"
-//#include "si5351.h"
+#include "usart_basic.h"
+
+#define LINKBUS_USART USART_0
 
 #define LINKBUS_MAX_MSG_LENGTH 50
 #define LINKBUS_MIN_MSG_LENGTH 3    /* shortest message: $TTY; */
@@ -44,7 +45,8 @@
 #define LINKBUS_MIN_TX_INTERVAL_MS 100
 
 #define FOSC 8000000    /* Clock Speed */
-#define LB_BAUD 9600
+#define LB_BAUD 9600 
+
 //#define MYUBRR(b) (FOSC / 16 / (b) - 1)
 
 // typedef enum
@@ -172,7 +174,7 @@ typedef struct
 
 /**
  */
-void linkbus_init(void);
+void linkbus_init(uint32_t baud, USART_Number_t usart);
 
 /**
  * Immediately turns off receiver and flushes receive buffer

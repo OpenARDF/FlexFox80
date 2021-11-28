@@ -24,6 +24,8 @@ src\driver_init.cpp
 
 src\ds3231.cpp
 
+src\eeprommanager.cpp
+
 src\Goertzel.cpp
 
 src\huzzah.cpp

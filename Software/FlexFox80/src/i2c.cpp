@@ -24,11 +24,11 @@
  * i2c.c
  */
 
+#include "defs.h"
 #include <util/twi.h>
 #include <avr/power.h>
 #include <avr/io.h>
 #include <avr/sfr_defs.h>
-//#include <util/delay.h>
 #include <util/atomic.h>
 
 #include "si5351.h"
@@ -49,6 +49,9 @@ enum {
 	I2C_READY,
 	I2C_ERROR
 };
+
+volatile uint16_t g_i2c0_timeout_ticks = 1000; 
+volatile uint16_t g_i2c1_timeout_ticks = 1000; 
 
 void I2C_0_Init(void)
 {
@@ -74,6 +77,9 @@ void I2C_0_Init(void)
 static uint8_t i2c_0_WaitW(void)
 {
 	uint8_t state = I2C_INIT;
+	
+	g_i2c0_timeout_ticks = 1000;
+	
 	do
 	{
 		if(TWI0.MSTATUS & (TWI_WIF_bm | TWI_RIF_bm))
@@ -94,7 +100,7 @@ static uint8_t i2c_0_WaitW(void)
 			/* get here only in case of bus error or arbitration lost - M4 state */
 			state = I2C_ERROR;
 		}
-	} while(!state);
+	} while(!state && g_i2c0_timeout_ticks);
 	
 	return state;
 }
@@ -102,6 +108,8 @@ static uint8_t i2c_0_WaitW(void)
 static uint8_t i2c_0_WaitR(void)
 {
 	uint8_t state = I2C_INIT;
+	
+	g_i2c0_timeout_ticks = 1000;
 	
 	do
 	{
@@ -114,7 +122,7 @@ static uint8_t i2c_0_WaitR(void)
 			/* get here only in case of bus error or arbitration lost - M4 state */
 			state = I2C_ERROR;
 		}
-	} while(!state);
+	} while(!state && g_i2c0_timeout_ticks);
 	
 	return state;
 }
@@ -130,7 +138,7 @@ uint8_t I2C_0_SendData(uint8_t address, uint8_t *pData, uint8_t len)
 	return retVal;
 
 	retVal = 0;
-	if((len != 0) && (pData != NULL))
+	if((len != 0) && (pData != null))
 	{
 		while(len--)
 		{
@@ -172,7 +180,7 @@ uint8_t I2C_0_GetData(uint8_t address, uint8_t *pData, uint8_t len)
 	}
 
 	retVal = 0;
-	if((len != 0) && (pData !=NULL ))
+	if((len != 0) && (pData !=null ))
 	{
 		while(len--)
 		{
@@ -226,6 +234,9 @@ void I2C_1_Init(void)
 static uint8_t I2C_1_WaitW(void)
 {
 	uint8_t state = I2C_INIT;
+	
+	g_i2c1_timeout_ticks = 1000;
+	
 	do
 	{
 		if(TWI1.MSTATUS & (TWI_WIF_bm | TWI_RIF_bm))
@@ -246,7 +257,7 @@ static uint8_t I2C_1_WaitW(void)
 			/* get here only in case of bus error or arbitration lost - M4 state */
 			state = I2C_ERROR;
 		}
-	} while(!state);
+	} while(!state && g_i2c1_timeout_ticks);
 	
 	return state;
 }
@@ -254,6 +265,8 @@ static uint8_t I2C_1_WaitW(void)
 static uint8_t I2C_1_WaitR(void)
 {
 	uint8_t state = I2C_INIT;
+	
+	g_i2c0_timeout_ticks = 1000;
 	
 	do
 	{
@@ -266,7 +279,7 @@ static uint8_t I2C_1_WaitR(void)
 			/* get here only in case of bus error or arbitration lost - M4 state */
 			state = I2C_ERROR;
 		}
-	} while(!state);
+	} while(!state && g_i2c0_timeout_ticks);
 	
 	return state;
 }
@@ -282,7 +295,7 @@ uint8_t I2C_1_SendData(uint8_t address, uint8_t *pData, uint8_t len)
 	return retVal;
 
 	retVal = 0;
-	if((len != 0) && (pData != NULL))
+	if((len != 0) && (pData != null))
 	{
 		while(len--)
 		{
@@ -324,7 +337,7 @@ uint8_t I2C_1_GetData(uint8_t address, uint8_t *pData, uint8_t len)
 	}
 
 	retVal = 0;
-	if((len != 0) && (pData !=NULL ))
+	if((len != 0) && (pData !=null ))
 	{
 		while(len--)
 		{

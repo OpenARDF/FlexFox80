@@ -78,7 +78,12 @@
 #ifndef SI5351_H_
 #define SI5351_H_
 
-#include <avr/eeprom.h>
+//#include <avr/eeprom.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /********************************************************************************************************************
  *  Notes:
@@ -491,5 +496,9 @@ void dump_registers(void);
 #endif  /* #ifdef DEBUGGING_ONLY */
 
 #endif  /* #ifdef INCLUDE_SI5351_SUPPORT */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  /* SI5351_H_ */

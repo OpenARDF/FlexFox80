@@ -38,6 +38,31 @@ binio::~binio()
 } //~binio
 
 
+void wifi_power(bool state)
+{
+	if(state == ON)
+	{
+		PORTA_set_pin_level(WIFI_ENABLE, HIGH);
+	}
+	else
+	{
+		PORTA_set_pin_level(WIFI_ENABLE, LOW);
+	}
+}
+
+void wifi_reset(bool state)
+{
+	if(state == ON)
+	{
+		PORTA_set_pin_level(WIFI_RESET, LOW);
+	}
+	else
+	{
+		PORTA_set_pin_level(WIFI_RESET, HIGH);
+	}
+}
+
+
 /**
 Handle switch closure interrupts
 */

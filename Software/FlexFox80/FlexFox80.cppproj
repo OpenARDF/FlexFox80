@@ -126,6 +126,7 @@
         <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
         <avrgcc.compiler.optimization.DebugLevel>Default (-g2)</avrgcc.compiler.optimization.DebugLevel>
         <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+        <avrgcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -fno-threadsafe-statics</avrgcc.compiler.miscellaneous.OtherFlags>
         <avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultCharTypeUnsigned>
         <avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcccpp.compiler.general.ChangeDefaultBitFieldUnsigned>
         <avrgcccpp.compiler.symbols.DefSymbols>
@@ -148,6 +149,7 @@
         <avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcccpp.compiler.optimization.AllocateBytesNeededForEnum>
         <avrgcccpp.compiler.optimization.DebugLevel>Default (-g2)</avrgcccpp.compiler.optimization.DebugLevel>
         <avrgcccpp.compiler.warnings.AllWarnings>True</avrgcccpp.compiler.warnings.AllWarnings>
+        <avrgcccpp.compiler.miscellaneous.OtherFlags>-fno-threadsafe-statics</avrgcccpp.compiler.miscellaneous.OtherFlags>
         <avrgcccpp.linker.libraries.Libraries>
           <ListValues>
             <Value>libm</Value>
@@ -204,6 +206,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="include\ds3231.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="include\eeprommanager.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="include\Goertzel.h">
@@ -279,6 +284,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\ds3231.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\eeprommanager.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\Goertzel.cpp">

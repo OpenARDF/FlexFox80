@@ -47,8 +47,8 @@ void serial_Tx(uint8_t rx_char);
 void linkbus_Rx(uint8_t rx_char);
 void linkbus_Tx(uint8_t rx_char);
 
-static bool g_serial_comms_on_USART1 = true;
-
+extern USART_Number_t g_serialbus_usart_number;
+extern USART_Number_t g_linkbus_usart_number;
 
 ISR(TCB2_INT_vect)
 {
@@ -62,11 +62,12 @@ ISR(USART0_RXC_vect)
 {
 	uint8_t rx_char = USART0_get_data();
 	
-	if(g_serial_comms_on_USART1)
+	if(g_linkbus_usart_number == USART_0)
 	{
 		linkbus_Rx(rx_char);
 	}
-	else
+	
+	if(g_serialbus_usart_number == USART_0)
 	{
 		serial_Rx(rx_char);
 	}
@@ -264,7 +265,7 @@ void serial_Rx(uint8_t rx_char)
 */
 ISR(USART0_DRE_vect)
 {
-	if(g_serial_comms_on_USART1)
+	if(g_linkbus_usart_number == USART_0)
 	{
 		static LinkbusTxBuffer* buff = 0;
 		static uint8_t charIndex = 0;
@@ -277,7 +278,7 @@ ISR(USART0_DRE_vect)
 		if((*buff)[charIndex])
 		{
 			/* Put data into buffer, sends the data */
-			USART1.TXDATAL = (*buff)[charIndex++];
+			USART0.TXDATAL = (*buff)[charIndex++];
 		}
 		else
 		{
@@ -290,7 +291,8 @@ ISR(USART0_DRE_vect)
 			}
 		}
 	}
-	else
+	
+	if(g_serialbus_usart_number == USART_0)
 	{
 		static SerialbusTxBuffer* buff = 0;
 		static uint8_t charIndex = 0;
@@ -312,7 +314,7 @@ ISR(USART0_DRE_vect)
 			buff = nextFullSBTxBuffer();
 			if(!buff)
 			{
-				linkbus_end_tx();
+				serialbus_end_tx();
 			}
 		}
 	}
@@ -326,13 +328,14 @@ ISR(USART1_RXC_vect)
 {
 	uint8_t rx_char = USART1_get_data();	
 	
-	if(g_serial_comms_on_USART1)
-	{
-		serial_Rx(rx_char);
-	}
-	else
+	if(g_linkbus_usart_number == USART_1)
 	{
 		linkbus_Rx(rx_char);
+	}
+	
+	if(g_serialbus_usart_number == USART_1)
+	{
+		serial_Rx(rx_char);
 	}
 }
 
@@ -353,7 +356,6 @@ void linkbus_Rx(uint8_t rx_char)
 	if(buff)
 	{
 		rx_char = toupper(rx_char);
-		//		SMCR = 0x00;                                /* exit power-down mode */
 
 		if((rx_char == '$') || (rx_char == '!'))    /* start of new message = $ */
 		{
@@ -443,7 +445,7 @@ void linkbus_Rx(uint8_t rx_char)
 */
 ISR(USART1_DRE_vect)
 {
-	if(g_serial_comms_on_USART1)
+	if(g_serialbus_usart_number == USART_1)
 	{
 		static SerialbusTxBuffer* buff = 0;
 		static uint8_t charIndex = 0;
@@ -456,7 +458,7 @@ ISR(USART1_DRE_vect)
 		if((*buff)[charIndex])
 		{
 			/* Put data into buffer, sends the data */
-			USART0.TXDATAL = (*buff)[charIndex++];
+			USART1.TXDATAL = (*buff)[charIndex++];
 		}
 		else
 		{
@@ -465,11 +467,12 @@ ISR(USART1_DRE_vect)
 			buff = nextFullSBTxBuffer();
 			if(!buff)
 			{
-				linkbus_end_tx();
+				serialbus_end_tx();
 			}
 		}
 	}
-	else
+	
+	if(g_linkbus_usart_number == USART_1)
 	{
 		static LinkbusTxBuffer* buff = 0;
 		static uint8_t charIndex = 0;

@@ -72,6 +72,8 @@
 
 
 void BINIO_init(void);
+void wifi_power(bool state);
+void wifi_reset(bool state);
 
 class binio
 {

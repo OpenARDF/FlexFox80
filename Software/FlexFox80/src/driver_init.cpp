@@ -45,21 +45,15 @@ void system_init()
 	CPUINT_init(); /* Interrupts must also be enabled before timer interrupts will function */
 	BINIO_init();
 
-	// Set pin direction to output
-	LED_set_level(
-	    // <y> Initial level
-	    // <id> pad_initial_level
-	    // <false"> Low
-	    // <true"> High
-	    false);
-
 	LED_set_dir(PORT_DIR_OUT);
+	LED_set_level(OFF);
 
 	SLPCTRL_init();
 	
 	DAC0_init();
 
-	linkbus_init();
+	linkbus_init(LB_BAUD, LINKBUS_USART);
+	serialbus_init(SB_BAUD, SERIALBUS_USART);
 
 	BOD_init();
 }
