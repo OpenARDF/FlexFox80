@@ -166,6 +166,8 @@ uint32_t convertTimeStringToEpoch(char * s)
   return result;
 }
 
+#endif //  DATE_STRING_SUPPORT_ENABLED
+
 /** 
  * Checks a string to see if it contains only numerical characters
  */
@@ -182,5 +184,3 @@ BOOL only_digits(char *s)
 	return( TRUE);
 }
 
-
-#endif //  DATE_STRING_SUPPORT_ENABLED

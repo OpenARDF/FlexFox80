@@ -82,6 +82,8 @@ typedef enum
 	SB_MESSAGE_CODE_SETTINGS = 'S' * 100 + 'E' * 10 + 'T',     /* Set Morse code speeds */
 	SB_MESSAGE_CLOCK = 'C' * 100 + 'L' * 10 + 'K',             /* Set or read the RTC */
 	SB_MESSAGE_PASSWORD = 'P' * 100 + 'W' * 10 + 'D',			/* Password command */
+	SB_MESSAGE_TX_POWER = 'P' * 100 + 'W' * 10 + 'R',			/* Transmit power */
+	SB_MESSAGE_TX_FREQ = 'F' * 100 + 'R' * 10 + 'E',				/* Transmit frequency */
 
 	SB_INVALID_MESSAGE = MAX_UINT16                            /* This value must never overlap a valid message ID */
 } SBMessageID;
@@ -128,7 +130,7 @@ typedef struct
 } SerialbusRxBuffer;
 
 #define WAITING_FOR_UPDATE -1
-#define HELP_TEXT_TXT "\nCommands:\n  CLK [T|S|F [\"YYMMDDhhmmss\"]] - Read/set time/start/finish\n  FOX [fox]- Set fox role\n  ID [callsign] -  Set callsign\n  SYN 0-3 - Synchronize\n  PWD [pwd] - Set DTMF password\n  UTI - Read volts & temp\n  SET S|P [setting] - Set ID code speed or PTT reset\n\0"
+#define HELP_TEXT_TXT (char*)"\nCommands:\n  CLK [T|S|F [\"YYMMDDhhmmss\"]] - Read/set time/start/finish\n  FOX [fox]- Set fox role\n  FRE [frequency] - Set tx frequency\n  PWR [power] - Set transmit power\n  ID [callsign] -  Set callsign\n  SYN 0-3 - Synchronize\n  PWD [pwd] - Set DTMF password\n  UTI - Read volts & temp\n  SET S [setting] - Set ID code speed\n\0"
 
 
 /**

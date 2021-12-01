@@ -43,6 +43,9 @@ struct EE_prom
 	uint8_t id_codespeed;  /* 40 */
 	uint8_t fox_setting;  /* 41 */
 	uint8_t utc_offset; /* 42 */
+	uint32_t frequency; /* 43 */
+	uint32_t rtty_offset; /* 47 */
+	uint16_t rf_power; /* 51 */
 };
 
 typedef enum
@@ -54,7 +57,10 @@ typedef enum
 	UnlockCode = 31,
 	Id_codespeed = 40,
 	Fox_setting = 41,
-	Utc_offset = 42
+	Utc_offset = 42,
+	Frequency = 43,
+	RTTY_offset = 47,
+	RF_Power = 51
 } EE_var_t;
 
 class EepromManager
@@ -71,19 +77,10 @@ EepromManager();
 
 static const struct EE_prom ee_vars;
 
-//void initEEPROMStrings(void);
-void dumpEEPROMVars(void);
 BOOL initializeEEPROMVars(void);
 BOOL readNonVols(void);
-// void send_Help(void);
-void sendEEPROMString(EE_var_t v);
 void updateEEPROMVar(EE_var_t v, void* val);
-// uint16_t readTemperatureTable(int i);
-void resetEEPROMValues(void);
-
-// #if INIT_EEPROM_ONLY
-// 	void sendSuccessString(void);
-// #endif  /* INIT_EEPROM_ONLY */
+void saveAllEEPROM();
 
 protected:
 private:

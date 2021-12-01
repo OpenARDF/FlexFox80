@@ -38,13 +38,13 @@ extern "C" {
 	#endif /* __cplusplus */
 
 	void    I2C_0_Init(void);
-	uint8_t I2C_0_SendData(uint8_t address, uint8_t *pData, uint8_t len); // returns how many bytes have been sent, -1 means NACK at address
-	uint8_t I2C_0_GetData(uint8_t address, uint8_t *pData, uint8_t len); // returns how many bytes have been received, -1 means NACK at address
+	uint8_t I2C_0_SendData(uint8_t slaveAddr, uint8_t regAddr, uint8_t *pData, uint8_t len); // returns how many bytes have been sent, -1 means NACK at address
+	uint8_t I2C_0_GetData(uint8_t slaveAddr, uint8_t regAddr, uint8_t *pData, uint8_t len); // returns how many bytes have been received, -1 means NACK at address
 	void    I2C_0_EndSession(void);
 
 	void    I2C_1_Init(void);
-	uint8_t I2C_1_SendData(uint8_t address, uint8_t *pData, uint8_t len); // returns how many bytes have been sent, -1 means NACK at address
-	uint8_t I2C_1_GetData(uint8_t address, uint8_t *pData, uint8_t len); // returns how many bytes have been received, -1 means NACK at address
+	uint8_t I2C_1_SendData(uint8_t slaveAddr, uint8_t regAddr, uint8_t *pData, uint8_t len); // returns how many bytes have been sent, -1 means NACK at address
+	uint8_t I2C_1_GetData(uint8_t slaveAddr, uint8_t regAddr, uint8_t *pData, uint8_t len); // returns how many bytes have been received, -1 means NACK at address
 	void    I2C_1_EndSession(void);
 
 	#ifdef	__cplusplus

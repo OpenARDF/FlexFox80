@@ -62,6 +62,11 @@ void wifi_reset(bool state)
 	}
 }
 
+bool wifiPresent(void)
+{
+	return(PORTD_get_pin_level(WIFI_MODULE_DETECT));
+}
+
 
 /**
 Handle switch closure interrupts
@@ -179,7 +184,8 @@ void BINIO_init(void)
 	/* PORTD.PIN5 = ACD5 Audio in TX_PA_VOLTAGE */
 	/* PORTD.PIN6 = DAC0 voltage out DAC_OUTPUT */
 	
-	PORTD_set_pin_dir(ADC7, PORT_DIR_OFF); /* Unused */
+	PORTD_set_pin_dir(WIFI_MODULE_DETECT, PORT_DIR_IN); /* Detect presence of Huzzah module */
+	PORTC_set_pin_pull_mode(WIFI_MODULE_DETECT, PORT_PULL_OFF);
 
 	/* PORTE *************************************************************************************/
 	PORTE_set_pin_dir(0, PORT_DIR_OFF); /* Unused */

@@ -26,6 +26,7 @@
 #include "eeprommanager.h"
 #include "serialbus.h"
 #include "i2c.h"
+#include "transmitter.h"
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
 #include <string.h>
@@ -71,6 +72,9 @@ extern volatile time_t g_event_start_epoch;
 extern volatile time_t g_event_finish_epoch;
 extern volatile int8_t g_utc_offset;
 extern uint8_t g_unlockCode[];
+extern uint32_t g_80m_frequency;
+extern uint32_t g_rtty_offset;
+extern uint16_t g_80m_power_level_mW;
 
 extern char g_tempStr[];
 
@@ -112,19 +116,6 @@ void avr_eeprom_write_dword(eeprom_addr_t index, uint32_t in) {
 	_PROTECTED_WRITE_SPM(NVMCTRL.CTRLA, NVMCTRL_CMD_NONE_gc);
 }
 
-// to read
-uint8_t avr_eeprom_read_byte(eeprom_addr_t index) {
-	uint8_t r;
-	r = eeprom_read_byte((uint8_t *)index);
-	return r;
-}
-
-uint8_t avr_eeprom_read_word(eeprom_addr_t index) {
-	uint16_t r;
-	r = eeprom_read_word((uint16_t *)index);
-	return r;
-}
-
 void EepromManager::updateEEPROMVar(EE_var_t v, void* val)
 {
 	if(!val)
@@ -134,6 +125,24 @@ void EepromManager::updateEEPROMVar(EE_var_t v, void* val)
 
 	switch(v)
 	{
+		case Frequency:
+		{
+			avr_eeprom_write_dword(Frequency, *(uint32_t*)val);
+		}
+		break;
+		
+		case RTTY_offset:
+		{
+			avr_eeprom_write_dword(RTTY_offset, *(uint32_t*)val);
+		}
+		break;
+		
+		case RF_Power:
+		{
+			avr_eeprom_write_word(RF_Power, *(uint32_t*)val);			
+		}
+		break;
+		
 		case StationID_text:
 		{
 			char* char_addr = (char*)val;
@@ -213,6 +222,12 @@ void EepromManager::updateEEPROMVar(EE_var_t v, void* val)
 }
 
 
+void EepromManager::saveAllEEPROM(void)
+{
+	// TODO: Save all values that have changed
+}
+
+
 BOOL EepromManager::readNonVols(void)
 {
 	BOOL failure = TRUE;
@@ -244,6 +259,10 @@ BOOL EepromManager::readNonVols(void)
 				break;
 			}
 		}
+		
+		g_80m_frequency = CLAMP(TX_MINIMUM_80M_FREQUENCY, eeprom_read_dword(&(EepromManager::ee_vars.frequency)), TX_MAXIMUM_80M_FREQUENCY);
+		g_rtty_offset =eeprom_read_dword(&(EepromManager::ee_vars.rtty_offset));
+		g_80m_power_level_mW = CLAMP(MIN_RF_POWER_MW, eeprom_read_word(&(EepromManager::ee_vars.rf_power)), MAX_TX_POWER_80M_MW);
 
 		/* Perform sanity checks */
 		if(g_event_start_epoch && (g_event_finish_epoch <= g_event_start_epoch))
@@ -265,23 +284,6 @@ BOOL EepromManager::readNonVols(void)
 		BOOL err = FALSE;
 		uint16_t i, j;
 
-#ifndef ATMEL_STUDIO_7
-			/* Erase full EEPROM */
-			for(i = 0; i < 0x0400; i++)
-			{
-				eeprom_write_byte((uint8_t*)i, 0xFF);
-			}
-
-			for(i = 0; i < 0x0400; i++)
-			{
-				uint8_t x = eeprom_read_byte((const uint8_t*)&i);
-				if(x != 0xFF)
-				{
-					err = TRUE;
-				}
-			}
-#endif  /* !ATMEL_STUDIO_7 */
-
 		uint16_t initialization_flag = eeprom_read_word(0);
 
 		if(initialization_flag != EEPROM_INITIALIZED_FLAG)
@@ -291,8 +293,6 @@ BOOL EepromManager::readNonVols(void)
 
 			g_fox = EEPROM_FOX_SETTING_DEFAULT;
 			avr_eeprom_write_byte(Fox_setting, g_fox);
-
-	//		i2c_init(); /* Needs to happen before reading RTC */
 
 			g_event_start_epoch = EEPROM_START_EPOCH_DEFAULT;
 			avr_eeprom_write_dword(Event_start_epoch, g_event_start_epoch);
@@ -316,6 +316,15 @@ BOOL EepromManager::readNonVols(void)
 
 			avr_eeprom_write_byte(i, 0);
 			g_unlockCode[j] = '\0';
+			
+			g_80m_frequency = EEPROM_TX_80M_FREQUENCY_DEFAULT;
+			avr_eeprom_write_dword(Frequency, g_80m_frequency);
+
+			g_rtty_offset = EEPROM_RTTY_OFFSET_FREQUENCY_DEFAULT;
+			avr_eeprom_write_dword(Frequency, g_80m_frequency);
+
+			g_80m_power_level_mW = EEPROM_TX_80M_POWER_MW_DEFAULT;
+			avr_eeprom_write_dword(RF_Power, g_80m_power_level_mW);
 
 			/* Done */
 
@@ -325,113 +334,3 @@ BOOL EepromManager::readNonVols(void)
 		return(err);
 	}
 
-
-#if INIT_EEPROM_ONLY
-	void EepromManager::sendSuccessString(void)
-	{
-		sendEEPROMString(TextVersion);
-		sendPROGMEMString((const char*)&TEXT_EEPROM_SUCCESS_MESSAGE);
-//		dumpEEPROMVars();
-	}
-
-	void EepromManager::sendPROGMEMString(const char* fl_addr)
-	{
-		if(!sb_enabled())
-		{
-			return;
-		}
-
-		if(fl_addr)
-		{
-			char c = pgm_read_byte(fl_addr++);
-
-			while(c)
-			{
-				sb_echo_char(c);
-				c = pgm_read_byte((fl_addr++));
-
-				while(linkbusTxInProgress())
-				{
-					;
-				}
-			}
-		}
-	}
-
-
-	void EepromManager::dumpEEPROMVars(void)
-	{
-		uint8_t byt;
-		uint16_t wrd;
-		uint32_t dwrd;
-
-		byt = eeprom_read_byte(&(EepromManager::ee_vars.id_codespeed));
-		sprintf(g_tempStr, "CS=%d\n", byt);
-		sb_send_string(g_tempStr);
-
-		byt = eeprom_read_byte(&(EepromManager::ee_vars.fox_setting));
-		sprintf(g_tempStr, "FX=%d\n", byt);
-		sb_send_string(g_tempStr);
-
-		dwrd = eeprom_read_dword(&(EepromManager::ee_vars.event_start_epoch));
-		sprintf(g_tempStr, "SE=%lu\n", dwrd);
-		sb_send_string(g_tempStr);
-
-		dwrd = eeprom_read_dword(&(EepromManager::ee_vars.event_finish_epoch));
-		sprintf(g_tempStr, "FE=%lu\n", dwrd);
-		sb_send_string(g_tempStr);
-
-		byt = eeprom_read_byte(&(EepromManager::ee_vars.utc_offset));
-		sprintf(g_tempStr, "UO=%d\n", (int8_t)byt);
-		sb_send_string(g_tempStr);
-
-		for(int i = 0; i < MAX_PATTERN_TEXT_LENGTH; i++)
-		{
-			g_messages_text[STATION_ID][i] = (char)eeprom_read_byte((uint8_t*)(&(EepromManager::ee_vars.stationID_text[i])));
-			if(!g_messages_text[STATION_ID][i])
-			{
-				break;
-			}
-		}
-
-		sprintf(g_tempStr, "ID=\"%s\"\n", g_messages_text[STATION_ID]);
-		sb_send_string(g_tempStr);
-
-		for(int i = 0; i < MAX_UNLOCK_CODE_LENGTH; i++)
-		{
-			g_unlockCode[i] = eeprom_read_byte((uint8_t*)(&(EepromManager::ee_vars.unlockCode[i])));
-			if(!g_unlockCode[i])
-			{
-				break;
-			}
-		}
-
-		sprintf(g_tempStr, "PW=\"%s\"\n", (char*)g_unlockCode);
-		sb_send_string(g_tempStr);
-		sb_send_NewLine();
-	}
-#endif  /* INIT_EEPROM_ONLY */
-
-void EepromManager::resetEEPROMValues(void)
-{
-	uint8_t i;
-
-	uint8_t *v = (uint8_t*)EEPROM_DTMF_UNLOCK_CODE_DEFAULT;
-	for(i = 0; i < strlen(EEPROM_DTMF_UNLOCK_CODE_DEFAULT); i++)
-	{
-		g_unlockCode[i] = *v;
-		eeprom_write_byte((uint8_t*)&(g_unlockCode[i]), *v++);
-	}
-
-	eeprom_write_byte((uint8_t*)&(EepromManager::ee_vars.unlockCode[i]), 0);
-	g_unlockCode[i] = '\0';
-
-	g_messages_text[STATION_ID][0] = '\0';
-	eeprom_write_byte((uint8_t*)&(EepromManager::ee_vars.stationID_text[0]), 0);
-
-	g_event_start_epoch = EEPROM_START_EPOCH_DEFAULT;
-	eeprom_write_dword((uint32_t*)&(EepromManager::ee_vars.event_start_epoch), g_event_start_epoch);
-
-	g_event_finish_epoch = EEPROM_FINISH_EPOCH_DEFAULT;
-	eeprom_write_dword((uint32_t*)&(EepromManager::ee_vars.event_finish_epoch), g_event_finish_epoch);
-}

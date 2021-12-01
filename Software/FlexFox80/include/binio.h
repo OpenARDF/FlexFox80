@@ -55,7 +55,7 @@
 #define TO_WIFI_RX 0
 
 /* PORTD *************************************************************************************/
-#define ADC7 7
+#define WIFI_MODULE_DETECT 7
 #define DAC_OUTPUT 6
 #define TX_PA_VOLTAGE 5
 #define TX_12_VOLTAGE 4
@@ -74,6 +74,7 @@
 void BINIO_init(void);
 void wifi_power(bool state);
 void wifi_reset(bool state);
+bool wifiPresent(void);
 
 class binio
 {

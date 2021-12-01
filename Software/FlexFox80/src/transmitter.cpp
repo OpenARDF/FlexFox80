@@ -31,30 +31,17 @@
 
 extern volatile AntConnType g_antenna_connect_state;
 
-#ifdef INCLUDE_TRANSMITTER_SUPPORT
+extern volatile BatteryType g_battery_type;
 
-	extern uint8_t g_mod_up;
-	extern uint8_t g_mod_down;
-	extern volatile BatteryType g_battery_type;
+static volatile BOOL g_tx_initialized = FALSE;
+volatile Frequency_Hz g_80m_frequency = EEPROM_TX_80M_FREQUENCY_DEFAULT;
+volatile uint16_t g_80m_power_level_mW = EEPROM_TX_80M_POWER_MW_DEFAULT;
+volatile Frequency_Hz g_rtty_offset = EEPROM_RTTY_OFFSET_FREQUENCY_DEFAULT;
 
-	static volatile BOOL g_tx_initialized = FALSE;
-	static volatile Frequency_Hz g_80m_frequency = DEFAULT_TX_80M_FREQUENCY;
-	static volatile uint16_t g_80m_power_level_mW = DEFAULT_TX_80M_POWER_MW;
-	static volatile Frequency_Hz g_rtty_offset = DEFAULT_RTTY_OFFSET_FREQUENCY;
+static volatile BOOL g_transmitter_keyed = FALSE;
+volatile BOOL g_tx_power_is_zero = TRUE;
 
-	static volatile BOOL g_transmitter_keyed = FALSE;
-	volatile BOOL g_tx_power_is_zero = TRUE;
-
-/* EEPROM Defines */
-#define EEPROM_BAND_DEFAULT 0
-
-	static BOOL EEMEM ee_eeprom_initialization_flag = EEPROM_INITIALIZED_FLAG;
-	static int32_t EEMEM ee_si5351_ref_correction = EEPROM_SI5351_CALIBRATION_DEFAULT;
-
-	static uint32_t EEMEM ee_active_80m_frequency = DEFAULT_TX_80M_FREQUENCY;
-	static uint16_t EEMEM ee_80m_power_level_mW = DEFAULT_TX_80M_POWER_MW;
-	static uint32_t EEMEM ee_cw_offset_frequency = DEFAULT_RTTY_OFFSET_FREQUENCY;
-	static uint8_t EEMEM ee_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
+uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 
 /*
  *       Local Function Prototypes
@@ -85,12 +72,7 @@ extern volatile AntConnType g_antenna_connect_state;
 
 	Frequency_Hz txGetFrequency(void)
 	{
-		if(g_tx_initialized)
-		{
-			return( g_80m_frequency);
-		}
-
-		return( FREQUENCY_NOT_SPECIFIED);
+		return( g_80m_frequency);
 	}
 
 	EC powerToTransmitter(BOOL on)
@@ -131,6 +113,11 @@ extern volatile AntConnType g_antenna_connect_state;
 				}
 			}
 		}
+	}
+
+	uint16_t txGetPowerMw(void)
+	{
+		return( g_80m_power_level_mW);
 	}
 
 	EC __attribute__((optimize("O0"))) txSetParameters(uint16_t* power_mW, BOOL* enableDriverPwr)
@@ -214,8 +201,6 @@ extern volatile AntConnType g_antenna_connect_state;
 			return( code);
 		}
 
-		initializeTransmitterEEPROMVars();
-
 		if((code = txSetParameters(NULL, NULL)))
 		{
 			return( code);
@@ -230,23 +215,23 @@ extern volatile AntConnType g_antenna_connect_state;
 			return( code);
 		}
 
-		if((code = si5351_drive_strength(TX_CLOCK_VHF, SI5351_DRIVE_8MA)))
-		{
-			return( code);
-		}
-		if((code = si5351_clock_enable(TX_CLOCK_VHF, SI5351_CLK_DISABLED)))
-		{
-			return( code);
-		}
-
-		if((code = si5351_drive_strength(TX_CLOCK_VHF_FM, SI5351_DRIVE_8MA)))
-		{
-			return( code);
-		}
-		if((code = si5351_clock_enable(TX_CLOCK_VHF_FM, SI5351_CLK_DISABLED)))
-		{
-			return( code);
-		}
+// 		if((code = si5351_drive_strength(TX_CLOCK_VHF, SI5351_DRIVE_8MA)))
+// 		{
+// 			return( code);
+// 		}
+// 		if((code = si5351_clock_enable(TX_CLOCK_VHF, SI5351_CLK_DISABLED)))
+// 		{
+// 			return( code);
+// 		}
+// 
+// 		if((code = si5351_drive_strength(TX_CLOCK_VHF_FM, SI5351_DRIVE_8MA)))
+// 		{
+// 			return( code);
+// 		}
+// 		if((code = si5351_clock_enable(TX_CLOCK_VHF_FM, SI5351_CLK_DISABLED)))
+// 		{
+// 			return( code);
+// 		}
 
 		uint16_t pwr_mW = g_80m_power_level_mW;
 		txSetFrequency((Frequency_Hz*)&g_80m_frequency, TRUE);
@@ -257,45 +242,6 @@ extern volatile AntConnType g_antenna_connect_state;
 		return( code);
 	}
 
-	void storeTransmitterValues(void)
-	{
-		saveAllTransmitterEEPROM();
-	}
-
-
-	void initializeTransmitterEEPROMVars(void)
-	{
-		if(eeprom_read_byte(&ee_eeprom_initialization_flag) == EEPROM_INITIALIZED_FLAG)
-		{
-			g_80m_frequency = eeprom_read_dword(&ee_active_80m_frequency);
-			g_80m_power_level_mW = eeprom_read_word(&ee_80m_power_level_mW);
-			g_rtty_offset = eeprom_read_dword(&ee_cw_offset_frequency);
-		}
-		else
-		{
-			eeprom_write_byte(&ee_eeprom_initialization_flag, EEPROM_INITIALIZED_FLAG);
-
-			g_80m_frequency = DEFAULT_TX_80M_FREQUENCY;
-			g_80m_power_level_mW = DEFAULT_TX_80M_POWER_MW;
-			g_rtty_offset = DEFAULT_RTTY_OFFSET_FREQUENCY;
-
-			saveAllTransmitterEEPROM();
-		}
-	}
-
-	void saveAllTransmitterEEPROM(void)
-	{
-		uint8_t table[16] = DEFAULT_80M_POWER_TABLE;
-
-		eeprom_update_dword((uint32_t*)&ee_active_80m_frequency, g_80m_frequency);
-		eeprom_update_word(&ee_80m_power_level_mW, g_80m_power_level_mW);
-		eeprom_update_dword((uint32_t*)&ee_cw_offset_frequency, g_rtty_offset);
-		eeprom_update_dword((uint32_t*)&ee_si5351_ref_correction, si5351_get_correction());
-		eeprom_write_block(table, ee_80m_power_table, sizeof(table));
-	}
-
-
-#endif  /*#ifdef INCLUDE_TRANSMITTER_SUPPORT */
 
 EC txMilliwattsToSettings(uint16_t* powerMW, uint8_t* driveLevel, uint8_t* modLevelHigh, uint8_t* modLevelLow)
 {
@@ -308,14 +254,7 @@ EC txMilliwattsToSettings(uint16_t* powerMW, uint8_t* driveLevel, uint8_t* modLe
 		return(ERROR_CODE_SW_LOGIC_ERROR);
 	}
 
-	if(g_battery_type == BATTERY_4r2V)
-	{
-		maxPwr = MAX_TX_POWER_80M_4r2V_MW;
-	}
-	else
-	{
-		maxPwr = MAX_TX_POWER_80M_MW;
-	}
+	maxPwr = MAX_TX_POWER_80M_MW;
 
 	if((int16_t)*powerMW > maxPwr)
 	{
@@ -405,7 +344,7 @@ EC txMilliwattsToSettings(uint16_t* powerMW, uint8_t* driveLevel, uint8_t* modLe
 		*powerMW = 5000;
 	}
 
-	*driveLevel = eeprom_read_byte(&ee_80m_power_table[index]);
+	*driveLevel = g_80m_power_table[index];
 	*modLevelHigh = 0;
 	*modLevelLow = 0;
 	*driveLevel = MIN(*driveLevel, MAX_80M_PWR_SETTING);

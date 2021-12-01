@@ -54,7 +54,7 @@
    #define RTC_AGING                       0x10
    #define RTC_TEMP_MSB                    0x11
    #define RTC_TEMP_LSB                    0x12
-
+   
 #if INCLUDE_DS3231_SUPPORT
 
 #ifdef FOOBAR
@@ -74,6 +74,12 @@ const uint8_t wd(int year, int month, int day)
 #endif
 
 time_t epoch_from_ltm(tm *ltm);
+
+bool ds3231_init()
+{
+	I2C_0_Init();
+	return (!ds3231_responding());
+}
 
 uint8_t bcd2dec(uint8_t val)
 {
@@ -178,8 +184,7 @@ time_t ds3231_get_epoch(EC *result)
 	uint8_t data[7] = { 0, 0, 0, 0, 0, 0, 0 };
 	BOOL res;
 
-	data[0] = RTC_SECONDS;
-	res = (I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, data, 7) != 7);
+	res = (I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS, data, 7) != 7);
 
 	if(!res)
 	{
@@ -254,8 +259,7 @@ time_t ds3231_get_epoch(EC *result)
 	BOOL ds3231_get_temp(int16_t * val)
 	{
 		uint8_t data[2] = { 0, 0 };
-		data[0] = RTC_TEMP_MSB;
-		BOOL result = (I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, data, 2) != 2);
+		BOOL result = (I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_TEMP_MSB, data, 2) != 2);
 
 		if(!result)
 		{
@@ -268,36 +272,57 @@ time_t ds3231_get_epoch(EC *result)
 	}
 
 
+BOOL ds3231_set_date_time_arducon(char *datetime, ClockSetting setting) /* String format "YYMMDDhhmmss" */
+{
+	BOOL failure = TRUE;
+	uint8_t data[7] = { 0, 0, 0, 0, 0, 0, 0 };
+
+	if(datetime)                            
+	{
+		data[0] = char2bcd(&datetime[10]);  /* seconds in BCD */
+		data[1] = char2bcd(&datetime[8]);   /* minutes in BCD */
+		data[2] = char2bcd(&datetime[6]);   /* hours in BCD 24-hour format */
+		/* data[3] =  not used */
+		data[4] = char2bcd(&datetime[4]);   /* day of month in BCD */
+		data[5] = char2bcd(&datetime[2]);   /* month in BCD */
+		data[6] = char2bcd(&datetime[0]);   /* 2-digit year in BCD */
+
+		failure = (I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS+(setting*7), data, 7) != 7);
+	}
+
+	return(failure);
+}
+
+
 void ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-23T18:00:00Z" */
 {
-	uint8_t data[8] = { 0, 0, 0, 1, 0, 0, 0 };
+	uint8_t data[7] = { 0, 0, 0, 1, 0, 0, 0 };
 	int temp, year=2000, month, date;
 
-	data[1] = dateString[18] - '0'; /* seconds */
-	data[1] |= ((dateString[17] - '0') << 4); /*10s of seconds */
-	data[2] = dateString[15] - '0'; /* minutes */
-	data[2] |= ((dateString[14] - '0') << 4); /* 10s of minutes */
-	data[3] = dateString[12] - '0'; /* hours */
-	data[3] |= ((dateString[11] - '0') << 4); /* 10s of hours - sets 24-hour format (not AM/PM) */
-	//data[4] = Skip day of week
-	data[5] = dateString[9] - '0'; /* day of month digit 1 */
+	data[0] = dateString[18] - '0'; /* seconds */
+	data[0] |= ((dateString[17] - '0') << 4); /*10s of seconds */
+	data[1] = dateString[15] - '0'; /* minutes */
+	data[1] |= ((dateString[14] - '0') << 4); /* 10s of minutes */
+	data[2] = dateString[12] - '0'; /* hours */
+	data[2] |= ((dateString[11] - '0') << 4); /* 10s of hours - sets 24-hour format (not AM/PM) */
+	//data[3] = Skip day of week
+	data[4] = dateString[9] - '0'; /* day of month digit 1 */
 	date = data[5];
 	temp = dateString[8] - '0';
 	date += 10*temp;
-	data[5] |= (temp << 4); /* day of month digit 10 */
-	data[6] = dateString[6] - '0'; /* month digit 1 */
+	data[4] |= (temp << 4); /* day of month digit 10 */
+	data[5] = dateString[6] - '0'; /* month digit 1 */
 	month = data[6];
 	temp = dateString[5] - '0';
 	month += 10*temp;
-	data[6] |= (temp << 4 ); /* month digit 10; century=0 */
-	data[7] = dateString[3] - '0'; /* year digit 1 */
+	data[5] |= (temp << 4 ); /* month digit 10; century=0 */
+	data[6] = dateString[3] - '0'; /* year digit 1 */
 	year += data[7];
 	temp = dateString[2] - '0';
 	year += 10*temp;
-	data[7] |= (temp << 4); /* year digit 10 */
+	data[6] |= (temp << 4); /* year digit 10 */
 
-	data[0] = RTC_SECONDS+(setting*7);
-	I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, data, 8);
+	I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS+(setting*7), data, 7);
 }
 
 
@@ -317,8 +342,7 @@ void ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-2
 		BOOL am_pm;
 		BOOL twelvehour;
 
-		data[0] = RTC_SECONDS;
-		if(I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, data, 7) == 7)
+		if(I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS, data, 7) == 7)
 		{
 			second10 = ((data[0] & 0xf0) >> 4);
 			second = (data[0] & 0x0f);
@@ -390,30 +414,27 @@ void ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-2
 	
 	void ds3231_1s_sqw(BOOL enable)
 	{
-		uint8_t data[2];
-		
-		data[0] = RTC_CONTROL;
+		uint8_t data[1];
 		
 		if(enable)
 		{
-			data[1] = 0x00;
-			I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, data, 2);
+			data[0] = 0x00;
+			I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_CONTROL, data, 1);
 		}
 		else
 		{
-			data[1] = 0x04;
-			I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, data, 2);
+			data[0] = 0x04;
+			I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_CONTROL, data, 1);
 		}
 	}
 
 
 	void ds3231_set_aging(int8_t data_in)
 	{
-		int8_t data[2];
+		int8_t data[1];
 		
-		data[0] = RTC_AGING;
-		data[1] = data_in;
-		I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, (uint8_t *)data, 2);
+		data[0] = data_in;
+		I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_AGING, (uint8_t *)data, 1);
 	}
 
 
@@ -421,9 +442,16 @@ void ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-2
 	{
 		int8_t data[1];
 		
-		data[0] = RTC_AGING;
-		I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, (uint8_t *)data, 1);
+		I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_AGING, (uint8_t *)data, 1);
 		return(data[0]);
+	}
+
+	bool ds3231_responding()
+	{
+		bool responseReceived = false;
+		int8_t data[1];		
+		responseReceived = (I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_AGING, (uint8_t *)data, 1) == 1);
+		return(responseReceived);
 	}
 
 
@@ -435,8 +463,7 @@ BOOL ds3231_sync2nearestMinute()
 	BOOL err = FALSE;
 	uint8_t data[8] = { 0, 0, 0 };
 
-	data[0] = RTC_SECONDS;
-	if(I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, (uint8_t *)data, 3) == 3)
+	if(I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS, (uint8_t *)data, 3) == 3)
 	{
 		uint8_t hours;
 		uint8_t minutes;
@@ -480,40 +507,39 @@ BOOL ds3231_sync2nearestMinute()
 
 		if(!err)
 		{
-			data[1] = 0; /* seconds = 00 */
-			data[2] = dec2bcd(minutes);
-			data[3] = 0;
+			data[0] = 0; /* seconds = 00 */
+			data[1] = dec2bcd(minutes);
+			data[2] = 0;
 
 			if(twelvehour)
 			{
-				data[3] |= 0x40; /* set  12-hour bit */
+				data[2] |= 0x40; /* set  12-hour bit */
 
 				if(hours >= 12)
 				{
-					data[3] |= 0x20; /* set pm bit */
+					data[2] |= 0x20; /* set pm bit */
 				}
 
 				if(hours >= 10)
 				{
-					data[3] |= 0x10;
+					data[2] |= 0x10;
 				}
 			}
 			else
 			{
 				if(hours >= 20)
 				{
-					data[3] |= 0x20; /* set 20 bit */
+					data[2] |= 0x20; /* set 20 bit */
 				}
 				else if(hours >= 10)
 				{
-					data[3] |= 0x10; /* set 10 bit */
+					data[2] |= 0x10; /* set 10 bit */
 				}
 			}
 
-			data[3] |= hours % 10;
+			data[2] |= hours % 10;
 			
-			data[0] = RTC_SECONDS;
-			err = (I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, (uint8_t *)data, 4) != 4);
+			err = (I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS, (uint8_t *)data, 4) != 4);
 		}
 	}
 
@@ -523,26 +549,26 @@ BOOL ds3231_sync2nearestMinute()
 /**
  *   Converts an epoch (seconds since 1900)  into a string with format "yymmddhhmmss"
  */
-// #define THIRTY_YEARS 946080000
-// char* convertEpochToTimeString(unsigned long epoch, char* timeString)
-//  {
-//    struct tm  ts;
-//
-//    if(!timeString) return(timeString);
-//
-//    if (epoch < MINIMUM_EPOCH)
-//    {
-//         timeString[0] = '\0';
-// 		return timeString;
-//    }
-//
-//    time_t e = (time_t)epoch - THIRTY_YEARS;
-//    // Format time, "yymmddhhmmss"
-//    ts = *localtime(&e);
-//    strftime(timeString, sizeof(timeString), "%y%m%d%H%M%S", &ts);
-//
-//    return timeString;
-//  }
+#define THIRTY_YEARS 946080000
+char* convertEpochToTimeString(unsigned long epoch, char* timeString)
+ {
+   struct tm  ts;
+
+   if(!timeString) return(timeString);
+
+   if (epoch < MINIMUM_EPOCH)
+   {
+        timeString[0] = '\0';
+		return timeString;
+   }
+
+   time_t e = (time_t)epoch - THIRTY_YEARS;
+   // Format time, "yymmddhhmmss"
+   ts = *localtime(&e);
+   strftime(timeString, sizeof(timeString), "%y%m%d%H%M%S", &ts);
+
+   return timeString;
+ }
 
 
 #endif  /* #ifdef INCLUDE_DS3231_SUPPORT */

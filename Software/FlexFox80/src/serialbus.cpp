@@ -54,8 +54,9 @@ static char g_tempMsgBuff[SERIALBUS_MAX_MSG_LENGTH];
 /* Local function prototypes */
 BOOL serialbus_start_tx(void);
 BOOL serialbus_send_text(char* text);
-static void USART0_initialization(uint32_t baud);
+// static void USART0_initialization(uint32_t baud);
 static void USART1_initialization(uint32_t baud);
+static void USART4_initialization(uint32_t baud);
 
 /* Module global variables */
 static volatile BOOL serialbus_tx_active = FALSE; /* volatile is required to ensure optimizer handles this properly */
@@ -197,7 +198,7 @@ BOOL serialbus_start_tx(void)
 		
 		if(g_serialbus_usart_number == USART_0)
 		{
-			USART0_enable_tx();
+			USART4_enable_tx();
 		}
 		else
 		{
@@ -212,9 +213,9 @@ void serialbus_end_tx(void)
 {
 	if(serialbus_tx_active)
 	{
-		if(g_serialbus_usart_number == USART_0)
+		if(g_serialbus_usart_number == USART_4)
 		{
-			USART0.CTRLA &= ~(1 << USART_DREIE_bp); /* Transmit Data Register Empty Interrupt Enable: disable */
+			USART4.CTRLA &= ~(1 << USART_DREIE_bp); /* Transmit Data Register Empty Interrupt Enable: disable */
 		}
 		else
 		{
@@ -237,19 +238,19 @@ void serialbus_end_tx(void)
 
 
 /* configure the pins and initialize the registers */
-void USART0_initialization(uint32_t baud)
-{
-
-	// Set Rx pin direction to input
-	PA1_set_dir(PORT_DIR_IN);
-	PA1_set_pull_mode(PORT_PULL_OFF);
-
-	// Set Tx pin direction to output
-	PA0_set_dir(PORT_DIR_OUT);
-	PA0_set_level(HIGH);
-
-	USART0_init(baud);
-}
+// void USART0_initialization(uint32_t baud)
+// {
+// 
+// 	// Set Rx pin direction to input
+// 	PA1_set_dir(PORT_DIR_IN);
+// 	PA1_set_pull_mode(PORT_PULL_OFF);
+// 
+// 	// Set Tx pin direction to output
+// 	PA0_set_dir(PORT_DIR_OUT);
+// 	PA0_set_level(HIGH);
+// 
+// 	USART0_init(baud);
+// }
 
 
 /* configure the pins and initialize the registers */
@@ -268,6 +269,22 @@ void USART1_initialization(uint32_t baud)
 }
 
 
+/* configure the pins and initialize the registers */
+void USART4_initialization(uint32_t baud)
+{
+
+	// Set Rx pin direction to input
+	PE1_set_dir(PORT_DIR_IN);
+	PE1_set_pull_mode(PORT_PULL_OFF);
+
+	// Set Tx pin direction to output
+	PE0_set_dir(PORT_DIR_OUT);
+	PE0_set_level(HIGH);
+
+	USART4_init(baud);
+}
+
+
 void serialbus_init(uint32_t baud, USART_Number_t usart)
 {
 	memset(rx_buffer, 0, sizeof(rx_buffer));
@@ -279,9 +296,9 @@ void serialbus_init(uint32_t baud, USART_Number_t usart)
 
 	if((usart != USART_DO_NOT_CHANGE) || (g_serialbus_usart_number == USART_NOT_SET))
 	{
-		if(usart == USART_0)
+		if(usart == USART_4)
 		{
-			USART0_initialization(baud);
+			USART4_initialization(baud);
 		}
 		else
 		{
@@ -300,9 +317,9 @@ void serialbus_disable(void)
 
 	g_bus_disabled = TRUE;
 
-	if(g_serialbus_usart_number == USART_0)
+	if(g_serialbus_usart_number == USART_4)
 	{	
-		USART0_disable();
+		USART4_disable();
 	}
 	else
 	{

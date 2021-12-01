@@ -200,8 +200,8 @@
 	void set_multisynth_registers(Si5351_clock, Union_si5351_regs, uint8_t, uint8_t, BOOL);
 	uint32_t calc_gcd(uint32_t, uint32_t);
 	void reduce_by_gcd(uint32_t *, uint32_t *);
-	BOOL si5351_write_bulk(uint8_t *, uint8_t);
-	BOOL si5351_read_bulk(uint8_t *, uint8_t);
+	BOOL si5351_write_bulk(uint8_t, uint8_t *, uint8_t);
+	BOOL si5351_read_bulk(uint8_t, uint8_t *, uint8_t);
 	void set_integer_mode(Si5351_clock, BOOL);
 	void ms_div(Si5351_clock, uint8_t, BOOL);
 
@@ -210,9 +210,12 @@
 		BOOL si5351_read_int_status(Si5351IntStatus *);
 #endif
 
+bool g_si5351_initialized = false;
+
 /*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 /* Public functions */
 /*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
+BOOL err = FALSE;
 
 /*
  * init(Si5351_Xtal_load_pF xtal_load_c, Frequency_Hz ref_osc_freq)
@@ -226,7 +229,7 @@
  */
 	BOOL si5351_init(Si5351_Xtal_load_pF xtal_load_c, Frequency_Hz ref_osc_freq)
 	{
-		BOOL err = FALSE;
+//		static BOOL err = FALSE;
 		uint8_t data[2];
 		
 #ifndef DEBUG_WITHOUT_I2C
@@ -246,26 +249,22 @@
 
 		/* Disable Outputs */
 		/* Set CLKx_DIS high; Reg. 3 = 0xFF */
-		data[0] = 3;
-		data[1] = 0xff;
-		err = si5351_write_bulk(data, 2);
-
+		data[0] = 0xFF;
+		err = si5351_write_bulk(0x03, data, 1);
+		
+		if(err) return err;
 		/* Power down clocks */
-		data[0] = 16;
-		data[1] = 0xCC;
-		err |= si5351_write_bulk(data, 2);
-		data[0] = 17;
-		err |= si5351_write_bulk(data, 2);
-		data[0] = 18;
-		err |= si5351_write_bulk(data, 2);
+		data[0] = 0xCC;
+		err |= si5351_write_bulk(0x10, data, 1);
+		err |= si5351_write_bulk(0x11, data, 1);
+		err |= si5351_write_bulk(0x12, data, 1);
 
 		/* Set crystal load capacitance */
 		reg_val = 0x12; /* 0b010010 reserved value bits */
 		reg_val |= xtal_load_c;
 
-		data[0] = SI5351_CRYSTAL_LOAD;
-		data[1] = reg_val;
-		err |= si5351_write_bulk(data, 2);
+		data[0] = reg_val;
+		err |= si5351_write_bulk(SI5351_CRYSTAL_LOAD, data, 1);
 
 		if(!ref_osc_freq)
 		{
@@ -275,8 +274,7 @@
 		/* Change the ref osc freq if different from default */
 		if(ref_osc_freq != xtal_freq)
 		{
-			data[0] = SI5351_PLL_INPUT_SOURCE;
-			if(si5351_read_bulk(data, 1))
+			if(si5351_read_bulk(SI5351_PLL_INPUT_SOURCE, data, 1))
 			{
 				return TRUE;
 			}
@@ -305,10 +303,11 @@
 
 #endif  /* #ifndef DIVIDE_XTAL_FREQ_IF_NEEDED */
 
-			data[0] = SI5351_PLL_INPUT_SOURCE;
-			data[1] = reg_val;
-			err |= si5351_write_bulk(data, 2);
+			data[0] = reg_val;
+			err |= si5351_write_bulk(SI5351_PLL_INPUT_SOURCE, data, 1);
 		}
+		
+		g_si5351_initialized = !err;
 
 		return err;
 	}
@@ -339,6 +338,7 @@
 #ifdef DEBUGGING_ONLY
 			uint32_t div = 0;
 #endif
+		if(!g_si5351_initialized) return(true);
 
 #ifdef DO_BOUNDS_CHECKING
 			if(freq_Fout < SI5351_CLKOUT_MIN_FREQ)
@@ -381,9 +381,8 @@
 
 				/* Block 1: Disable Outputs */
 				/* Set CLKx_DIS high; Reg. 3 = 0xFF */
-// 				data[0] = 3;
-// 				data[1] = ~enabledClocksMask | 0xF9;
-/*			si5351_write_bulk(data, 2); // only disable CLK0 */
+// 				data[0] = ~enabledClocksMask | 0xF9;
+/*			si5351_write_bulk(0x03, data, 1); // only disable CLK0 */
 
 				target_pll = SI5351_PLLA;
 				clock_out[SI5351_CLK0] = freq_Fout; /* store the value for reference */
@@ -400,9 +399,8 @@
 
 				/* Block 1: Disable Outputs */
 				/* Set CLKx_DIS high; Reg. 3 = 0xFF */
- 				data[0] = 3;
- 				data[1] = ~enabledClocksMask | 0xFA;
-				si5351_write_bulk(data, 2); /* only disable CLK1 */
+ 				data[0] = ~enabledClocksMask | 0xFA;
+				si5351_write_bulk(0x03, data, 1); /* only disable CLK1 */
 
 				target_pll = SI5351_PLLB;
 				clock_out[SI5351_CLK1] = freq_Fout;         /* store the value for reference */
@@ -419,9 +417,8 @@
 
 				/* Block 1: Disable Outputs */
 				/* Set CLKx_DIS high; Reg. 3 = 0xFF */
- 				data[0] = 3;
- 				data[1] = ~enabledClocksMask | 0xFC; /* only disable CLK2 */
- 				si5351_write_bulk(data, 2); /* only disable CLK1 */
+ 				data[0] = ~enabledClocksMask | 0xFC; /* only disable CLK2 */
+ 				si5351_write_bulk(0x03, data, 1); /* only disable CLK1 */
 
 				target_pll = SI5351_PLLB;
 				clock_out[SI5351_CLK2] = freq_Fout;         /* store the value for reference */
@@ -445,9 +442,8 @@
 		/* Block 2: */
 		/* Power down all output drivers */
 		/* Reg. 16, 17, 18, 19, 20, 21, 22, 23 = 0x80 */
-//  	data[0] = clock_ctrl_addr;
-//  	data[1] = 0xCC; /* only disable CLK2 */
-/*	si5351_write_bulk(data, 2); // power down only clock being set, leaving that clock configured as follows: */
+//  	data[0] = 0xCC; /* only disable CLK2 */
+/*	si5351_write_bulk(clock_ctrl_addr, data, 1); // power down only clock being set, leaving that clock configured as follows: */
 		/*   o Drive strength = 2 mA */
 		/*   o Input source = multisynth */
 		/*   o Output clock not inverted */
@@ -519,23 +515,20 @@
 		/* (see Register 3) */
 		if(clocksOff)
 		{
- 			data[0] = 3;
- 			data[1] = enabledClocksMask;
-			si5351_write_bulk(data, 2);    /* disable clock(s) in use */
+ 			data[0] = enabledClocksMask;
+			si5351_write_bulk(0x03, data, 1);    /* disable clock(s) in use */
 		}
 		else
 		{
- 			data[0] = 3;
- 			data[1] = ~enabledClocksMask;
- 			si5351_write_bulk(data, 2);  /* only enable clock(s) in use */
+ 			data[0] = ~enabledClocksMask;
+ 			si5351_write_bulk(0x03, data, 1);  /* only enable clock(s) in use */
 		}
 
 		/* power up the clock */
 		if(target_pll == SI5351_PLLA)
 		{
- 			data[0] = clock_ctrl_addr;
- 			data[1] = 0x4C;
- 			si5351_write_bulk(data, 2);  /* power up only clock being set, leaving that clock configured as follows: */
+ 			data[0] = 0x4C;
+ 			si5351_write_bulk(clock_ctrl_addr, data, 1);  /* power up only clock being set, leaving that clock configured as follows: */
 			/*   o Drive strength = 2 mA */
 			/*   o Input source = multisynth */
 			/*   o Output clock not inverted */
@@ -547,9 +540,8 @@
 		{
 			if(int_mode)
 			{
- 				data[0] = clock_ctrl_addr;
- 				data[1] = 0x6C;
- 				si5351_write_bulk(data, 2);  /* power up only clock being set, leaving that clock configured as follows: */
+ 				data[0] = 0x6C;
+ 				si5351_write_bulk(clock_ctrl_addr, data, 1);  /* power up only clock being set, leaving that clock configured as follows: */
 				/*   o Drive strength = 2 mA */
 				/*   o Input source = multisynth */
 				/*   o Output clock not inverted */
@@ -559,9 +551,8 @@
 			}
 			else
 			{
- 				data[0] = clock_ctrl_addr;
- 				data[1] = 0x2C;
- 				si5351_write_bulk(data, 2);  /* power up only clock being set, leaving that clock configured as follows: */
+ 				data[0] = 0x2C;
+ 				si5351_write_bulk(clock_ctrl_addr, data, 1);  /* power up only clock being set, leaving that clock configured as follows: */
 				/*   o Drive strength = 2 mA */
 				/*   o Input source = multisynth */
 				/*   o Output clock not inverted */
@@ -609,9 +600,7 @@
 		uint8_t reg_val;
 		uint8_t data[2];
 		
-		data[0] = SI5351_OUTPUT_ENABLE_CTRL;
-
-		if(si5351_read_bulk(data, 1)) 
+		if(si5351_read_bulk(SI5351_OUTPUT_ENABLE_CTRL, data, 1)) 
 		{
 			return ERROR_CODE_RTC_NONRESPONSIVE;
 		}
@@ -627,14 +616,14 @@
 			reg_val |= (1 << (uint8_t)clk);
 		}
 
-		data[0] = SI5351_OUTPUT_ENABLE_CTRL;
-		data[1] = reg_val;
-		if(si5351_write_bulk(data, 2)) return ERROR_CODE_RTC_NONRESPONSIVE;
+		data[0] = reg_val;
+		if(si5351_write_bulk(SI5351_OUTPUT_ENABLE_CTRL, data, 1)) return ERROR_CODE_RTC_NONRESPONSIVE;
 
 		return ERROR_CODE_NO_ERROR;
 	}
-
-
+	
+	
+	
 /*
  * si5351_drive_strength(Si5351_clock clk, Si5351_drive drive)
  *
@@ -650,8 +639,7 @@
 		uint8_t data[2];
 		const uint8_t mask = 0x03;
 
-		data[0] = SI5351_CLK0_CTRL + (uint8_t)clk;
-		if(si5351_read_bulk(data, 1))
+		if(si5351_read_bulk(SI5351_CLK0_CTRL + (uint8_t)clk, data, 1))
 		{
 			return ERROR_CODE_CLKGEN_NONRESPONSIVE;
 		}
@@ -694,9 +682,8 @@
 			break;
 		}
 
-		data[0] = SI5351_CLK0_CTRL + (uint8_t)clk;
-		data[1] = reg_val;
-		if(si5351_write_bulk(data, 2)) return ERROR_CODE_CLKGEN_NONRESPONSIVE;
+		data[0] = reg_val;
+		if(si5351_write_bulk(SI5351_CLK0_CTRL + (uint8_t)clk, data, 1)) return ERROR_CODE_CLKGEN_NONRESPONSIVE;
 
 		return ERROR_CODE_NO_ERROR;
 	}
@@ -715,20 +702,18 @@
  */
 	void pll_reset(Si5351_pll target_pll)
 	{
-		uint8_t data[2];
-		
-		data[0] = SI5351_PLL_RESET;
+		uint8_t data[1];
 		
 		if(target_pll & SI5351_PLLA)
 		{
-			data[1] = SI5351_PLL_RESET_A;
-			si5351_write_bulk(data, 2);
+			data[0] = SI5351_PLL_RESET_A;
+			si5351_write_bulk(SI5351_PLL_RESET, data, 1);
 		}
 
 		if(target_pll & SI5351_PLLB)
 		{
-			data[1] = SI5351_PLL_RESET_B;
-			si5351_write_bulk(data, 2);
+			data[0] = SI5351_PLL_RESET_B;
+			si5351_write_bulk(SI5351_PLL_RESET, data, 1);
 		}
 	}
 
@@ -825,7 +810,7 @@
 		/* Derive the register values to write */
 
 		/* Prepare an array for parameters to be written to */
-		uint8_t i = 1;
+		uint8_t i = 0;
 
 		/* Registers 26-27 */
 		params[i++] = pll_reg.reg.p3_1;
@@ -849,13 +834,11 @@
 		/* Write the parameters */
 		if(target_pll == SI5351_PLLA)
 		{
-			params[0] = SI5351_PLLA_PARAMETERS;
-			si5351_write_bulk(params, i);
+			si5351_write_bulk(SI5351_PLLA_PARAMETERS, params, i);
 		}
 		else    /* if(target_pll == SI5351_PLLB) */
 		{
-			params[0] = SI5351_PLLB_PARAMETERS;
-			si5351_write_bulk(params, i);
+			si5351_write_bulk(SI5351_PLLB_PARAMETERS, params, i);
 		}
 
 #ifdef DEBUGGING_ONLY
@@ -1218,14 +1201,14 @@
 	}
 
 
-	BOOL si5351_write_bulk(uint8_t *data, uint8_t bytes)
+	BOOL si5351_write_bulk(uint8_t regAddr, uint8_t *data, uint8_t bytes)
 	{
-		return( I2C_1_SendData(SI5351_I2C_SLAVE_ADDR, data, bytes) != bytes);
+		return( I2C_1_SendData(SI5351_I2C_SLAVE_ADDR, regAddr, data, bytes) != bytes);
 	}
 
-	BOOL si5351_read_bulk(uint8_t *data, uint8_t bytes)
+	BOOL si5351_read_bulk(uint8_t regAddr, uint8_t *data, uint8_t bytes)
 	{
-		return( I2C_1_GetData(SI5351_I2C_SLAVE_ADDR, data, bytes) != bytes);
+		return( I2C_1_GetData(SI5351_I2C_SLAVE_ADDR, regAddr, data, bytes) != bytes);
 	}
 
 
@@ -1235,8 +1218,7 @@
 			uint8_t reg_val = 0;
 			uint8_t data[2];
 
-			data[0] = SI5351_DEVICE_STATUS;
-			if(si5351_read_bulk(data, 1))
+			if(si5351_read_bulk(SI5351_DEVICE_STATUS, data, 1))
 			{
 				return(TRUE);
 			}
@@ -1259,9 +1241,7 @@
 			uint8_t reg_val = 0;
 			uint8_t data[2];
 
-			data[0] = SI5351_DEVICE_STATUS;
-			
-			if(si5351_read_bulk(data, 1))
+			if(si5351_read_bulk(SI5351_DEVICE_STATUS, data, 1))
 			{
 				return(TRUE);
 			}
@@ -1293,9 +1273,7 @@
 		uint8_t reg_val;
 		uint8_t data[2];
 		
-		data[0] = SI5351_CLK0_CTRL + (uint8_t)clk;
-
-		if(si5351_read_bulk(data, 1))
+		if(si5351_read_bulk(SI5351_CLK0_CTRL + (uint8_t)clk, data, 1))
 		{
 			return;
 		}
@@ -1311,9 +1289,8 @@
 			reg_val |= SI5351_CLK_PLL_SELECT;
 		}
 
-		data[0] = SI5351_CLK0_CTRL + (uint8_t)clk;
-		data[1] = reg_val;
-		si5351_write_bulk(data, 2);
+		data[0] = reg_val;
+		si5351_write_bulk(SI5351_CLK0_CTRL + (uint8_t)clk, data, 1);
 	}
 
 
@@ -1331,7 +1308,7 @@
 	void set_multisynth_registers(Si5351_clock clk, Union_si5351_regs ms_reg, BOOL int_mode, uint8_t r_div, BOOL div_by_4)
 	{
 		uint8_t params[11];
-		uint8_t i = 1;
+		uint8_t i = 0;
 		uint8_t reg_val;
 		uint8_t data[2];
 
@@ -1339,9 +1316,8 @@
 		params[i++] = ms_reg.reg.p3_1;
 		params[i++] = ms_reg.reg.p3_0;
 
-		data[0] = (SI5351_CLK0_PARAMETERS + 2) + (clk * 8);
 		/* Register 44 for CLK0; 52 for CLK1 */
-		if(si5351_read_bulk(data, 1))
+		if(si5351_read_bulk((SI5351_CLK0_PARAMETERS + 2) + (clk * 8), data, 1))
 		{
 			return;
 		}
@@ -1368,22 +1344,19 @@
 		{
 			case SI5351_CLK0:
 			{
-				params[0] = SI5351_CLK0_PARAMETERS;
-				si5351_write_bulk(params, i);
+				si5351_write_bulk(SI5351_CLK0_PARAMETERS, params, i);
 			}
 			break;
 
 			case SI5351_CLK1:
 			{
-				params[0] = SI5351_CLK1_PARAMETERS;
-				si5351_write_bulk(params, i);
+				si5351_write_bulk(SI5351_CLK1_PARAMETERS, params, i);
 			}
 			break;
 
 			case SI5351_CLK2:
 			{
-				params[0] = SI5351_CLK2_PARAMETERS;
-				si5351_write_bulk(params, i);
+				si5351_write_bulk(SI5351_CLK2_PARAMETERS, params, i);
 			}
 			break;
 
@@ -1411,8 +1384,7 @@
 		uint8_t reg_val;
 		uint8_t data[2];
 
-		data[0] = SI5351_CLK0_CTRL + (uint8_t)clk;
-		if(si5351_read_bulk(data, 1))
+		if(si5351_read_bulk(SI5351_CLK0_CTRL + (uint8_t)clk, data, 1))
 		{
 			return;
 		}
@@ -1428,9 +1400,8 @@
 			reg_val &= ~(SI5351_CLK_INTEGER_MODE);
 		}
 
-		data[0] = SI5351_CLK0_CTRL + (uint8_t)clk;
-		data[1] = reg_val;
-		si5351_write_bulk(data, 2);
+		data[0] = reg_val;
+		si5351_write_bulk(SI5351_CLK0_CTRL + (uint8_t)clk, data, 1);
 	}
 
 
@@ -1463,9 +1434,7 @@
 				return;
 		}
 
-		data[0] = reg_addr;
-		
-		if(si5351_read_bulk(data, 1))
+		if(si5351_read_bulk(reg_addr, data, 1))
 		{
 			return;
 		}
@@ -1486,9 +1455,8 @@
 
 		reg_val |= (r_div << SI5351_OUTPUT_CLK_DIV_SHIFT);
 
-		data[0] = reg_addr;
-		data[1] = reg_val;
-		si5351_write_bulk(data, 2);
+		data[0] = reg_val;
+		si5351_write_bulk(reg_addr, data, 1);
 	}
 
 #endif  /* #ifdef INCLUDE_SI5351_SUPPORT */

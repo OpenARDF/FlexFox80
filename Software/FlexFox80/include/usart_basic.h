@@ -94,6 +94,32 @@ uint8_t USART1_read(void);
 
 void USART1_write(const uint8_t data);
 
+/* Normal Mode, Baud register value */
+#define USART4_BAUD_RATE(BAUD_RATE) ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
+
+int8_t USART4_init(uint32_t baud);
+
+void USART4_enable();
+
+void USART4_enable_rx();
+
+void USART4_enable_tx();
+
+void USART4_disable();
+
+uint8_t USART4_get_data();
+
+bool USART4_is_tx_ready();
+
+bool USART4_is_rx_ready();
+
+bool USART4_is_tx_busy();
+
+uint8_t USART4_read(void);
+
+void USART4_write(const uint8_t data);
+
+
 #ifdef __cplusplus
 }
 #endif

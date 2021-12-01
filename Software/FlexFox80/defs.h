@@ -46,7 +46,6 @@
  * Include only the necessary hardware support */
    #define INCLUDE_SI5351_SUPPORT TRUE // Silicon Labs Programmable Clock
    #define INCLUDE_DS3231_SUPPORT TRUE // Maxim RTC
-   #define INCLUDE_TRANSMITTER_SUPPORT
 //   #define INCLUDE_DAC081C085_SUPPORT
 //   #define ENABLE_PIN_CHANGE_INTERRUPT_0
 //   #define ENABLE_PIN_CHANGE_INTERRUPT_1
@@ -58,6 +57,8 @@
 
 //   #define AM_DAC DAC081C_I2C_SLAVE_ADDR_A1
 //   #define BIAS_POT MCP4552_I2C_SLAVE_ADDR_A0
+
+	#define DATE_STRING_SUPPORT_ENABLED
 
 /*******************************************************/
 /* Error Codes                                                                   */
@@ -233,22 +234,40 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 #define EEPROM_BATTERY_EMPTY_MV 3430
 #define MAX_UNLOCK_CODE_LENGTH 8
 #define EEPROM_DTMF_UNLOCK_CODE_DEFAULT "1357"
-#define MIN_CODE_SPEED_WPM 5
-#define MAX_CODE_SPEED_WPM 20
-#define SECONDS_24H 86400
+#define MIN_UNLOCK_CODE_LENGTH 4
+#define MIN_CODE_SPEED_WPM (uint8_t)5
+#define MAX_CODE_SPEED_WPM (uint8_t)20
+#define MAX_RF_POWER_MW (uint16_t)5000
+#define MIN_RF_POWER_MW (uint16_t)0
 #define EEPROM_START_EPOCH_DEFAULT 0
 #define EEPROM_FINISH_EPOCH_DEFAULT 0
 #define EEPROM_UTC_OFFSET_DEFAULT 0
 #define EEPROM_FOX_SETTING_DEFAULT FOX_1
-#define TEXT_SET_TIME_TXT "CLK T YYMMDDhhmmss <- Set current time\n"
-#define TEXT_SET_START_TXT "CLK S YYMMDDhhmmss <- Set start time\n"
-#define TEXT_SET_FINISH_TXT "CLK F YYMMDDhhmmss <- Set finish time\n"
-#define TEXT_SET_ID_TXT "ID [\"callsign\"] <- Set callsign\n"
-#define TEXT_ERR_FINISH_BEFORE_START_TXT "Err: Finish before start!\n"
-#define TEXT_ERR_FINISH_IN_PAST_TXT "Err: Finish in past!\n"
-#define TEXT_ERR_START_IN_PAST_TXT "Err: Start in past!\n"
-#define TEXT_ERR_INVALID_TIME_TXT "Err: Invalid time!\n"
-#define TEXT_ERR_TIME_IN_PAST_TXT "Err: Time in past!\n"
+#define TEXT_SET_TIME_TXT (char*)"CLK T YYMMDDhhmmss <- Set current time\n"
+#define TEXT_SET_START_TXT (char*)"CLK S YYMMDDhhmmss <- Set start time\n"
+#define TEXT_SET_FINISH_TXT (char*)"CLK F YYMMDDhhmmss <- Set finish time\n"
+#define TEXT_SET_ID_TXT (char*)"ID [\"callsign\"] <- Set callsign\n"
+#define TEXT_ERR_FINISH_BEFORE_START_TXT (char*)"Err: Finish before start!\n"
+#define TEXT_ERR_FINISH_IN_PAST_TXT (char*)"Err: Finish in past!\n"
+#define TEXT_ERR_START_IN_PAST_TXT (char*)"Err: Start in past!\n"
+#define TEXT_ERR_INVALID_TIME_TXT (char*)"Err: Invalid time!\n"
+#define TEXT_ERR_TIME_IN_PAST_TXT (char*)"Err: Time in past!\n"
+#define TEXT_RTC_NOT_RESPONDING_TXT (char*)"Error: No response from clock hardware\n"
+#define TEXT_TX_NOT_RESPONDING_TXT (char*)"Error: No response from transmit hardware\n"
+#define TEXT_WIFI_NOT_DETECTED_TXT (char*)"Warning: WiFi hardware not detected\n"
+#define MINIMUM_EPOCH ((time_t)1609459200)  /* 1 Jan 2021 00:00:00 */
+#define SECONDS_24H 86400
+
+typedef enum
+{
+	NULL_CONFIG,
+	WAITING_FOR_START,
+	CONFIGURATION_ERROR,
+	SCHEDULED_EVENT_DID_NOT_START,
+	SCHEDULED_EVENT_WILL_NEVER_RUN,
+	EVENT_IN_PROGRESS
+} ConfigurationState_t;
+
 
 
 /******************************************************

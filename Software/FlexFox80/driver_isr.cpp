@@ -73,6 +73,21 @@ ISR(USART0_RXC_vect)
 	}
 }
 
+ISR(USART4_RXC_vect)
+{
+	uint8_t rx_char = USART4_get_data();
+	
+	if(g_linkbus_usart_number == USART_4)
+	{
+		linkbus_Rx(rx_char);
+	}
+	
+	if(g_serialbus_usart_number == USART_4)
+	{
+		serial_Rx(rx_char);
+	}
+}
+
 void serial_Rx(uint8_t rx_char)
 {
 	static char textBuff[SERIALBUS_MAX_MSG_LENGTH];
@@ -306,6 +321,67 @@ ISR(USART0_DRE_vect)
 		{
 			/* Put data into buffer, sends the data */
 			USART0.TXDATAL = (*buff)[charIndex++];
+		}
+		else
+		{
+			charIndex = 0;
+			(*buff)[0] = '\0';
+			buff = nextFullSBTxBuffer();
+			if(!buff)
+			{
+				serialbus_end_tx();
+			}
+		}
+	}
+}
+
+
+/**
+
+*/
+ISR(USART4_DRE_vect)
+{
+	if(g_linkbus_usart_number == USART_4)
+	{
+		static LinkbusTxBuffer* buff = 0;
+		static uint8_t charIndex = 0;
+
+		if(!buff)
+		{
+			buff = nextFullLBTxBuffer();
+		}
+
+		if((*buff)[charIndex])
+		{
+			/* Put data into buffer, sends the data */
+			USART4.TXDATAL = (*buff)[charIndex++];
+		}
+		else
+		{
+			charIndex = 0;
+			(*buff)[0] = '\0';
+			buff = nextFullLBTxBuffer();
+			if(!buff)
+			{
+				linkbus_end_tx();
+			}
+		}
+	}
+	
+	if(g_serialbus_usart_number == USART_4)
+	{
+		static SerialbusTxBuffer* buff = 0;
+		static uint8_t charIndex = 0;
+
+		if(!buff)
+		{
+			buff = nextFullSBTxBuffer();
+		}
+
+		if((*buff)[charIndex])
+		{
+			/* Put data into buffer, sends the data */
+			USART4.TXDATAL = (*buff)[charIndex++];
 		}
 		else
 		{

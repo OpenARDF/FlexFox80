@@ -40,7 +40,6 @@
 #include "defs.h"
 #include <time.h>
 
-
 typedef enum {
 	RTC_CLOCK,
 	RTC_ALARM1,
@@ -63,10 +62,29 @@ extern "C" {
 void ds3231_read_date_time(int32_t* val, char* buffer, TimeFormat format);
 #endif // DATE_STRING_SUPPORT_ENABLED
 
+/** 
+ *
+ */
+bool ds3231_init(void);
+
+/**
+ *  Reads a value from a DS3231 register. Returns true if there was a response.
+ */
+bool ds3231_responding(void);
+
+
 /**
  *  Reads time from the DS3231 and returns the epoch
  */
 time_t ds3231_get_epoch(EC *result);
+
+
+/**
+ *  Set year, month, date, day, hours, minutes and seconds of the DS3231 to the time passed in the argument.
+ * dateString has the format YYMMDDhhmmss
+ * ClockSetting setting = clock or alarm to be set
+ */
+BOOL ds3231_set_date_time_arducon(char *datetime, ClockSetting setting);
 
 
 /**
@@ -87,6 +105,11 @@ time_t ds3231_get_epoch(EC *result);
 
 
 /**
+ *  Sets seconds to zero and updates minutes and hours appropriately
+ */
+BOOL ds3231_sync2nearestMinute(void);
+
+/**
  *
  */
 	BOOL ds3231_get_temp(int16_t * val);
@@ -105,6 +128,13 @@ time_t ds3231_get_epoch(EC *result);
  *
  */
 	int8_t ds3231_get_aging(void);
+
+time_t RTC_String2Epoch(bool *error, char *datetime);
+
+/**
+ *   Converts an epoch (seconds since 1900)  into a string with format "yymmddhhmmss"
+ */
+char* convertEpochToTimeString(unsigned long epoch, char* timeString);
 
 
 #ifdef __cplusplus

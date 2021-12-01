@@ -24,6 +24,7 @@ src/eeprommanager.d src/eeprommanager.o: ../src/eeprommanager.cpp \
  ../utils/compiler.h ../include/atmel_start_pins.h ../include/clkctrl.h \
  ../include/slpctrl.h ../include/cpuint.h ../include/tcb.h \
  ../include/bod.h ../include/atmel_start_pins.h ../include/i2c.h \
+ ../include/transmitter.h ../include/si5351.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\pgmspace.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\eeprom.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\string.h \
@@ -102,6 +103,10 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\
 ../include/atmel_start_pins.h:
 
 ../include/i2c.h:
+
+../include/transmitter.h:
+
+../include/si5351.h:
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\pgmspace.h:
 
