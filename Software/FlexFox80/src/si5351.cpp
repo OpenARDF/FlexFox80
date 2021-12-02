@@ -192,18 +192,18 @@
 #ifdef DEBUGGING_ONLY
 		uint32_t set_pll(Frequency_Hz, Si5351_pll);
 #else
-		void set_pll(Frequency_Hz, Si5351_pll);
+		bool set_pll(Frequency_Hz, Si5351_pll);
 #endif
 
 	Frequency_Hz multisynth_estimate(Frequency_Hz freq_Fout, Union_si5351_regs *reg, BOOL *int_mode, BOOL *divBy4);
-	void set_multisynth_registers_source(Si5351_clock, Si5351_pll);
-	void set_multisynth_registers(Si5351_clock, Union_si5351_regs, uint8_t, uint8_t, BOOL);
+	bool set_multisynth_registers_source(Si5351_clock, Si5351_pll);
+	bool set_multisynth_registers(Si5351_clock, Union_si5351_regs, uint8_t, uint8_t, BOOL);
 	uint32_t calc_gcd(uint32_t, uint32_t);
 	void reduce_by_gcd(uint32_t *, uint32_t *);
 	BOOL si5351_write_bulk(uint8_t, uint8_t *, uint8_t);
 	BOOL si5351_read_bulk(uint8_t, uint8_t *, uint8_t);
-	void set_integer_mode(Si5351_clock, BOOL);
-	void ms_div(Si5351_clock, uint8_t, BOOL);
+	bool set_integer_mode(Si5351_clock, BOOL);
+	bool ms_div(Si5351_clock, uint8_t, BOOL);
 
 #ifdef SUPPORT_STATUS_READS
 		BOOL si5351_read_sys_status(Si5351Status *);
@@ -400,7 +400,10 @@ BOOL err = FALSE;
 				/* Block 1: Disable Outputs */
 				/* Set CLKx_DIS high; Reg. 3 = 0xFF */
  				data[0] = ~enabledClocksMask | 0xFA;
-				si5351_write_bulk(0x03, data, 1); /* only disable CLK1 */
+				if(si5351_write_bulk(0x03, data, 1)) /* only disable CLK1 */
+				{
+					return true;
+				} 
 
 				target_pll = SI5351_PLLB;
 				clock_out[SI5351_CLK1] = freq_Fout;         /* store the value for reference */
@@ -418,7 +421,10 @@ BOOL err = FALSE;
 				/* Block 1: Disable Outputs */
 				/* Set CLKx_DIS high; Reg. 3 = 0xFF */
  				data[0] = ~enabledClocksMask | 0xFC; /* only disable CLK2 */
- 				si5351_write_bulk(0x03, data, 1); /* only disable CLK1 */
+ 				if(si5351_write_bulk(0x03, data, 1)) /* only disable CLK1 */
+				{
+					return true;
+				} 
 
 				target_pll = SI5351_PLLB;
 				clock_out[SI5351_CLK2] = freq_Fout;         /* store the value for reference */
@@ -486,8 +492,15 @@ BOOL err = FALSE;
 		}
 
 		/* Set multisynth registers (MS must be set before PLL) */
-		set_multisynth_registers_source(clk, target_pll);
-		set_multisynth_registers(clk, ms_reg, int_mode, r_div, div_by_4);
+		if(set_multisynth_registers_source(clk, target_pll))
+		{
+			return(true);
+		}
+		
+		if(set_multisynth_registers(clk, ms_reg, int_mode, r_div, div_by_4))
+		{
+			return(true);
+		}
 
 		/* Set PLL if necessary */
 #ifdef DEBUGGING_ONLY
@@ -516,19 +529,28 @@ BOOL err = FALSE;
 		if(clocksOff)
 		{
  			data[0] = enabledClocksMask;
-			si5351_write_bulk(0x03, data, 1);    /* disable clock(s) in use */
+			if(si5351_write_bulk(0x03, data, 1))    /* disable clock(s) in use */
+			{
+				return true;
+			} 
 		}
 		else
 		{
  			data[0] = ~enabledClocksMask;
- 			si5351_write_bulk(0x03, data, 1);  /* only enable clock(s) in use */
+ 			if(si5351_write_bulk(0x03, data, 1))  /* only enable clock(s) in use */
+			{
+				return true;
+			} 
 		}
 
 		/* power up the clock */
 		if(target_pll == SI5351_PLLA)
 		{
  			data[0] = 0x4C;
- 			si5351_write_bulk(clock_ctrl_addr, data, 1);  /* power up only clock being set, leaving that clock configured as follows: */
+ 			if(si5351_write_bulk(clock_ctrl_addr, data, 1))  /* power up only clock being set, leaving that clock configured as follows: */
+			{
+				return true;
+			} 
 			/*   o Drive strength = 2 mA */
 			/*   o Input source = multisynth */
 			/*   o Output clock not inverted */
@@ -541,7 +563,10 @@ BOOL err = FALSE;
 			if(int_mode)
 			{
  				data[0] = 0x6C;
- 				si5351_write_bulk(clock_ctrl_addr, data, 1);  /* power up only clock being set, leaving that clock configured as follows: */
+ 				if(si5351_write_bulk(clock_ctrl_addr, data, 1))  /* power up only clock being set, leaving that clock configured as follows: */
+				{
+					return true;
+				} 
 				/*   o Drive strength = 2 mA */
 				/*   o Input source = multisynth */
 				/*   o Output clock not inverted */
@@ -552,7 +577,10 @@ BOOL err = FALSE;
 			else
 			{
  				data[0] = 0x2C;
- 				si5351_write_bulk(clock_ctrl_addr, data, 1);  /* power up only clock being set, leaving that clock configured as follows: */
+ 				if(si5351_write_bulk(clock_ctrl_addr, data, 1))  /* power up only clock being set, leaving that clock configured as follows: */
+				{
+					return true;
+				} 
 				/*   o Drive strength = 2 mA */
 				/*   o Input source = multisynth */
 				/*   o Output clock not inverted */
@@ -788,7 +816,7 @@ BOOL err = FALSE;
 #ifdef DEBUGGING_ONLY
 		uint32_t set_pll(Frequency_Hz freq_VCO, Si5351_pll target_pll)
 #else
-		void set_pll(Frequency_Hz freq_VCO, Si5351_pll target_pll)
+		bool set_pll(Frequency_Hz freq_VCO, Si5351_pll target_pll)
 #endif
 	{
 		Union_si5351_regs pll_reg;
@@ -800,11 +828,16 @@ BOOL err = FALSE;
 			Frequency_Hz pll_error = freq_VCO - result;
 #else
 	#ifdef APPLY_XTAL_CALIBRATION_VALUE
-		pll_calc(freq_VCO, &pll_reg, g_si5351_ref_correction);
+		if(pll_calc(freq_VCO, &pll_reg, g_si5351_ref_correction))
+		{
+			return(true);
+		}
 	#else
-		pll_calc(freq_VCO, &pll_reg);
+		if(pll_calc(freq_VCO, &pll_reg))
+		{
+			return(true);
+		}
 	#endif
-
 #endif
 
 		/* Derive the register values to write */
@@ -834,15 +867,23 @@ BOOL err = FALSE;
 		/* Write the parameters */
 		if(target_pll == SI5351_PLLA)
 		{
-			si5351_write_bulk(SI5351_PLLA_PARAMETERS, params, i);
+			if(si5351_write_bulk(SI5351_PLLA_PARAMETERS, params, i))
+			{
+				return(true);
+			}
 		}
 		else    /* if(target_pll == SI5351_PLLB) */
 		{
-			si5351_write_bulk(SI5351_PLLB_PARAMETERS, params, i);
+			if(si5351_write_bulk(SI5351_PLLB_PARAMETERS, params, i))
+			{
+				return(true);
+			}
 		}
 
 #ifdef DEBUGGING_ONLY
-			return(result);
+		return(result);
+#else
+		return(false);
 #endif
 	}
 
@@ -1268,14 +1309,14 @@ BOOL err = FALSE;
  * Set the desired PLL source for a multisynth.
  *
  */
-	void set_multisynth_registers_source(Si5351_clock clk, Si5351_pll pll)
+	bool set_multisynth_registers_source(Si5351_clock clk, Si5351_pll pll)
 	{
 		uint8_t reg_val;
 		uint8_t data[2];
 		
 		if(si5351_read_bulk(SI5351_CLK0_CTRL + (uint8_t)clk, data, 1))
 		{
-			return;
+			return(true);
 		}
 		
 		reg_val = data[0];
@@ -1290,7 +1331,12 @@ BOOL err = FALSE;
 		}
 
 		data[0] = reg_val;
-		si5351_write_bulk(SI5351_CLK0_CTRL + (uint8_t)clk, data, 1);
+		if(si5351_write_bulk(SI5351_CLK0_CTRL + (uint8_t)clk, data, 1))
+		{
+			return(true);
+		}
+		
+		return(false);
 	}
 
 
@@ -1305,7 +1351,7 @@ BOOL err = FALSE;
  * div_by_4 - 1 Divide By 4 mode: 0 to disable
  *
  */
-	void set_multisynth_registers(Si5351_clock clk, Union_si5351_regs ms_reg, BOOL int_mode, uint8_t r_div, BOOL div_by_4)
+	bool set_multisynth_registers(Si5351_clock clk, Union_si5351_regs ms_reg, BOOL int_mode, uint8_t r_div, BOOL div_by_4)
 	{
 		uint8_t params[11];
 		uint8_t i = 0;
@@ -1319,7 +1365,7 @@ BOOL err = FALSE;
 		/* Register 44 for CLK0; 52 for CLK1 */
 		if(si5351_read_bulk((SI5351_CLK0_PARAMETERS + 2) + (clk * 8), data, 1))
 		{
-			return;
+			return(true);
 		}
 		
 		reg_val = data[0];
@@ -1344,19 +1390,28 @@ BOOL err = FALSE;
 		{
 			case SI5351_CLK0:
 			{
-				si5351_write_bulk(SI5351_CLK0_PARAMETERS, params, i);
+				if(si5351_write_bulk(SI5351_CLK0_PARAMETERS, params, i))
+				{
+					return(true);
+				}
 			}
 			break;
 
 			case SI5351_CLK1:
 			{
-				si5351_write_bulk(SI5351_CLK1_PARAMETERS, params, i);
+				if(si5351_write_bulk(SI5351_CLK1_PARAMETERS, params, i))
+				{
+					return(true);
+				}
 			}
 			break;
 
 			case SI5351_CLK2:
 			{
-				si5351_write_bulk(SI5351_CLK2_PARAMETERS, params, i);
+				if(si5351_write_bulk(SI5351_CLK2_PARAMETERS, params, i))
+				{
+					return(true);
+				}
 			}
 			break;
 
@@ -1366,8 +1421,17 @@ BOOL err = FALSE;
 			break;
 		}
 
-		set_integer_mode(clk, int_mode);
-		ms_div(clk, r_div, div_by_4);
+		if(set_integer_mode(clk, int_mode))
+		{
+			return(true);
+		}
+		
+		if(ms_div(clk, r_div, div_by_4))
+		{
+			return(true);
+		}
+		
+		return(false);
 	}
 
 
@@ -1379,14 +1443,14 @@ BOOL err = FALSE;
  *
  * Set the indicated multisynth into integer mode.
  */
-	void set_integer_mode(Si5351_clock clk, BOOL enable)
+	bool set_integer_mode(Si5351_clock clk, BOOL enable)
 	{
 		uint8_t reg_val;
 		uint8_t data[2];
 
 		if(si5351_read_bulk(SI5351_CLK0_CTRL + (uint8_t)clk, data, 1))
 		{
-			return;
+			return(true);
 		}
 		
 		reg_val = data[0];
@@ -1401,11 +1465,11 @@ BOOL err = FALSE;
 		}
 
 		data[0] = reg_val;
-		si5351_write_bulk(SI5351_CLK0_CTRL + (uint8_t)clk, data, 1);
+		return(si5351_write_bulk(SI5351_CLK0_CTRL + (uint8_t)clk, data, 1));
 	}
 
 
-	void ms_div(Si5351_clock clk, uint8_t r_div, BOOL div_by_4)
+	bool ms_div(Si5351_clock clk, uint8_t r_div, BOOL div_by_4)
 	{
 		uint8_t reg_val, reg_addr;
 		uint8_t data[2];
@@ -1431,12 +1495,12 @@ BOOL err = FALSE;
 			break;
 
 			default:
-				return;
+				return(true);
 		}
 
 		if(si5351_read_bulk(reg_addr, data, 1))
 		{
-			return;
+			return(true);
 		}
 		
 		reg_val = data[0];
@@ -1456,7 +1520,7 @@ BOOL err = FALSE;
 		reg_val |= (r_div << SI5351_OUTPUT_CLK_DIV_SHIFT);
 
 		data[0] = reg_val;
-		si5351_write_bulk(reg_addr, data, 1);
+		return(si5351_write_bulk(reg_addr, data, 1));
 	}
 
 #endif  /* #ifdef INCLUDE_SI5351_SUPPORT */

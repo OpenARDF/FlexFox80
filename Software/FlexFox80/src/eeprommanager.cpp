@@ -221,10 +221,70 @@ void EepromManager::updateEEPROMVar(EE_var_t v, void* val)
 	}
 }
 
-
+/** 
+ * Store any changed EEPROM variables
+ */
 void EepromManager::saveAllEEPROM(void)
 {
-	// TODO: Save all values that have changed
+	uint16_t i;
+	
+	if(g_id_codespeed != eeprom_read_byte(&(EepromManager::ee_vars.id_codespeed)))
+	{
+		updateEEPROMVar(Id_codespeed, (void*)&g_id_codespeed);
+	}
+	
+	if(g_fox != eeprom_read_byte(&(EepromManager::ee_vars.fox_setting)))
+	{
+		updateEEPROMVar(Fox_setting, (void*)&g_fox);
+	}
+	
+	if(g_event_start_epoch != eeprom_read_dword(&(EepromManager::ee_vars.event_start_epoch)))
+	{
+		updateEEPROMVar(Event_start_epoch, (void*)&g_event_start_epoch);
+	}
+	
+	if(g_event_finish_epoch != eeprom_read_dword(&(EepromManager::ee_vars.event_finish_epoch)))
+	{
+		updateEEPROMVar(Event_finish_epoch, (void*)&g_event_finish_epoch);
+	}
+	
+	if(g_utc_offset != eeprom_read_byte(&(EepromManager::ee_vars.utc_offset)))
+	{
+		updateEEPROMVar(Utc_offset, (void*)&g_utc_offset);
+	}
+	
+	for(i = 0; i < MAX_PATTERN_TEXT_LENGTH; i++)
+	{
+		if(g_messages_text[STATION_ID][i] != (char)eeprom_read_byte((uint8_t*)(&(EepromManager::ee_vars.stationID_text[i]))))
+		{
+			updateEEPROMVar(StationID_text, (void*)g_messages_text[STATION_ID]);
+			break;
+		}
+	}
+
+	for(i = 0; i < MAX_UNLOCK_CODE_LENGTH; i++)
+	{
+		if(g_unlockCode[i] != (char)eeprom_read_byte((uint8_t*)(&(EepromManager::ee_vars.unlockCode[i]))))
+		{
+			updateEEPROMVar(UnlockCode, (void*)g_unlockCode);
+			break;
+		}
+	}
+	
+	if(g_80m_frequency != eeprom_read_dword(&(EepromManager::ee_vars.frequency)))
+	{
+		updateEEPROMVar(Frequency, (void*)&g_80m_frequency);
+	}
+	
+	if(g_rtty_offset != eeprom_read_dword(&(EepromManager::ee_vars.rtty_offset)))
+	{
+		updateEEPROMVar(RTTY_offset, (void*)&g_rtty_offset);
+	}
+	
+	if(g_80m_power_level_mW != eeprom_read_word(&(EepromManager::ee_vars.rf_power)))
+	{
+		updateEEPROMVar(RF_Power, (void*)&g_80m_power_level_mW);
+	}
 }
 
 

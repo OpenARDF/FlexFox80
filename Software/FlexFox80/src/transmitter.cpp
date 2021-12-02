@@ -58,16 +58,21 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
  */
 	BOOL txSetFrequency(Frequency_Hz *freq, BOOL leaveClockOff)
 	{
-		BOOL activeBandSet = FALSE;
+		BOOL err = FALSE;
 
 		if((*freq < TX_MAXIMUM_80M_FREQUENCY) && (*freq > TX_MINIMUM_80M_FREQUENCY))    /* 80m */
 		{
-			si5351_set_freq(*freq, TX_CLOCK_HF_0, leaveClockOff);
-			g_80m_frequency = *freq;
-			activeBandSet = TRUE;
+			if(si5351_set_freq(*freq, TX_CLOCK_HF_0, leaveClockOff))
+			{
+				err = true; 
+			}
+			else
+			{
+				g_80m_frequency = *freq;
+			}
 		}
 
-		return( activeBandSet);
+		return(err);
 	}
 
 	Frequency_Hz txGetFrequency(void)
@@ -234,10 +239,15 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 // 		}
 
 		uint16_t pwr_mW = g_80m_power_level_mW;
-		txSetFrequency((Frequency_Hz*)&g_80m_frequency, TRUE);
-		txSetParameters(&pwr_mW, NULL);
-
-		g_tx_initialized = TRUE;
+		if(txSetFrequency((Frequency_Hz*)&g_80m_frequency, TRUE))
+		{
+			code = ERROR_CODE_RF_OSCILLATOR_ERROR;
+		}
+		else
+		{
+			txSetParameters(&pwr_mW, NULL);
+			g_tx_initialized = TRUE;
+		}
 
 		return( code);
 	}

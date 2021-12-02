@@ -810,9 +810,14 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 					f = atol(sb_buff->fields[SB_FIELD1]);
 
 					Frequency_Hz ff = f;
-					if(txSetFrequency(&ff, TRUE))
+					if(!txSetFrequency(&ff, TRUE))
 					{
 						transmitter_freq = ff;
+						g_ee_mgr.saveAllEEPROM();
+					}
+					else
+					{
+						sb_send_string(TEXT_TX_NOT_RESPONDING_TXT);						
 					}
 				}
 				else
@@ -956,9 +961,16 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
  						if(t)
  						{
 							bool fail = ds3231_set_date_time_arducon(g_tempStr, RTC_CLOCK);
- 							g_current_epoch = t;
- 							sprintf(g_tempStr, "Time:%lu\n", g_current_epoch);
- 							setupForFox(NULL, START_NOTHING);   /* Avoid timing problems if an event is already active */
+							if(fail)
+							{
+								sb_send_string(TEXT_RTC_NOT_RESPONDING_TXT);						
+							}
+							else
+							{
+ 								g_current_epoch = t;
+ 								sprintf(g_tempStr, "Time:%lu\n", g_current_epoch);
+ 								setupForFox(NULL, START_NOTHING);   /* Avoid timing problems if an event is already active */
+							}
  						}
  						else
  						{
@@ -1508,7 +1520,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					f = atol(lb_buff->fields[LB_MSG_FIELD1]);
 
 					Frequency_Hz ff = f;
-					if(txSetFrequency(&ff, TRUE))
+					if(!txSetFrequency(&ff, TRUE))
 					{
 						transmitter_freq = ff;
 						event_parameter_count++;
