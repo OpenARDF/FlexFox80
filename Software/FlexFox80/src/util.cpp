@@ -55,15 +55,15 @@ int32_t timeDif(time_t a, time_t b)
 /**
  * Returns parsed time structure from a string of format "yyyy-mm-ddThh:mm:ssZ"
  */
-BOOL mystrptime(char* s, struct tm* ltm) {
+bool mystrptime(char* s, struct tm* ltm) {
   const int month_days[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
   char temp[6];
   char str[21];
   int hold;
-  BOOL isleap;
+  bool isleap;
   char *ptr0;
   char *ptr1;
-  BOOL noSeconds = FALSE;
+  bool noSeconds = false;
 
   strncpy(str, s, 21);  // "yyyy-mm-ddThh:mm:ssZ\0" <- maximum length null-terminated string
 
@@ -79,7 +79,7 @@ BOOL mystrptime(char* s, struct tm* ltm) {
   hold = atoi(temp);
   isleap = is_leap_year(hold);
   hold -= 1900;
-  if((hold < 0) || (hold > 200)) return TRUE;
+  if((hold < 0) || (hold > 200)) return true;
   ltm->tm_year = hold;
 
   ptr0 = ptr1;
@@ -89,7 +89,7 @@ BOOL mystrptime(char* s, struct tm* ltm) {
   strncpy(temp, ptr0, 3);
   ++ptr1;
   hold = atoi(temp) - 1;
-  if((hold > 11) || (hold < 0)) return TRUE;
+  if((hold > 11) || (hold < 0)) return true;
   ltm->tm_mon = hold;
 
   ptr0 = ptr1;
@@ -99,7 +99,7 @@ BOOL mystrptime(char* s, struct tm* ltm) {
   strncpy(temp, ptr0, 3);
   ++ptr1;
   hold = atoi(temp);
-  if((hold > 31) || (hold < 1)) return TRUE;
+  if((hold > 31) || (hold < 1)) return true;
   ltm->tm_mday = hold;
 
   ptr0 = ptr1;
@@ -118,7 +118,7 @@ BOOL mystrptime(char* s, struct tm* ltm) {
   strncpy(temp, ptr0, 3);
   ++ptr1;
   hold = atoi(temp);
-  if((hold > 23) || (hold < 0)) return TRUE;
+  if((hold > 23) || (hold < 0)) return true;
   ltm->tm_hour = hold;
 
   ptr0 = ptr1;
@@ -127,7 +127,7 @@ BOOL mystrptime(char* s, struct tm* ltm) {
   {
 	  strncpy(temp, ptr0, 3);
 	  hold = atoi(temp);
-	  if(hold > 59) return TRUE;
+	  if(hold > 59) return true;
 	  ltm->tm_min = hold;
   }
   else
@@ -137,15 +137,15 @@ BOOL mystrptime(char* s, struct tm* ltm) {
 	  strncpy(temp, ptr0, 3);
 	  ++ptr1;
 	  hold = atoi(temp);
-	  if(hold > 59) return TRUE;
+	  if(hold > 59) return true;
 	  ltm->tm_min = hold;
 
 	  hold = atoi(ptr1);
-	  if(hold > 59) return TRUE;
+	  if(hold > 59) return true;
 	  ltm->tm_sec = hold;
   }
 
-  return FALSE;
+  return false;
 }
 
 
@@ -171,16 +171,16 @@ uint32_t convertTimeStringToEpoch(char * s)
 /** 
  * Checks a string to see if it contains only numerical characters
  */
-BOOL only_digits(char *s)
+bool only_digits(char *s)
 {
 	while(*s)
 	{
 		if(isdigit(*s++) == 0)
 		{
-			return( FALSE);
+			return( false);
 		}
 	}
 
-	return( TRUE);
+	return( true);
 }
 

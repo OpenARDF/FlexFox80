@@ -28,31 +28,7 @@
 #define WIFI_RESET_gc (1 << 6)  /* WiFi reset port pin */
 #define WIFI_POWER_gc (1 << 5)  /* WiFi enable power port pin */
 
-BOOL wifi_enabled(void)
+bool wifi_enabled(void)
 {
 	return  VPORTA.OUT & WIFI_RESET_gc; /* read setting on reset line */
-}
-
-void wifi_reset(BOOL reset)
-{
-	if(reset) // assert reset low
-	{
-		VPORTA.OUT &= ~WIFI_RESET_gc;
-	}
-	else // de-assert reset high
-	{
-		VPORTA.OUT |= WIFI_RESET_gc;
-	}
-}
-
-void wifi_power(BOOL on)
-{
-	if(on)
-	{
-		VPORTA.OUT |= WIFI_POWER_gc;
-	}
-	else
-	{
-		VPORTA.OUT &= ~WIFI_POWER_gc;
-	}
 }

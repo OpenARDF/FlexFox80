@@ -75,10 +75,10 @@
  *       TEST EQUIPMENT MESSAGE FAMILY (DEVICE MESSAGING)
  *       $TST - Test message
  *       !ACK - Simple acknowledgment to a command (sent when required)
- *       $CK0 - Set Si5351 CLK0: field1 = freq (Hz); field2 = enable (BOOL)
- *       $CK1 - Set Si5351 CLK1: field1 = freq (Hz); field2 = enable (BOOL)
- *       $CK2 - Set Si5351 CLK2: field1 = freq (Hz); field2 = enable (BOOL)
- *       $VOL - Set audio volume: field1 = inc/decr (BOOL); field2 = % (int)
+ *       $CK0 - Set Si5351 CLK0: field1 = freq (Hz); field2 = enable (bool)
+ *       $CK1 - Set Si5351 CLK1: field1 = freq (Hz); field2 = enable (bool)
+ *       $CK2 - Set Si5351 CLK2: field1 = freq (Hz); field2 = enable (bool)
+ *       $VOL - Set audio volume: field1 = inc/decr (bool); field2 = % (int)
  *       $BAT? - Subscribe to battery voltage reports
  *
  */
@@ -204,7 +204,7 @@ LinkbusTxBuffer* nextFullLBTxBuffer(void);
 
 /**
  */
-BOOL linkbusTxInProgress(void);
+bool linkbusTxInProgress(void);
 
 /**
  */
@@ -220,7 +220,7 @@ void lb_send_sync(void);
 
 /**
  */
-BOOL lb_send_text(char* text);
+bool lb_send_text(char* text);
 
 /**
 */

@@ -160,7 +160,7 @@ SerialbusTxBuffer* nextFullSBTxBuffer(void);
 
 /**
  */
-BOOL serialbusTxInProgress(void);
+bool serialbusTxInProgress(void);
 
 /**
  */
@@ -184,7 +184,7 @@ void sb_echo_char(uint8_t c);
 
 /**
  */
-BOOL sb_send_string(char* str);
+bool sb_send_string(char* str);
 
 /**
  */
@@ -192,7 +192,7 @@ void sb_send_value(uint16_t value, char* label);
 
 /**
  */
-BOOL sb_enabled(void);
+bool sb_enabled(void);
 
 #ifdef __cplusplus
 	}

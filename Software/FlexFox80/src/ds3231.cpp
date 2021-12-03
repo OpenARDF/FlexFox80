@@ -181,11 +181,12 @@ the UNIX epoch for the time held in the DS3231 RTC. If error is not null then it
 
 time_t ds3231_get_epoch(EC *result)
 {
+	uint8_t tries = 10; /* try several times in case of transient bus issues */
 	time_t epoch = 0;
 	uint8_t data[7] = { 0, 0, 0, 0, 0, 0, 0 };
-	BOOL res;
+	bool res;
 
-	res = (I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS, data, 7) != 7);
+	while(tries-- && (res = (I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS, data, 7) != 7)));
 
 	if(!res)
 	{
@@ -196,8 +197,8 @@ time_t ds3231_get_epoch(EC *result)
 		uint8_t hours;
 		uint8_t minutes;
 		uint8_t seconds;
-		BOOL am_pm;
-		BOOL twelvehour;
+		bool am_pm;
+		bool twelvehour;
 
 		year += data[6] & 0x0f;
 		year += 10*((data[6] & 0xf0) >> 4);
@@ -257,10 +258,13 @@ time_t ds3231_get_epoch(EC *result)
 	return epoch;
 }
 
-	BOOL ds3231_get_temp(int16_t * val)
+	bool ds3231_get_temp(int16_t * val)
 	{
+		uint8_t tries = 10; /* try several times in case of transient bus issues */
 		uint8_t data[2] = { 0, 0 };
-		BOOL result = (I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_TEMP_MSB, data, 2) != 2);
+		bool result;
+		
+		while(tries-- && (result = (I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_TEMP_MSB, data, 2) != 2)));
 
 		if(!result)
 		{
@@ -269,13 +273,14 @@ time_t ds3231_get_epoch(EC *result)
 			*val |= data[1];
 		}
 
-		return result;
+		return(result);
 	}
 
 
-BOOL ds3231_set_date_time_arducon(char *datetime, ClockSetting setting) /* String format "YYMMDDhhmmss" */
+bool ds3231_set_date_time_arducon(char *datetime, ClockSetting setting) /* String format "YYMMDDhhmmss" */
 {
-	BOOL failure = TRUE;
+	uint8_t tries = 10; /* try several times in case of transient bus issues */
+	bool failure = true;
 	uint8_t data[7] = { 0, 0, 0, 0, 0, 0, 0 };
 
 	if(datetime)                            
@@ -288,7 +293,7 @@ BOOL ds3231_set_date_time_arducon(char *datetime, ClockSetting setting) /* Strin
 		data[5] = char2bcd(&datetime[2]);   /* month in BCD */
 		data[6] = char2bcd(&datetime[0]);   /* 2-digit year in BCD */
 
-		failure = (I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS+(setting*7), data, 7) != 7);
+		while(tries-- && (failure = (I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS+(setting*7), data, 7) != 7)));
 	}
 
 	return(failure);
@@ -297,6 +302,7 @@ BOOL ds3231_set_date_time_arducon(char *datetime, ClockSetting setting) /* Strin
 
 void ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-23T18:00:00Z" */
 {
+	uint8_t tries = 10; /* try several times in case of transient bus issues */
 	uint8_t data[7] = { 0, 0, 0, 1, 0, 0, 0 };
 	int temp, year=2000, month, date;
 
@@ -323,13 +329,15 @@ void ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-2
 	year += 10*temp;
 	data[6] |= (temp << 4); /* year digit 10 */
 
-	I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS+(setting*7), data, 7);
+	while(tries-- && (I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS+(setting*7), data, 7)));
 }
 
 
 #ifdef DATE_STRING_SUPPORT_ENABLED
-	void ds3231_read_date_time(int32_t* val, char* buffer, TimeFormat format)
+	bool ds3231_read_date_time(int32_t* val, char* buffer, TimeFormat format)
 	{
+		uint8_t tries = 10; /* try several times in case of transient bus issues */
+		bool failure;
 		uint8_t data[7] = { 0, 0, 0, 0, 0, 0, 0 };
 		uint8_t month;
 		uint8_t date;
@@ -340,10 +348,12 @@ void ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-2
 		uint8_t minute;
 		uint8_t hour10;
 		uint8_t hour;
-		BOOL am_pm;
-		BOOL twelvehour;
+		bool am_pm;
+		bool twelvehour;
+		
+		while(tries-- && (failure = I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS, data, 7) != 7));
 
-		if(I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS, data, 7) == 7)
+		if(!failure)
 		{
 			second10 = ((data[0] & 0xf0) >> 4);
 			second = (data[0] & 0x0f);
@@ -410,48 +420,52 @@ void ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-2
 				*val = second + 10 * second10 + 60 * (int32_t)minute + 600 * (int32_t)minute10 +  3600 * (int32_t)hour + 36000 * (int32_t)hour10;
 			}
 		}
+		
+		return(failure);
 	}
 #endif // DATE_STRING_SUPPORT_ENABLED
 	
-	void ds3231_1s_sqw(BOOL enable)
+	bool ds3231_1s_sqw(bool enable)
 	{
+		uint8_t tries = 10; /* try several times in case of transient bus issues */
+		bool failure;
 		uint8_t data[1];
 		
-		if(enable)
-		{
-			data[0] = 0x00;
-			I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_CONTROL, data, 1);
-		}
-		else
-		{
-			data[0] = 0x04;
-			I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_CONTROL, data, 1);
-		}
+		data[0] = enable ? 0x00:0x04;	
+		while(tries-- && (failure = (I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_CONTROL, data, 1) != 1)));
+		
+		return(failure);
 	}
 
 
-	void ds3231_set_aging(int8_t data_in)
+	bool ds3231_set_aging(int8_t data_in)
 	{
+		uint8_t tries = 10; /* try several times in case of transient bus issues */
+		bool failure;
 		int8_t data[1];
 		
 		data[0] = data_in;
-		I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_AGING, (uint8_t *)data, 1);
+		while(tries-- && (failure = (I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_AGING, (uint8_t *)data, 1) != 1)));
+		return(failure);
 	}
 
 
 	int8_t ds3231_get_aging()
 	{
+		uint8_t tries = 10; /* try several times in case of transient bus issues */
+		bool failure;
 		int8_t data[1];
 		
-		I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_AGING, (uint8_t *)data, 1);
+		while(tries-- && (failure = (I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_AGING, (uint8_t *)data, 1) != 1)));
 		return(data[0]);
 	}
 
 	bool ds3231_responding()
 	{
 		bool responseReceived = false;
+		uint8_t tries = 10;
 		int8_t data[1];		
-		responseReceived = (I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_AGING, (uint8_t *)data, 1) == 1);
+		while(tries-- && !(responseReceived = (I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_AGING, (uint8_t *)data, 1) == 1)));
 		return(responseReceived);
 	}
 
@@ -459,12 +473,15 @@ void ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-2
 /* This simple synchronization approach works for all times except 12 midnight. If synchronization
 results in the advancement to the next day, then one day would be lost. Instead of introducing that
 error, this function merely fails to synchronize at midnight. */
-BOOL ds3231_sync2nearestMinute()
+bool ds3231_sync2nearestMinute()
 {
-	BOOL err = FALSE;
+	uint8_t tries = 10; /* try several times in case of transient bus issues */
+	bool err = false;
 	uint8_t data[8] = { 0, 0, 0 };
+		
+	while(tries-- && (err = (I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS, (uint8_t *)data, 3) != 3)));
 
-	if(I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS, (uint8_t *)data, 3) == 3)
+	if(!err)
 	{
 		uint8_t hours;
 		uint8_t minutes;
@@ -472,8 +489,8 @@ BOOL ds3231_sync2nearestMinute()
 
 		uint8_t hour10;
 		uint8_t hour;
-		BOOL am_pm;
-		BOOL twelvehour;
+		bool am_pm;
+		bool twelvehour;
 
 		seconds = bcd2dec(data[0]);
 		minutes = bcd2dec(data[1]);
@@ -501,7 +518,7 @@ BOOL ds3231_sync2nearestMinute()
 
 				if(hours > 23) /* Don't attempt to synchronize at midnight */
 				{
-					err = TRUE;
+					err = true;
 				}
 			}
 		}
@@ -540,7 +557,7 @@ BOOL ds3231_sync2nearestMinute()
 
 			data[2] |= hours % 10;
 			
-			err = (I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS, (uint8_t *)data, 4) != 4);
+			while(tries-- && (err = (I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS, (uint8_t *)data, 4) != 4)));
 		}
 	}
 

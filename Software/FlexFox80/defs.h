@@ -44,8 +44,8 @@
 
 /******************************************************
  * Include only the necessary hardware support */
-   #define INCLUDE_SI5351_SUPPORT TRUE // Silicon Labs Programmable Clock
-   #define INCLUDE_DS3231_SUPPORT TRUE // Maxim RTC
+   #define INCLUDE_SI5351_SUPPORT true // Silicon Labs Programmable Clock
+   #define INCLUDE_DS3231_SUPPORT true // Maxim RTC
 //   #define INCLUDE_DAC081C085_SUPPORT
 //   #define ENABLE_PIN_CHANGE_INTERRUPT_0
 //   #define ENABLE_PIN_CHANGE_INTERRUPT_1
@@ -216,7 +216,7 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 
 #define EEPROM_START_TIME_DEFAULT 0
 #define EEPROM_FINISH_TIME_DEFAULT 0
-#define EEPROM_EVENT_ENABLED_DEFAULT FALSE
+#define EEPROM_EVENT_ENABLED_DEFAULT false
 #define EEPROM_ID_CODE_SPEED_DEFAULT 20
 #define EEPROM_PATTERN_CODE_SPEED_DEFAULT 8
 #define EEPROM_ON_AIR_TIME_DEFAULT 60
@@ -276,18 +276,6 @@ typedef enum
 #define         SDA_PIN 1 /* (1 << PINC4) */
 #define         SCL_PIN 1 /* (1 << PINC5) */
 #define         I2C_PINS (SCL_PIN | SDA_PIN)
-
-#ifndef FALSE
-   #define FALSE 0
-#endif
-
-#ifndef TRUE
-   #define TRUE !FALSE
-#endif
-
-#ifndef BOOL
-	typedef uint8_t BOOL;
-#endif
 
 #ifndef Frequency_Hz
 	typedef uint32_t Frequency_Hz;

@@ -44,7 +44,7 @@
 
 /* Global Variables */
 USART_Number_t g_serialbus_usart_number = USART_NOT_SET;
-static volatile BOOL g_bus_disabled = TRUE;
+static volatile bool g_bus_disabled = true;
 static const char crlf[] = "\n";
 static char lineTerm[8] = "\n";
 static const char textPrompt[] = "> ";
@@ -52,20 +52,20 @@ static const char textPrompt[] = "> ";
 static char g_tempMsgBuff[SERIALBUS_MAX_MSG_LENGTH];
 
 /* Local function prototypes */
-BOOL serialbus_start_tx(void);
-BOOL serialbus_send_text(char* text);
+bool serialbus_start_tx(void);
+bool serialbus_send_text(char* text);
 // static void USART0_initialization(uint32_t baud);
 static void USART1_initialization(uint32_t baud);
 static void USART4_initialization(uint32_t baud);
 
 /* Module global variables */
-static volatile BOOL serialbus_tx_active = FALSE; /* volatile is required to ensure optimizer handles this properly */
+static volatile bool serialbus_tx_active = false; /* volatile is required to ensure optimizer handles this properly */
 static SerialbusTxBuffer tx_buffer[SERIALBUS_NUMBER_OF_TX_MSG_BUFFERS];
 static SerialbusRxBuffer rx_buffer[SERIALBUS_NUMBER_OF_RX_MSG_BUFFERS];
 
 SerialbusTxBuffer* nextFullSBTxBuffer(void)
 {
-	BOOL found = TRUE;
+	bool found = true;
 	static uint8_t bufferIndex = 0;
 	uint8_t count = 0;
 
@@ -73,7 +73,7 @@ SerialbusTxBuffer* nextFullSBTxBuffer(void)
 	{
 		if(++count >= SERIALBUS_NUMBER_OF_TX_MSG_BUFFERS)
 		{
-			found = FALSE;
+			found = false;
 			break;
 		}
 
@@ -94,7 +94,7 @@ SerialbusTxBuffer* nextFullSBTxBuffer(void)
 
 SerialbusTxBuffer* nextEmptySBTxBuffer(void)
 {
-	BOOL found = TRUE;
+	bool found = true;
 	static uint8_t bufferIndex = 0;
 	uint8_t count = 0;
 
@@ -102,7 +102,7 @@ SerialbusTxBuffer* nextEmptySBTxBuffer(void)
 	{
 		if(++count >= SERIALBUS_NUMBER_OF_TX_MSG_BUFFERS)
 		{
-			found = FALSE;
+			found = false;
 			break;
 		}
 
@@ -123,7 +123,7 @@ SerialbusTxBuffer* nextEmptySBTxBuffer(void)
 
 SerialbusRxBuffer* nextEmptySBRxBuffer(void)
 {
-	BOOL found = TRUE;
+	bool found = true;
 	static uint8_t bufferIndex = 0;
 	uint8_t count = 0;
 
@@ -131,7 +131,7 @@ SerialbusRxBuffer* nextEmptySBRxBuffer(void)
 	{
 		if(++count >= SERIALBUS_NUMBER_OF_RX_MSG_BUFFERS)
 		{
-			found = FALSE;
+			found = false;
 			break;
 		}
 
@@ -152,7 +152,7 @@ SerialbusRxBuffer* nextEmptySBRxBuffer(void)
 
 SerialbusRxBuffer* nextFullSBRxBuffer(void)
 {
-	BOOL found = TRUE;
+	bool found = true;
 	static uint8_t bufferIndex = 0;
 	uint8_t count = 0;
 
@@ -160,7 +160,7 @@ SerialbusRxBuffer* nextFullSBRxBuffer(void)
 	{
 		if(++count >= SERIALBUS_NUMBER_OF_RX_MSG_BUFFERS)
 		{
-			found = FALSE;
+			found = false;
 			break;
 		}
 
@@ -183,18 +183,18 @@ SerialbusRxBuffer* nextFullSBRxBuffer(void)
 /***********************************************************************
  * serialbusTxInProgress(void)
  ************************************************************************/
-BOOL serialbusTxInProgress(void)
+bool serialbusTxInProgress(void)
 {
 	return(serialbus_tx_active);
 }
 
-BOOL serialbus_start_tx(void)
+bool serialbus_start_tx(void)
 {
-	BOOL success = !serialbus_tx_active;
+	bool success = !serialbus_tx_active;
 
 	if(success) /* message will be lost if transmit is busy */
 	{
-		serialbus_tx_active = TRUE;
+		serialbus_tx_active = true;
 		
 		if(g_serialbus_usart_number == USART_0)
 		{
@@ -222,7 +222,7 @@ void serialbus_end_tx(void)
 			USART1.CTRLA &= ~(1 << USART_DREIE_bp); /* Transmit Data Register Empty Interrupt Enable: disable */
 		}
 		
-		serialbus_tx_active = FALSE;
+		serialbus_tx_active = false;
 	}
 }
 
@@ -308,14 +308,14 @@ void serialbus_init(uint32_t baud, USART_Number_t usart)
 		g_serialbus_usart_number = usart;
 	}
 
-	g_bus_disabled = FALSE;
+	g_bus_disabled = false;
 }
 
 void serialbus_disable(void)
 {
 	uint8_t bufferIndex;
 
-	g_bus_disabled = TRUE;
+	g_bus_disabled = true;
 
 	if(g_serialbus_usart_number == USART_4)
 	{	
@@ -336,9 +336,9 @@ void serialbus_disable(void)
 }
 
 
-BOOL serialbus_send_text(char* text)
+bool serialbus_send_text(char* text)
 {
-	BOOL err = TRUE;
+	bool err = true;
 	uint16_t tries = 200;
 
 	if(g_bus_disabled)
@@ -367,7 +367,7 @@ BOOL serialbus_send_text(char* text)
 			sprintf(*buff, text);
 
 			serialbus_start_tx();
-			err = FALSE;
+			err = false;
 		}
 	}
 
@@ -412,25 +412,25 @@ void sb_echo_char(uint8_t c)
 	serialbus_send_text(g_tempMsgBuff);
 }
 
-BOOL sb_send_string(char* str)
+bool sb_send_string(char* str)
 {
-	BOOL err = FALSE;
+	bool err = false;
 	uint16_t length, lengthToSend, lengthSent=0;
 	bool done = false;
 
 	if(g_bus_disabled)
 	{
-		return( TRUE);
+		return( true);
 	}
 
 	if(str == NULL)
 	{
-		return( TRUE);
+		return( true);
 	}
 
 	if(!*str)
 	{
-		return(TRUE);
+		return(true);
 	}
 
 	length = strlen(str);
@@ -461,7 +461,7 @@ BOOL sb_send_string(char* str)
 
 void sb_send_value(uint16_t value, char* label)
 {
-	BOOL err;
+	bool err;
 
 	if(g_bus_disabled)
 	{
@@ -480,7 +480,7 @@ void sb_send_value(uint16_t value, char* label)
 }
 
 
-BOOL sb_enabled(void)
+bool sb_enabled(void)
 {
 	return( !g_bus_disabled);
 }

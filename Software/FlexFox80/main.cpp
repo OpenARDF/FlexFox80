@@ -48,24 +48,24 @@ static char g_tempStr[50] = { '\0' };
 static volatile EC g_last_error_code = ERROR_CODE_NO_ERROR;
 static volatile SC g_last_status_code = STATUS_CODE_IDLE;
 
-static volatile BOOL g_powering_off = FALSE;
+static volatile bool g_powering_off = false;
 
 static volatile uint16_t g_util_tick_countdown = 0;
-static volatile BOOL g_battery_measurements_active = FALSE;
+static volatile bool g_battery_measurements_active = false;
 static volatile uint16_t g_maximum_battery = 0;
 volatile BatteryType g_battery_type = BATTERY_UNKNOWN;
 
-static volatile BOOL g_antenna_connection_changed = TRUE;
+static volatile bool g_antenna_connection_changed = true;
 volatile AntConnType g_antenna_connect_state = ANT_CONNECTION_UNDETERMINED;
 
 static volatile int32_t g_on_the_air = 0;
 static volatile int g_sendID_seconds_countdown = 0;
 static volatile uint16_t g_code_throttle = 50;
 static volatile uint8_t g_WiFi_shutdown_seconds = 120;
-static volatile BOOL g_report_seconds = FALSE;
-static volatile BOOL g_wifi_active = TRUE;
+static volatile bool g_report_seconds = false;
+static volatile bool g_wifi_active = true;
 static volatile uint8_t g_wifi_enable_delay = 0;
-static volatile BOOL g_shutting_down_wifi = FALSE;
+static volatile bool g_shutting_down_wifi = false;
 static volatile SleepType g_sleepType = NOT_SLEEPING;
 
 char g_messages_text[2][MAX_PATTERN_TEXT_LENGTH + 1] = { "\0", "\0" };
@@ -78,21 +78,21 @@ volatile int16_t g_intra_cycle_delay_time = EEPROM_INTRA_CYCLE_DELAY_TIME_DEFAUL
 volatile int16_t g_ID_period_seconds = EEPROM_ID_TIME_INTERVAL_DEFAULT;              /* amount of time between ID/callsign transmissions */
 volatile time_t g_event_start_time = EEPROM_START_TIME_DEFAULT;
 volatile time_t g_event_finish_time = EEPROM_FINISH_TIME_DEFAULT;
-volatile BOOL g_event_enabled = EEPROM_EVENT_ENABLED_DEFAULT;                        /* indicates that the conditions for executing the event are set */
-volatile BOOL g_event_commenced = FALSE;
-volatile BOOL g_check_for_next_event = FALSE;
-volatile BOOL g_waiting_for_next_event = FALSE;
+volatile bool g_event_enabled = EEPROM_EVENT_ENABLED_DEFAULT;                        /* indicates that the conditions for executing the event are set */
+volatile bool g_event_commenced = false;
+volatile bool g_check_for_next_event = false;
+volatile bool g_waiting_for_next_event = false;
 volatile int g_update_timeout_seconds = 90;
 volatile uint16_t g_battery_empty_mV = EEPROM_BATTERY_EMPTY_MV;
 
 extern volatile uint16_t g_i2c0_timeout_ticks;
 extern volatile uint16_t g_i2c1_timeout_ticks;
-static volatile BOOL g_sufficient_power_detected = FALSE;
-static volatile BOOL g_enableHardwareWDResets = FALSE;
-extern volatile BOOL g_tx_power_is_zero;
+static volatile bool g_sufficient_power_detected = false;
+static volatile bool g_enableHardwareWDResets = false;
+extern volatile bool g_tx_power_is_zero;
 
-static volatile BOOL g_go_to_sleep = FALSE;
-static volatile BOOL g_sleeping = FALSE;
+static volatile bool g_go_to_sleep = false;
+static volatile bool g_sleeping = false;
 static volatile time_t g_seconds_left_to_sleep = 0;
 static volatile time_t g_seconds_to_sleep = MAX_TIME;
 
@@ -100,7 +100,7 @@ static volatile time_t g_seconds_to_sleep = MAX_TIME;
 static const uint16_t g_adcChannelConversionPeriod_ticks[NUMBER_OF_POLLED_ADC_CHANNELS] = { TIMER2_0_5HZ, TIMER2_0_5HZ, TIMER2_0_5HZ, TIMER2_5_8HZ, TIMER2_5_8HZ };
 static volatile uint16_t g_tickCountdownADCFlag[NUMBER_OF_POLLED_ADC_CHANNELS] = { TIMER2_0_5HZ, TIMER2_0_5HZ, TIMER2_0_5HZ, TIMER2_5_8HZ, TIMER2_5_8HZ };
 //static uint16_t g_filterADCValue[NUMBER_OF_POLLED_ADC_CHANNELS] = { 500, 500, 500, 500, 500 };
-//static volatile BOOL g_adcUpdated[NUMBER_OF_POLLED_ADC_CHANNELS] = { FALSE, FALSE, FALSE, FALSE, FALSE };
+//static volatile bool g_adcUpdated[NUMBER_OF_POLLED_ADC_CHANNELS] = { false, false, false, false, false };
 static volatile uint16_t g_lastConversionResult[NUMBER_OF_POLLED_ADC_CHANNELS];
 
 extern Goertzel g_goertzel;
@@ -121,7 +121,7 @@ bool g_transmissions_disabled = true;
  *
  * These functions are available only within this file
  ************************************************************************/
-BOOL eventEnabled(void);
+bool eventEnabled(void);
 void handleLinkBusMsgs(void);
 void handleSerialBusMsgs(void);
 void wdt_init(WDReset resetType);
@@ -131,8 +131,8 @@ EC launchEvent(SC* statusCode);
 EC hw_init(void);
 EC rtc_init(void);
 void set_ports(SleepType initType);
-BOOL antennaIsConnected(void);
-void initializeAllEventSettings(BOOL disableEvent);
+bool antennaIsConnected(void);
+void initializeAllEventSettings(bool disableEvent);
 void suspendEvent(void);
 void stopEventNow(EventActionSource_t activationSource);
 void startEventNow(EventActionSource_t activationSource);
@@ -141,7 +141,7 @@ void startEventUsingRTC(void);
 
 void setupForFox(Fox_t* fox, EventAction_t action);
 time_t validateTimeString(char* str, time_t* epochVar, int8_t offsetHours);
-BOOL reportTimeTill(time_t from, time_t until, const char* prefix, const char* failMsg);
+bool reportTimeTill(time_t from, time_t until, const char* prefix, const char* failMsg);
 ConfigurationState_t clockConfigurationCheck(void);
 void reportConfigErrors(void);
 
@@ -165,16 +165,16 @@ ISR(TCB3_INT_vect)
 			cnt = 0;
 			if(!g_event_enabled) LED_toggle_level();
 					
-			static BOOL lastAntennaConnectionState = FALSE;
+			static bool lastAntennaConnectionState = false;
 			static uint8_t antennaReadCount = 3;
-			BOOL ant = antennaIsConnected();
+			bool ant = antennaIsConnected();
 
 			if(!ant)    /* immediately detect disconnection */
 			{
 				if(g_antenna_connect_state != ANT_ALL_DISCONNECTED)
 				{
 					g_antenna_connect_state = ANT_ALL_DISCONNECTED;
-					g_antenna_connection_changed = TRUE;
+					g_antenna_connection_changed = true;
 				}
 			}
 			else if(g_antenna_connect_state == ANT_ALL_DISCONNECTED)
@@ -188,7 +188,7 @@ ISR(TCB3_INT_vect)
 						if(!antennaReadCount)
 						{
 							g_antenna_connect_state = ANT_CONNECTION_UNDETERMINED;
-							g_antenna_connection_changed = TRUE;
+							g_antenna_connection_changed = true;
 							antennaReadCount = 3;
 						}
 					}
@@ -212,8 +212,8 @@ ISR(TCB3_INT_vect)
 
 				if(!g_seconds_left_to_sleep || g_antenna_connection_changed)
 				{
-					g_go_to_sleep = FALSE;
-					g_sleeping = FALSE;
+					g_go_to_sleep = false;
+					g_sleeping = false;
 				}
 			}
 			else
@@ -236,9 +236,9 @@ ISR(TCB3_INT_vect)
 							g_last_status_code = STATUS_CODE_EVENT_FINISHED;
 							g_on_the_air = 0;
 							keyTransmitter(OFF);
-							g_event_enabled = FALSE;
-							g_event_commenced = FALSE;
-							g_check_for_next_event = TRUE;
+							g_event_enabled = false;
+							g_event_commenced = false;
+							g_check_for_next_event = true;
 							g_update_timeout_seconds = 90;
 							if(g_wifi_active)
 							{
@@ -252,7 +252,7 @@ ISR(TCB3_INT_vect)
 				{
 					if(g_event_commenced)
 					{
-						BOOL repeat;
+						bool repeat;
 
 						if(g_sendID_seconds_countdown)
 						{
@@ -272,7 +272,7 @@ ISR(TCB3_INT_vect)
 										g_last_status_code = STATUS_CODE_SENDING_ID;
 										g_sendID_seconds_countdown = g_ID_period_seconds;
 										g_code_throttle = throttleValue(g_id_codespeed);
-										repeat = FALSE;
+										repeat = false;
 										makeMorse(g_messages_text[STATION_ID], &repeat, NULL);  /* Send only once */
 									}
 								}
@@ -284,7 +284,7 @@ ISR(TCB3_INT_vect)
 									{
 										keyTransmitter(OFF);
 										g_on_the_air -= g_off_air_seconds;
-										repeat = TRUE;
+										repeat = true;
 										makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);    /* Reset pattern to start */
 										g_last_status_code = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
 
@@ -305,7 +305,7 @@ ISR(TCB3_INT_vect)
 											{
 												g_seconds_to_sleep = (time_t)(g_off_air_seconds - 10);
 												g_sleepType = SLEEP_UNTIL_NEXT_XMSN;
-												g_go_to_sleep = TRUE;
+												g_go_to_sleep = true;
 												g_sendID_seconds_countdown = MAX(0, g_sendID_seconds_countdown - (int)g_seconds_to_sleep);
 											}
 										}
@@ -326,7 +326,7 @@ ISR(TCB3_INT_vect)
 									g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
 									g_on_the_air = g_on_air_seconds;
 									g_code_throttle = throttleValue(g_pattern_codespeed);
-									BOOL repeat = TRUE;
+									bool repeat = true;
 									makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 								}
 							}
@@ -350,11 +350,11 @@ ISR(TCB3_INT_vect)
 								g_on_the_air = g_on_air_seconds;
 								g_sendID_seconds_countdown = g_on_air_seconds - g_time_needed_for_ID;
 								g_code_throttle = throttleValue(g_pattern_codespeed);
-								BOOL repeat = TRUE;
+								bool repeat = true;
 								makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 							}
 
-							g_event_commenced = TRUE;
+							g_event_commenced = true;
 						}
 					}
 				}
@@ -389,7 +389,7 @@ ISR(TCB3_INT_vect)
 							{
 								wifi_reset(ON);     /* put WiFi into reset */
 								wifi_power(OFF);    /* power off WiFi */
-								g_shutting_down_wifi = FALSE;
+								g_shutting_down_wifi = false;
 
 								/* If an event hasn't been enabled by the time that WiFi shuts
 								 *  down, then the transmitter will never run. Just sleep indefinitely
@@ -397,7 +397,7 @@ ISR(TCB3_INT_vect)
 								if(!g_event_enabled)
 								{
 									g_sleepType = SLEEP_FOREVER;
-									g_go_to_sleep = TRUE;
+									g_go_to_sleep = true;
 									g_seconds_to_sleep = MAX_TIME;
 								}
 								else if(g_sleepType == SLEEP_AFTER_WIFI_GOES_OFF)
@@ -405,14 +405,14 @@ ISR(TCB3_INT_vect)
 									eventEnabled(); /* Sets sleep time appropriately */
 								}
 
-								g_wifi_active = FALSE;
+								g_wifi_active = false;
 							}
 						}
 					}
 
 					if(g_wifi_active)
 					{
-						g_report_seconds = TRUE;
+						g_report_seconds = true;
 					}
 				}
 			}
@@ -432,10 +432,10 @@ ISR(TCB0_INT_vect)
 {
     if(TCB0.INTFLAGS & TCB_CAPT_bm)
     {
-//		static BOOL conversionInProcess = FALSE;
+//		static bool conversionInProcess = false;
 //		static int8_t indexConversionInProcess;
 		static uint16_t codeInc = 0;
-		BOOL repeat, finished;
+		bool repeat, finished;
 		
 		if(g_i2c0_timeout_ticks)
 		{
@@ -452,7 +452,7 @@ ISR(TCB0_INT_vect)
 			g_util_tick_countdown--;
 		}
 
-		static BOOL key = FALSE;
+		static bool key = false;
 
 		if(g_event_enabled && g_event_commenced)
 		{
@@ -470,7 +470,7 @@ ISR(TCB0_INT_vect)
 						{
 							g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
 							g_code_throttle = throttleValue(g_pattern_codespeed);
-							repeat = TRUE;
+							repeat = true;
 							makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 							key = makeMorse(NULL, &repeat, &finished);
 						}
@@ -530,7 +530,7 @@ ISR(TCB0_INT_vect)
 // 				g_tickCountdownADCFlag[indexConversionInProcess] = g_adcChannelConversionPeriod_ticks[indexConversionInProcess];    /* reset the tick countdown */
 // //				ADMUX = (ADMUX & 0xF0) | activeADC[indexConversionInProcess];                                                       /* index through all active channels */
 // //				ADCSRA |= (1 << ADSC);                                                                                              /*single conversion mode */
-// 				conversionInProcess = TRUE;
+// 				conversionInProcess = true;
 // 			}
 // 		}
 // 		else if(1 /*!( ADCSRA & (1 << ADSC) ) */)   /* wait for conversion to complete */
@@ -540,11 +540,11 @@ ISR(TCB0_INT_vect)
 // 			holdConversionResult = (uint16_t)(((uint32_t)hold * ADC_REF_VOLTAGE_mV) >> 10);                                         /* millivolts at ADC pin */
 // 			uint16_t lastResult = g_lastConversionResult[indexConversionInProcess];
 // 
-// 			g_adcUpdated[indexConversionInProcess] = TRUE;
+// 			g_adcUpdated[indexConversionInProcess] = true;
 // 
 // 			if(indexConversionInProcess == BATTERY_READING)
 // 			{
-// 				BOOL directionUP = holdConversionResult > lastResult;
+// 				bool directionUP = holdConversionResult > lastResult;
 // 				uint16_t delta = directionUP ? holdConversionResult - lastResult : lastResult - holdConversionResult;
 // 
 // 				if(delta > g_filterADCValue[indexConversionInProcess])
@@ -563,7 +563,7 @@ ISR(TCB0_INT_vect)
 // 						lastResult--;
 // 					}
 // 
-// 					g_battery_measurements_active = TRUE;
+// 					g_battery_measurements_active = true;
 // 
 // 					if(lastResult > VOLTS_5)
 // 					{
@@ -591,7 +591,7 @@ ISR(TCB0_INT_vect)
 // 
 // 			g_lastConversionResult[indexConversionInProcess] = lastResult;
 // 
-// 			conversionInProcess = FALSE;
+// 			conversionInProcess = false;
 // 		}
 
         TCB0.INTFLAGS = TCB_CAPT_bm; /* clear interrupt flag */
@@ -814,7 +814,7 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 					f = atol(sb_buff->fields[SB_FIELD1]);
 
 					Frequency_Hz ff = f;
-					if(!txSetFrequency(&ff, TRUE))
+					if(!txSetFrequency(&ff, true))
 					{
 						transmitter_freq = ff;
 						g_ee_mgr.saveAllEEPROM();
@@ -851,7 +851,7 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 					}
 					else if(sb_buff->fields[SB_FIELD1][0] == '2')  /* Start the event at the programmed start time */
 					{
- 						g_transmissions_disabled = TRUE;        /* Disable an event currently underway */
+ 						g_transmissions_disabled = true;        /* Disable an event currently underway */
  						startEventUsingRTC();
 					}
 					else if(sb_buff->fields[SB_FIELD1][0] == '3')  /* Start the event immediately with a transmissions starting now */
@@ -951,7 +951,7 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 
 			case SB_MESSAGE_CLOCK:
 			{
-				BOOL doprint = false;
+				bool doprint = false;
 
 				if(sb_buff->fields[SB_FIELD1][0] == 'T')   /* Current time format "YYMMDDhhmmss" */
 				{
@@ -974,7 +974,7 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 							{
 								char t[50];
 								g_current_epoch = ds3231_get_epoch(null);
- 								sprintf(g_tempStr, "Time: %s (%lu)\n", convertEpochToTimeString(g_current_epoch, t, 50), g_current_epoch);
+ 								sprintf(g_tempStr, "Time: %s\n", convertEpochToTimeString(g_current_epoch, t, 50));
  								setupForFox(NULL, START_NOTHING);   /* Avoid timing problems if an event is already active */
 							}
  						}
@@ -985,15 +985,14 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 							
  							g_current_epoch = ds3231_get_epoch(&result);
 							 
-							if(!result)
+							if(result)
 							{
-								char t[50];
- 								sprintf(g_tempStr, "Time: %s (%lu)\n", convertEpochToTimeString(g_current_epoch, t, 50), g_current_epoch);
-// 								sprintf(g_tempStr, "Epoch:%lu\n", g_current_epoch);
+								sb_send_string(TEXT_RTC_NOT_RESPONDING_TXT);
 							}
 							else
 							{
-								sb_send_string(TEXT_RTC_NOT_RESPONDING_TXT);
+								char t[50];
+								sprintf(g_tempStr, "Time: %s\n", convertEpochToTimeString(g_current_epoch, t, 50));
 							}
 					}
 
@@ -1011,11 +1010,11 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
  						g_event_finish_epoch = MAX(g_event_finish_epoch, (g_event_start_epoch + SECONDS_24H));
   						g_ee_mgr.updateEEPROMVar(Event_finish_epoch, (void*)&g_event_finish_epoch);
  						setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);
-// 						if(g_event_start_epoch > g_current_epoch) startEventUsingRTC();
+ 						if(g_event_start_epoch > g_current_epoch) startEventUsingRTC();
  					}
  
 					char t[50];
-					sprintf(g_tempStr, "Start: %s (%lu)\n", convertEpochToTimeString(g_event_start_epoch, t, 50), g_event_start_epoch);
+					sprintf(g_tempStr, "Start: %s\n", convertEpochToTimeString(g_event_start_epoch, t, 50));
   					doprint = true;
 				}
 				else if(sb_buff->fields[SB_FIELD1][0] == 'F')  /* Event finish time */
@@ -1032,7 +1031,7 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
  					}
  
 					char t[50];
-					sprintf(g_tempStr, "Finish: %s (%lu)\n", convertEpochToTimeString(g_event_finish_epoch, t, 50), g_event_finish_epoch);
+					sprintf(g_tempStr, "Finish: %s\n", convertEpochToTimeString(g_event_finish_epoch, t, 50));
  					doprint = true;
 				}
 				else if(sb_buff->fields[SB_FIELD1][0] == '*')  /* Sync seconds to zero */
@@ -1112,7 +1111,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 {
 	LinkbusRxBuffer* lb_buff;
 	static uint8_t event_parameter_count = 0;
-	BOOL send_ack = TRUE;
+	bool send_ack = true;
 
 	while((lb_buff = nextFullLBRxBuffer()))
 	{
@@ -1122,7 +1121,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 		{
 			case LB_MESSAGE_WIFI:
 			{
-				BOOL result;
+				bool result;
 
 				if(lb_buff->fields[LB_MSG_FIELD1][0])
 				{
@@ -1156,7 +1155,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 			{
 				char f1 = lb_buff->fields[LB_MSG_FIELD1][0];
 
-				g_wifi_active = TRUE;
+				g_wifi_active = true;
 
 				if(f1 == 'Z')                                                       /* WiFi connected to browser - keep alive */
 				{
@@ -1181,10 +1180,10 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 						cli();
 						g_wifi_enable_delay = 0;
 						g_WiFi_shutdown_seconds = 1;        /* Shut down WiFi in 1 seconds */
-						g_waiting_for_next_event = FALSE;   /* Prevents resetting shutdown settings */
-						g_check_for_next_event = FALSE;     /* Prevents resetting shutdown settings */
-						g_wifi_active = FALSE;
-						g_shutting_down_wifi = TRUE;
+						g_waiting_for_next_event = false;   /* Prevents resetting shutdown settings */
+						g_check_for_next_event = false;     /* Prevents resetting shutdown settings */
+						g_wifi_active = false;
+						g_shutting_down_wifi = true;
 						sei();
 					}
 				}
@@ -1245,7 +1244,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 							{
 								/* Set the Morse code pattern and speed */
 								cli();
-								BOOL repeat = TRUE;
+								bool repeat = true;
 								makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 								g_code_throttle = throttleValue(g_pattern_codespeed);
 								sei();
@@ -1255,8 +1254,8 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 								g_off_air_seconds = 0;                      /* off period is very short */
 								g_on_the_air = 9999;                        /*  start out transmitting */
 								g_sendID_seconds_countdown = MAX_UINT16;    /* wait a long time to send the ID */
-								g_event_commenced = TRUE;                   /* get things running immediately */
-								g_event_enabled = TRUE;                     /* get things running immediately */
+								g_event_commenced = true;                   /* get things running immediately */
+								g_event_enabled = true;                     /* get things running immediately */
 								g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
 							}
 							else
@@ -1279,7 +1278,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 								if(g_go_to_sleep && g_sleepType)
 								{
 									g_sleepType = SLEEP_AFTER_WIFI_GOES_OFF;
-									g_go_to_sleep = FALSE;
+									g_go_to_sleep = false;
 								}
 
 								g_WiFi_shutdown_seconds = 60;
@@ -1343,7 +1342,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 
 			case LB_MESSAGE_CLOCK:
 			{
-				g_wifi_active = TRUE;
+				g_wifi_active = true;
 
 				if(lb_buff->type == LINKBUS_MSG_COMMAND)    /* ignore replies since, as the time source, we should never be sending queries anyway */
 				{
@@ -1517,7 +1516,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					f = atol(lb_buff->fields[LB_MSG_FIELD1]);
 
 					Frequency_Hz ff = f;
-					if(!txSetFrequency(&ff, TRUE))
+					if(!txSetFrequency(&ff, true))
 					{
 						transmitter_freq = ff;
 						event_parameter_count++;
@@ -1596,11 +1595,11 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
  *
  * These functions are available only within this file
  ************************************************************************/
-BOOL __attribute__((optimize("O0"))) eventEnabled()
+bool __attribute__((optimize("O0"))) eventEnabled()
 {
 	time_t now;
 	int32_t dif;
-	BOOL runsFinite;
+	bool runsFinite;
 
 	dif = timeDif(g_event_finish_time, g_event_start_time);
 	runsFinite = (dif > 0);
@@ -1610,7 +1609,7 @@ BOOL __attribute__((optimize("O0"))) eventEnabled()
 
 	if((dif >= 0) && runsFinite)
 	{
-		return( FALSE); /* completed events are never enabled */
+		return( false); /* completed events are never enabled */
 	}
 
 	dif = timeDif(now, g_event_start_time);
@@ -1619,16 +1618,16 @@ BOOL __attribute__((optimize("O0"))) eventEnabled()
 	{
 		g_sleepType = NOT_SLEEPING;
 		g_seconds_to_sleep = 0;
-		return( TRUE);
+		return( true);
 	}
 
 	/* If we reach here, we have an event that has not yet started, and a sleep time needs to be calculated
 	 * consider if there is time for sleep prior to the event start */
 	g_seconds_to_sleep = (-dif) - 60;   /* sleep until 60 seconds before its start time */
 	g_sleepType = SLEEP_UNTIL_START_TIME;
-	g_go_to_sleep = TRUE;
+	g_go_to_sleep = true;
 
-	return( TRUE);
+	return( true);
 }
 
 
@@ -1727,7 +1726,7 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 
 		if(dif >= 0)                                    /* start time is in the past */
 		{
-			BOOL turnOnTransmitter = FALSE;
+			bool turnOnTransmitter = false;
 			int cyclePeriod = g_on_air_seconds + g_off_air_seconds;
 			int secondsIntoCycle = dif % cyclePeriod;
 			int timeTillTransmit = g_intra_cycle_delay_time - secondsIntoCycle;
@@ -1750,7 +1749,7 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 				else    /* we should be transmitting right now */
 				{
 					g_on_the_air = g_on_air_seconds + timeTillTransmit;
-					turnOnTransmitter = TRUE;
+					turnOnTransmitter = true;
 					if(statusCode)
 					{
 						*statusCode = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
@@ -1782,7 +1781,7 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 			if(turnOnTransmitter)
 			{
 				cli();
-				BOOL repeat = TRUE;
+				bool repeat = true;
 				makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 				g_code_throttle = throttleValue(g_pattern_codespeed);
 				sei();
@@ -1792,7 +1791,7 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 				keyTransmitter(OFF);
 			}
 
-			g_event_commenced = TRUE;
+			g_event_commenced = true;
 		}
 		else    /* start time is in the future */
 		{
@@ -1803,7 +1802,7 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 			keyTransmitter(OFF);
 		}
 
-		g_waiting_for_next_event = FALSE;
+		g_waiting_for_next_event = false;
 		g_update_timeout_seconds = 90;
 	}
 
@@ -1826,12 +1825,12 @@ void set_ports(SleepType initType)
 	
 }
 
-BOOL antennaIsConnected()
+bool antennaIsConnected()
 {
 	return true;
 }
 
-void initializeAllEventSettings(BOOL disableEvent)
+void initializeAllEventSettings(bool disableEvent)
 {
 	
 }
@@ -1896,7 +1895,7 @@ void startEventNow(EventActionSource_t activationSource)
 		}
 	}
 
-// 	g_LED_enunciating = FALSE;
+// 	g_LED_enunciating = false;
 	sei();
 }
 
@@ -1975,8 +1974,8 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 
 	cli();
 	
-	g_event_commenced = FALSE;					/* get things running immediately */
-	g_event_enabled = FALSE;					/* get things running immediately */
+	g_event_commenced = false;					/* get things running immediately */
+	g_event_enabled = false;					/* get things running immediately */
 
 	switch(g_fox)
 	{
@@ -2020,7 +2019,7 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 				sprintf(g_messages_text[PATTERN_TEXT], "MO5");
 			}
 			
-			BOOL repeat = TRUE;
+			bool repeat = true;
 			makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 			g_code_throttle = throttleValue(g_pattern_codespeed);
 
@@ -2070,7 +2069,7 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 				}
 			}
 			
-			BOOL repeat = TRUE;
+			bool repeat = true;
 			makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 			g_pattern_codespeed = 8;
 			g_code_throttle = throttleValue(g_pattern_codespeed);
@@ -2121,7 +2120,7 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 				}
 			}
 			
-			BOOL repeat = TRUE;
+			bool repeat = true;
 			makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 			g_pattern_codespeed = 15;
 			g_code_throttle = throttleValue(g_pattern_codespeed);
@@ -2149,7 +2148,7 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 		 * case SPECTATOR: */
 		default:
 		{
-			BOOL repeat = TRUE;
+			bool repeat = true;
 			makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 			g_pattern_codespeed = 8;
 			g_code_throttle = throttleValue(g_pattern_codespeed);
@@ -2162,23 +2161,23 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 
 	if(action == START_NOTHING)
 	{
-		g_event_commenced = FALSE;                   /* get things running immediately */
-		g_event_enabled = FALSE;                     /* get things running immediately */
+		g_event_commenced = false;                   /* get things running immediately */
+		g_event_enabled = false;                     /* get things running immediately */
 
- 		g_use_rtc_for_startstop = FALSE;
- 		g_transmissions_disabled = TRUE;
+ 		g_use_rtc_for_startstop = false;
+ 		g_transmissions_disabled = true;
 	}
 	else if(action == START_EVENT_NOW)
 	{
 // 		g_seconds_since_sync = 0;                   /* Total elapsed time since synchronization */
- 		g_use_rtc_for_startstop = FALSE;
- 		g_transmissions_disabled = FALSE;
-		g_event_commenced = TRUE;					/* get things running immediately */
-		g_event_enabled = TRUE;						/* get things running immediately */
+ 		g_use_rtc_for_startstop = false;
+ 		g_transmissions_disabled = false;
+		g_event_commenced = true;					/* get things running immediately */
+		g_event_enabled = true;						/* get things running immediately */
 	}
 	else if(action == START_TRANSMISSIONS_NOW)                                  /* Immediately start transmitting, regardless RTC or time slot */
 	{
-		BOOL repeat = TRUE;
+		bool repeat = true;
 		makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 		g_code_throttle = throttleValue(g_pattern_codespeed);
 
@@ -2186,13 +2185,13 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 // 		g_event_finish_time = MAX_TIME;             /* run for a long long time */
 		g_on_the_air = g_on_air_seconds;			/* start out transmitting */
 		g_sendID_seconds_countdown = 60;			/* wait a long time to send the ID */
-		g_event_commenced = TRUE;                   /* get things running immediately */
-		g_event_enabled = TRUE;                     /* get things running immediately */
+		g_event_commenced = true;                   /* get things running immediately */
+		g_event_enabled = true;                     /* get things running immediately */
 		g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
 		
 // 		g_seconds_since_sync = (g_fox_counter - 1) * g_on_air_interval_seconds; /* Total elapsed time since start of event */
- 		g_use_rtc_for_startstop = FALSE;
- 		g_transmissions_disabled = FALSE;
+ 		g_use_rtc_for_startstop = false;
+ 		g_transmissions_disabled = false;
 // 		g_initialize_fox_transmissions = INIT_EVENT_STARTING_NOW;
 	}
 	else         /* if(action == START_EVENT_WITH_STARTFINISH_TIMES) */
@@ -2204,20 +2203,20 @@ void setupForFox(Fox_t* fox, EventAction_t action)
  		{
  		}
  
- 		g_use_rtc_for_startstop = TRUE;
- 		g_transmissions_disabled = TRUE;
+ 		g_use_rtc_for_startstop = true;
+ 		g_transmissions_disabled = true;
 	}
 
 // 	sendMorseTone(OFF);
 // 	g_code_throttle    = 0;                 /* Adjusts Morse code speed */
-// 	g_on_the_air       = FALSE;             /* Controls transmitter Morse activity */
+// 	g_on_the_air       = false;             /* Controls transmitter Morse activity */
 
 // 	g_config_error = NULL_CONFIG;           /* Trigger a new configuration enunciation */
 // 	digitalWrite(PIN_LED, OFF);             /*  LED Off - in case it was left on */
 // 
 // 	digitalWrite(PIN_CW_KEY_LOGIC, OFF);    /* TX key line */
-// 	g_sendAMmodulation = FALSE;
-// 	g_LED_enunciating = FALSE;
+// 	g_sendAMmodulation = false;
+// 	g_LED_enunciating = false;
 // 	g_config_error = NULL_CONFIG;           /* Trigger a new configuration enunciation */
 
 	sei();
@@ -2291,13 +2290,13 @@ time_t validateTimeString(char* str, time_t* epochVar, int8_t offsetHours)
 }
 
 
-BOOL reportTimeTill(time_t from, time_t until, const char* prefix, const char* failMsg)
+bool reportTimeTill(time_t from, time_t until, const char* prefix, const char* failMsg)
 {
-	BOOL failure = FALSE;
+	bool failure = false;
 
 	if(from >= until)   /* Negative time */
 	{
-		failure = TRUE;
+		failure = true;
 		if(failMsg)
 		{
 			sb_send_string((char*)failMsg);

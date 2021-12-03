@@ -70,11 +70,11 @@ typedef int16_t Attenuation;
 
 /**
  */
-	EC txSetParameters(uint16_t* power_mW, BOOL* enableDriverPwr);
+	EC txSetParameters(uint16_t* power_mW, bool* enableDriverPwr);
 
 /**
  */
-	BOOL txSetFrequency(Frequency_Hz *freq, BOOL leaveClockOff);
+	bool txSetFrequency(Frequency_Hz *freq, bool leaveClockOff);
 
 /**
  */
@@ -87,20 +87,20 @@ typedef int16_t Attenuation;
 
 /**
  */
-void keyTransmitter(BOOL on);
+void keyTransmitter(bool on);
 
 /**
  */
-EC powerToTransmitter(BOOL on);
+EC powerToTransmitter(bool on);
 
 /**
  */
 EC txMilliwattsToSettings(uint16_t* powerMW, uint8_t* powerLevel, uint8_t* modLevelHigh, uint8_t* modLevelLow);
 
 /**
-Returns TRUE if an antenna for the active band is connected to the transmitter
+Returns true if an antenna for the active band is connected to the transmitter
  */
-BOOL txIsAntennaForBand(void);
+bool txIsAntennaForBand(void);
 
 
 #endif  /* TRANSMITTER_H_ */

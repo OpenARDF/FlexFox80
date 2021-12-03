@@ -35,26 +35,26 @@ MorseCharacter getMorseChar(char c);
 /*
  *  Load a string to send by passing in a pointer via the first argument.
  *  Call this function with a NULL argument at intervals of 1 element of time to generate Morse code.
- *  Once loaded with a string each call to this function returns a BOOL indicating whether a CW carrier should be sent
- *  Pass in a pointer to a BOOL in the second and third arguments:
+ *  Once loaded with a string each call to this function returns a bool indicating whether a CW carrier should be sent
+ *  Pass in a pointer to a bool in the second and third arguments:
  */
-BOOL makeMorse(char* s, BOOL* repeating, BOOL* finished)
+bool makeMorse(char* s, bool* repeating, bool* finished)
 {
 	static char* str = NULL;
 	static char c = ' ';
-	static BOOL repeat = TRUE;
+	static bool repeat = true;
 	static MorseCharacter morseInProgress;
 	static uint8_t charIndex;       /* letters, numbers, punctuation */
 	static uint8_t symbolIndex;     /* dits and dahs */
 	static uint8_t elementIndex;    /* units of time: dit = 1, dah = 3, intersymbol = 1, intercharacter = 3, etc. */
 	static uint8_t addedSpace;      /* adds additional time to make an inter-character space */
-	static BOOL completedString = FALSE;
-	static BOOL carrierOn = FALSE;
-	static BOOL holdKeyDown = FALSE;
+	static bool completedString = false;
+	static bool carrierOn = false;
+	static bool holdKeyDown = false;
 
 	if(s)   /* load a new NULL-terminated string to send */
 	{
-		holdKeyDown = FALSE;
+		holdKeyDown = false;
 
 		if(repeating)
 		{
@@ -70,15 +70,15 @@ BOOL makeMorse(char* s, BOOL* repeating, BOOL* finished)
 			symbolIndex = 0;
 			elementIndex = 0;
 			addedSpace = 0;
-			completedString = FALSE;
+			completedString = false;
 		}
 		else    /* a zero-length string shuts down makeMorse */
 		{
 			str = NULL;
-			completedString = TRUE;
+			completedString = true;
 			if(finished)
 			{
-				*finished = TRUE;
+				*finished = true;
 			}
 		}
 
@@ -96,8 +96,8 @@ BOOL makeMorse(char* s, BOOL* repeating, BOOL* finished)
 		{
 			if(finished)
 			{
-				*finished = TRUE;
-				holdKeyDown = FALSE;
+				*finished = true;
+				holdKeyDown = false;
 			}
 			return( OFF);
 		}
@@ -108,7 +108,7 @@ BOOL makeMorse(char* s, BOOL* repeating, BOOL* finished)
 		}
 		else if(carrierOn && !holdKeyDown)  /* carrier is on, so turn it off and wait appropriate amount of space */
 		{
-			carrierOn = FALSE;
+			carrierOn = false;
 			/* wait one element = inter-symbol space */
 			if(addedSpace)
 			{
@@ -134,12 +134,12 @@ BOOL makeMorse(char* s, BOOL* repeating, BOOL* finished)
 					{
 						str = NULL;
 						carrierOn = OFF;
-						completedString = TRUE;
+						completedString = true;
 						if(finished)
 						{
-							*finished = TRUE;
+							*finished = true;
 						}
-						holdKeyDown = FALSE;
+						holdKeyDown = false;
 						return( OFF );
 					}
 				}
@@ -150,7 +150,7 @@ BOOL makeMorse(char* s, BOOL* repeating, BOOL* finished)
 
 			if(morseInProgress.pattern < INTER_WORD_SPACE)
 			{
-				BOOL isDah = morseInProgress.pattern & (1 << symbolIndex++);
+				bool isDah = morseInProgress.pattern & (1 << symbolIndex++);
 
 				if(isDah)
 				{
@@ -161,7 +161,7 @@ BOOL makeMorse(char* s, BOOL* repeating, BOOL* finished)
 					elementIndex = 0;
 				}
 
-				carrierOn = TRUE;
+				carrierOn = true;
 
 				if(symbolIndex >= morseInProgress.lengthInSymbols)
 				{
@@ -172,7 +172,7 @@ BOOL makeMorse(char* s, BOOL* repeating, BOOL* finished)
 			{
 				uint8_t sym = morseInProgress.lengthInSymbols;
 				symbolIndex = 255;  /* ensure the next character gets read */
-				carrierOn = FALSE;
+				carrierOn = false;
 				if(sym >= 4 )
 				{
 					elementIndex = morseInProgress.lengthInSymbols - 4;
@@ -187,11 +187,11 @@ BOOL makeMorse(char* s, BOOL* repeating, BOOL* finished)
 		/* Overrides for key on and key off special characters */
 		if(c == '<')    /* constant tone */
 		{
-			holdKeyDown = TRUE;
+			holdKeyDown = true;
 		}
 		else
 		{
-			holdKeyDown = FALSE;
+			holdKeyDown = false;
 		}
 	}
 
@@ -202,7 +202,7 @@ BOOL makeMorse(char* s, BOOL* repeating, BOOL* finished)
 
 	if(holdKeyDown)
 	{
-		return(TRUE);
+		return(true);
 	}
 	else
 	{

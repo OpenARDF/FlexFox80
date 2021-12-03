@@ -96,7 +96,7 @@ void serial_Rx(uint8_t rx_char)
 	static uint8_t field_index = 0;
 	static uint8_t field_len = 0;
 	static int msg_ID = 0;
-	static BOOL receiving_msg = FALSE;
+	static bool receiving_msg = false;
 
 	if(!buff)
 	{
@@ -155,7 +155,7 @@ void serial_Rx(uint8_t rx_char)
 			field_index = 0;
 			buff = NULL;
 
-			receiving_msg = FALSE;
+			receiving_msg = false;
 		}
 		else if(rx_char)
 		{
@@ -191,7 +191,7 @@ void serial_Rx(uint8_t rx_char)
 
 					if(charIndex == 0)
 					{
-						receiving_msg = FALSE;
+						receiving_msg = false;
 					}
 				}
 				else
@@ -262,7 +262,7 @@ void serial_Rx(uint8_t rx_char)
 						buff->fields[i][0] = '\0';
 					}
 
-					receiving_msg = TRUE;
+					receiving_msg = true;
 					charIndex++;
 				}
 			}
@@ -422,7 +422,7 @@ void linkbus_Rx(uint8_t rx_char)
 	static uint8_t field_index = 0;
 	static uint8_t field_len = 0;
 	static uint32_t tempMsg_ID = 0;
-	static BOOL receiving_msg = FALSE;
+	static bool receiving_msg = false;
 
 	if(!buff)
 	{
@@ -439,7 +439,7 @@ void linkbus_Rx(uint8_t rx_char)
 			buff->type = (rx_char == '!') ? LINKBUS_MSG_REPLY : LINKBUS_MSG_COMMAND;
 			field_len = 0;
 			tempMsg_ID = 0;
-			receiving_msg = TRUE;
+			receiving_msg = true;
 
 			/* Empty the field buffers */
 			for(field_index = 0; field_index < LINKBUS_MAX_MSG_NUMBER_OF_FIELDS; field_index++)
@@ -468,7 +468,7 @@ void linkbus_Rx(uint8_t rx_char)
 					{
 						buff->id = (LBMessageID)tempMsg_ID;
 					}
-					receiving_msg = FALSE;
+					receiving_msg = false;
 				}
 				else if(rx_char == '?')
 				{
@@ -477,7 +477,7 @@ void linkbus_Rx(uint8_t rx_char)
 					{
 						buff->id = (LBMessageID)tempMsg_ID;
 					}
-					receiving_msg = FALSE;
+					receiving_msg = false;
 				}
 
 				if(!receiving_msg)
@@ -509,7 +509,7 @@ void linkbus_Rx(uint8_t rx_char)
 
 		if(++charIndex >= LINKBUS_MAX_MSG_LENGTH)
 		{
-			receiving_msg = FALSE;
+			receiving_msg = false;
 			charIndex = 0;
 		}
 	}

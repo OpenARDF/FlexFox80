@@ -77,8 +77,8 @@ EepromManager();
 
 static const struct EE_prom ee_vars;
 
-BOOL initializeEEPROMVars(void);
-BOOL readNonVols(void);
+bool initializeEEPROMVars(void);
+bool readNonVols(void);
 void updateEEPROMVar(EE_var_t v, void* val);
 void saveAllEEPROM();
 

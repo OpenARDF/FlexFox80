@@ -288,15 +288,6 @@ extern "C" {
 
 #define RFRAC_DENOM                                     ((1L << 20) - 1)
 
-#ifndef FALSE
-	#define FALSE 0
-#endif
-
-#ifndef TRUE
-	#define TRUE !FALSE
-#endif
-
-
 #ifdef DEBUGGING_ONLY
 
 #define NUM_REGS_MAX 100
@@ -314,9 +305,6 @@ extern "C" {
  * Typedefs
  ******************************************************************************************************************** */
 
-#ifndef BOOL
-	typedef uint8_t BOOL;
-#endif
 
 #ifndef Frequency_Hz
 	typedef uint32_t Frequency_Hz;
@@ -412,7 +400,7 @@ extern "C" {
 	typedef struct
 	{
 		Frequency_Hz freq;
-		BOOL enabled;
+		bool enabled;
 		Si5351_drive drive;
 	} ClockPin;
 
@@ -443,11 +431,11 @@ extern "C" {
 
 /**
  */
-BOOL si5351_init(Si5351_Xtal_load_pF, Frequency_Hz);
+bool si5351_init(Si5351_Xtal_load_pF, Frequency_Hz);
 
 /**
  */
-BOOL si5351_set_freq(Frequency_Hz, Si5351_clock, BOOL clocksOff);
+bool si5351_set_freq(Frequency_Hz, Si5351_clock, bool clocksOff);
 
 /**
  */
@@ -455,7 +443,7 @@ Frequency_Hz si5351_get_frequency(Si5351_clock clock);
 
 /**
  */
-EC si5351_clock_enable(Si5351_clock, BOOL);
+EC si5351_clock_enable(Si5351_clock, bool);
 
 /**
  */
@@ -487,7 +475,7 @@ void si5351_read_status(void);
 
 /**
  */
-BOOL compare_with_register_map(void);
+bool compare_with_register_map(void);
 
 /**
  */

@@ -288,9 +288,9 @@ void EepromManager::saveAllEEPROM(void)
 }
 
 
-BOOL EepromManager::readNonVols(void)
+bool EepromManager::readNonVols(void)
 {
-	BOOL failure = TRUE;
+	bool failure = true;
 	uint16_t i;
 	uint16_t initialization_flag = eeprom_read_word(0);
 
@@ -330,7 +330,7 @@ BOOL EepromManager::readNonVols(void)
 			g_event_finish_epoch = g_event_start_epoch + SECONDS_24H;
 		}
 
-		failure = FALSE;
+		failure = false;
 	}
 
 	return( failure);
@@ -339,9 +339,9 @@ BOOL EepromManager::readNonVols(void)
 /*
  * Set volatile variables to their values stored in EEPROM
  */
-	BOOL EepromManager::initializeEEPROMVars(void)
+	bool EepromManager::initializeEEPROMVars(void)
 	{
-		BOOL err = FALSE;
+		bool err = false;
 		uint16_t i, j;
 
 		uint16_t initialization_flag = eeprom_read_word(0);

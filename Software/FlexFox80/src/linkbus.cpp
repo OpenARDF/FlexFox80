@@ -33,25 +33,25 @@
 #include <avr/wdt.h>
 
 /* Global Variables */
-static volatile BOOL g_bus_disabled = TRUE;
+static volatile bool g_bus_disabled = true;
 USART_Number_t g_linkbus_usart_number = USART_NOT_SET;
 
 static char g_tempMsgBuff[LINKBUS_MAX_MSG_LENGTH];
 
 /* Local function prototypes */
-static BOOL linkbus_start_tx(void);
+static bool linkbus_start_tx(void);
 // static void USART0_initialization(uint32_t baud);
 static void USART1_initialization(uint32_t baud);
 static void USART4_initialization(uint32_t baud);
 
 /* Module global variables */
-static volatile BOOL linkbus_tx_active = FALSE; // volatile is required to ensure optimizer handles this properly
+static volatile bool linkbus_tx_active = false; // volatile is required to ensure optimizer handles this properly
 static LinkbusTxBuffer tx_buffer[LINKBUS_NUMBER_OF_TX_MSG_BUFFERS];
 static LinkbusRxBuffer rx_buffer[LINKBUS_NUMBER_OF_RX_MSG_BUFFERS];
 
 LinkbusTxBuffer* nextFullLBTxBuffer(void)
 {
-	BOOL found = TRUE;
+	bool found = true;
 	static uint8_t bufferIndex = 0;
 	uint8_t count = 0;
 
@@ -59,7 +59,7 @@ LinkbusTxBuffer* nextFullLBTxBuffer(void)
 	{
 		if(++count >= LINKBUS_NUMBER_OF_TX_MSG_BUFFERS)
 		{
-			found = FALSE;
+			found = false;
 			break;
 		}
 
@@ -80,7 +80,7 @@ LinkbusTxBuffer* nextFullLBTxBuffer(void)
 
 LinkbusTxBuffer* nextEmptyLBTxBuffer(void)
 {
-	BOOL found = TRUE;
+	bool found = true;
 	static uint8_t bufferIndex = 0;
 	uint8_t count = 0;
 
@@ -88,7 +88,7 @@ LinkbusTxBuffer* nextEmptyLBTxBuffer(void)
 	{
 		if(++count >= LINKBUS_NUMBER_OF_TX_MSG_BUFFERS)
 		{
-			found = FALSE;
+			found = false;
 			break;
 		}
 
@@ -109,7 +109,7 @@ LinkbusTxBuffer* nextEmptyLBTxBuffer(void)
 
 LinkbusRxBuffer* nextEmptyLBRxBuffer(void)
 {
-	BOOL found = TRUE;
+	bool found = true;
 	static uint8_t bufferIndex = 0;
 	uint8_t count = 0;
 
@@ -117,7 +117,7 @@ LinkbusRxBuffer* nextEmptyLBRxBuffer(void)
 	{
 		if(++count >= LINKBUS_NUMBER_OF_RX_MSG_BUFFERS)
 		{
-			found = FALSE;
+			found = false;
 			break;
 		}
 
@@ -138,7 +138,7 @@ LinkbusRxBuffer* nextEmptyLBRxBuffer(void)
 
 LinkbusRxBuffer* nextFullLBRxBuffer(void)
 {
-	BOOL found = TRUE;
+	bool found = true;
 	static uint8_t bufferIndex = 0;
 	uint8_t count = 0;
 
@@ -146,7 +146,7 @@ LinkbusRxBuffer* nextFullLBRxBuffer(void)
 	{
 		if(++count >= LINKBUS_NUMBER_OF_RX_MSG_BUFFERS)
 		{
-			found = FALSE;
+			found = false;
 			break;
 		}
 
@@ -169,18 +169,18 @@ LinkbusRxBuffer* nextFullLBRxBuffer(void)
 /***********************************************************************
  * linkbusTxInProgress(void)
  ************************************************************************/
-BOOL linkbusTxInProgress(void)
+bool linkbusTxInProgress(void)
 {
 	return(linkbus_tx_active);
 }
 
-BOOL linkbus_start_tx(void)
+bool linkbus_start_tx(void)
 {
-	BOOL success = !linkbus_tx_active;
+	bool success = !linkbus_tx_active;
 
 	if(success) /* message will be lost if transmit is busy */
 	{
-		linkbus_tx_active = TRUE;
+		linkbus_tx_active = true;
 		
 		if(g_linkbus_usart_number == USART_0)
 		{	
@@ -208,7 +208,7 @@ void linkbus_end_tx(void)
 			USART1.CTRLA &= ~(1 << USART_DREIE_bp); /* Transmit Data Register Empty Interrupt Enable: disable */
 		}
 		
-		linkbus_tx_active = FALSE;
+		linkbus_tx_active = false;
 	}
 }
 
@@ -302,14 +302,14 @@ void linkbus_init(uint32_t baud, USART_Number_t usart)
 		g_linkbus_usart_number = usart;
 	}
 
-	g_bus_disabled = FALSE;
+	g_bus_disabled = false;
 }
 
 void linkbus_disable(void)
 {
 	uint8_t bufferIndex;
 
-	g_bus_disabled = TRUE;
+	g_bus_disabled = true;
 
 	if(g_linkbus_usart_number == USART_4)
 	{	
@@ -333,7 +333,7 @@ void linkbus_enable(void)
 {
 	uint8_t bufferIndex;
 
-	g_bus_disabled = FALSE;
+	g_bus_disabled = false;
 
 	if(g_linkbus_usart_number == USART_4)
 	{	
@@ -353,9 +353,9 @@ void linkbus_enable(void)
 }
 
 
-BOOL lb_send_text(char* text)
+bool lb_send_text(char* text)
 {
-	BOOL err = TRUE;
+	bool err = true;
 	uint16_t tries = 200;
 
 	if(g_bus_disabled) return err;
@@ -378,7 +378,7 @@ BOOL lb_send_text(char* text)
 			sprintf(*buff, text);
 
 			linkbus_start_tx();
-			err = FALSE;
+			err = false;
 		}
 	}
 

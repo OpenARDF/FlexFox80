@@ -35,7 +35,7 @@
 #include <time.h>
 
 int32_t timeDif(time_t a, time_t b);
-BOOL only_digits(char *s);
+bool only_digits(char *s);
 
 /***********************************************************************************************
  *  Print Formatting Utility Functions
@@ -46,7 +46,7 @@ BOOL only_digits(char *s);
  * Converts a string of format "yyyy-mm-ddThh:mm:ss" to seconds since 1900
  */
 uint32_t convertTimeStringToEpoch(char * s);
-BOOL mystrptime(char* s, struct tm* ltm);
+bool mystrptime(char* s, struct tm* ltm);
 #endif // DATE_STRING_SUPPORT_ENABLED
 
 #endif  /* UTIL_H_ */

@@ -59,7 +59,7 @@ extern "C" {
  */
 //	void ds3231_read_time(int32_t* val, char* buffer, TimeFormat format);
 #ifdef DATE_STRING_SUPPORT_ENABLED
-void ds3231_read_date_time(int32_t* val, char* buffer, TimeFormat format);
+bool ds3231_read_date_time(int32_t* val, char* buffer, TimeFormat format);
 #endif // DATE_STRING_SUPPORT_ENABLED
 
 /** 
@@ -84,7 +84,7 @@ time_t ds3231_get_epoch(EC *result);
  * dateString has the format YYMMDDhhmmss
  * ClockSetting setting = clock or alarm to be set
  */
-BOOL ds3231_set_date_time_arducon(char *datetime, ClockSetting setting);
+bool ds3231_set_date_time_arducon(char *datetime, ClockSetting setting);
 
 
 /**
@@ -107,22 +107,22 @@ BOOL ds3231_set_date_time_arducon(char *datetime, ClockSetting setting);
 /**
  *  Sets seconds to zero and updates minutes and hours appropriately
  */
-BOOL ds3231_sync2nearestMinute(void);
+bool ds3231_sync2nearestMinute(void);
 
 /**
  *
  */
-	BOOL ds3231_get_temp(int16_t * val);
+	bool ds3231_get_temp(int16_t * val);
 
 /**
  *  Turn on/off 1-second square wave on the INT/SQW pin.
  */
-	void ds3231_1s_sqw(BOOL enable);
+	bool ds3231_1s_sqw(bool enable);
 
 /**
  *
  */
-	void ds3231_set_aging(int8_t data_in);
+	bool ds3231_set_aging(int8_t data_in);
 
 /**
  *

@@ -35,13 +35,13 @@ extern volatile AntConnType g_antenna_connect_state;
 
 extern volatile BatteryType g_battery_type;
 
-static volatile BOOL g_tx_initialized = FALSE;
+static volatile bool g_tx_initialized = false;
 volatile Frequency_Hz g_80m_frequency = EEPROM_TX_80M_FREQUENCY_DEFAULT;
 volatile uint16_t g_80m_power_level_mW = EEPROM_TX_80M_POWER_MW_DEFAULT;
 volatile Frequency_Hz g_rtty_offset = EEPROM_RTTY_OFFSET_FREQUENCY_DEFAULT;
 
-static volatile BOOL g_transmitter_keyed = FALSE;
-volatile BOOL g_tx_power_is_zero = TRUE;
+static volatile bool g_transmitter_keyed = false;
+volatile bool g_tx_power_is_zero = true;
 
 uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 
@@ -50,9 +50,9 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
  *       and the VFO configuration in effect. The VFO  frequency might be above or below the intended  frequency, depending on the VFO
  *       configuration setting in effect for the radio band of the frequency.
  */
-	BOOL txSetFrequency(Frequency_Hz *freq, BOOL leaveClockOff)
+	bool txSetFrequency(Frequency_Hz *freq, bool leaveClockOff)
 	{
-		BOOL err = FALSE;
+		bool err = false;
 
 		if((*freq < TX_MAXIMUM_80M_FREQUENCY) && (*freq > TX_MINIMUM_80M_FREQUENCY))    /* 80m */
 		{
@@ -74,14 +74,14 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 		return( g_80m_frequency);
 	}
 
-	EC powerToTransmitter(BOOL on)
+	EC powerToTransmitter(bool on)
 	{
 		fet_driver(on);
 
 		return(ERROR_CODE_NO_ERROR);
 	}
 
-	void keyTransmitter(BOOL on)
+	void keyTransmitter(bool on)
 	{
 		if(g_tx_initialized)
 		{			
@@ -91,7 +91,7 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 				{
 					if(si5351_clock_enable(TX_CLOCK_HF_0, SI5351_CLK_ENABLED) == ERROR_CODE_NO_ERROR)
 					{
-						g_transmitter_keyed = TRUE;
+						g_transmitter_keyed = true;
 					}
 				}
 			}
@@ -99,7 +99,7 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 			{
 				if(si5351_clock_enable(TX_CLOCK_HF_0, SI5351_CLK_DISABLED) == ERROR_CODE_NO_ERROR)
 				{
-					g_transmitter_keyed = FALSE;
+					g_transmitter_keyed = false;
 				}
 			}
 		}
@@ -110,10 +110,10 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 		return( g_80m_power_level_mW);
 	}
 
-	EC __attribute__((optimize("O0"))) txSetParameters(uint16_t* power_mW, BOOL* enableDriverPwr)
-/*	EC txSetParameters(uint16_t* power_mW, BOOL* enableDriverPwr) */
+	EC __attribute__((optimize("O0"))) txSetParameters(uint16_t* power_mW, bool* enableDriverPwr)
+/*	EC txSetParameters(uint16_t* power_mW, bool* enableDriverPwr) */
 	{
-		BOOL err = FALSE;
+		bool err = false;
 		EC code = ERROR_CODE_NO_ERROR;
 		uint16_t power = 0;
 
@@ -139,8 +139,8 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 					}
 					else
 					{
-						g_tx_power_is_zero = TRUE;
-						err = TRUE;
+						g_tx_power_is_zero = true;
+						err = true;
 						code = ERROR_CODE_NO_ANTENNA_PREVENTS_POWER_SETTING;
 					}
 
@@ -158,7 +158,7 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 			}
 			else
 			{
-				err = TRUE;
+				err = true;
 				code = ERROR_CODE_POWER_LEVEL_NOT_SUPPORTED;
 			}
 		}
@@ -220,14 +220,14 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 // 		}
 
 		uint16_t pwr_mW = g_80m_power_level_mW;
-		if(txSetFrequency((Frequency_Hz*)&g_80m_frequency, TRUE))
+		if(txSetFrequency((Frequency_Hz*)&g_80m_frequency, true))
 		{
 			code = ERROR_CODE_RF_OSCILLATOR_ERROR;
 		}
 		else
 		{
 			txSetParameters(&pwr_mW, NULL);
-			g_tx_initialized = TRUE;
+			g_tx_initialized = true;
 		}
 
 		return( code);
@@ -345,15 +345,15 @@ EC txMilliwattsToSettings(uint16_t* powerMW, uint8_t* driveLevel, uint8_t* modLe
 
 /**
  */
-BOOL __attribute__((optimize("O0"))) txIsAntennaForBand(void)
+bool __attribute__((optimize("O0"))) txIsAntennaForBand(void)
 {
-	BOOL result = FALSE;
+	bool result = false;
 
 	switch(g_antenna_connect_state)
 	{
 		case ANT_80M_CONNECTED:
 		{
-			result = TRUE;
+			result = true;
 		}
 		break;
 
