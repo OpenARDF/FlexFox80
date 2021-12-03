@@ -31,7 +31,7 @@
 #define WIFI_RESET 6
 #define WIFI_ENABLE 5
 #define ANT_CONNECT_INT 4
-#define HF_ENABLE 3
+#define FET_DRIVER_ENABLE 3
 #define RTC_SQW 2
 #define RXD0 1
 #define TXD0 0
@@ -75,6 +75,7 @@ void BINIO_init(void);
 void wifi_power(bool state);
 void wifi_reset(bool state);
 bool wifiPresent(void);
+void fet_driver(bool state);
 
 class binio
 {

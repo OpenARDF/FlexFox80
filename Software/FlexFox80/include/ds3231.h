@@ -134,7 +134,7 @@ time_t RTC_String2Epoch(bool *error, char *datetime);
 /**
  *   Converts an epoch (seconds since 1900)  into a string with format "yymmddhhmmss"
  */
-char* convertEpochToTimeString(unsigned long epoch, char* timeString);
+char* convertEpochToTimeString(time_t epoch, char* buf, size_t size);
 
 
 #ifdef __cplusplus

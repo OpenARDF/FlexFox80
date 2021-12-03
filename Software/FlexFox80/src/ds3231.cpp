@@ -30,6 +30,7 @@
    #include "ds3231.h"
    #include <util/twi.h>
    #include <stdio.h>
+   #include <time.h>
    #include "i2c.h"
    #include "util.h"
 
@@ -549,25 +550,16 @@ BOOL ds3231_sync2nearestMinute()
 /**
  *   Converts an epoch (seconds since 1900)  into a string with format "yymmddhhmmss"
  */
-#define THIRTY_YEARS 946080000
-char* convertEpochToTimeString(unsigned long epoch, char* timeString)
+#define THIRTY_YEARS 946684800
+char* convertEpochToTimeString(time_t epoch, char* buf, size_t size)
  {
-   struct tm  ts;
+    struct tm  ts;
+	time_t t = epoch - THIRTY_YEARS;
 
-   if(!timeString) return(timeString);
-
-   if (epoch < MINIMUM_EPOCH)
-   {
-        timeString[0] = '\0';
-		return timeString;
-   }
-
-   time_t e = (time_t)epoch - THIRTY_YEARS;
-   // Format time, "yymmddhhmmss"
-   ts = *localtime(&e);
-   strftime(timeString, sizeof(timeString), "%y%m%d%H%M%S", &ts);
-
-   return timeString;
+    // Format time, "ddd yyyy-mm-dd hh:mm:ss zzz"
+    ts = *localtime(&t);
+    strftime(buf, size, "%a %Y-%m-%d %H:%M:%S", &ts);
+   return buf;
  }
 
 

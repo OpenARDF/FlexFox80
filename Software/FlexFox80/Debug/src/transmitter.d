@@ -17,7 +17,8 @@ src/transmitter.d src/transmitter.o: ../src/transmitter.cpp \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\lock.h \
  ../include/transmitter.h ../defs.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\interrupt.h \
- ../include/si5351.h ../include/i2c.h
+ ../include/si5351.h ../include/i2c.h ../include/dac0.h \
+ ../include/binio.h
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\string.h:
 
@@ -60,3 +61,7 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 ../include/si5351.h:
 
 ../include/i2c.h:
+
+../include/dac0.h:
+
+../include/binio.h:

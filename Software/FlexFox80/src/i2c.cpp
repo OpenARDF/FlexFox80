@@ -147,7 +147,7 @@ uint8_t I2C_0_SendData(uint8_t slaveAddr, uint8_t regAddr, uint8_t *pData, uint8
 	uint8_t retVal = (uint8_t) - 1;
 	
 	/* Send slave address */
-	TWI0.MADDR = slaveAddr & ~0x01;
+	TWI0.MADDR = slaveAddr;
 	if(i2c_0_WaitW() != I2C_ACKED)
 	{
 		return retVal;

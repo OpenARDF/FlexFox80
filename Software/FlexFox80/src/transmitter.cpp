@@ -28,6 +28,8 @@
 #include <avr/eeprom.h>
 #include "transmitter.h"
 #include "i2c.h"    /* DAC on 80m VGA of Rev X1 Receiver board */
+#include "dac0.h"
+#include "binio.h"
 
 extern volatile AntConnType g_antenna_connect_state;
 
@@ -42,14 +44,6 @@ static volatile BOOL g_transmitter_keyed = FALSE;
 volatile BOOL g_tx_power_is_zero = TRUE;
 
 uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
-
-/*
- *       Local Function Prototypes
- *
- */
-	/**
-	 */
-	void saveAllTransmitterEEPROM(void);
 
 /*
  *       This function sets the VFO frequency (CLK0 of the Si5351) based on the intended frequency passed in by the parameter (freq),
@@ -82,18 +76,9 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 
 	EC powerToTransmitter(BOOL on)
 	{
-		EC result = ERROR_CODE_NO_ERROR;
+		fet_driver(on);
 
-		if(on)
-		{
-// 			PORTB |= (1 << PORTB1);     /* Turn HF on */
-		}
-		else
-		{
-// 			PORTB &= ~(1 << PORTB1);  /* Turn off 80m band */
-		}
-
-		return(result);
+		return(ERROR_CODE_NO_ERROR);
 	}
 
 	void keyTransmitter(BOOL on)
@@ -132,13 +117,10 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 		EC code = ERROR_CODE_NO_ERROR;
 		uint16_t power = 0;
 
-		if(power_mW)
+		if(power_mW != null)
 		{
 			power = *power_mW;
-		}
 
-		if(power_mW != NULL)
-		{
 			if(power <= MAX_TX_POWER_80M_MW)
 			{
 				uint8_t drainVoltageDAC, modLevelHigh, modLevelLow;
@@ -153,11 +135,7 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 
 					if(txIsAntennaForBand())
 					{
-// 						err = dac081c_set_dac(drainVoltageDAC, PA_DAC);
-// 						if(err)
-// 						{
-// 							code = ERROR_CODE_DAC1_NONRESPONSIVE;
-// 						}
+						DAC0_setVal(drainVoltageDAC);
 					}
 					else
 					{
@@ -166,13 +144,13 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 						code = ERROR_CODE_NO_ANTENNA_PREVENTS_POWER_SETTING;
 					}
 
-					if(g_tx_power_is_zero || err || (drainVoltageDAC == 0))
+					if(g_tx_power_is_zero || (drainVoltageDAC == 0))
 					{
-// 							PORTB &= ~(1 << PORTB6);    /* Turn off Tx power */
+						powerToTransmitter(OFF); /* Turn off FET driver */
 					}
 					else
 					{
-// 							PORTB |= (1 << PORTB6);     /* Turn on Tx power */
+						powerToTransmitter(ON); /* Turn on FET driver */
 					}
 				}
 
@@ -200,6 +178,8 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 	EC init_transmitter(void)
 	{
 		EC code;
+		
+		DAC0_init();
 
 		if((code = (EC)si5351_init(SI5351_CRYSTAL_LOAD_6PF, 0)))
 		{
@@ -215,6 +195,7 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 		{
 			return( code);
 		}
+		
 		if((code = si5351_clock_enable(TX_CLOCK_HF_0, SI5351_CLK_DISABLED)))
 		{
 			return( code);

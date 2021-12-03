@@ -37,6 +37,18 @@ binio::~binio()
 {
 } //~binio
 
+void fet_driver(bool state)
+{
+	if(state == ON)
+	{
+		PORTA_set_pin_level(FET_DRIVER_ENABLE, HIGH);
+	}
+	else
+	{
+		PORTA_set_pin_level(FET_DRIVER_ENABLE, LOW);
+	}
+}
+
 
 void wifi_power(bool state)
 {
@@ -119,8 +131,8 @@ void BINIO_init(void)
 //	PORTA_set_pin_pull_mode(RTC_SQW, PORT_PULL_UP);
 	PORTA_pin_set_isc(RTC_SQW, PORT_ISC_RISING_gc);
 	
-	PORTA_set_pin_dir(HF_ENABLE, PORT_DIR_OUT);
-	PORTA_set_pin_level(HF_ENABLE, LOW);
+	PORTA_set_pin_dir(FET_DRIVER_ENABLE, PORT_DIR_OUT);
+	PORTA_set_pin_level(FET_DRIVER_ENABLE, LOW);
 	
 	PORTA_set_pin_dir(ANT_CONNECT_INT, PORT_DIR_IN);
 	PORTA_set_pin_pull_mode(ANT_CONNECT_INT, PORT_PULL_UP);

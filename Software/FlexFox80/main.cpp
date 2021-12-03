@@ -44,7 +44,7 @@ typedef enum
  * Whenever possible limit globals' scope to this file using "static"
  * Use "volatile" for globals shared between ISRs and foreground
  ************************************************************************/
-static char g_tempStr[21] = { '\0' };
+static char g_tempStr[50] = { '\0' };
 static volatile EC g_last_error_code = ERROR_CODE_NO_ERROR;
 static volatile SC g_last_status_code = STATUS_CODE_IDLE;
 
@@ -134,6 +134,10 @@ void set_ports(SleepType initType);
 BOOL antennaIsConnected(void);
 void initializeAllEventSettings(BOOL disableEvent);
 void suspendEvent(void);
+void stopEventNow(EventActionSource_t activationSource);
+void startEventNow(EventActionSource_t activationSource);
+void startEventUsingRTC(void);
+
 
 void setupForFox(Fox_t* fox, EventAction_t action);
 time_t validateTimeString(char* str, time_t* epochVar, int8_t offsetHours);
@@ -839,16 +843,16 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 				{
 					if(sb_buff->fields[SB_FIELD1][0] == '0')       /* Stop the event. Re-sync will occur on next start */
 					{
-// 						stopEventNow(PROGRAMMATIC);
+ 						stopEventNow(PROGRAMMATIC);
 					}
 					else if(sb_buff->fields[SB_FIELD1][0] == '1')  /* Start the event, re-syncing to a start time of now - same as a button press */
 					{
-// 						startEventNow(PROGRAMMATIC);
+ 						startEventNow(PROGRAMMATIC);
 					}
 					else if(sb_buff->fields[SB_FIELD1][0] == '2')  /* Start the event at the programmed start time */
 					{
  						g_transmissions_disabled = TRUE;        /* Disable an event currently underway */
-// 						startEventUsingRTC();
+ 						startEventUsingRTC();
 					}
 					else if(sb_buff->fields[SB_FIELD1][0] == '3')  /* Start the event immediately with a transmissions starting now */
 					{
@@ -960,41 +964,32 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
  
  						if(t)
  						{
-							bool fail = ds3231_set_date_time_arducon(g_tempStr, RTC_CLOCK);
-							if(fail)
+							bool result = ds3231_set_date_time_arducon(g_tempStr, RTC_CLOCK);
+							
+							if(result)
 							{
 								sb_send_string(TEXT_RTC_NOT_RESPONDING_TXT);						
 							}
 							else
 							{
- 								g_current_epoch = t;
- 								sprintf(g_tempStr, "Time:%lu\n", g_current_epoch);
+								char t[50];
+								g_current_epoch = ds3231_get_epoch(null);
+ 								sprintf(g_tempStr, "Time: %s (%lu)\n", convertEpochToTimeString(g_current_epoch, t, 50), g_current_epoch);
  								setupForFox(NULL, START_NOTHING);   /* Avoid timing problems if an event is already active */
 							}
- 						}
- 						else
- 						{
-							EC result;
- 							g_current_epoch = ds3231_get_epoch(&result);
-							if(!result)
-							{
- 								reportTimeTill(g_current_epoch, g_event_start_epoch, "Starts in: ", NULL);
-							}
-							else
-							{
-								sb_send_string(TEXT_RTC_NOT_RESPONDING_TXT);
-							}
-						
- 							sprintf(g_tempStr, "Epoch:%lu\n", g_current_epoch);
  						}
 					}
 					else
 					{
 							EC result;
+							
  							g_current_epoch = ds3231_get_epoch(&result);
+							 
 							if(!result)
 							{
- 								sprintf(g_tempStr, "Epoch:%lu\n", g_current_epoch);
+								char t[50];
+ 								sprintf(g_tempStr, "Time: %s (%lu)\n", convertEpochToTimeString(g_current_epoch, t, 50), g_current_epoch);
+// 								sprintf(g_tempStr, "Epoch:%lu\n", g_current_epoch);
 							}
 							else
 							{
@@ -1019,8 +1014,9 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 // 						if(g_event_start_epoch > g_current_epoch) startEventUsingRTC();
  					}
  
- 					sprintf(g_tempStr, "Start:%lu\n", g_event_start_epoch);
- 					doprint = true;
+					char t[50];
+					sprintf(g_tempStr, "Start: %s (%lu)\n", convertEpochToTimeString(g_event_start_epoch, t, 50), g_event_start_epoch);
+  					doprint = true;
 				}
 				else if(sb_buff->fields[SB_FIELD1][0] == 'F')  /* Event finish time */
 				{
@@ -1032,10 +1028,11 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
  						g_event_finish_epoch = f;
   						g_ee_mgr.updateEEPROMVar(Event_finish_epoch, (void*)&g_event_finish_epoch);
  						setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);
-// 						if(g_event_start_epoch > g_current_epoch) startEventUsingRTC();
+ 						if(g_event_start_epoch > g_current_epoch) startEventUsingRTC();
  					}
  
- 					sprintf(g_tempStr, "Finish:%lu\n", g_event_finish_epoch);
+					char t[50];
+					sprintf(g_tempStr, "Finish: %s (%lu)\n", convertEpochToTimeString(g_event_finish_epoch, t, 50), g_event_finish_epoch);
  					doprint = true;
 				}
 				else if(sb_buff->fields[SB_FIELD1][0] == '*')  /* Sync seconds to zero */
@@ -1845,6 +1842,123 @@ void suspendEvent()
 }
 
 
+void startEventNow(EventActionSource_t activationSource)
+{
+	ConfigurationState_t conf = clockConfigurationCheck();
+
+	cli();
+	if(activationSource == POWER_UP)
+	{
+		if(conf == CONFIGURATION_ERROR)
+		{
+			setupForFox(NULL, START_NOTHING);
+		}
+		else
+		{
+			setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);
+		}
+	}
+	else if(activationSource == PROGRAMMATIC)
+	{
+		if(conf == CONFIGURATION_ERROR)                                                                                             /* Start immediately */
+		{
+			setupForFox(NULL, START_EVENT_NOW);
+		}
+		else if((conf == WAITING_FOR_START) || (conf == SCHEDULED_EVENT_WILL_NEVER_RUN) || (conf == SCHEDULED_EVENT_DID_NOT_START)) /* Start immediately */
+		{
+			setupForFox(NULL, START_EVENT_NOW);
+		}
+		else                                                                                                                        /*if((conf == EVENT_IN_PROGRESS) */
+		{
+			setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);                                                                  /* Let the RTC start the event */
+		}
+	}
+	else                                                                                                                            /* PUSHBUTTON */
+	{
+		if(conf == CONFIGURATION_ERROR)                                                                                             /* No scheduled event */
+		{
+			setupForFox(NULL, START_EVENT_NOW);
+		}
+		else                                                                                                                        /* if(buttonActivated) */
+		{
+			if(conf == WAITING_FOR_START)
+			{
+				setupForFox(NULL, START_TRANSMISSIONS_NOW);                                                                         /* Start transmitting! */
+			}
+			else if(conf == SCHEDULED_EVENT_WILL_NEVER_RUN)
+			{
+				setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);                                                              /* rtc starts the event */
+			}
+			else                                                                                                                    /* Event should be running now */
+			{
+				setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);                                                              /* start the running event */
+			}
+		}
+	}
+
+// 	g_LED_enunciating = FALSE;
+	sei();
+}
+
+void stopEventNow(EventActionSource_t activationSource)
+{
+	ConfigurationState_t conf = clockConfigurationCheck();
+
+	cli();
+
+	if(activationSource == PROGRAMMATIC)
+	{
+		setupForFox(NULL, START_NOTHING);
+	}
+	else    /* if(activationSource == PUSHBUTTON) */
+	{
+		if(conf == WAITING_FOR_START)
+		{
+			setupForFox(NULL, START_TRANSMISSIONS_NOW);
+		}
+		if(conf == SCHEDULED_EVENT_WILL_NEVER_RUN)
+		{
+			setupForFox(NULL, START_NOTHING);
+		}
+		else    /*if(conf == CONFIGURATION_ERROR) */
+		{
+			setupForFox(NULL, START_NOTHING);
+		}
+	}
+
+// 	if(g_sync_pin_stable == STABLE_LOW)
+// 	{
+// 		digitalWrite(PIN_LED, OFF); /*  LED Off */
+// 	}
+}
+
+void startEventUsingRTC(void)
+{
+	g_current_epoch = ds3231_get_epoch(null);
+	ConfigurationState_t state = clockConfigurationCheck();
+
+	if(state != CONFIGURATION_ERROR)
+	{
+		setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);
+		reportTimeTill(g_current_epoch, g_event_start_epoch, "Starts in: ", "In progress\n");
+
+		if(g_event_start_epoch < g_current_epoch)
+		{
+			reportTimeTill(g_current_epoch, g_event_finish_epoch, "Time Remaining: ", NULL);
+		}
+		else
+		{
+			reportTimeTill(g_event_start_epoch, g_event_finish_epoch, "Lasts: ", NULL);
+		}
+	}
+	else
+	{
+		reportConfigErrors();
+	}
+}
+
+
+
 void setupForFox(Fox_t* fox, EventAction_t action)
 {
 	bool patternNotSet = true;
@@ -1860,6 +1974,9 @@ void setupForFox(Fox_t* fox, EventAction_t action)
  	g_current_epoch = ds3231_get_epoch(null);
 
 	cli();
+	
+	g_event_commenced = FALSE;					/* get things running immediately */
+	g_event_enabled = FALSE;					/* get things running immediately */
 
 	switch(g_fox)
 	{
@@ -1901,7 +2018,6 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 			if(patternNotSet)
 			{
 				sprintf(g_messages_text[PATTERN_TEXT], "MO5");
-				patternNotSet = false;
 			}
 			
 			BOOL repeat = TRUE;
@@ -1910,38 +2026,108 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 
 			g_on_air_seconds = 60;						/* on period is very long */
 			g_off_air_seconds = 240;                    /* off period is very short */
-			g_event_commenced = FALSE;                   /* get things running immediately */
-			g_event_enabled = FALSE;                     /* get things running immediately */
 		}
 		break;
 
 		case SPRINT_S1:
+		{
+			if(patternNotSet)
+			{
+				sprintf(g_messages_text[PATTERN_TEXT], "ME");
+				patternNotSet = false;
+			}
+		}
 		case SPRINT_S2:
+		{
+			if(patternNotSet)
+			{
+				sprintf(g_messages_text[PATTERN_TEXT], "MI");
+				patternNotSet = false;
+			}
+		}
 		case SPRINT_S3:
+		{
+			if(patternNotSet)
+			{
+				sprintf(g_messages_text[PATTERN_TEXT], "MS");
+				patternNotSet = false;
+			}
+		}
 		case SPRINT_S4:
+		{
+			if(patternNotSet)
+			{
+				sprintf(g_messages_text[PATTERN_TEXT], "MH");
+				patternNotSet = false;
+			}
+		}
 		case SPRINT_S5:
 		{
-// 			g_on_air_interval_seconds = 12;
-// 			g_cycle_period_seconds = 60;
-// 			g_number_of_foxes = 5;
-// 			g_pattern_codespeed = SPRINT_SLOW_CODE_SPEED;
-// 			g_fox_id_offset = SPRINT_S1 - 1;
-// 			g_id_interval_seconds = 600;
+			{
+				if(patternNotSet)
+				{
+					sprintf(g_messages_text[PATTERN_TEXT], "M5");
+				}
+			}
+			
+			BOOL repeat = TRUE;
+			makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
+			g_pattern_codespeed = 8;
+			g_code_throttle = throttleValue(g_pattern_codespeed);
+
+			g_on_air_seconds = 12;						/* on period is very long */
+			g_off_air_seconds = 48;						/* off period is very short */
 		}
 		break;
 
 		case SPRINT_F1:
+		{
+			if(patternNotSet)
+			{
+				sprintf(g_messages_text[PATTERN_TEXT], "OE");
+				patternNotSet = false;
+			}
+		}
 		case SPRINT_F2:
+		{
+			if(patternNotSet)
+			{
+				sprintf(g_messages_text[PATTERN_TEXT], "OI");
+				patternNotSet = false;
+			}
+		}
 		case SPRINT_F3:
+		{
+			if(patternNotSet)
+			{
+				sprintf(g_messages_text[PATTERN_TEXT], "OS");
+				patternNotSet = false;
+			}
+		}
 		case SPRINT_F4:
+		{
+			if(patternNotSet)
+			{
+				sprintf(g_messages_text[PATTERN_TEXT], "OH");
+				patternNotSet = false;
+			}
+		}
 		case SPRINT_F5:
 		{
-// 			g_on_air_interval_seconds = 12;
-// 			g_cycle_period_seconds = 60;
-// 			g_number_of_foxes = 5;
-// 			g_pattern_codespeed = SPRINT_FAST_CODE_SPEED;
-// 			g_fox_id_offset = SPRINT_F1 - 1;
-// 			g_id_interval_seconds = 600;
+			{
+				if(patternNotSet)
+				{
+					sprintf(g_messages_text[PATTERN_TEXT], "O5");
+				}
+			}
+			
+			BOOL repeat = TRUE;
+			makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
+			g_pattern_codespeed = 15;
+			g_code_throttle = throttleValue(g_pattern_codespeed);
+
+			g_on_air_seconds = 12;						/* on period is very long */
+			g_off_air_seconds = 48;						/* off period is very short */
 		}
 		break;
 
@@ -1963,13 +2149,13 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 		 * case SPECTATOR: */
 		default:
 		{
-// 			g_use_ptt_periodic_reset = g_ptt_periodic_reset_enabled;
-// 			g_number_of_foxes = 1;
-// 			g_pattern_codespeed = 8;
-// 			g_id_interval_seconds = g_ptt_periodic_reset_enabled ? 60 : 600;
-// 			g_on_air_interval_seconds = g_id_interval_seconds;
-// 			g_fox_id_offset = 0;
-// 			g_cycle_period_seconds = g_id_interval_seconds;
+			BOOL repeat = TRUE;
+			makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
+			g_pattern_codespeed = 8;
+			g_code_throttle = throttleValue(g_pattern_codespeed);
+
+			g_on_air_seconds = 60;						/* on period is very long */
+			g_off_air_seconds = 0;						/* off period is very short */
 		}
 		break;
 	}
@@ -1984,9 +2170,11 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 	}
 	else if(action == START_EVENT_NOW)
 	{
-// 		g_seconds_since_sync = 0;                                               /* Total elapsed time since synchronization */
+// 		g_seconds_since_sync = 0;                   /* Total elapsed time since synchronization */
  		g_use_rtc_for_startstop = FALSE;
  		g_transmissions_disabled = FALSE;
+		g_event_commenced = TRUE;					/* get things running immediately */
+		g_event_enabled = TRUE;						/* get things running immediately */
 	}
 	else if(action == START_TRANSMISSIONS_NOW)                                  /* Immediately start transmitting, regardless RTC or time slot */
 	{
@@ -1994,38 +2182,26 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 		makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 		g_code_throttle = throttleValue(g_pattern_codespeed);
 
-		g_event_start_time = 1;                     /* have it start a long time ago */
-		g_event_finish_time = MAX_TIME;             /* run for a long long time */
-		g_on_air_seconds = 60;						/* on period is very long */
-		g_off_air_seconds = 240;                    /* off period is very short */
-		g_on_the_air = 9999;                        /* start out transmitting */
+// 		g_event_start_time = 1;                     /* have it start a long time ago */
+// 		g_event_finish_time = MAX_TIME;             /* run for a long long time */
+		g_on_the_air = g_on_air_seconds;			/* start out transmitting */
 		g_sendID_seconds_countdown = 60;			/* wait a long time to send the ID */
 		g_event_commenced = TRUE;                   /* get things running immediately */
 		g_event_enabled = TRUE;                     /* get things running immediately */
 		g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
 		
-// 		g_fox_counter = MAX(1, g_fox - g_fox_id_offset);
 // 		g_seconds_since_sync = (g_fox_counter - 1) * g_on_air_interval_seconds; /* Total elapsed time since start of event */
  		g_use_rtc_for_startstop = FALSE;
  		g_transmissions_disabled = FALSE;
 // 		g_initialize_fox_transmissions = INIT_EVENT_STARTING_NOW;
 	}
-	else                                                                    /* if(action == START_EVENT_WITH_STARTFINISH_TIMES) */
+	else         /* if(action == START_EVENT_WITH_STARTFINISH_TIMES) */
 	{
  		if(g_event_start_epoch < g_current_epoch)                           /* timed event in progress */
  		{
-//  			g_seconds_since_sync = g_current_epoch - g_event_start_epoch;   /* Total elapsed time counter: synced at event start time */
-//  			g_fox_counter = CLAMP(1, 1 + ((g_seconds_since_sync % g_cycle_period_seconds) / g_on_air_interval_seconds), g_number_of_foxes);
-//  			g_initialize_fox_transmissions = INIT_EVENT_IN_PROGRESS_WITH_STARTFINISH_TIMES;
  		}
  		else                                                                /* event starts in the future */
  		{
-// 			g_seconds_since_sync = 0;                                       /* Total elapsed time counter */
-// 			g_fox_counter = 1;
-// 			if(g_event_start_epoch > (g_current_epoch + 300))
-// 			{
-// 				digitalWrite(PIN_PWDN, OFF); /* Turn off the radio until close to start time */
-// 			}
  		}
  
  		g_use_rtc_for_startstop = TRUE;
