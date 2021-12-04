@@ -26,6 +26,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=LTC3600EMSE%23PBF-ND
 F 6 "Analog Devices Inc." H 7550 2500 50  0001 C CNN "Manufacturer"
 F 7 "LTC3600EMSE#PBF" H 7550 2500 50  0001 C CNN "Manufacturer PN"
 F 8 "IC REG BUCK PROG 1.5A 12MSOP" H 7550 2500 50  0001 C CNN "Description"
+F 9 "C580752" H 7550 2500 50  0001 C CNN "LCSC Part Number"
 	1    7550 2500
 	1    0    0    -1  
 $EndComp
@@ -45,6 +46,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-1365-1-ND\">Link
 F 6 "Yageo" H 8700 3000 50  0001 C CNN "Manufacturer"
 F 7 "CC0805KKX7R7BB105" H 8700 3000 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 1UF 16V X7R 0805" H 8700 3000 50  0001 C CNN "Description"
+F 9 "C344171" H 8700 3000 50  0001 C CNN "LCSC Part Number"
 	1    8700 3000
 	1    0    0    -1  
 $EndComp
@@ -94,93 +96,35 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=1276-3373-1-ND\">Lin
 F 6 "Samsung Electro-Mechanics" V 7250 1900 50  0001 C CNN "Manufacturer"
 F 7 "CL32A226MAJNNNE" V 7250 1900 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 22UF 25V X5R 1210" V 7250 1900 50  0001 C CNN "Description"
+F 9 "C337455" H 7250 1900 50  0001 C CNN "LCSC Part Number"
 	1    7250 1900
 	0    1    1    0   
 $EndComp
 $Comp
-L Analog_DAC:DAC081C085 U201
-U 1 1 58B84991
-P 3600 2250
-F 0 "U201" H 3600 2700 61  0000 L CNB
-F 1 "DAC081C085" H 3400 2600 61  0000 L CNB
-F 2 "Housings_SSOP:MSOP-8_3x3mm_Pitch0.65mm" H 3600 2250 50  0001 C CIN
-F 3 "" H 3600 2250 50  0000 C CNN
-F 4 "DAC081C085CIMM/NOPBCT-ND" H 3600 2250 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=DAC081C085CIMM%2FNOPBCT-ND\">Link</a>" H 3600 2250 60  0001 C CNN "Link"
-F 6 "Texas Instruments" H 3600 2250 50  0001 C CNN "Manufacturer"
-F 7 "DAC081C085CIMM/NOPB" H 3600 2250 50  0001 C CNN "Manufacturer PN"
-F 8 "IC DAC 8BIT V-OUT 8VSSOP" H 3600 2250 50  0001 C CNN "Description"
-	1    3600 2250
-	1    0    0    -1  
-$EndComp
-Text GLabel 3150 2300 0    39   Input ~ 0
-DI_SCL
-Text GLabel 3150 2400 0    39   Input ~ 0
-DI_SDA
-$Comp
 L FlexFox80-rescue:+3V3_L8-ARDF-2-Band-MiniTx-rescue #PWR085
 U 1 1 58B86FD9
-P 4350 1250
-F 0 "#PWR085" H 4350 1100 50  0001 C CNN
-F 1 "+3V3_L8" H 4350 1390 50  0000 C CNN
-F 2 "" H 4350 1250 50  0000 C CNN
-F 3 "" H 4350 1250 50  0000 C CNN
-	1    4350 1250
+P 4900 1850
+F 0 "#PWR085" H 4900 1700 50  0001 C CNN
+F 1 "+3V3_L8" H 4900 1990 50  0000 C CNN
+F 2 "" H 4900 1850 50  0000 C CNN
+F 3 "" H 4900 1850 50  0000 C CNN
+	1    4900 1850
 	1    0    0    -1  
 $EndComp
-$Comp
-L Device:C_Small C201
-U 1 1 58B87194
-P 4000 1350
-F 0 "C201" V 4100 1250 50  0000 L CNN
-F 1 "10uF" V 3900 1250 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805" H 4000 1350 50  0001 C CNN
-F 3 "" H 4000 1350 50  0000 C CNN
-F 4 "490-5523-1-ND" H 4000 1350 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-5523-1-ND\">Link</a>" H 4000 1350 60  0001 C CNN "Link"
-F 6 "Murata Electronics" V 4000 1350 50  0001 C CNN "Manufacturer"
-F 7 "GRM21BR61E106KA73L" V 4000 1350 50  0001 C CNN "Manufacturer PN"
-F 8 "CAP CER 10UF 25V X5R 0805" V 4000 1350 50  0001 C CNN "Description"
-	1    4000 1350
-	0    -1   -1   0   
-$EndComp
-$Comp
-L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR086
-U 1 1 58B87220
-P 4350 2500
-F 0 "#PWR086" H 4350 2250 50  0001 C CNN
-F 1 "GND_L8" H 4350 2350 50  0001 C CNN
-F 2 "" H 4350 2500 50  0000 C CNN
-F 3 "" H 4350 2500 50  0000 C CNN
-	1    4350 2500
-	1    0    0    -1  
-$EndComp
-$Comp
-L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR087
-U 1 1 58B88093
-P 3800 1400
-F 0 "#PWR087" H 3800 1150 50  0001 C CNN
-F 1 "GND_L8" H 3800 1250 50  0000 C CNN
-F 2 "" H 3800 1400 50  0000 C CNN
-F 3 "" H 3800 1400 50  0000 C CNN
-	1    3800 1400
-	1    0    0    -1  
-$EndComp
-NoConn ~ 3200 2100
-NoConn ~ 3200 2200
 $Comp
 L Device:R R204
 U 1 1 58B8A0BC
 P 5250 1950
 F 0 "R204" V 5330 1950 50  0000 C CNN
-F 1 "536k" V 5250 1950 50  0000 C CNN
+F 1 "392k" V 5250 1950 50  0000 C CNN
 F 2 "Resistors_SMD:R_0805" V 5180 1950 50  0001 C CNN
 F 3 "" H 5250 1950 50  0000 C CNN
-F 4 "311-536KCRCT-ND" H 5250 1950 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-536KCRCT-ND\">Link</a>" H 5250 1950 60  0001 C CNN "Link"
+F 4 "311-392KCRCT-ND" H 5250 1950 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-392KCRCT-ND\">Link</a>" H 5250 1950 60  0001 C CNN "Link"
 F 6 "Yageo" V 5250 1950 50  0001 C CNN "Manufacturer"
-F 7 "RC0805FR-07536KL" V 5250 1950 50  0001 C CNN "Manufacturer PN"
-F 8 "RES SMD 536K OHM 1% 1/8W 0805" V 5250 1950 50  0001 C CNN "Description"
+F 7 "RC0805FR-07392KL" V 5250 1950 50  0001 C CNN "Manufacturer PN"
+F 8 "RES SMD 392K OHM 1% 1/8W 0805" V 5250 1950 50  0001 C CNN "Description"
+F 9 "C273847" H 5250 1950 50  0001 C CNN "LCSC Part Number"
 	1    5250 1950
 	0    -1   -1   0   
 $EndComp
@@ -197,23 +141,8 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-100KCRCT-ND\">Li
 F 6 "Yageo" V 6000 2850 50  0001 C CNN "Manufacturer"
 F 7 "RC0805FR-07100KL" V 6000 2850 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 100K OHM 1% 1/8W 0805" V 6000 2850 50  0001 C CNN "Description"
+F 9 "C103905" H 6000 2850 50  0001 C CNN "LCSC Part Number"
 	1    6000 2850
-	0    1    1    0   
-$EndComp
-$Comp
-L Device:R R206
-U 1 1 58B8A49B
-P 5500 2850
-F 0 "R206" V 5580 2850 50  0000 C CNN
-F 1 "46.4k" V 5500 2850 50  0000 C CNN
-F 2 "Resistors_SMD:R_0805" V 5430 2850 50  0001 C CNN
-F 3 "" H 5500 2850 50  0000 C CNN
-F 4 "RMCF0805FT46K4CT-ND" H 5500 2850 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=RMCF0805FT46K4CT-ND\">Link</a>" H 5500 2850 60  0001 C CNN "Link"
-F 6 "Stackpole Electronics Inc" V 5500 2850 50  0001 C CNN "Manufacturer"
-F 7 "RMCF0805FT46K4" V 5500 2850 50  0001 C CNN "Manufacturer PN"
-F 8 "RES 46.4K OHM 1% 1/8W 0805" V 5500 2850 50  0001 C CNN "Description"
-	1    5500 2850
 	0    1    1    0   
 $EndComp
 $Comp
@@ -264,6 +193,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-162KCRCT-ND\">Li
 F 6 "Yageo" H 8900 1700 50  0001 C CNN "Manufacturer"
 F 7 "RC0805FR-07162KL" H 8900 1700 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 162K OHM 1% 1/8W 0805" H 8900 1700 50  0001 C CNN "Description"
+F 9 "C416820" H 8900 1700 50  0001 C CNN "LCSC Part Number"
 	1    8900 1700
 	0    1    1    0   
 $EndComp
@@ -334,6 +264,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=296-37698-1-ND\">Lin
 F 6 "Texas Instruments" H 6000 2200 50  0001 C CNN "Manufacturer"
 F 7 "OPA171AIDBVR" H 6000 2200 50  0001 C CNN "Manufacturer PN"
 F 8 "IC OPAMP GP 1 CIRCUIT SOT23-5" H 6000 2200 50  0001 C CNN "Description"
+F 9 "C88036" H 6000 2200 50  0001 C CNN "LCSC Part Number"
 	1    6000 2200
 	1    0    0    -1  
 $EndComp
@@ -361,6 +292,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-3904-1-ND\">Link
 F 6 "KEMET" H 9200 2850 50  0001 C CNN "Manufacturer"
 F 7 "T495X476K020ATE150" H 9200 2850 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP TANT 47UF 10% 20V 2917" H 9200 2850 50  0001 C CNN "Description"
+F 9 "C122333" H 9200 2850 50  0001 C CNN "LCSC Part Number"
 	1    9200 2850
 	1    0    0    -1  
 $EndComp
@@ -417,6 +349,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=1276-2624-1-ND\">Lin
 F 6 "Samsung Electro-Mechanics" V 6500 3750 50  0001 C CNN "Manufacturer"
 F 7 "CL21C271GBANNNC" V 6500 3750 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 270PF 50V C0G/NP0 0805" V 6500 3750 50  0001 C CNN "Description"
+F 9 "C161109" H 6500 3750 50  0001 C CNN "LCSC Part Number"
 	1    6500 3750
 	1    0    0    -1  
 $EndComp
@@ -433,6 +366,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-10457-1-ND\">Lin
 F 6 "AVX Corporation" V 6700 3450 50  0001 C CNN "Manufacturer"
 F 7 "08052U100FAT2A" V 6700 3450 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 10PF 200V C0G/NP0 0805" V 6700 3450 50  0001 C CNN "Description"
+F 9 "C344177" H 6700 3450 50  0001 C CNN "LCSC Part Number"
 	1    6700 3450
 	1    0    0    -1  
 $EndComp
@@ -484,28 +418,7 @@ Wire Wire Line
 Connection ~ 9200 2650
 Connection ~ 9200 2200
 Wire Wire Line
-	3200 2300 3150 2300
-Wire Wire Line
-	3200 2400 3150 2400
-Wire Wire Line
-	4350 1250 4350 1350
-Wire Wire Line
-	4100 1350 4200 1350
-Connection ~ 4350 1350
-Wire Wire Line
 	5200 2100 5550 2100
-Wire Wire Line
-	3800 1350 3900 1350
-Wire Wire Line
-	4350 1900 4350 1950
-Wire Wire Line
-	4350 2200 4100 2200
-Connection ~ 4350 2200
-Wire Wire Line
-	4100 2300 4200 2300
-Wire Wire Line
-	4200 2300 4200 1350
-Connection ~ 4200 1350
 Wire Wire Line
 	5900 1550 5900 1750
 Wire Wire Line
@@ -524,9 +437,6 @@ Wire Wire Line
 Connection ~ 5900 1750
 Wire Wire Line
 	5400 1950 5550 1950
-Wire Wire Line
-	5100 1950 4350 1950
-Connection ~ 4350 1950
 Wire Wire Line
 	8300 1750 8300 1700
 Wire Wire Line
@@ -552,8 +462,6 @@ Wire Wire Line
 	8700 2800 8500 2800
 Wire Wire Line
 	6300 2200 6350 2200
-Wire Wire Line
-	4100 2100 4800 2100
 Wire Wire Line
 	5700 2300 5700 2850
 Wire Wire Line
@@ -581,24 +489,6 @@ Wire Wire Line
 	6700 3250 6500 3250
 Wire Wire Line
 	6700 3900 6500 3900
-Wire Wire Line
-	3800 1350 3800 1400
-$Comp
-L Device:INDUCTOR_SMALL L201
-U 1 1 5BF17B46
-P 4350 1650
-F 0 "L201" H 4350 1750 50  0000 C CNN
-F 1 "10uH" H 4350 1600 50  0000 C CNN
-F 2 "Resistors_SMD:R_0805" H 4350 1650 50  0001 C CNN
-F 3 "" H 4350 1650 50  0001 C CNN
-F 4 "490-6682-1-ND" H 4350 1650 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-6682-1-ND\">Link</a>" H 4350 1650 60  0001 C CNN "Link"
-F 6 "Murata Electronics" H 4350 1650 50  0001 C CNN "Manufacturer"
-F 7 "LQM21FN100M80L" H 4350 1650 50  0001 C CNN "Manufacturer PN"
-F 8 "FIXED IND 10UH 100MA 390 MOHM" H 4350 1650 50  0001 C CNN "Description"
-	1    4350 1650
-	0    1    1    0   
-$EndComp
 NoConn ~ 6500 5050
 NoConn ~ 6500 5150
 $Comp
@@ -695,6 +585,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-27.0KCRCT-ND\">L
 F 6 "Yageo" V 5050 2100 50  0001 C CNN "Manufacturer"
 F 7 "RC0805FR-0727KL" V 5050 2100 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 27K OHM 1% 1/8W 0805" V 5050 2100 50  0001 C CNN "Description"
+F 9 "C139896" H 5050 2100 50  0001 C CNN "LCSC Part Number"
 	1    5050 2100
 	0    1    1    0   
 $EndComp
@@ -722,6 +613,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-10KLGCT-ND\">Lin
 F 6 "Yageo" H 5650 6050 50  0001 C CNN "Manufacturer"
 F 7 "AC0805FR-0710KL" H 5650 6050 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 10K OHM 1% 1/8W 0805" H 5650 6050 50  0001 C CNN "Description"
+F 9 "C38522" H 5650 6050 50  0001 C CNN "LCSC Part Number"
 	1    5650 6050
 	1    0    0    -1  
 $EndComp
@@ -762,17 +654,6 @@ Wire Wire Line
 	5650 5500 5650 5150
 Connection ~ 5650 5150
 $Comp
-L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0171
-U 1 1 5F83A1A7
-P 4100 2400
-F 0 "#PWR0171" H 4100 2150 50  0001 C CNN
-F 1 "GND_L8" H 4100 2250 50  0001 C CNN
-F 2 "" H 4100 2400 50  0000 C CNN
-F 3 "" H 4100 2400 50  0000 C CNN
-	1    4100 2400
-	0    -1   -1   0   
-$EndComp
-$Comp
 L special:TEST_SCOPE W205
 U 1 1 5F84AD75
 P 4800 2250
@@ -801,19 +682,12 @@ Wire Wire Line
 	4800 2250 4800 2100
 Wire Wire Line
 	5550 1950 5550 2100
-Connection ~ 4800 2100
 Wire Wire Line
 	8500 2800 8500 3300
 Wire Wire Line
 	9200 2650 9200 2750
 Wire Wire Line
 	9200 2200 9200 2650
-Wire Wire Line
-	4350 1350 4350 1400
-Wire Wire Line
-	4350 2200 4350 2300
-Wire Wire Line
-	4200 1350 4350 1350
 Wire Wire Line
 	5550 2100 5700 2100
 Wire Wire Line
@@ -822,8 +696,6 @@ Wire Wire Line
 	5700 2850 5850 2850
 Wire Wire Line
 	5900 1750 5900 1900
-Wire Wire Line
-	4350 1950 4350 2200
 Wire Wire Line
 	8700 1700 8750 1700
 Wire Wire Line
@@ -859,6 +731,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=MIC2196YM-CT-ND\">Li
 F 6 "Microchip Technology" H 4100 6550 50  0001 C CNN "Manufacturer"
 F 7 "MIC2196YM-TR" H 4100 6550 50  0001 C CNN "Manufacturer PN"
 F 8 "IC REG CTRLR BOOST 8SOIC" H 4100 6550 50  0001 C CNN "Description"
+F 9 "C627808" H 4100 6550 50  0001 C CNN "LCSC Part Number"
 	1    4100 6550
 	-1   0    0    -1  
 $EndComp
@@ -868,13 +741,14 @@ U 1 1 60D12815
 P 3500 5450
 F 0 "L203" H 3500 5550 50  0000 C CNN
 F 1 "6.8uH" H 3500 5400 50  0000 C CNN
-F 2 "Inductors:CDR7D28MN" H 3500 5450 50  0001 C CNN
+F 2 "Inductors:2020" H 3500 5450 50  0001 C CNN
 F 3 "http://www.bourns.com/docs/Product-Datasheets/SRP7028A.pdf" H 3500 5450 50  0001 C CNN
-F 4 "308-1328-1-ND" H 3500 5450 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=308-1328-1-ND\">Link</a>" H 3500 5450 60  0001 C CNN "Link"
-F 6 "Sumida America Components Inc." H 3500 5450 50  0001 C CNN "Manufacturer"
-F 7 "CDR7D28MNNP-6R8NC" H 3500 5450 50  0001 C CNN "Manufacturer PN"
-F 8 "FIXED IND 6.8UH 2.75A 46.3 MOHM" H 3500 5450 50  0001 C CNN "Description"
+F 4 "490-16286-1-ND" H 3500 5450 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-16286-1-ND\">Link</a>" H 3500 5450 60  0001 C CNN "Link"
+F 6 "Murata Electronics" H 3500 5450 50  0001 C CNN "Manufacturer"
+F 7 "LQH5BPN6R8M38L" H 3500 5450 50  0001 C CNN "Manufacturer PN"
+F 8 "FIXED IND 6.8UH 3A 39 MOHM SMD" H 3500 5450 50  0001 C CNN "Description"
+F 9 "C703749" H 3500 5450 50  0001 C CNN "LCSC Part Number"
 	1    3500 5450
 	1    0    0    -1  
 $EndComp
@@ -891,6 +765,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-100KCRCT-ND\">Li
 F 6 "Yageo" H 2850 4350 50  0001 C CNN "Manufacturer"
 F 7 "RC0805FR-07100KL" H 2850 4350 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 100K OHM 1% 1/8W 0805" H 2850 4350 50  0001 C CNN "Description"
+F 9 "C103905" H 2850 4350 50  0001 C CNN "LCSC Part Number"
 	1    2850 4350
 	0    1    1    0   
 $EndComp
@@ -920,6 +795,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-1395-1-ND\">Link
 F 6 "AVX Corporation" H 3250 4350 50  0001 C CNN "Manufacturer"
 F 7 "08055C104KAT2A" H 3250 4350 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 0.1UF 50V X7R 0805" H 3250 4350 50  0001 C CNN "Description"
+F 9 "C360619" H 3250 4350 50  0001 C CNN "LCSC Part Number"
 	1    3250 4350
 	0    -1   -1   0   
 $EndComp
@@ -1038,6 +914,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-10KLGCT-ND\">Lin
 F 6 "Yageo" H 2150 6200 50  0001 C CNN "Manufacturer"
 F 7 "AC0805FR-0710KL" H 2150 6200 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 10K OHM 1% 1/8W 0805" H 2150 6200 50  0001 C CNN "Description"
+F 9 "C38522" H 2150 6200 50  0001 C CNN "LCSC Part Number"
 	1    2150 6200
 	-1   0    0    1   
 $EndComp
@@ -1054,6 +931,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-1.10KCRCT-ND\">L
 F 6 "Yageo" H 2150 6800 50  0001 C CNN "Manufacturer"
 F 7 "RC0805FR-071K1L" H 2150 6800 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 1.1K OHM 1% 1/8W 0805" H 2150 6800 50  0001 C CNN "Description"
+F 9 "C352257" H 2150 6800 50  0001 C CNN "LCSC Part Number"
 	1    2150 6800
 	-1   0    0    1   
 $EndComp
@@ -1125,6 +1003,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=408-1544-1-ND\">Link
 F 6 "Susumu" H 2950 6850 50  0001 C CNN "Manufacturer"
 F 7 "KRL1220E-M-R010-F-T5" H 2950 6850 50  0001 C CNN "Manufacturer PN"
 F 8 "RES 0.01 OHM 1% 1/2W 0805" H 2950 6850 50  0001 C CNN "Description"
+F 9 "C728271" H 2950 6850 50  0001 C CNN "LCSC Part Number"
 	1    2950 6850
 	-1   0    0    1   
 $EndComp
@@ -1161,6 +1040,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-5253-1-ND\">Link
 F 6 "CAP TANT 150UF 10% 20V 2917" H 1850 4950 50  0001 C CNN "Description"
 F 7 "AVX Corporation" H 1850 4950 50  0001 C CNN "Manufacturer"
 F 8 "TPME157K020R0035" H 1850 4950 50  0001 C CNN "Manufacturer PN"
+F 9 "C444765" H 1850 4950 50  0001 C CNN "LCSC Part Number"
 	1    1850 4950
 	0    1    1    0   
 $EndComp
@@ -1207,6 +1087,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-10068-1-ND\">Lin
 F 6 "AVX Corporation" H 4950 6700 50  0001 C CNN "Manufacturer"
 F 7 "08055A103JAT2A" H 4950 6700 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 10000PF 50V NP0 0805" H 4950 6700 50  0001 C CNN "Description"
+F 9 "C527201" H 4950 6700 50  0001 C CNN "LCSC Part Number"
 	1    4950 6700
 	0    -1   -1   0   
 $EndComp
@@ -1287,6 +1168,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=YAG4990CT-ND\">Link<
 F 6 "Yageo" H 4450 4750 50  0001 C CNN "Manufacturer"
 F 7 "RT0805BRE0749K9L" H 4450 4750 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 49.9K OHM 0.1% 1/8W 0805" H 4450 4750 50  0001 C CNN "Description"
+F 9 "C218598" H 4450 4750 50  0001 C CNN "LCSC Part Number"
 	1    4450 4750
 	0    -1   -1   0   
 $EndComp
@@ -1358,6 +1240,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=B530C-FDICT-ND\">Lin
 F 6 "Diodes Incorporated" H 2550 5450 50  0001 C CNN "Manufacturer"
 F 7 "B530C-13-F" H 2550 5450 50  0001 C CNN "Manufacturer PN"
 F 8 "DIODE SCHOTTKY 30V 5A SMC" H 2550 5450 50  0001 C CNN "Description"
+F 9 "C110488" H 2550 5450 50  0001 C CNN "LCSC Part Number"
 	1    2550 5450
 	1    0    0    -1  
 $EndComp
@@ -1382,22 +1265,6 @@ F 8 "TH" H 6300 5050 50  0001 C CNN "Description"
 	-1   0    0    -1  
 $EndComp
 $Comp
-L Device:C_Small C203
-U 1 1 6094F3CA
-P 4350 2400
-F 0 "C203" H 4100 2350 50  0000 L CNN
-F 1 "10uF" H 4100 2450 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0805" H 4350 2400 50  0001 C CNN
-F 3 "" H 4350 2400 50  0000 C CNN
-F 4 "490-5523-1-ND" H 4350 2400 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-5523-1-ND\">Link</a>" H 4350 2400 60  0001 C CNN "Link"
-F 6 "Murata Electronics" V 4350 2400 50  0001 C CNN "Manufacturer"
-F 7 "GRM21BR61E106KA73L" V 4350 2400 50  0001 C CNN "Manufacturer PN"
-F 8 "CAP CER 10UF 25V X5R 0805" V 4350 2400 50  0001 C CNN "Description"
-	1    4350 2400
-	-1   0    0    1   
-$EndComp
-$Comp
 L Device:C_Small C205
 U 1 1 6095F95F
 P 5650 1750
@@ -1410,6 +1277,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-5523-1-ND\">Link
 F 6 "Murata Electronics" V 5650 1750 50  0001 C CNN "Manufacturer"
 F 7 "GRM21BR61E106KA73L" V 5650 1750 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 10UF 25V X5R 0805" V 5650 1750 50  0001 C CNN "Description"
+F 9 "C84416" H 5650 1750 50  0001 C CNN "LCSC Part Number"
 	1    5650 1750
 	0    -1   -1   0   
 $EndComp
@@ -1426,6 +1294,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-5523-1-ND\">Link
 F 6 "Murata Electronics" V 3850 5950 50  0001 C CNN "Manufacturer"
 F 7 "GRM21BR61E106KA73L" V 3850 5950 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 10UF 25V X5R 0805" V 3850 5950 50  0001 C CNN "Description"
+F 9 "C84416" H 3850 5950 50  0001 C CNN "LCSC Part Number"
 	1    3850 5950
 	0    -1   -1   0   
 $EndComp
@@ -1442,6 +1311,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-100KCRCT-ND\">Li
 F 6 "Yageo" V 6700 2700 50  0001 C CNN "Manufacturer"
 F 7 "RC0805FR-07100KL" V 6700 2700 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 100K OHM 1% 1/8W 0805" V 6700 2700 50  0001 C CNN "Description"
+F 9 "C103905" H 6700 2700 50  0001 C CNN "LCSC Part Number"
 	1    6700 2700
 	1    0    0    -1  
 $EndComp
@@ -1458,6 +1328,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-27.0KCRCT-ND\">L
 F 6 "Yageo" V 6500 3450 50  0001 C CNN "Manufacturer"
 F 7 "RC0805FR-0727KL" V 6500 3450 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 27K OHM 1% 1/8W 0805" V 6500 3450 50  0001 C CNN "Description"
+F 9 "C139896" H 6500 3450 50  0001 C CNN "LCSC Part Number"
 	1    6500 3450
 	1    0    0    -1  
 $EndComp
@@ -1474,6 +1345,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=MUN5213DW1T1GOSCT-ND
 F 6 "ON Semiconductor" H 2950 3850 50  0001 C CNN "Manufacturer"
 F 7 "MUN5213DW1T1G" H 2950 3850 50  0001 C CNN "Manufacturer PN"
 F 8 "TRANS PREBIAS 2NPN 50V SC88" H 2950 3850 50  0001 C CNN "Description"
+F 9 "C95381" H 2950 3850 50  0001 C CNN "LCSC Part Number"
 	1    2950 3850
 	1    0    0    1   
 $EndComp
@@ -1490,6 +1362,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=DMP4025LSD-13DICT-ND
 F 6 "Diodes Incorporated" H 1950 5700 50  0001 C CNN "Manufacturer"
 F 7 "DMP4025LSD-13" H 1950 5700 50  0001 C CNN "Manufacturer PN"
 F 8 "MOSFET 2P-CH 40V 6.9A 8SO" H 1950 5700 50  0001 C CNN "Description"
+F 9 "C150763" H 1950 5700 50  0001 C CNN "LCSC Part Number"
 	1    1950 5700
 	1    0    0    1   
 $EndComp
@@ -1506,6 +1379,7 @@ F 5 "Renesas Electronics America Inc" H 3050 5900 50  0001 C CNN "Manufacturer"
 F 6 "RJK0354DSP-00#J0" H 3050 5900 50  0001 C CNN "Manufacturer PN"
 F 7 "MOSFET N-CH 30V 16A 8SOP" H 3050 5900 50  0001 C CNN "Description"
 F 8 "<a href=\"https://www.digikey.com/products/en?keywords=RJK0354DSP-00#J0CT-ND\">Link</a>" H 3050 5900 50  0001 C CNN "Link"
+F 9 "C919563" H 3050 5900 50  0001 C CNN "LCSC Part Number"
 	1    3050 5900
 	0    -1   -1   0   
 $EndComp
@@ -1522,6 +1396,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=DMP4025LSD-13DICT-ND
 F 6 "Diodes Incorporated" H 3100 4650 50  0001 C CNN "Manufacturer"
 F 7 "DMP4025LSD-13" H 3100 4650 50  0001 C CNN "Manufacturer PN"
 F 8 "MOSFET 2P-CH 40V 6.9A 8SO" H 3100 4650 50  0001 C CNN "Description"
+F 9 "C150763" H 3100 4650 50  0001 C CNN "LCSC Part Number"
 	2    3100 4650
 	0    1    1    0   
 $EndComp
@@ -1538,6 +1413,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-5253-1-ND\">Link
 F 6 "CAP TANT 150UF 10% 20V 2917" H 1850 4750 50  0001 C CNN "Description"
 F 7 "AVX Corporation" H 1850 4750 50  0001 C CNN "Manufacturer"
 F 8 "TPME157K020R0035" H 1850 4750 50  0001 C CNN "Manufacturer PN"
+F 9 "C444765" H 1850 4750 50  0001 C CNN "LCSC Part Number"
 	1    1850 4750
 	0    1    1    0   
 $EndComp
@@ -1554,6 +1430,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-1395-1-ND\">Link
 F 6 "AVX Corporation" H 8300 2550 50  0001 C CNN "Manufacturer"
 F 7 "08055C104KAT2A" H 8300 2550 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 0.1UF 50V X7R 0805" H 8300 2550 50  0001 C CNN "Description"
+F 9 "C360619" H 8300 2550 50  0001 C CNN "LCSC Part Number"
 	1    8300 2550
 	-1   0    0    1   
 $EndComp
@@ -1575,6 +1452,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-1395-1-ND\">Link
 F 6 "AVX Corporation" H 4400 5000 50  0001 C CNN "Manufacturer"
 F 7 "08055C104KAT2A" H 4400 5000 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 0.1UF 50V X7R 0805" H 4400 5000 50  0001 C CNN "Description"
+F 9 "C360619" H 4400 5000 50  0001 C CNN "LCSC Part Number"
 	1    4400 5000
 	0    -1   -1   0   
 $EndComp
@@ -1591,6 +1469,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-1395-1-ND\">Link
 F 6 "AVX Corporation" H 5400 6000 50  0001 C CNN "Manufacturer"
 F 7 "08055C104KAT2A" H 5400 6000 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 0.1UF 50V X7R 0805" H 5400 6000 50  0001 C CNN "Description"
+F 9 "C360619" H 5400 6000 50  0001 C CNN "LCSC Part Number"
 	1    5400 6000
 	-1   0    0    1   
 $EndComp
@@ -1607,27 +1486,12 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=B530C-FDICT-ND\">Lin
 F 6 "Diodes Incorporated" H 5350 5150 50  0001 C CNN "Manufacturer"
 F 7 "B530C-13-F" H 5350 5150 50  0001 C CNN "Manufacturer PN"
 F 8 "DIODE SCHOTTKY 30V 5A SMC" H 5350 5150 50  0001 C CNN "Description"
+F 9 "C110488" H 5350 5150 50  0001 C CNN "LCSC Part Number"
 	1    5350 5150
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
 	4100 5150 5200 5150
-$Comp
-L FlexFox80-rescue:INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue L202
-U 1 1 609E544F
-P 8850 2650
-F 0 "L202" H 8850 2750 50  0000 C CNN
-F 1 "6.8uH" H 8850 2600 50  0000 C CNN
-F 2 "Inductors:CDR7D28MN" H 8850 2650 50  0001 C CNN
-F 3 "http://www.bourns.com/docs/Product-Datasheets/SRP7028A.pdf" H 8850 2650 50  0001 C CNN
-F 4 "308-1328-1-ND" H 8850 2650 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=308-1328-1-ND\">Link</a>" H 8850 2650 60  0001 C CNN "Link"
-F 6 "Sumida America Components Inc." H 8850 2650 50  0001 C CNN "Manufacturer"
-F 7 "CDR7D28MNNP-6R8NC" H 8850 2650 50  0001 C CNN "Manufacturer PN"
-F 8 "FIXED IND 6.8UH 2.75A 46.3 MOHM" H 8850 2650 50  0001 C CNN "Description"
-	1    8850 2650
-	1    0    0    -1  
-$EndComp
 $Comp
 L Device:C_Small C212
 U 1 1 609F1166
@@ -1641,6 +1505,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-1395-1-ND\">Link
 F 6 "AVX Corporation" H 8700 1900 50  0001 C CNN "Manufacturer"
 F 7 "08055C104KAT2A" H 8700 1900 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 0.1UF 50V X7R 0805" H 8700 1900 50  0001 C CNN "Description"
+F 9 "C360619" H 8700 1900 50  0001 C CNN "LCSC Part Number"
 	1    8700 1900
 	-1   0    0    1   
 $EndComp
@@ -1657,6 +1522,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-162KCRCT-ND\">Li
 F 6 "Yageo" H 5650 5650 50  0001 C CNN "Manufacturer"
 F 7 "RC0805FR-07162KL" H 5650 5650 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 162K OHM 1% 1/8W 0805" H 5650 5650 50  0001 C CNN "Description"
+F 9 "C416820" H 5650 5650 50  0001 C CNN "LCSC Part Number"
 	1    5650 5650
 	1    0    0    -1  
 $EndComp
@@ -1673,6 +1539,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-10KLGCT-ND\">Lin
 F 6 "Yageo" H 8500 1700 50  0001 C CNN "Manufacturer"
 F 7 "AC0805FR-0710KL" H 8500 1700 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 10K OHM 1% 1/8W 0805" H 8500 1700 50  0001 C CNN "Description"
+F 9 "C38522" H 8500 1700 50  0001 C CNN "LCSC Part Number"
 	1    8500 1700
 	0    1    1    0   
 $EndComp
@@ -1689,6 +1556,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-3904-1-ND\">Link
 F 6 "KEMET" H 4350 5950 50  0001 C CNN "Manufacturer"
 F 7 "T495X476K020ATE150" H 4350 5950 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP TANT 47UF 10% 20V 2917" H 4350 5950 50  0001 C CNN "Description"
+F 9 "C122333" H 4350 5950 50  0001 C CNN "LCSC Part Number"
 	1    4350 5950
 	0    -1   -1   0   
 $EndComp
@@ -1705,6 +1573,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-162KCRCT-ND\">Li
 F 6 "Yageo" H 4050 4750 50  0001 C CNN "Manufacturer"
 F 7 "RC0805FR-07162KL" H 4050 4750 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 162K OHM 1% 1/8W 0805" H 4050 4750 50  0001 C CNN "Description"
+F 9 "C416820" H 4050 4750 50  0001 C CNN "LCSC Part Number"
 	1    4050 4750
 	0    1    1    0   
 $EndComp
@@ -1721,6 +1590,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-10KLGCT-ND\">Lin
 F 6 "Yageo" H 4700 6700 50  0001 C CNN "Manufacturer"
 F 7 "AC0805FR-0710KL" H 4700 6700 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 10K OHM 1% 1/8W 0805" H 4700 6700 50  0001 C CNN "Description"
+F 9 "C38522" H 4700 6700 50  0001 C CNN "LCSC Part Number"
 	1    4700 6700
 	0    1    1    0   
 $EndComp
@@ -1737,6 +1607,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-10KLGCT-ND\">Lin
 F 6 "Yageo" H 4850 6350 50  0001 C CNN "Manufacturer"
 F 7 "AC0805FR-0710KL" H 4850 6350 50  0001 C CNN "Manufacturer PN"
 F 8 "RES SMD 10K OHM 1% 1/8W 0805" H 4850 6350 50  0001 C CNN "Description"
+F 9 "C38522" H 4850 6350 50  0001 C CNN "LCSC Part Number"
 	1    4850 6350
 	0    1    1    0   
 $EndComp
@@ -1753,6 +1624,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-1365-1-ND\">Link
 F 6 "Yageo" H 3550 6900 50  0001 C CNN "Manufacturer"
 F 7 "CC0805KKX7R7BB105" H 3550 6900 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 1UF 16V X7R 0805" H 3550 6900 50  0001 C CNN "Description"
+F 9 "C344171" H 3550 6900 50  0001 C CNN "LCSC Part Number"
 	1    3550 6900
 	1    0    0    -1  
 $EndComp
@@ -1780,5 +1652,48 @@ F 2 "" H 6000 5200 50  0001 C CNN
 F 3 "" H 6000 5200 50  0001 C CNN
 	1    6000 5200
 	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5100 1950 4900 1950
+Wire Wire Line
+	4900 1950 4900 1850
+Text GLabel 4150 2100 0    39   Input ~ 0
+DAC_OUTPUT
+Wire Wire Line
+	4150 2100 4800 2100
+Connection ~ 4800 2100
+$Comp
+L FlexFox80-rescue:INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue L202
+U 1 1 618D43F0
+P 8850 2650
+F 0 "L202" H 8850 2750 50  0000 C CNN
+F 1 "6.8uH" H 8850 2600 50  0000 C CNN
+F 2 "Inductors:2020" H 8850 2650 50  0001 C CNN
+F 3 "http://www.bourns.com/docs/Product-Datasheets/SRP7028A.pdf" H 8850 2650 50  0001 C CNN
+F 4 "490-16286-1-ND" H 8850 2650 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-16286-1-ND\">Link</a>" H 8850 2650 60  0001 C CNN "Link"
+F 6 "Murata Electronics" H 8850 2650 50  0001 C CNN "Manufacturer"
+F 7 "LQH5BPN6R8M38L" H 8850 2650 50  0001 C CNN "Manufacturer PN"
+F 8 "FIXED IND 6.8UH 3A 39 MOHM SMD" H 8850 2650 50  0001 C CNN "Description"
+F 9 "C703749" H 8850 2650 50  0001 C CNN "LCSC Part Number"
+	1    8850 2650
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R206
+U 1 1 6205CF15
+P 5500 2850
+F 0 "R206" V 5400 2850 50  0000 C CNN
+F 1 "27k" V 5500 2850 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805" V 5430 2850 50  0001 C CNN
+F 3 "" H 5500 2850 50  0000 C CNN
+F 4 "311-27.0KCRCT-ND" H 5500 2850 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=311-27.0KCRCT-ND\">Link</a>" H 5500 2850 60  0001 C CNN "Link"
+F 6 "Yageo" V 5500 2850 50  0001 C CNN "Manufacturer"
+F 7 "RC0805FR-0727KL" V 5500 2850 50  0001 C CNN "Manufacturer PN"
+F 8 "RES SMD 27K OHM 1% 1/8W 0805" V 5500 2850 50  0001 C CNN "Description"
+F 9 "C139896" H 5500 2850 50  0001 C CNN "LCSC Part Number"
+	1    5500 2850
+	0    1    1    0   
 $EndComp
 $EndSCHEMATC

@@ -81,6 +81,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-14552-1-ND\">Lin
 F 6 "KEMET" H 5800 3600 50  0001 C CNN "Manufacturer"
 F 7 "C0805C112J5GAC7800" H 5800 3600 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 1100PF 50V NP0 0805" H 5800 3600 50  0001 C CNN "Description"
+F 9 "C2327793" H 5800 3600 50  0001 C CNN "LCSC Part Number"
 	1    5800 3600
 	1    0    0    -1  
 $EndComp
@@ -286,7 +287,7 @@ $EndSheet
 Text GLabel 2250 3850 0    39   Input ~ 0
 CLK1
 Text GLabel 3450 2250 1    39   Input ~ 0
-HF_ENABLE
+FET_DRIVER_ENABLE
 $Comp
 L Device:C_Small C120
 U 1 1 5BE9CF68
@@ -300,6 +301,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-9924-1-ND\">Link
 F 6 "AVX Corporation" V 4550 2700 50  0001 C CNN "Manufacturer"
 F 7 "08051C474K4Z2A" V 4550 2700 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 0.47UF 100V X7R 0805" V 4550 2700 50  0001 C CNN "Description"
+F 9 "C342818" H 4550 2700 50  0001 C CNN "LCSC Part Number"
 	1    4550 2700
 	0    -1   -1   0   
 $EndComp
@@ -316,6 +318,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=445-5752-1-ND\">Link
 F 6 "TDK Corporation" H 6500 3600 50  0001 C CNN "Manufacturer"
 F 7 "CGA4F2C0G2A182J085AA" H 6500 3600 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 1800PF 100V C0G 0805" H 6500 3600 50  0001 C CNN "Description"
+F 9 "C2173329" H 6500 3600 50  0001 C CNN "LCSC Part Number"
 	1    6500 3600
 	-1   0    0    1   
 $EndComp
@@ -529,6 +532,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-17459-1-ND\">Lin
 F 6 "KEMET" V 7100 3100 50  0001 C CNN "Manufacturer"
 F 7 "C0805C910J1GAC7800" V 7100 3100 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 91PF 100V NP0 0805" V 7100 3100 50  0001 C CNN "Description"
+F 9 "C2439516" H 7100 3100 50  0001 C CNN "LCSC Part Number"
 	1    7100 3100
 	0    1    1    0   
 $EndComp
@@ -570,6 +574,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-3904-1-ND\">Link
 F 6 "KEMET" V 4150 2700 50  0001 C CNN "Manufacturer"
 F 7 "T495X476K020ATE150" V 4150 2700 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP TANT 47UF 10% 20V 2917" V 4150 2700 50  0001 C CNN "Description"
+F 9 "C122333" H 4150 2700 50  0001 C CNN "LCSC Part Number"
 	1    4150 2700
 	0    1    -1   0   
 $EndComp
@@ -619,6 +624,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=1276-3373-1-ND\">Lin
 F 6 "Samsung Electro-Mechanics" V 3350 3250 50  0001 C CNN "Manufacturer"
 F 7 "CL32A226MAJNNNE" V 3350 3250 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 22UF 25V X5R 1210" V 3350 3250 50  0001 C CNN "Description"
+F 9 "C337455" H 3350 3250 50  0001 C CNN "LCSC Part Number"
 	1    3350 3250
 	0    -1   -1   0   
 $EndComp
@@ -635,6 +641,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=LMN200B02DICT-ND\">L
 F 6 "Diodes Incorporated" V 3250 2500 50  0001 C CNN "Manufacturer"
 F 7 "LMN200B02-7" V 3250 2500 50  0001 C CNN "Manufacturer PN"
 F 8 "MCU LOAD SWITCH 200MA SOT-363" V 3250 2500 50  0001 C CNN "Description"
+F 9 "C150757" H 3250 2500 50  0001 C CNN "LCSC Part Number"
 	1    3250 2500
 	0    1    1    0   
 $EndComp
@@ -655,6 +662,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=BZT52C4V7-13FDICT-ND
 F 6 "Diodes Incorporated" H 3150 2950 50  0001 C CNN "Manufacturer"
 F 7 "BZT52C4V7-13-F" H 3150 2950 50  0001 C CNN "Manufacturer PN"
 F 8 "DIODE ZENER 4.7V 500MW SOD123" H 3150 2950 50  0001 C CNN "Description"
+F 9 "C151054" H 3150 2950 50  0001 C CNN "LCSC Part Number"
 	1    3150 2950
 	0    1    1    0   
 $EndComp
@@ -728,6 +736,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=CG0603MLC-05LECT-ND\
 F 6 "Bourns Inc." H 8650 2350 50  0001 C CNN "Manufacturer"
 F 7 "CG0603MLC-05LE" H 8650 2350 50  0001 C CNN "Manufacturer PN"
 F 8 "VARISTOR 0603" H 8650 2350 50  0001 C CNN "Description"
+F 9 "C2655331" H 8650 2350 50  0001 C CNN "LCSC Part Number"
 	1    8650 2350
 	-1   0    0    -1  
 $EndComp
@@ -906,6 +915,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=MBD54DWT1GOSCT-ND\">
 F 6 "ON Semiconductor" H 9150 2100 50  0001 C CNN "Manufacturer"
 F 7 "MBD54DWT1G" H 9150 2100 50  0001 C CNN "Manufacturer PN"
 F 8 "DIODE ARRAY SCHOTTKY 30V SC88" H 9150 2100 50  0001 C CNN "Description"
+F 9 "C152486" H 9150 2100 50  0001 C CNN "LCSC Part Number"
 	1    9150 2100
 	1    0    0    -1  
 $EndComp
@@ -924,6 +934,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-9924-1-ND\">Link
 F 6 "AVX Corporation" V 5550 3400 50  0001 C CNN "Manufacturer"
 F 7 "08051C474K4Z2A" V 5550 3400 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 0.47UF 100V X7R 0805" V 5550 3400 50  0001 C CNN "Description"
+F 9 "C342818" H 5550 3400 50  0001 C CNN "LCSC Part Number"
 	1    5550 3400
 	0    -1   -1   0   
 $EndComp
@@ -940,6 +951,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=399-14552-1-ND\">Lin
 F 6 "KEMET" H 7500 3600 50  0001 C CNN "Manufacturer"
 F 7 "C0805C112J5GAC7800" H 7500 3600 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 1100PF 50V NP0 0805" H 7500 3600 50  0001 C CNN "Description"
+F 9 "C2327793" H 7500 3600 50  0001 C CNN "LCSC Part Number"
 	1    7500 3600
 	1    0    0    -1  
 $EndComp
