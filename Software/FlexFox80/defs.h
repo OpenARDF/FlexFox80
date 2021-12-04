@@ -253,7 +253,7 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 #define TEXT_ERR_START_IN_PAST_TXT (char*)"Err: Start in past!\n"
 #define TEXT_ERR_INVALID_TIME_TXT (char*)"Err: Invalid time!\n"
 #define TEXT_ERR_TIME_IN_PAST_TXT (char*)"Err: Time in past!\n"
-#define TEXT_RTC_NOT_RESPONDING_TXT (char*)"Error: No response from clock hardware\n"
+#define TEXT_RTC_NOT_RESPONDING_TXT (char*)"Error: No response from clock hardware\n\0"
 #define TEXT_TX_NOT_RESPONDING_TXT (char*)"Error: No response from transmit hardware\n"
 #define TEXT_WIFI_NOT_DETECTED_TXT (char*)"Warning: WiFi hardware not detected\n"
 #define MINIMUM_EPOCH ((time_t)1609459200)  /* 1 Jan 2021 00:00:00 */

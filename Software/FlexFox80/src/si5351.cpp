@@ -216,7 +216,6 @@ bool g_si5351_initialized = false;
 /*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 /* Public functions */
 /*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
-bool err = false;
 
 /*
  * init(Si5351_Xtal_load_pF xtal_load_c, Frequency_Hz ref_osc_freq)
@@ -230,7 +229,7 @@ bool err = false;
  */
 	bool si5351_init(Si5351_Xtal_load_pF xtal_load_c, Frequency_Hz ref_osc_freq)
 	{
-//		static bool err = false;
+		static bool err = false;
 		uint8_t data[2];
 		
 #ifndef DEBUG_WITHOUT_I2C

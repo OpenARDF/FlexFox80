@@ -609,23 +609,16 @@ int main(void)
 	
 	g_ee_mgr.initializeEEPROMVars();
 	g_ee_mgr.readNonVols();
-	
-	sb_send_NewLine();
-	sb_send_string((char *)PRODUCT_NAME_LONG);
-	sprintf(g_tempStr, "\nSW Ver: %s\n", SW_REVISION);
-	sb_send_string(g_tempStr);
-	sb_send_string(HELP_TEXT_TXT);
 					
 	ADC0_setADCChannel(ADCAudioInput);
 	
-	g_last_error_code = init_transmitter();
-	if(g_last_error_code)
+	if(init_transmitter() == ERROR_CODE_RF_OSCILLATOR_ERROR)
 	{
 		sb_send_NewLine();
 		sb_send_string(TEXT_TX_NOT_RESPONDING_TXT);
 	}
 	
-	if(ds3231_init())
+	if(rtc_init() == ERROR_CODE_RTC_NONRESPONSIVE)
 	{
 		sb_send_NewLine();
 		sb_send_string(TEXT_RTC_NOT_RESPONDING_TXT);
@@ -638,8 +631,12 @@ int main(void)
 	}
 	
 	sb_send_NewLine();
+	sb_send_string((char *)PRODUCT_NAME_LONG);
+	sprintf(g_tempStr, "\nSW Ver: %s\n", SW_REVISION);
+	sb_send_string(g_tempStr);
+	sb_send_string(HELP_TEXT_TXT);
+	sb_send_NewLine();
 	sb_send_NewPrompt();
-	
 
 	while (1) {
 		while(util_delay_ms(250))
@@ -968,7 +965,7 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 							
 							if(result)
 							{
-								sb_send_string(TEXT_RTC_NOT_RESPONDING_TXT);						
+								sprintf(g_tempStr, TEXT_RTC_NOT_RESPONDING_TXT);
 							}
 							else
 							{
@@ -987,7 +984,7 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 							 
 							if(result)
 							{
-								sb_send_string(TEXT_RTC_NOT_RESPONDING_TXT);
+								sprintf(g_tempStr, TEXT_RTC_NOT_RESPONDING_TXT);
 							}
 							else
 							{
@@ -1817,6 +1814,11 @@ EC hw_init()
 
 EC rtc_init()
 {
+	if(ds3231_1s_sqw(ON))
+	{
+		return ERROR_CODE_RTC_NONRESPONSIVE;
+	}
+	
 	return ERROR_CODE_NO_ERROR;
 }
 
@@ -2023,6 +2025,7 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 			makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 			g_code_throttle = throttleValue(g_pattern_codespeed);
 
+			g_sendID_seconds_countdown = 60;			/* wait 10 minutes send the ID */
 			g_on_air_seconds = 60;						/* on period is very long */
 			g_off_air_seconds = 240;                    /* off period is very short */
 		}
@@ -2074,6 +2077,7 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 			g_pattern_codespeed = 8;
 			g_code_throttle = throttleValue(g_pattern_codespeed);
 
+			g_sendID_seconds_countdown = 600;			/* wait 10 minutes send the ID */
 			g_on_air_seconds = 12;						/* on period is very long */
 			g_off_air_seconds = 48;						/* off period is very short */
 		}
@@ -2113,11 +2117,9 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 		}
 		case SPRINT_F5:
 		{
+			if(patternNotSet)
 			{
-				if(patternNotSet)
-				{
-					sprintf(g_messages_text[PATTERN_TEXT], "O5");
-				}
+				sprintf(g_messages_text[PATTERN_TEXT], "O5");
 			}
 			
 			bool repeat = true;
@@ -2125,6 +2127,7 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 			g_pattern_codespeed = 15;
 			g_code_throttle = throttleValue(g_pattern_codespeed);
 
+			g_sendID_seconds_countdown = 600;			/* wait 10 minutes send the ID */
 			g_on_air_seconds = 12;						/* on period is very long */
 			g_off_air_seconds = 48;						/* off period is very short */
 		}
@@ -2144,15 +2147,25 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 #endif // SUPPORT_TEMP_AND_VOLTAGE_REPORTING
 
 
-		/* case BEACON:
-		 * case SPECTATOR: */
+		case SPECTATOR:
+		{
+			sprintf(g_messages_text[PATTERN_TEXT], "S");
+			patternNotSet = false;
+		}
+		case BEACON:
 		default:
 		{
+			if(patternNotSet)
+			{
+				sprintf(g_messages_text[PATTERN_TEXT], "MO");
+			}
+			
 			bool repeat = true;
 			makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 			g_pattern_codespeed = 8;
 			g_code_throttle = throttleValue(g_pattern_codespeed);
 
+			g_sendID_seconds_countdown = 600;			/* wait 10 minutes send the ID */
 			g_on_air_seconds = 60;						/* on period is very long */
 			g_off_air_seconds = 0;						/* off period is very short */
 		}
@@ -2184,7 +2197,6 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 // 		g_event_start_time = 1;                     /* have it start a long time ago */
 // 		g_event_finish_time = MAX_TIME;             /* run for a long long time */
 		g_on_the_air = g_on_air_seconds;			/* start out transmitting */
-		g_sendID_seconds_countdown = 60;			/* wait a long time to send the ID */
 		g_event_commenced = true;                   /* get things running immediately */
 		g_event_enabled = true;                     /* get things running immediately */
 		g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
@@ -2196,12 +2208,8 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 	}
 	else         /* if(action == START_EVENT_WITH_STARTFINISH_TIMES) */
 	{
- 		if(g_event_start_epoch < g_current_epoch)                           /* timed event in progress */
- 		{
- 		}
- 		else                                                                /* event starts in the future */
- 		{
- 		}
+		SC sc;
+ 		EC ec = activateEventUsingCurrentSettings(&sc);
  
  		g_use_rtc_for_startstop = true;
  		g_transmissions_disabled = true;

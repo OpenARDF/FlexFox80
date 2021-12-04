@@ -178,12 +178,13 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 	EC init_transmitter(void)
 	{
 		EC code;
+		bool err;
 		
 		DAC0_init();
 
-		if((code = (EC)si5351_init(SI5351_CRYSTAL_LOAD_6PF, 0)))
+		if((err = si5351_init(SI5351_CRYSTAL_LOAD_6PF, 0)))
 		{
-			return( code);
+			return(ERROR_CODE_RF_OSCILLATOR_ERROR);
 		}
 
 		if((code = txSetParameters(NULL, NULL)))
@@ -220,14 +221,15 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 // 		}
 
 		uint16_t pwr_mW = g_80m_power_level_mW;
-		if(txSetFrequency((Frequency_Hz*)&g_80m_frequency, true))
+		
+		err = txSetFrequency((Frequency_Hz*)&g_80m_frequency, true);
+		if(!err)
 		{
-			code = ERROR_CODE_RF_OSCILLATOR_ERROR;
-		}
-		else
-		{
-			txSetParameters(&pwr_mW, NULL);
-			g_tx_initialized = true;
+			code = txSetParameters(&pwr_mW, NULL);
+			if(code == ERROR_CODE_NO_ERROR)
+			{
+				g_tx_initialized = true;
+			}
 		}
 
 		return( code);

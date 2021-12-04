@@ -60,8 +60,8 @@ static void USART4_initialization(uint32_t baud);
 
 /* Module global variables */
 static volatile bool serialbus_tx_active = false; /* volatile is required to ensure optimizer handles this properly */
-static SerialbusTxBuffer tx_buffer[SERIALBUS_NUMBER_OF_TX_MSG_BUFFERS];
-static SerialbusRxBuffer rx_buffer[SERIALBUS_NUMBER_OF_RX_MSG_BUFFERS];
+static volatile SerialbusTxBuffer tx_buffer[SERIALBUS_NUMBER_OF_TX_MSG_BUFFERS];
+static volatile SerialbusRxBuffer rx_buffer[SERIALBUS_NUMBER_OF_RX_MSG_BUFFERS];
 
 SerialbusTxBuffer* nextFullSBTxBuffer(void)
 {
@@ -86,7 +86,7 @@ SerialbusTxBuffer* nextFullSBTxBuffer(void)
 
 	if(found)
 	{
-		return( &tx_buffer[bufferIndex]);
+		return((SerialbusTxBuffer*)&tx_buffer[bufferIndex]);
 	}
 
 	return(null);
@@ -115,7 +115,7 @@ SerialbusTxBuffer* nextEmptySBTxBuffer(void)
 
 	if(found)
 	{
-		return( &tx_buffer[bufferIndex]);
+		return((SerialbusTxBuffer*)&tx_buffer[bufferIndex]);
 	}
 
 	return(null);
@@ -144,7 +144,7 @@ SerialbusRxBuffer* nextEmptySBRxBuffer(void)
 
 	if(found)
 	{
-		return( &rx_buffer[bufferIndex]);
+		return((SerialbusRxBuffer*)&rx_buffer[bufferIndex]);
 	}
 
 	return(null);
@@ -173,7 +173,7 @@ SerialbusRxBuffer* nextFullSBRxBuffer(void)
 
 	if(found)
 	{
-		return( &rx_buffer[bufferIndex]);
+		return((SerialbusRxBuffer*)&rx_buffer[bufferIndex]);
 	}
 
 	return(null);
@@ -287,7 +287,7 @@ void USART4_initialization(uint32_t baud)
 
 void serialbus_init(uint32_t baud, USART_Number_t usart)
 {
-	memset(rx_buffer, 0, sizeof(rx_buffer));
+	memset((SerialbusRxBuffer*)rx_buffer, 0, sizeof(*(SerialbusRxBuffer*)rx_buffer));
 
 	for(int bufferIndex=0; bufferIndex<SERIALBUS_NUMBER_OF_TX_MSG_BUFFERS; bufferIndex++)
 	{
@@ -327,7 +327,7 @@ void serialbus_disable(void)
 	}
 	
 	serialbus_end_tx();
-	memset(rx_buffer, 0, sizeof(rx_buffer));
+	memset((SerialbusRxBuffer*)rx_buffer, 0, sizeof(*(SerialbusRxBuffer*)rx_buffer));
 
 	for(bufferIndex=0; bufferIndex<SERIALBUS_NUMBER_OF_TX_MSG_BUFFERS; bufferIndex++)
 	{
@@ -414,6 +414,7 @@ void sb_echo_char(uint8_t c)
 
 bool sb_send_string(char* str)
 {
+	char buf[SERIALBUS_MAX_TX_MSG_LENGTH+1];
 	bool err = false;
 	uint16_t length, lengthToSend, lengthSent=0;
 	bool done = false;
@@ -438,22 +439,21 @@ bool sb_send_string(char* str)
 	do
 	{
 		lengthToSend = MIN(length-lengthSent, (uint16_t)SERIALBUS_MAX_TX_MSG_LENGTH);
-		strncpy(g_tempMsgBuff, &str[lengthSent], lengthToSend);
-		if(lengthToSend < SERIALBUS_MAX_TX_MSG_LENGTH)
-		{
-			g_tempMsgBuff[lengthToSend] = '\0';
-		}
-		while((err = serialbus_send_text(g_tempMsgBuff)))
-		{
-			;
-		}
-		while(!err && serialbusTxInProgress())
-		{
-			;
-		}
+		strncpy(buf, &str[lengthSent], lengthToSend);
+
+		buf[lengthToSend] = '\0';
+		err = serialbus_send_text(buf);
 		
+		if(!err)
+		{
+			while(serialbusTxInProgress())
+			{
+				;
+			}
+		}
+
 		lengthSent += lengthToSend;
-		done = lengthSent >= length;
+		done = err || (lengthSent >= length);
 	}while(!done);
 
 	return( err);
