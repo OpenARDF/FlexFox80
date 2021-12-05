@@ -431,7 +431,7 @@ void ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-2
 		bool failure;
 		uint8_t data[1];
 		
-		data[0] = enable ? 0x00:0x04;	
+		data[0] = enable ? 0x40:0x00;	
 		while(tries-- && (failure = (I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_CONTROL, data, 1) != 1)));
 		
 		return(failure);
@@ -565,17 +565,17 @@ bool ds3231_sync2nearestMinute()
 }
 
 /**
- *   Converts an epoch (seconds since 1900)  into a string with format "yymmddhhmmss"
+ *   Converts an epoch (seconds since 1900)  into a string with format "ddd dd-mon-yyyy hh:mm:ss zzz"
  */
 #define THIRTY_YEARS 946684800
 char* convertEpochToTimeString(time_t epoch, char* buf, size_t size)
  {
-    struct tm  ts;
+   struct tm  ts;
 	time_t t = epoch - THIRTY_YEARS;
 
-    // Format time, "ddd yyyy-mm-dd hh:mm:ss zzz"
+    // Format time, "ddd dd-mon-yyyy hh:mm:ss zzz"
     ts = *localtime(&t);
-    strftime(buf, size, "%a %Y-%m-%d %H:%M:%S", &ts);
+    strftime(buf, size, "%a %d-%b-%Y %H:%M:%S", &ts);
    return buf;
  }
 

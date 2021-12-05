@@ -76,7 +76,7 @@ void wifi_reset(bool state)
 
 bool wifiPresent(void)
 {
-	return(PORTD_get_pin_level(WIFI_MODULE_DETECT));
+	return(!PORTD_get_pin_level(WIFI_MODULE_DETECT));
 }
 
 

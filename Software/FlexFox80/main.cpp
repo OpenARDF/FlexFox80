@@ -612,6 +612,12 @@ int main(void)
 					
 	ADC0_setADCChannel(ADCAudioInput);
 	
+	sb_send_NewLine();
+	sb_send_string((char *)PRODUCT_NAME_LONG);
+	sprintf(g_tempStr, "\nSW Ver: %s\n", SW_REVISION);
+	sb_send_string(g_tempStr);
+	sb_send_string(HELP_TEXT_TXT);
+	
 	if(init_transmitter() == ERROR_CODE_RF_OSCILLATOR_ERROR)
 	{
 		sb_send_NewLine();
@@ -630,11 +636,6 @@ int main(void)
 		sb_send_string(TEXT_WIFI_NOT_DETECTED_TXT);
 	}
 	
-	sb_send_NewLine();
-	sb_send_string((char *)PRODUCT_NAME_LONG);
-	sprintf(g_tempStr, "\nSW Ver: %s\n", SW_REVISION);
-	sb_send_string(g_tempStr);
-	sb_send_string(HELP_TEXT_TXT);
 	sb_send_NewLine();
 	sb_send_NewPrompt();
 
@@ -808,12 +809,11 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 				if(sb_buff->fields[SB_FIELD1][0])
 				{
 					Frequency_Hz f;
-					f = atol(sb_buff->fields[SB_FIELD1]);
+					frequencyVal(sb_buff->fields[SB_FIELD1], &f);
 
-					Frequency_Hz ff = f;
-					if(!txSetFrequency(&ff, true))
+					if(!txSetFrequency(&f, true))
 					{
-						transmitter_freq = ff;
+						transmitter_freq = f;
 						g_ee_mgr.saveAllEEPROM();
 					}
 					else
@@ -821,14 +821,21 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 						sb_send_string(TEXT_TX_NOT_RESPONDING_TXT);						
 					}
 				}
-				else
-				{
-					transmitter_freq = txGetFrequency();
-				}
+
+				transmitter_freq = txGetFrequency();
 
 				if(transmitter_freq)
 				{
-					sprintf(g_tempStr, "FRE=%ld Hz\n", transmitter_freq);
+					char result[20];
+					if(!frequencyString(result, transmitter_freq))
+					{
+						sprintf(g_tempStr, "FRE=%s\n", result);						
+					}
+					else
+					{
+						sprintf(g_tempStr, "FRE=%lu\n", transmitter_freq);
+					}
+					
 					sb_send_string(g_tempStr);
 				}
 			}
@@ -1813,7 +1820,22 @@ EC hw_init()
 }
 
 EC rtc_init()
-{
+{	
+	PORTC_set_pin_dir(3, PORT_DIR_OUT);
+	// Toggle SCL to put DS3231 into a known state
+	for(int i=0; i<50; i++)
+	{		
+		PORTC_set_pin_level(3, OFF);
+		while(util_delay_ms(20));
+		PORTC_set_pin_level(3, ON);
+		while(util_delay_ms(20));		
+	}
+	
+	PORTC_set_pin_pull_mode(3, PORT_PULL_UP);
+	PORTC_set_pin_pull_mode(2, PORT_PULL_UP);
+	
+	ds3231_init();
+		
 	if(ds3231_1s_sqw(ON))
 	{
 		return ERROR_CODE_RTC_NONRESPONSIVE;
@@ -2209,7 +2231,8 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 	else         /* if(action == START_EVENT_WITH_STARTFINISH_TIMES) */
 	{
 		SC sc;
- 		EC ec = activateEventUsingCurrentSettings(&sc);
+ //		EC ec = 
+		activateEventUsingCurrentSettings(&sc);
  
  		g_use_rtc_for_startstop = true;
  		g_transmissions_disabled = true;
