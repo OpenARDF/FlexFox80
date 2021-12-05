@@ -204,16 +204,8 @@ bool frequencyString(char* result, uint32_t freq)
 	
 	if((freq > 3500000) && (freq < 4000000)) // Accept only a Hz value to be expressed in kHz
 	{
-		uint32_t frac = (freq % 1000)/100;
-		
-		if(frac)
-		{
-			sprintf(result, "%lu.%1lu kHz", freq/1000, frac);
-		}
-		else
-		{
-			sprintf(result, "%lu.0 kHz", freq/1000);
-		}
+		uint32_t frac = (freq % 1000)/100;		
+		sprintf(result, "%lu.%1lu kHz", freq/1000, frac);
 		
 		failure = false;
 	}
@@ -291,4 +283,128 @@ bool frequencyVal(char* str, Frequency_Hz* result)
 	}
 	
 	return(failure);	
+}
+
+bool fox2Text(char* str, Fox_t fox)
+{
+	bool failure = false;
+	
+	switch(fox)
+	{
+		case BEACON:
+		{
+			sprintf(str, "Finish \"MO\"");
+		}
+		break;
+		
+		case FOX_1:
+		{
+			sprintf(str, "Classic Fox 1 \"MOE\"");
+		}
+		break;
+		
+		case FOX_2:
+		{
+			sprintf(str, "Classic Fox 2 \"MOI\"");
+		}
+		break;
+		
+		case FOX_3:
+		{
+			sprintf(str, "Classic Fox 3 \"MOS\"");
+		}
+		break;
+		
+		case FOX_4:
+		{
+			sprintf(str, "Classic Fox 4 \"MOH\"");
+		}
+		break;
+		
+		case FOX_5:
+		{
+			sprintf(str, "Classic Fox 5 \"MO5\"");
+		}
+		break;
+		
+		case FOXORING:
+		{
+			sprintf(str, "Foxoring");
+		}
+		break;
+		
+		case SPECTATOR:
+		{
+			sprintf(str, "Spectator \"S\"");
+		}
+		break;
+		
+		case SPRINT_S1:
+		{
+			sprintf(str, "Sprint Slow 1 \"ME\"");
+		}
+		break;
+		
+		case SPRINT_S2:
+		{
+			sprintf(str, "Sprint Slow 2 \"MI\"");
+		}
+		break;
+		
+		case SPRINT_S3:
+		{
+			sprintf(str, "Sprint Slow 3 \"MS\"");
+		}
+		break;
+		
+		case SPRINT_S4:
+		{
+			sprintf(str, "Sprint Slow 4 \"MH\"");
+		}
+		break;
+		
+		case SPRINT_S5:
+		{
+			sprintf(str, "Sprint Slow 5 \"M5\"");
+		}
+		break;
+		
+		case SPRINT_F1:
+		{
+			sprintf(str, "Sprint Fast 1 \"OE\"");
+		}
+		break;
+		
+		case SPRINT_F2:
+		{
+			sprintf(str, "Sprint Fast 2 \"OI\"");
+		}
+		break;
+		
+		case SPRINT_F3:
+		{
+			sprintf(str, "Sprint Fast 3 \"OS\"");
+		}
+		break;
+		
+		case SPRINT_F4:
+		{
+			sprintf(str, "Sprint Fast 4 \"OH\"");
+		}
+		break;
+		
+		case SPRINT_F5:
+		{
+			sprintf(str, "Sprint Fast 5 \"O5\"");
+		}
+		break;
+		
+		default:
+		{
+			failure = true;
+		}
+		break;
+	}
+	
+	return(failure);
 }

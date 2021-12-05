@@ -48,5 +48,6 @@ uint32_t convertTimeStringToEpoch(char * s);
 bool mystrptime(char* s, struct tm* ltm);
 bool frequencyString(char* result, uint32_t freq);
 bool frequencyVal(char* str, Frequency_Hz* result);
+bool fox2Text(char* str, Fox_t fox);
 
 #endif  /* UTIL_H_ */

@@ -767,7 +767,17 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 					}
 				}
 
-				sprintf(g_tempStr, "Fox=%u\n", (uint16_t)g_fox);
+				if(!fox2Text(g_tempStr, g_fox))
+				{
+					char str1[25];
+					strcpy(str1, g_tempStr);
+					sprintf(g_tempStr, "Fox=%s\n", str1);
+				}
+				else
+				{
+					sprintf(g_tempStr, "Fox=%u\n", (uint16_t)g_fox);
+				}
+				
 				sb_send_string(g_tempStr);
 			}
 			break;
@@ -957,7 +967,7 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 			{
 				bool doprint = false;
 
-				if(sb_buff->fields[SB_FIELD1][0] == 'T')   /* Current time format "YYMMDDhhmmss" */
+				if(!sb_buff->fields[SB_FIELD1][0] || sb_buff->fields[SB_FIELD1][0] == 'T')   /* Current time format "YYMMDDhhmmss" */
 				{
 					if(sb_buff->fields[SB_FIELD2][0])
 					{
