@@ -2,7 +2,7 @@
 <export version="D">
   <design>
     <source>/Users/Charles/Documents/GitHub/FlexFox80/KiCad/FlexFox80.sch</source>
-    <date>Saturday, May 15, 2021 at 09:20:00 AM</date>
+    <date>Saturday, December 04, 2021 at 09:21:17 AM</date>
     <tool>Eeschema (5.1.9-0-10_14)</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -78,6 +78,7 @@
       <fields>
         <field name="Description">CAP CER 1100PF 50V NP0 0805</field>
         <field name="Digi-Key Part No.">399-14552-1-ND</field>
+        <field name="LCSC Part Number">C2327793</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=399-14552-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">KEMET</field>
         <field name="Manufacturer PN">C0805C112J5GAC7800</field>
@@ -128,6 +129,7 @@
       <fields>
         <field name="Description">CAP CER 0.47UF 100V X7R 0805</field>
         <field name="Digi-Key Part No.">478-9924-1-ND</field>
+        <field name="LCSC Part Number">C342818</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-9924-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08051C474K4Z2A</field>
@@ -142,6 +144,7 @@
       <fields>
         <field name="Description">CAP CER 1800PF 100V C0G 0805</field>
         <field name="Digi-Key Part No.">445-5752-1-ND</field>
+        <field name="LCSC Part Number">C2173329</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=445-5752-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">TDK Corporation</field>
         <field name="Manufacturer PN">CGA4F2C0G2A182J085AA</field>
@@ -250,6 +253,7 @@
       <fields>
         <field name="Description">CAP CER 91PF 100V NP0 0805</field>
         <field name="Digi-Key Part No.">399-17459-1-ND</field>
+        <field name="LCSC Part Number">C2439516</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=399-17459-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">KEMET</field>
         <field name="Manufacturer PN">C0805C910J1GAC7800</field>
@@ -278,6 +282,7 @@
       <fields>
         <field name="Description">CAP TANT 47UF 10% 20V 2917</field>
         <field name="Digi-Key Part No.">399-3904-1-ND</field>
+        <field name="LCSC Part Number">C122333</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=399-3904-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">KEMET</field>
         <field name="Manufacturer PN">T495X476K020ATE150</field>
@@ -292,6 +297,7 @@
       <fields>
         <field name="Description">CAP CER 22UF 25V X5R 1210</field>
         <field name="Digi-Key Part No.">1276-3373-1-ND</field>
+        <field name="LCSC Part Number">C337455</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=1276-3373-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Samsung Electro-Mechanics</field>
         <field name="Manufacturer PN">CL32A226MAJNNNE</field>
@@ -307,6 +313,7 @@
       <fields>
         <field name="Description">MCU LOAD SWITCH 200MA SOT-363</field>
         <field name="Digi-Key Part No.">LMN200B02DICT-ND</field>
+        <field name="LCSC Part Number">C150757</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=LMN200B02DICT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Diodes Incorporated</field>
         <field name="Manufacturer PN">LMN200B02-7</field>
@@ -321,6 +328,7 @@
       <fields>
         <field name="Description">DIODE ZENER 4.7V 500MW SOD123</field>
         <field name="Digi-Key Part No.">BZT52C4V7-13FDICT-ND</field>
+        <field name="LCSC Part Number">C151054</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=BZT52C4V7-13FDICT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Diodes Incorporated</field>
         <field name="Manufacturer PN">BZT52C4V7-13-F</field>
@@ -335,6 +343,7 @@
       <fields>
         <field name="Description">VARISTOR 0603</field>
         <field name="Digi-Key Part No.">CG0603MLC-05LECT-ND</field>
+        <field name="LCSC Part Number">C2655331</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=CG0603MLC-05LECT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Bourns Inc.</field>
         <field name="Manufacturer PN">CG0603MLC-05LE</field>
@@ -378,6 +387,7 @@
       <fields>
         <field name="Description">DIODE ARRAY SCHOTTKY 30V SC88</field>
         <field name="Digi-Key Part No.">MBD54DWT1GOSCT-ND</field>
+        <field name="LCSC Part Number">C152486</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=MBD54DWT1GOSCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">ON Semiconductor</field>
         <field name="Manufacturer PN">MBD54DWT1G</field>
@@ -392,6 +402,7 @@
       <fields>
         <field name="Description">CAP CER 0.47UF 100V X7R 0805</field>
         <field name="Digi-Key Part No.">478-9924-1-ND</field>
+        <field name="LCSC Part Number">C342818</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-9924-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08051C474K4Z2A</field>
@@ -406,6 +417,7 @@
       <fields>
         <field name="Description">CAP CER 1100PF 50V NP0 0805</field>
         <field name="Digi-Key Part No.">399-14552-1-ND</field>
+        <field name="LCSC Part Number">C2327793</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=399-14552-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">KEMET</field>
         <field name="Manufacturer PN">C0805C112J5GAC7800</field>
@@ -432,6 +444,7 @@
       <fields>
         <field name="Description">IC REG BUCK PROG 1.5A 12MSOP</field>
         <field name="Digi-Key Part No.">LTC3600EMSE#PBF-ND</field>
+        <field name="LCSC Part Number">C580752</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=LTC3600EMSE%23PBF-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Analog Devices Inc.</field>
         <field name="Manufacturer PN">LTC3600EMSE#PBF</field>
@@ -446,6 +459,7 @@
       <fields>
         <field name="Description">CAP CER 1UF 16V X7R 0805</field>
         <field name="Digi-Key Part No.">311-1365-1-ND</field>
+        <field name="LCSC Part Number">C344171</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-1365-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">CC0805KKX7R7BB105</field>
@@ -460,6 +474,7 @@
       <fields>
         <field name="Description">CAP CER 22UF 25V X5R 1210</field>
         <field name="Digi-Key Part No.">1276-3373-1-ND</field>
+        <field name="LCSC Part Number">C337455</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=1276-3373-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Samsung Electro-Mechanics</field>
         <field name="Manufacturer PN">CL32A226MAJNNNE</field>
@@ -468,43 +483,16 @@
       <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
       <tstamp>58B8121A</tstamp>
     </comp>
-    <comp ref="U201">
-      <value>DAC081C085</value>
-      <footprint>Housings_SSOP:MSOP-8_3x3mm_Pitch0.65mm</footprint>
-      <fields>
-        <field name="Description">IC DAC 8BIT V-OUT 8VSSOP</field>
-        <field name="Digi-Key Part No.">DAC081C085CIMM/NOPBCT-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=DAC081C085CIMM%2FNOPBCT-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">Texas Instruments</field>
-        <field name="Manufacturer PN">DAC081C085CIMM/NOPB</field>
-      </fields>
-      <libsource lib="Analog_DAC" part="DAC081C085" description=""/>
-      <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
-      <tstamp>58B84991</tstamp>
-    </comp>
-    <comp ref="C201">
-      <value>10uF</value>
-      <footprint>Capacitors_SMD:C_0805</footprint>
-      <fields>
-        <field name="Description">CAP CER 10UF 25V X5R 0805</field>
-        <field name="Digi-Key Part No.">490-5523-1-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=490-5523-1-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">Murata Electronics</field>
-        <field name="Manufacturer PN">GRM21BR61E106KA73L</field>
-      </fields>
-      <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
-      <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
-      <tstamp>58B87194</tstamp>
-    </comp>
     <comp ref="R204">
-      <value>536k</value>
+      <value>392k</value>
       <footprint>Resistors_SMD:R_0805</footprint>
       <fields>
-        <field name="Description">RES SMD 536K OHM 1% 1/8W 0805</field>
-        <field name="Digi-Key Part No.">311-536KCRCT-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-536KCRCT-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Description">RES SMD 392K OHM 1% 1/8W 0805</field>
+        <field name="Digi-Key Part No.">311-392KCRCT-ND</field>
+        <field name="LCSC Part Number">C273847</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-392KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
-        <field name="Manufacturer PN">RC0805FR-07536KL</field>
+        <field name="Manufacturer PN">RC0805FR-07392KL</field>
       </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
       <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
@@ -516,6 +504,7 @@
       <fields>
         <field name="Description">RES SMD 100K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-100KCRCT-ND</field>
+        <field name="LCSC Part Number">C103905</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-100KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RC0805FR-07100KL</field>
@@ -524,26 +513,13 @@
       <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
       <tstamp>58B8A411</tstamp>
     </comp>
-    <comp ref="R206">
-      <value>46.4k</value>
-      <footprint>Resistors_SMD:R_0805</footprint>
-      <fields>
-        <field name="Description">RES 46.4K OHM 1% 1/8W 0805</field>
-        <field name="Digi-Key Part No.">RMCF0805FT46K4CT-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=RMCF0805FT46K4CT-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">Stackpole Electronics Inc</field>
-        <field name="Manufacturer PN">RMCF0805FT46K4</field>
-      </fields>
-      <libsource lib="Device" part="R" description="Resistor"/>
-      <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
-      <tstamp>58B8A49B</tstamp>
-    </comp>
     <comp ref="R212">
       <value>162k</value>
       <footprint>Resistors_SMD:R_0805</footprint>
       <fields>
         <field name="Description">RES SMD 162K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-162KCRCT-ND</field>
+        <field name="LCSC Part Number">C416820</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-162KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RC0805FR-07162KL</field>
@@ -558,6 +534,7 @@
       <fields>
         <field name="Description">IC OPAMP GP 1 CIRCUIT SOT23-5</field>
         <field name="Digi-Key Part No.">296-37698-1-ND</field>
+        <field name="LCSC Part Number">C88036</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=296-37698-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Texas Instruments</field>
         <field name="Manufacturer PN">OPA171AIDBVR</field>
@@ -572,6 +549,7 @@
       <fields>
         <field name="Description">CAP TANT 47UF 10% 20V 2917</field>
         <field name="Digi-Key Part No.">399-3904-1-ND</field>
+        <field name="LCSC Part Number">C122333</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=399-3904-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">KEMET</field>
         <field name="Manufacturer PN">T495X476K020ATE150</field>
@@ -600,6 +578,7 @@
       <fields>
         <field name="Description">CAP CER 270PF 50V C0G/NP0 0805</field>
         <field name="Digi-Key Part No.">1276-2624-1-ND</field>
+        <field name="LCSC Part Number">C161109</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=1276-2624-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Samsung Electro-Mechanics</field>
         <field name="Manufacturer PN">CL21C271GBANNNC</field>
@@ -614,6 +593,7 @@
       <fields>
         <field name="Description">CAP CER 10PF 200V C0G/NP0 0805</field>
         <field name="Digi-Key Part No.">478-10457-1-ND</field>
+        <field name="LCSC Part Number">C344177</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-10457-1-ND"&gt;Link&lt;a/&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08052U100FAT2A</field>
@@ -621,20 +601,6 @@
       <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
       <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
       <tstamp>5A76779A</tstamp>
-    </comp>
-    <comp ref="L201">
-      <value>10uH</value>
-      <footprint>Resistors_SMD:R_0805</footprint>
-      <fields>
-        <field name="Description">FIXED IND 10UH 100MA 390 MOHM</field>
-        <field name="Digi-Key Part No.">490-6682-1-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=490-6682-1-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">Murata Electronics</field>
-        <field name="Manufacturer PN">LQM21FN100M80L</field>
-      </fields>
-      <libsource lib="Device" part="INDUCTOR_SMALL" description=""/>
-      <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
-      <tstamp>5BF17B46</tstamp>
     </comp>
     <comp ref="W204">
       <value>V4</value>
@@ -664,6 +630,7 @@
       <fields>
         <field name="Description">RES SMD 27K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-27.0KCRCT-ND</field>
+        <field name="LCSC Part Number">C139896</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-27.0KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RC0805FR-0727KL</field>
@@ -678,6 +645,7 @@
       <fields>
         <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-10KLGCT-ND</field>
+        <field name="LCSC Part Number">C38522</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10KLGCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">AC0805FR-0710KL</field>
@@ -704,6 +672,7 @@
       <fields>
         <field name="Description">IC REG CTRLR BOOST 8SOIC</field>
         <field name="Digi-Key Part No.">MIC2196YM-CT-ND</field>
+        <field name="LCSC Part Number">C627808</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=MIC2196YM-CT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Microchip Technology</field>
         <field name="Manufacturer PN">MIC2196YM-TR</field>
@@ -714,14 +683,15 @@
     </comp>
     <comp ref="L203">
       <value>6.8uH</value>
-      <footprint>Inductors:CDR7D28MN</footprint>
+      <footprint>Inductors:2020</footprint>
       <datasheet>http://www.bourns.com/docs/Product-Datasheets/SRP7028A.pdf</datasheet>
       <fields>
-        <field name="Description">FIXED IND 6.8UH 2.75A 46.3 MOHM</field>
-        <field name="Digi-Key Part No.">308-1328-1-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=308-1328-1-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">Sumida America Components Inc.</field>
-        <field name="Manufacturer PN">CDR7D28MNNP-6R8NC</field>
+        <field name="Description">FIXED IND 6.8UH 3A 39 MOHM SMD</field>
+        <field name="Digi-Key Part No.">490-16286-1-ND</field>
+        <field name="LCSC Part Number">C703749</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=490-16286-1-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">Murata Electronics</field>
+        <field name="Manufacturer PN">LQH5BPN6R8M38L</field>
       </fields>
       <libsource lib="FlexFox80-rescue" part="INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue" description=""/>
       <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
@@ -733,6 +703,7 @@
       <fields>
         <field name="Description">RES SMD 100K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-100KCRCT-ND</field>
+        <field name="LCSC Part Number">C103905</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-100KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RC0805FR-07100KL</field>
@@ -747,6 +718,7 @@
       <fields>
         <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
         <field name="Digi-Key Part No.">478-1395-1-ND</field>
+        <field name="LCSC Part Number">C360619</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08055C104KAT2A</field>
@@ -761,6 +733,7 @@
       <fields>
         <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-10KLGCT-ND</field>
+        <field name="LCSC Part Number">C38522</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10KLGCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">AC0805FR-0710KL</field>
@@ -775,6 +748,7 @@
       <fields>
         <field name="Description">RES SMD 1.1K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-1.10KCRCT-ND</field>
+        <field name="LCSC Part Number">C352257</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-1.10KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RC0805FR-071K1L</field>
@@ -789,6 +763,7 @@
       <fields>
         <field name="Description">RES 0.01 OHM 1% 1/2W 0805</field>
         <field name="Digi-Key Part No.">408-1544-1-ND</field>
+        <field name="LCSC Part Number">C728271</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=408-1544-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Susumu</field>
         <field name="Manufacturer PN">KRL1220E-M-R010-F-T5</field>
@@ -803,6 +778,7 @@
       <fields>
         <field name="Description">CAP TANT 150UF 10% 20V 2917</field>
         <field name="Digi-Key Part No.">478-5253-1-ND</field>
+        <field name="LCSC Part Number">C444765</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-5253-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">TPME157K020R0035</field>
@@ -817,6 +793,7 @@
       <fields>
         <field name="Description">CAP CER 10000PF 50V NP0 0805</field>
         <field name="Digi-Key Part No.">478-10068-1-ND</field>
+        <field name="LCSC Part Number">C527201</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-10068-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08055A103JAT2A</field>
@@ -831,6 +808,7 @@
       <fields>
         <field name="Description">RES SMD 49.9K OHM 0.1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">YAG4990CT-ND</field>
+        <field name="LCSC Part Number">C218598</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=YAG4990CT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RT0805BRE0749K9L</field>
@@ -845,6 +823,7 @@
       <fields>
         <field name="Description">DIODE SCHOTTKY 30V 5A SMC</field>
         <field name="Digi-Key Part No.">B530C-FDICT-ND</field>
+        <field name="LCSC Part Number">C110488</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=B530C-FDICT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Diodes Incorporated</field>
         <field name="Manufacturer PN">B530C-13-F</field>
@@ -867,26 +846,13 @@
       <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
       <tstamp>607F80D4</tstamp>
     </comp>
-    <comp ref="C203">
-      <value>10uF</value>
-      <footprint>Capacitors_SMD:C_0805</footprint>
-      <fields>
-        <field name="Description">CAP CER 10UF 25V X5R 0805</field>
-        <field name="Digi-Key Part No.">490-5523-1-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=490-5523-1-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">Murata Electronics</field>
-        <field name="Manufacturer PN">GRM21BR61E106KA73L</field>
-      </fields>
-      <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
-      <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
-      <tstamp>6094F3CA</tstamp>
-    </comp>
     <comp ref="C205">
       <value>10uF</value>
       <footprint>Capacitors_SMD:C_0805</footprint>
       <fields>
         <field name="Description">CAP CER 10UF 25V X5R 0805</field>
         <field name="Digi-Key Part No.">490-5523-1-ND</field>
+        <field name="LCSC Part Number">C84416</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=490-5523-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Murata Electronics</field>
         <field name="Manufacturer PN">GRM21BR61E106KA73L</field>
@@ -901,6 +867,7 @@
       <fields>
         <field name="Description">CAP CER 10UF 25V X5R 0805</field>
         <field name="Digi-Key Part No.">490-5523-1-ND</field>
+        <field name="LCSC Part Number">C84416</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=490-5523-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Murata Electronics</field>
         <field name="Manufacturer PN">GRM21BR61E106KA73L</field>
@@ -915,6 +882,7 @@
       <fields>
         <field name="Description">RES SMD 100K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-100KCRCT-ND</field>
+        <field name="LCSC Part Number">C103905</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-100KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RC0805FR-07100KL</field>
@@ -929,6 +897,7 @@
       <fields>
         <field name="Description">RES SMD 27K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-27.0KCRCT-ND</field>
+        <field name="LCSC Part Number">C139896</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-27.0KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RC0805FR-0727KL</field>
@@ -943,6 +912,7 @@
       <fields>
         <field name="Description">TRANS PREBIAS 2NPN 50V SC88</field>
         <field name="Digi-Key Part No.">MUN5213DW1T1GOSCT-ND</field>
+        <field name="LCSC Part Number">C95381</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=MUN5213DW1T1GOSCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">ON Semiconductor</field>
         <field name="Manufacturer PN">MUN5213DW1T1G</field>
@@ -957,6 +927,7 @@
       <fields>
         <field name="Description">MOSFET 2P-CH 40V 6.9A 8SO</field>
         <field name="Digi-Key Part No.">DMP4025LSD-13DICT-ND</field>
+        <field name="LCSC Part Number">C150763</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=DMP4025LSD-13DICT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Diodes Incorporated</field>
         <field name="Manufacturer PN">DMP4025LSD-13</field>
@@ -971,6 +942,7 @@
       <fields>
         <field name="Description">MOSFET N-CH 30V 16A 8SOP</field>
         <field name="Digi-Key Part No.">RJK0354DSP-00#J0CT-ND</field>
+        <field name="LCSC Part Number">C919563</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=RJK0354DSP-00#J0CT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Renesas Electronics America Inc</field>
         <field name="Manufacturer PN">RJK0354DSP-00#J0</field>
@@ -985,6 +957,7 @@
       <fields>
         <field name="Description">CAP TANT 150UF 10% 20V 2917</field>
         <field name="Digi-Key Part No.">478-5253-1-ND</field>
+        <field name="LCSC Part Number">C444765</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-5253-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">TPME157K020R0035</field>
@@ -999,6 +972,7 @@
       <fields>
         <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
         <field name="Digi-Key Part No.">478-1395-1-ND</field>
+        <field name="LCSC Part Number">C360619</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08055C104KAT2A</field>
@@ -1013,6 +987,7 @@
       <fields>
         <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
         <field name="Digi-Key Part No.">478-1395-1-ND</field>
+        <field name="LCSC Part Number">C360619</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08055C104KAT2A</field>
@@ -1027,6 +1002,7 @@
       <fields>
         <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
         <field name="Digi-Key Part No.">478-1395-1-ND</field>
+        <field name="LCSC Part Number">C360619</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08055C104KAT2A</field>
@@ -1041,6 +1017,7 @@
       <fields>
         <field name="Description">DIODE SCHOTTKY 30V 5A SMC</field>
         <field name="Digi-Key Part No.">B530C-FDICT-ND</field>
+        <field name="LCSC Part Number">C110488</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=B530C-FDICT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Diodes Incorporated</field>
         <field name="Manufacturer PN">B530C-13-F</field>
@@ -1049,27 +1026,13 @@
       <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
       <tstamp>609CF024</tstamp>
     </comp>
-    <comp ref="L202">
-      <value>6.8uH</value>
-      <footprint>Inductors:CDR7D28MN</footprint>
-      <datasheet>http://www.bourns.com/docs/Product-Datasheets/SRP7028A.pdf</datasheet>
-      <fields>
-        <field name="Description">FIXED IND 6.8UH 2.75A 46.3 MOHM</field>
-        <field name="Digi-Key Part No.">308-1328-1-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=308-1328-1-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">Sumida America Components Inc.</field>
-        <field name="Manufacturer PN">CDR7D28MNNP-6R8NC</field>
-      </fields>
-      <libsource lib="FlexFox80-rescue" part="INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue" description=""/>
-      <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
-      <tstamp>609E544F</tstamp>
-    </comp>
     <comp ref="C212">
       <value>100nF</value>
       <footprint>Capacitors_SMD:C_0805</footprint>
       <fields>
         <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
         <field name="Digi-Key Part No.">478-1395-1-ND</field>
+        <field name="LCSC Part Number">C360619</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08055C104KAT2A</field>
@@ -1084,6 +1047,7 @@
       <fields>
         <field name="Description">RES SMD 162K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-162KCRCT-ND</field>
+        <field name="LCSC Part Number">C416820</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-162KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RC0805FR-07162KL</field>
@@ -1098,6 +1062,7 @@
       <fields>
         <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-10KLGCT-ND</field>
+        <field name="LCSC Part Number">C38522</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10KLGCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">AC0805FR-0710KL</field>
@@ -1112,6 +1077,7 @@
       <fields>
         <field name="Description">CAP TANT 47UF 10% 20V 2917</field>
         <field name="Digi-Key Part No.">399-3904-1-ND</field>
+        <field name="LCSC Part Number">C122333</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=399-3904-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">KEMET</field>
         <field name="Manufacturer PN">T495X476K020ATE150</field>
@@ -1126,6 +1092,7 @@
       <fields>
         <field name="Description">RES SMD 162K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-162KCRCT-ND</field>
+        <field name="LCSC Part Number">C416820</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-162KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RC0805FR-07162KL</field>
@@ -1140,6 +1107,7 @@
       <fields>
         <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-10KLGCT-ND</field>
+        <field name="LCSC Part Number">C38522</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10KLGCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">AC0805FR-0710KL</field>
@@ -1154,6 +1122,7 @@
       <fields>
         <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-10KLGCT-ND</field>
+        <field name="LCSC Part Number">C38522</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10KLGCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">AC0805FR-0710KL</field>
@@ -1168,6 +1137,7 @@
       <fields>
         <field name="Description">CAP CER 1UF 16V X7R 0805</field>
         <field name="Digi-Key Part No.">311-1365-1-ND</field>
+        <field name="LCSC Part Number">C344171</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-1365-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">CC0805KKX7R7BB105</field>
@@ -1176,6 +1146,37 @@
       <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
       <tstamp>60A6A8B1</tstamp>
     </comp>
+    <comp ref="L202">
+      <value>6.8uH</value>
+      <footprint>Inductors:2020</footprint>
+      <datasheet>http://www.bourns.com/docs/Product-Datasheets/SRP7028A.pdf</datasheet>
+      <fields>
+        <field name="Description">FIXED IND 6.8UH 3A 39 MOHM SMD</field>
+        <field name="Digi-Key Part No.">490-16286-1-ND</field>
+        <field name="LCSC Part Number">C703749</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=490-16286-1-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">Murata Electronics</field>
+        <field name="Manufacturer PN">LQH5BPN6R8M38L</field>
+      </fields>
+      <libsource lib="FlexFox80-rescue" part="INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue" description=""/>
+      <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
+      <tstamp>618D43F0</tstamp>
+    </comp>
+    <comp ref="R206">
+      <value>27k</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="Description">RES SMD 27K OHM 1% 1/8W 0805</field>
+        <field name="Digi-Key Part No.">311-27.0KCRCT-ND</field>
+        <field name="LCSC Part Number">C139896</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-27.0KCRCT-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">Yageo</field>
+        <field name="Manufacturer PN">RC0805FR-0727KL</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <sheetpath names="/ARDF Tx Continued/" tstamps="/591BC960/"/>
+      <tstamp>6205CF15</tstamp>
+    </comp>
     <comp ref="U304">
       <value>SI5351A</value>
       <footprint>Housings_SSOP:MSOP-10_3x3mm_Pitch0.5mm</footprint>
@@ -1183,6 +1184,7 @@
       <fields>
         <field name="Description">IC CLK GENERATOR 200MHZ 10MSOP</field>
         <field name="Digi-Key Part No.">336-2399-5-ND</field>
+        <field name="LCSC Part Number">C529366</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=336-2399-5-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Silicon Labs</field>
         <field name="Manufacturer PN">SI5351A-B-GT</field>
@@ -1211,6 +1213,7 @@
       <fields>
         <field name="Description">CAP CER 0.47UF 100V X7R 0805</field>
         <field name="Digi-Key Part No.">478-9924-1-ND</field>
+        <field name="LCSC Part Number">C342818</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-9924-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08051C474K4Z2A</field>
@@ -1225,6 +1228,7 @@
       <fields>
         <field name="Description">CAP CER 10UF 25V X5R 0805</field>
         <field name="Digi-Key Part No.">490-5523-1-ND</field>
+        <field name="LCSC Part Number">C84416</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=490-5523-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Murata Electronics</field>
         <field name="Manufacturer PN">GRM21BR61E106KA73L</field>
@@ -1245,30 +1249,18 @@
       <tstamp>57BD33AA</tstamp>
     </comp>
     <comp ref="X301">
-      <value>ASTX-H11-25.MHZ</value>
+      <value>25.MHZ TCXO</value>
       <footprint>Crystals:ASTX-H11-25.000MHZ</footprint>
-      <datasheet>https://abracon.com/Oscillators/ASTX-H11.pdf</datasheet>
       <fields>
-        <field name="Description">XTAL OSC TCXO 25.0000MHZ HCMOS</field>
-        <field name="Digi-Key Part No.">535-12039-1-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=535-12039-1-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Description">XTAL OSC TCXO 25MHZ CLPSNW</field>
+        <field name="Digi-Key Part No.">2780-I537-2O7-25.000MHZCT-ND</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=2780-I537-2O7-25.000MHZCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Abracon LLC</field>
-        <field name="Manufacturer PN">ASTX-H11-25.000MHZ-T</field>
+        <field name="Manufacturer PN">I537-2O7-25.000 MHZ</field>
       </fields>
       <libsource lib="special" part="ASTX-H11" description="HCMOS SMD TCXO"/>
       <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
       <tstamp>58755171</tstamp>
-    </comp>
-    <comp ref="W301">
-      <value>TEST_1P</value>
-      <footprint>Measurement_Points:Measurement_Point_Square-SMD-Pad_Small</footprint>
-      <fields>
-        <field name="Link">np</field>
-        <field name="Part No.">np</field>
-      </fields>
-      <libsource lib="FlexFox80-rescue" part="TEST_1P-ARDF-2-Band-MiniTx-rescue" description=""/>
-      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
-      <tstamp>587A8789</tstamp>
     </comp>
     <comp ref="W302">
       <value>TEST_1P</value>
@@ -1287,6 +1279,7 @@
       <fields>
         <field name="Description">IC RTC CLK/CALENDAR I2C 16-SOIC</field>
         <field name="Digi-Key Part No.">DS3231S#T&amp;RCT-ND</field>
+        <field name="LCSC Part Number">C2651514</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=DS3231S%23T%26RCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Maxim Integrated</field>
         <field name="Manufacturer PN">DS3231S#T&amp;R</field>
@@ -1301,6 +1294,7 @@
       <fields>
         <field name="Description">CAP CER 1UF 16V X7R 0805</field>
         <field name="Digi-Key Part No.">311-1365-1-ND</field>
+        <field name="LCSC Part Number">C344171</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-1365-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">CC0805KKX7R7BB105</field>
@@ -1315,6 +1309,7 @@
       <fields>
         <field name="Description">RES SMD 10 OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-10.0CRCT-ND</field>
+        <field name="LCSC Part Number">C96347</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10.0CRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RC0805FR-0710RL</field>
@@ -1329,6 +1324,7 @@
       <fields>
         <field name="Description">CAP CER 10UF 25V X5R 0805</field>
         <field name="Digi-Key Part No.">490-5523-1-ND</field>
+        <field name="LCSC Part Number">C84416</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=490-5523-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Murata Electronics</field>
         <field name="Manufacturer PN">GRM21BR61E106KA73L</field>
@@ -1367,6 +1363,7 @@
       <fields>
         <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-10KLGCT-ND</field>
+        <field name="LCSC Part Number">C38522</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10KLGCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">AC0805FR-0710KL</field>
@@ -1509,6 +1506,7 @@
       <fields>
         <field name="Description">IC GATE AND 1CH 2-INP 5TSOP</field>
         <field name="Digi-Key Part No.">MC74HC1G08DTT1GOSCT-ND</field>
+        <field name="LCSC Part Number">C108694</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=MC74HC1G08DTT1GOSCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">ON Semiconductor</field>
         <field name="Manufacturer PN">MC74HC1G08DTT1G</field>
@@ -1516,49 +1514,6 @@
       <libsource lib="74xx" part="74HC1G08" description=""/>
       <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
       <tstamp>5BCC1DC3</tstamp>
-    </comp>
-    <comp ref="U307">
-      <value>SN74CB3Q3305</value>
-      <footprint>Housings_SSOP:TSSOP-8_3x3mm_Pitch0.65mm</footprint>
-      <fields>
-        <field name="Description">IC BUS SWITCH 1 X 1:1 8TSSOP</field>
-        <field name="Digi-Key Part No.">296-16809-1-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=296-16809-1-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">Texas Instruments</field>
-        <field name="Manufacturer PN">SN74CB3Q3305PWR</field>
-      </fields>
-      <libsource lib="Interface" part="SN74CB3Q3305" description=""/>
-      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
-      <tstamp>5C75D7C5</tstamp>
-    </comp>
-    <comp ref="U302">
-      <value>ATmega1284P-AU</value>
-      <footprint>Housings_QFP:TQFP-44_10x10mm_Pitch0.8mm</footprint>
-      <datasheet>http://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-8272-8-bit-AVR-microcontroller-ATmega164A_PA-324A_PA-644A_PA-1284_P_datasheet.pdf</datasheet>
-      <fields>
-        <field name="Description">IC MCU 8BIT 128KB FLASH 44TQFP</field>
-        <field name="Digi-Key Part No.">ATMEGA1284P-AU-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=ATMEGA1284P-AU-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">Microchip Technology</field>
-        <field name="Manufacturer PN">ATMEGA1284P-AU</field>
-      </fields>
-      <libsource lib="MCU_Microchip_ATmega" part="ATmega1284P-AU" description="20MHz, 128kB Flash, 16kB SRAM, 4kB EEPROM, JTAG, TQFP-44"/>
-      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
-      <tstamp>6081BBDB</tstamp>
-    </comp>
-    <comp ref="Y301">
-      <value>20 MHz</value>
-      <footprint>Crystals:CSTNE20M0V53Z000R0</footprint>
-      <fields>
-        <field name="Description">CERAMIC RES 20.0000MHZ 15PF SMD</field>
-        <field name="Digi-Key Part No.">490-17955-1-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=490-17955-1-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">Murata Electronics</field>
-        <field name="Manufacturer PN">CSTNE20M0V53Z000R0</field>
-      </fields>
-      <libsource lib="Device" part="Resonator_Small" description="Three pin ceramic resonator, small symbol"/>
-      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
-      <tstamp>617DD630</tstamp>
     </comp>
     <comp ref="J301">
       <value>DB9_Female</value>
@@ -1574,26 +1529,13 @@
       <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
       <tstamp>619A55E4</tstamp>
     </comp>
-    <comp ref="D304">
-      <value>GREEN</value>
-      <footprint>Resistors_SMD:R_0805</footprint>
-      <fields>
-        <field name="Description">LED GREEN CLEAR 0805 SMD</field>
-        <field name="Digi-Key Part No.">732-4983-1-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=732-4983-1-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">Wurth Elektronik</field>
-        <field name="Manufacturer PN">150080GS75000</field>
-      </fields>
-      <libsource lib="Device" part="LED_ALT" description="Light emitting diode, filled shape"/>
-      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
-      <tstamp>61B9E05F</tstamp>
-    </comp>
     <comp ref="D305">
       <value>RED</value>
       <footprint>Resistors_SMD:R_0805</footprint>
       <fields>
         <field name="Description">LED RED CLEAR 0805 SMD</field>
         <field name="Digi-Key Part No.">732-4984-1-ND </field>
+        <field name="LCSC Part Number">C72037</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=732-4984-1-ND "&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Wurth Elektronik</field>
         <field name="Manufacturer PN">150080RS75000</field>
@@ -1608,6 +1550,7 @@
       <fields>
         <field name="Description">SWITCH TACTILE SPST-NO 0.05A 12V</field>
         <field name="Digi-Key Part No.">CKN9088CT-ND</field>
+        <field name="LCSC Part Number">C221877</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=CKN9088CT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">C&amp;K</field>
         <field name="Manufacturer PN">PTS645SL50SMTR92 LFS</field>
@@ -1615,20 +1558,6 @@
       <libsource lib="Switch" part="SPST_small" description=""/>
       <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
       <tstamp>61BA254A</tstamp>
-    </comp>
-    <comp ref="R301">
-      <value>470</value>
-      <footprint>Resistors_SMD:R_0805</footprint>
-      <fields>
-        <field name="Description">RES 470 OHM 1% 1/4W 0805</field>
-        <field name="Digi-Key Part No.">2019-RK73H2ATTD4700FCT-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=2019-RK73H2ATTD4700FCT-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">KOA Speer Electronics, Inc.</field>
-        <field name="Manufacturer PN">RK73H2ATTD4700F</field>
-      </fields>
-      <libsource lib="Device" part="R" description="Resistor"/>
-      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
-      <tstamp>61C7B255</tstamp>
     </comp>
     <comp ref="TP302">
       <value>I2C0</value>
@@ -1642,24 +1571,13 @@
       <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
       <tstamp>608ADA8E</tstamp>
     </comp>
-    <comp ref="TP301">
-      <value>I2C1</value>
-      <footprint>Pin_Headers:Pin_Header_Straight_1x03</footprint>
-      <fields>
-        <field name="Digi-Key Part No.">np</field>
-        <field name="Link">np</field>
-        <field name="Manufacturer">np</field>
-      </fields>
-      <libsource lib="Connector_Generic" part="Conn_01x03" description="Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
-      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
-      <tstamp>608CC2B9</tstamp>
-    </comp>
     <comp ref="R313">
       <value>100k</value>
       <footprint>Resistors_SMD:R_0805</footprint>
       <fields>
         <field name="Description">RES SMD 100K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-100KCRCT-ND</field>
+        <field name="LCSC Part Number">C103905</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-100KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RC0805FR-07100KL</field>
@@ -1674,6 +1592,7 @@
       <fields>
         <field name="Description">RES SMD 560K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">13-RT0805FRE07560KLCT-ND</field>
+        <field name="LCSC Part Number">C352198</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=13-RT0805FRE07560KLCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RT0805FRE07560KL</field>
@@ -1688,6 +1607,7 @@
       <fields>
         <field name="Description">TRANS NPN 40V 0.6A SOT23</field>
         <field name="Digi-Key Part No.">MMBT2222ATPMSCT-ND</field>
+        <field name="LCSC Part Number">C194252</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=MMBT2222ATPMSCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Micro Commercial Co</field>
         <field name="Manufacturer PN">MMBT2222A-TP</field>
@@ -1715,6 +1635,7 @@
       <fields>
         <field name="Description">RES SMD 2.2K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-2.2KCRCT-ND</field>
+        <field name="LCSC Part Number">C114561</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10.0KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RC0805FR-072K2L</field>
@@ -1729,6 +1650,7 @@
       <fields>
         <field name="Description">TRIMMER 10K OHM 0.1W J LEAD TOP</field>
         <field name="Digi-Key Part No.">TC33X-103ECT-ND</field>
+        <field name="LCSC Part Number">C719176</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=TC33X-103ECT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Bourns Inc.</field>
         <field name="Manufacturer PN">TC33X-2-103E</field>
@@ -1738,14 +1660,15 @@
       <tstamp>609BC9EF</tstamp>
     </comp>
     <comp ref="U303">
-      <value>LP2992</value>
+      <value>LD2985BM33R</value>
       <footprint>TO_SOT_Packages_SMD:SOT-23-5</footprint>
       <fields>
-        <field name="Description">IC REG LINEAR 3.3V 250MA SOT23-5</field>
-        <field name="Digi-Key Part No.">LP2992AIM5-3.3/NOPBCT-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=LP2992AIM5-3.3/NOPBCT-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">Texas Instruments</field>
-        <field name="Manufacturer PN">LP2992AIM5-3.3/NOPB</field>
+        <field name="Description">IC REG LINEAR 3.3V 150MA SOT23-5</field>
+        <field name="Digi-Key Part No.">497-3499-1-ND</field>
+        <field name="LCSC Part Number">C222396</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=497-3499-1-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">STMicroelectronics</field>
+        <field name="Manufacturer PN">LD2985BM33R</field>
       </fields>
       <libsource lib="Regulator_Linear" part="LP2992" description=""/>
       <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
@@ -1757,6 +1680,7 @@
       <fields>
         <field name="Description">CAP CER 4.7UF 25V X7R 0805</field>
         <field name="Digi-Key Part No.">587-2990-1-ND</field>
+        <field name="LCSC Part Number">C162420</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=587-2990-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Taiyo Yuden</field>
         <field name="Manufacturer PN">TMK212AB7475KG-T</field>
@@ -1771,6 +1695,7 @@
       <fields>
         <field name="Description">DIODE ARRAY SCHOTTKY 30V SC88</field>
         <field name="Digi-Key Part No.">MBD54DWT1GOSCT-ND</field>
+        <field name="LCSC Part Number">C152486</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=MBD54DWT1GOSCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">ON Semiconductor</field>
         <field name="Manufacturer PN">MBD54DWT1G</field>
@@ -1785,6 +1710,7 @@
       <fields>
         <field name="Description">VARISTOR 0603</field>
         <field name="Digi-Key Part No.">CG0603MLC-05LECT-ND</field>
+        <field name="LCSC Part Number">C2655331</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=CG0603MLC-05LECT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Bourns Inc.</field>
         <field name="Manufacturer PN">CG0603MLC-05LE</field>
@@ -1799,6 +1725,7 @@
       <fields>
         <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
         <field name="Digi-Key Part No.">478-1395-1-ND</field>
+        <field name="LCSC Part Number">C360619</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08055C104KAT2A</field>
@@ -1813,6 +1740,7 @@
       <fields>
         <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
         <field name="Digi-Key Part No.">478-1395-1-ND</field>
+        <field name="LCSC Part Number">C360619</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08055C104KAT2A</field>
@@ -1827,6 +1755,7 @@
       <fields>
         <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
         <field name="Digi-Key Part No.">478-1395-1-ND</field>
+        <field name="LCSC Part Number">C360619</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08055C104KAT2A</field>
@@ -1841,6 +1770,7 @@
       <fields>
         <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
         <field name="Digi-Key Part No.">478-1395-1-ND</field>
+        <field name="LCSC Part Number">C360619</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08055C104KAT2A</field>
@@ -1855,6 +1785,7 @@
       <fields>
         <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
         <field name="Digi-Key Part No.">478-1395-1-ND</field>
+        <field name="LCSC Part Number">C360619</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08055C104KAT2A</field>
@@ -1869,6 +1800,7 @@
       <fields>
         <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
         <field name="Digi-Key Part No.">478-1395-1-ND</field>
+        <field name="LCSC Part Number">C360619</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08055C104KAT2A</field>
@@ -1883,6 +1815,7 @@
       <fields>
         <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
         <field name="Digi-Key Part No.">478-1395-1-ND</field>
+        <field name="LCSC Part Number">C360619</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08055C104KAT2A</field>
@@ -1897,6 +1830,7 @@
       <fields>
         <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
         <field name="Digi-Key Part No.">478-1395-1-ND</field>
+        <field name="LCSC Part Number">C360619</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08055C104KAT2A</field>
@@ -1911,6 +1845,7 @@
       <fields>
         <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-10KLGCT-ND</field>
+        <field name="LCSC Part Number">C38522</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10KLGCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">AC0805FR-0710KL</field>
@@ -1925,6 +1860,7 @@
       <fields>
         <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-10KLGCT-ND</field>
+        <field name="LCSC Part Number">C38522</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10KLGCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">AC0805FR-0710KL</field>
@@ -1939,6 +1875,7 @@
       <fields>
         <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-10KLGCT-ND</field>
+        <field name="LCSC Part Number">C38522</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10KLGCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">AC0805FR-0710KL</field>
@@ -1953,6 +1890,7 @@
       <fields>
         <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-10KLGCT-ND</field>
+        <field name="LCSC Part Number">C38522</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10KLGCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">AC0805FR-0710KL</field>
@@ -1967,6 +1905,7 @@
       <fields>
         <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-10KLGCT-ND</field>
+        <field name="LCSC Part Number">C38522</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10KLGCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">AC0805FR-0710KL</field>
@@ -1975,26 +1914,13 @@
       <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
       <tstamp>60CCCCB6</tstamp>
     </comp>
-    <comp ref="C316">
-      <value>100nF</value>
-      <footprint>Capacitors_SMD:C_0805</footprint>
-      <fields>
-        <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
-        <field name="Digi-Key Part No.">478-1395-1-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">AVX Corporation</field>
-        <field name="Manufacturer PN">08055C104KAT2A</field>
-      </fields>
-      <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
-      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
-      <tstamp>60CEED9E</tstamp>
-    </comp>
     <comp ref="R302">
       <value>470</value>
       <footprint>Resistors_SMD:R_0805</footprint>
       <fields>
         <field name="Description">RES 470 OHM 1% 1/4W 0805</field>
         <field name="Digi-Key Part No.">2019-RK73H2ATTD4700FCT-ND</field>
+        <field name="LCSC Part Number">C114564</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=2019-RK73H2ATTD4700FCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">KOA Speer Electronics, Inc.</field>
         <field name="Manufacturer PN">RK73H2ATTD4700F</field>
@@ -2003,40 +1929,13 @@
       <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
       <tstamp>60D10653</tstamp>
     </comp>
-    <comp ref="U308">
-      <value>LP2992</value>
-      <footprint>TO_SOT_Packages_SMD:SOT-23-5</footprint>
-      <fields>
-        <field name="Description">IC REG LINEAR 3.3V 250MA SOT23-5</field>
-        <field name="Digi-Key Part No.">LP2992AIM5-3.3/NOPBCT-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=LP2992AIM5-3.3/NOPBCT-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">Texas Instruments</field>
-        <field name="Manufacturer PN">LP2992AIM5-3.3/NOPB</field>
-      </fields>
-      <libsource lib="Regulator_Linear" part="LP2992" description=""/>
-      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
-      <tstamp>60E1E02E</tstamp>
-    </comp>
-    <comp ref="U306">
-      <value>LP2992</value>
-      <footprint>TO_SOT_Packages_SMD:SOT-23-5</footprint>
-      <fields>
-        <field name="Description">IC REG LINEAR 3.3V 250MA SOT23-5</field>
-        <field name="Digi-Key Part No.">LP2992AIM5-3.3/NOPBCT-ND</field>
-        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=LP2992AIM5-3.3/NOPBCT-ND"&gt;Link&lt;/a&gt;</field>
-        <field name="Manufacturer">Texas Instruments</field>
-        <field name="Manufacturer PN">LP2992AIM5-3.3/NOPB</field>
-      </fields>
-      <libsource lib="Regulator_Linear" part="LP2992" description=""/>
-      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
-      <tstamp>60E3CCEB</tstamp>
-    </comp>
     <comp ref="C318">
       <value>4.7uF</value>
       <footprint>Capacitors_SMD:C_0805</footprint>
       <fields>
         <field name="Description">CAP CER 4.7UF 25V X7R 0805</field>
         <field name="Digi-Key Part No.">587-2990-1-ND</field>
+        <field name="LCSC Part Number">C162420</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=587-2990-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Taiyo Yuden</field>
         <field name="Manufacturer PN">TMK212AB7475KG-T</field>
@@ -2051,6 +1950,7 @@
       <fields>
         <field name="Description">CAP CER 4.7UF 25V X7R 0805</field>
         <field name="Digi-Key Part No.">587-2990-1-ND</field>
+        <field name="LCSC Part Number">C162420</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=587-2990-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Taiyo Yuden</field>
         <field name="Manufacturer PN">TMK212AB7475KG-T</field>
@@ -2065,6 +1965,7 @@
       <fields>
         <field name="Description">CAP CER 4.7UF 25V X7R 0805</field>
         <field name="Digi-Key Part No.">587-2990-1-ND</field>
+        <field name="LCSC Part Number">C162420</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=587-2990-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Taiyo Yuden</field>
         <field name="Manufacturer PN">TMK212AB7475KG-T</field>
@@ -2079,6 +1980,7 @@
       <fields>
         <field name="Description">CAP CER 4.7UF 25V X7R 0805</field>
         <field name="Digi-Key Part No.">587-2990-1-ND</field>
+        <field name="LCSC Part Number">C162420</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=587-2990-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Taiyo Yuden</field>
         <field name="Manufacturer PN">TMK212AB7475KG-T</field>
@@ -2093,6 +1995,7 @@
       <fields>
         <field name="Description">CAP CER 4.7UF 25V X7R 0805</field>
         <field name="Digi-Key Part No.">587-2990-1-ND</field>
+        <field name="LCSC Part Number">C162420</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=587-2990-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Taiyo Yuden</field>
         <field name="Manufacturer PN">TMK212AB7475KG-T</field>
@@ -2107,6 +2010,7 @@
       <fields>
         <field name="Description">RES SMD 100K OHM 1% 1/8W 0805</field>
         <field name="Digi-Key Part No.">311-100KCRCT-ND</field>
+        <field name="LCSC Part Number">C103905</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-100KCRCT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Yageo</field>
         <field name="Manufacturer PN">RC0805FR-07100KL</field>
@@ -2121,6 +2025,7 @@
       <fields>
         <field name="Description">VARISTOR 0603</field>
         <field name="Digi-Key Part No.">CG0603MLC-05LECT-ND</field>
+        <field name="LCSC Part Number">C2655331</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=CG0603MLC-05LECT-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Bourns Inc.</field>
         <field name="Manufacturer PN">CG0603MLC-05LE</field>
@@ -2135,6 +2040,7 @@
       <fields>
         <field name="Description">CAP CER 0.47UF 100V X7R 0805</field>
         <field name="Digi-Key Part No.">478-9924-1-ND</field>
+        <field name="LCSC Part Number">C342818</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-9924-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">AVX Corporation</field>
         <field name="Manufacturer PN">08051C474K4Z2A</field>
@@ -2169,6 +2075,152 @@
       <libsource lib="Connector_Generic" part="Conn_01x06" description="Generic connector, single row, 01x06, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
       <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
       <tstamp>60A04D07</tstamp>
+    </comp>
+    <comp ref="U302">
+      <value>AVR128DA48</value>
+      <footprint>TQFP48_PT_MCH</footprint>
+      <fields>
+        <field name="Description">IC MCU 8BIT 128KB FLASH 48TQFP</field>
+        <field name="Digi-Key Part No.">150-AVR128DA48T-E/PTCT-ND</field>
+        <field name="LCSC Part Number">C1870720</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=150-AVR128DA48T-E/PTCT-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">Microchip Technology</field>
+        <field name="Manufacturer PN">AVR128DA48T-E/PT</field>
+      </fields>
+      <libsource lib="FlexFox80-rescue" part="AVR128DA48-I_PT-MCU_Microchip_AVR" description=""/>
+      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
+      <tstamp>6188F289</tstamp>
+    </comp>
+    <comp ref="U308">
+      <value>LD2985BM33R</value>
+      <footprint>TO_SOT_Packages_SMD:SOT-23-5</footprint>
+      <fields>
+        <field name="Description">IC REG LINEAR 3.3V 150MA SOT23-5</field>
+        <field name="Digi-Key Part No.">497-3499-1-ND</field>
+        <field name="LCSC Part Number">C222396</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=497-3499-1-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">STMicroelectronics</field>
+        <field name="Manufacturer PN">LD2985BM33R</field>
+      </fields>
+      <libsource lib="Regulator_Linear" part="LP2992" description=""/>
+      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
+      <tstamp>62069237</tstamp>
+    </comp>
+    <comp ref="C316">
+      <value>100nF</value>
+      <footprint>Capacitors_SMD:C_0805</footprint>
+      <fields>
+        <field name="Description">CAP CER 0.1UF 50V X7R 0805</field>
+        <field name="Digi-Key Part No.">478-1395-1-ND</field>
+        <field name="LCSC Part Number">C360619</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">AVX Corporation</field>
+        <field name="Manufacturer PN">08055C104KAT2A</field>
+      </fields>
+      <libsource lib="Device" part="C_Small" description="Unpolarized capacitor, small symbol"/>
+      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
+      <tstamp>6206BA38</tstamp>
+    </comp>
+    <comp ref="R314">
+      <value>560k</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="Description">RES SMD 560K OHM 1% 1/8W 0805</field>
+        <field name="Digi-Key Part No.">13-RT0805FRE07560KLCT-ND</field>
+        <field name="LCSC Part Number">C352198</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=13-RT0805FRE07560KLCT-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">Yageo</field>
+        <field name="Manufacturer PN">RT0805FRE07560KL</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
+      <tstamp>61B70272</tstamp>
+    </comp>
+    <comp ref="TP301">
+      <value>I2C1</value>
+      <footprint>Pin_Headers:Pin_Header_Straight_1x04</footprint>
+      <fields>
+        <field name="Digi-Key Part No.">np</field>
+        <field name="Link">np</field>
+        <field name="Manufacturer">np</field>
+      </fields>
+      <libsource lib="Connector_Generic" part="Conn_01x04" description="Generic connector, single row, 01x04, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
+      <tstamp>61C41F8A</tstamp>
+    </comp>
+    <comp ref="R301">
+      <value>470</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="Description">RES 470 OHM 1% 1/4W 0805</field>
+        <field name="Digi-Key Part No.">2019-RK73H2ATTD4700FCT-ND</field>
+        <field name="LCSC Part Number">C114564</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=2019-RK73H2ATTD4700FCT-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">KOA Speer Electronics, Inc.</field>
+        <field name="Manufacturer PN">RK73H2ATTD4700F</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
+      <tstamp>61C7B255</tstamp>
+    </comp>
+    <comp ref="D304">
+      <value>GREEN</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="Description">LED GREEN CLEAR 0805 SMD</field>
+        <field name="Digi-Key Part No.">732-4983-1-ND</field>
+        <field name="LCSC Part Number">C98224</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=732-4983-1-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">Wurth Elektronik</field>
+        <field name="Manufacturer PN">150080GS75000</field>
+      </fields>
+      <libsource lib="Device" part="LED_ALT" description="Light emitting diode, filled shape"/>
+      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
+      <tstamp>61B9E05F</tstamp>
+    </comp>
+    <comp ref="J304">
+      <value>Conn_01x10</value>
+      <datasheet>~</datasheet>
+      <libsource lib="Connector_Generic" part="Conn_01x10" description="Generic connector, single row, 01x10, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
+      <tstamp>61C4FE52</tstamp>
+    </comp>
+    <comp ref="R315">
+      <value>10k</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
+        <field name="Digi-Key Part No.">311-10KLGCT-ND</field>
+        <field name="LCSC Part Number">C38522</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10KLGCT-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">Yageo</field>
+        <field name="Manufacturer PN">AC0805FR-0710KL</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
+      <tstamp>622DEA61</tstamp>
+    </comp>
+    <comp ref="R316">
+      <value>10k</value>
+      <footprint>Resistors_SMD:R_0805</footprint>
+      <fields>
+        <field name="Description">RES SMD 10K OHM 1% 1/8W 0805</field>
+        <field name="Digi-Key Part No.">311-10KLGCT-ND</field>
+        <field name="LCSC Part Number">C38522</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=311-10KLGCT-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">Yageo</field>
+        <field name="Manufacturer PN">AC0805FR-0710KL</field>
+      </fields>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
+      <tstamp>622DEA83</tstamp>
+    </comp>
+    <comp ref="U306">
+      <value>LT1763CS8-5</value>
+      <footprint>Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm</footprint>
+      <libsource lib="Regulator_Linear" part="LT1763CS8-5" description="Linear Voltage Regulator IC Positive Fixed SOT-223-5"/>
+      <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
+      <tstamp>61B31D21</tstamp>
     </comp>
     <comp ref="BOX401">
       <value>Chassis Box</value>
@@ -2287,22 +2339,6 @@
         <pin num="5" name="V+" type="passive"/>
       </pins>
     </libpart>
-    <libpart lib="Analog_DAC" part="DAC081C085">
-      <fields>
-        <field name="Reference">U</field>
-        <field name="Value">DAC081C085</field>
-      </fields>
-      <pins>
-        <pin num="1" name="ADR0" type="input"/>
-        <pin num="2" name="ADR1" type="input"/>
-        <pin num="3" name="SCL" type="input"/>
-        <pin num="4" name="SDA" type="input"/>
-        <pin num="5" name="GND" type="power_in"/>
-        <pin num="6" name="VA" type="input"/>
-        <pin num="7" name="Vref" type="input"/>
-        <pin num="8" name="VOUT" type="output"/>
-      </pins>
-    </libpart>
     <libpart lib="Connector" part="DB9_Female">
       <description>9-pin female D-SUB connector</description>
       <docs> ~</docs>
@@ -2417,22 +2453,6 @@
       <pins>
         <pin num="1" name="Pin_1" type="passive"/>
         <pin num="2" name="Pin_2" type="passive"/>
-      </pins>
-    </libpart>
-    <libpart lib="Connector_Generic" part="Conn_01x03">
-      <description>Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)</description>
-      <docs>~</docs>
-      <footprints>
-        <fp>Connector*:*_1x??_*</fp>
-      </footprints>
-      <fields>
-        <field name="Reference">J</field>
-        <field name="Value">Conn_01x03</field>
-      </fields>
-      <pins>
-        <pin num="1" name="Pin_1" type="passive"/>
-        <pin num="2" name="Pin_2" type="passive"/>
-        <pin num="3" name="Pin_3" type="passive"/>
       </pins>
     </libpart>
     <libpart lib="Connector_Generic" part="Conn_01x04">
@@ -2632,23 +2652,6 @@
         <pin num="3" name="3" type="passive"/>
       </pins>
     </libpart>
-    <libpart lib="Device" part="Resonator_Small">
-      <description>Three pin ceramic resonator, small symbol</description>
-      <docs>~</docs>
-      <footprints>
-        <fp>Filter*</fp>
-        <fp>Resonator*</fp>
-      </footprints>
-      <fields>
-        <field name="Reference">Y</field>
-        <field name="Value">Resonator_Small</field>
-      </fields>
-      <pins>
-        <pin num="1" name="1" type="passive"/>
-        <pin num="2" name="2" type="passive"/>
-        <pin num="3" name="3" type="passive"/>
-      </pins>
-    </libpart>
     <libpart lib="Diode" part="BZT52C4V7">
       <footprints>
         <fp>D?</fp>
@@ -2676,6 +2679,68 @@
         <pin num="4" name="Vss" type="power_in"/>
         <pin num="5" name="InB" type="input"/>
         <pin num="6" name="In" type="input"/>
+      </pins>
+    </libpart>
+    <libpart lib="FlexFox80-rescue" part="AVR128DA48-I_PT-MCU_Microchip_AVR">
+      <footprints>
+        <fp>TQFP48_PT_MCH</fp>
+        <fp>TQFP48_PT_MCH-M</fp>
+        <fp>TQFP48_PT_MCH-L</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">AVR128DA48-I_PT-MCU_Microchip_AVR</field>
+        <field name="Footprint">TQFP48_PT_MCH</field>
+      </fields>
+      <pins>
+        <pin num="1" name="PA5" type="BiDi"/>
+        <pin num="2" name="PA6" type="BiDi"/>
+        <pin num="3" name="PA7" type="BiDi"/>
+        <pin num="4" name="PB0" type="BiDi"/>
+        <pin num="5" name="PB1" type="BiDi"/>
+        <pin num="6" name="PB2" type="BiDi"/>
+        <pin num="7" name="PB3" type="BiDi"/>
+        <pin num="8" name="PB4" type="BiDi"/>
+        <pin num="9" name="PB5" type="BiDi"/>
+        <pin num="10" name="PC0" type="BiDi"/>
+        <pin num="11" name="PC1" type="BiDi"/>
+        <pin num="12" name="PC2" type="BiDi"/>
+        <pin num="13" name="PC3" type="BiDi"/>
+        <pin num="14" name="VDD" type="power_in"/>
+        <pin num="15" name="GND" type="power_in"/>
+        <pin num="16" name="PC4" type="BiDi"/>
+        <pin num="17" name="PC5" type="BiDi"/>
+        <pin num="18" name="PC6" type="BiDi"/>
+        <pin num="19" name="PC7" type="BiDi"/>
+        <pin num="20" name="PD0" type="BiDi"/>
+        <pin num="21" name="PD1" type="BiDi"/>
+        <pin num="22" name="PD2" type="BiDi"/>
+        <pin num="23" name="PD3" type="BiDi"/>
+        <pin num="24" name="PD4" type="BiDi"/>
+        <pin num="25" name="PD5" type="BiDi"/>
+        <pin num="26" name="PD6" type="BiDi"/>
+        <pin num="27" name="PD7" type="BiDi"/>
+        <pin num="28" name="AVDD" type="power_in"/>
+        <pin num="29" name="GND" type="power_in"/>
+        <pin num="30" name="PE0" type="BiDi"/>
+        <pin num="31" name="PE1" type="BiDi"/>
+        <pin num="32" name="PE2" type="BiDi"/>
+        <pin num="33" name="PE3" type="BiDi"/>
+        <pin num="34" name="PF0_XTAL32K1" type="BiDi"/>
+        <pin num="35" name="PF1_XTAL32K2" type="BiDi"/>
+        <pin num="36" name="PF2" type="BiDi"/>
+        <pin num="37" name="PF3" type="BiDi"/>
+        <pin num="38" name="PF4" type="BiDi"/>
+        <pin num="39" name="PF5" type="BiDi"/>
+        <pin num="40" name="PF6/~RESET~" type="input"/>
+        <pin num="41" name="UPDI" type="BiDi"/>
+        <pin num="42" name="VDD" type="power_in"/>
+        <pin num="43" name="GND" type="power_in"/>
+        <pin num="44" name="PA0" type="BiDi"/>
+        <pin num="45" name="PA1" type="BiDi"/>
+        <pin num="46" name="PA2" type="BiDi"/>
+        <pin num="47" name="PA3" type="BiDi"/>
+        <pin num="48" name="PA4" type="BiDi"/>
       </pins>
     </libpart>
     <libpart lib="FlexFox80-rescue" part="Battery_Single_Cell-ARDF-2-Band-MiniTx-rescue">
@@ -2759,26 +2824,6 @@
         <pin num="1" name="1" type="passive"/>
       </pins>
     </libpart>
-    <libpart lib="Interface" part="SN74CB3Q3305">
-      <footprints>
-        <fp>TSSOP-8*</fp>
-        <fp>8-TSSOP*</fp>
-      </footprints>
-      <fields>
-        <field name="Reference">U</field>
-        <field name="Value">SN74CB3Q3305</field>
-      </fields>
-      <pins>
-        <pin num="1" name="1OE" type="input"/>
-        <pin num="2" name="1A" type="BiDi"/>
-        <pin num="3" name="1B" type="BiDi"/>
-        <pin num="4" name="GND" type="power_in"/>
-        <pin num="5" name="2A" type="BiDi"/>
-        <pin num="6" name="2B" type="BiDi"/>
-        <pin num="7" name="2OE" type="input"/>
-        <pin num="8" name="Vcc" type="power_in"/>
-      </pins>
-    </libpart>
     <libpart lib="Jumper" part="SolderJumper_2_Open">
       <description>Solder Jumper, 2-pole, open</description>
       <docs>~</docs>
@@ -2792,73 +2837,6 @@
       <pins>
         <pin num="1" name="A" type="passive"/>
         <pin num="2" name="B" type="passive"/>
-      </pins>
-    </libpart>
-    <libpart lib="MCU_Microchip_ATmega" part="ATmega164A-AU">
-      <aliases>
-        <alias>ATmega164PA-AU</alias>
-        <alias>ATmega324A-AU</alias>
-        <alias>ATmega324PA-AU</alias>
-        <alias>ATmega644A-AU</alias>
-        <alias>ATmega644PA-AU</alias>
-        <alias>ATmega1284-AU</alias>
-        <alias>ATmega1284P-AU</alias>
-      </aliases>
-      <description>20MHz, 16kB Flash, 1kB SRAM, 512B EEPROM, JTAG, TQFP-44</description>
-      <docs>http://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-8272-8-bit-AVR-microcontroller-ATmega164A_PA-324A_PA-644A_PA-1284_P_datasheet.pdf</docs>
-      <footprints>
-        <fp>TQFP*10x10mm*P0.8mm*</fp>
-      </footprints>
-      <fields>
-        <field name="Reference">U</field>
-        <field name="Value">ATmega164A-AU</field>
-        <field name="Footprint">Package_QFP:TQFP-44_10x10mm_P0.8mm</field>
-      </fields>
-      <pins>
-        <pin num="1" name="(PCINT13/ICP3/MOSI)PB5" type="BiDi"/>
-        <pin num="2" name="(PCINT14/OC3A/MISO)PB6" type="BiDi"/>
-        <pin num="3" name="(PCINT15/OC3B/SCK)PB7" type="BiDi"/>
-        <pin num="4" name="~RESET" type="input"/>
-        <pin num="5" name="VCC" type="power_in"/>
-        <pin num="6" name="GND" type="power_in"/>
-        <pin num="7" name="XTAL2" type="output"/>
-        <pin num="8" name="XTAL1" type="input"/>
-        <pin num="9" name="(PCINT24/RXD0/T3)PD0" type="BiDi"/>
-        <pin num="10" name="(PCINT25/TXD0)PD1" type="BiDi"/>
-        <pin num="11" name="(PCINT26/RXD1/INT0)PD2" type="BiDi"/>
-        <pin num="12" name="(PCINT27/TXD1/INT1)PD3" type="BiDi"/>
-        <pin num="13" name="(PCINT28/XCK1/OC1B)PD4" type="BiDi"/>
-        <pin num="14" name="(PCINT29/OC1A)PD5" type="BiDi"/>
-        <pin num="15" name="(PCINT30/OC2B/ICP)PD6" type="BiDi"/>
-        <pin num="16" name="(PCINT31/OC2A)PD7" type="BiDi"/>
-        <pin num="17" name="VCC" type="power_in"/>
-        <pin num="18" name="GND" type="passive"/>
-        <pin num="19" name="(PCINT16/SCL)PC0" type="BiDi"/>
-        <pin num="20" name="(PCINT17/SDA)PC1" type="BiDi"/>
-        <pin num="21" name="(PCINT18/TCK)PC2" type="BiDi"/>
-        <pin num="22" name="(PCINT19/TMS)PC3" type="BiDi"/>
-        <pin num="23" name="(TDO/PCINT20)PC4" type="BiDi"/>
-        <pin num="24" name="(TDI/PCINT21)PC5" type="BiDi"/>
-        <pin num="25" name="(TOSC1/PCINT22)PC6" type="BiDi"/>
-        <pin num="26" name="(TDI/PCINT21)PC7" type="BiDi"/>
-        <pin num="27" name="AVCC" type="power_in"/>
-        <pin num="28" name="GND" type="passive"/>
-        <pin num="29" name="AREF" type="passive"/>
-        <pin num="30" name="(ADC7/PCINT7)PA7" type="BiDi"/>
-        <pin num="31" name="(ADC6/PCINT6)PA6" type="BiDi"/>
-        <pin num="32" name="(ADC5/PCINT5)PA5" type="BiDi"/>
-        <pin num="33" name="(ADC4/PCINT4)PA4" type="BiDi"/>
-        <pin num="34" name="(ADC3/PCINT3)PA3" type="BiDi"/>
-        <pin num="35" name="(ADC2/PCINT2)PA2" type="BiDi"/>
-        <pin num="36" name="(ADC1/PCINT1)PA1" type="BiDi"/>
-        <pin num="37" name="(ADC0/PCINT0)PA0" type="BiDi"/>
-        <pin num="38" name="VCC" type="power_in"/>
-        <pin num="39" name="GND" type="passive"/>
-        <pin num="40" name="(XCK0/T0/PCINT8)PB0" type="BiDi"/>
-        <pin num="41" name="(T1/CLKO/PCINT9)PB1" type="BiDi"/>
-        <pin num="42" name="(AIN0/INT2/PCINT10)PB2" type="BiDi"/>
-        <pin num="43" name="(AIN1/OC0A/PCINT11)PB3" type="BiDi"/>
-        <pin num="44" name="(SS/OC0B/PCINT12)PB4" type="BiDi"/>
       </pins>
     </libpart>
     <libpart lib="Power_Management" part="MIC2196">
@@ -2921,6 +2899,32 @@
         <pin num="3" name="EN" type="input"/>
         <pin num="4" name="BYP" type="passive"/>
         <pin num="5" name="VOUT" type="power_out"/>
+      </pins>
+    </libpart>
+    <libpart lib="Regulator_Linear" part="LT1763CS8-5">
+      <aliases>
+        <alias>APE1707H-50-HF</alias>
+        <alias>APE1707H-12-HF</alias>
+        <alias>APE1707H-HF</alias>
+      </aliases>
+      <description>Linear Voltage Regulator IC Positive Fixed SOT-223-5</description>
+      <footprints>
+        <fp>TO?252*TabPin3*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">LT1763CS8-5</field>
+        <field name="Footprint">Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Vout" type="output"/>
+        <pin num="2" name="SENSE" type="power_in"/>
+        <pin num="3" name="GND" type="power_in"/>
+        <pin num="4" name="BYP" type="passive"/>
+        <pin num="5" name="~SHDN~" type="input"/>
+        <pin num="6" name="GND" type="power_in"/>
+        <pin num="7" name="GND" type="power_in"/>
+        <pin num="8" name="Vin" type="power_in"/>
       </pins>
     </libpart>
     <libpart lib="Regulator_Switching" part="LTC3600">
@@ -3198,9 +3202,6 @@
     <library logical="Amplifier_Operational">
       <uri>/Library/Application Support/kicad/library/Amplifier_Operational.lib</uri>
     </library>
-    <library logical="Analog_DAC">
-      <uri>/Library/Application Support/kicad/library/Analog_DAC.lib</uri>
-    </library>
     <library logical="Connector">
       <uri>/Library/Application Support/kicad/library/Connector.lib</uri>
     </library>
@@ -3219,14 +3220,8 @@
     <library logical="FlexFox80-rescue">
       <uri>/Users/Charles/Documents/GitHub/FlexFox80/KiCad/FlexFox80-rescue.lib</uri>
     </library>
-    <library logical="Interface">
-      <uri>/Library/Application Support/kicad/library/Interface.lib</uri>
-    </library>
     <library logical="Jumper">
       <uri>/Library/Application Support/kicad/library/Jumper.lib</uri>
-    </library>
-    <library logical="MCU_Microchip_ATmega">
-      <uri>/Library/Application Support/kicad/library/MCU_Microchip_ATmega.lib</uri>
     </library>
     <library logical="Power_Management">
       <uri>/Library/Application Support/kicad/library/Power_Management.lib</uri>
@@ -3255,48 +3250,48 @@
   </libraries>
   <nets>
     <net code="1" name="+12V">
-      <node ref="C315" pin="2"/>
-      <node ref="U203" pin="8"/>
-      <node ref="U303" pin="1"/>
-      <node ref="U306" pin="1"/>
-      <node ref="C210" pin="1"/>
-      <node ref="C205" pin="2"/>
-      <node ref="R201" pin="2"/>
-      <node ref="U202" pin="5"/>
+      <node ref="U306" pin="8"/>
       <node ref="Q101" pin="1"/>
+      <node ref="C205" pin="2"/>
+      <node ref="U203" pin="8"/>
+      <node ref="C210" pin="1"/>
       <node ref="C303" pin="2"/>
+      <node ref="U202" pin="5"/>
+      <node ref="R201" pin="2"/>
+      <node ref="C315" pin="2"/>
       <node ref="Q202" pin="6"/>
+      <node ref="U303" pin="1"/>
       <node ref="Q202" pin="5"/>
     </net>
     <net code="2" name="Net-(C122-Pad2)">
-      <node ref="L106" pin="1"/>
-      <node ref="C123" pin="1"/>
       <node ref="W111" pin="1"/>
       <node ref="C122" pin="2"/>
+      <node ref="C123" pin="1"/>
+      <node ref="L106" pin="1"/>
     </net>
     <net code="3" name="Net-(Q101-Pad3)">
       <node ref="Q101" pin="5"/>
       <node ref="Q101" pin="3"/>
     </net>
     <net code="4" name="Net-(J102-Pad2)">
-      <node ref="U107" pin="2"/>
       <node ref="J102" pin="2"/>
+      <node ref="U107" pin="2"/>
     </net>
     <net code="5" name="CLK1">
+      <node ref="U304" pin="9"/>
       <node ref="W105" pin="1"/>
       <node ref="U107" pin="6"/>
-      <node ref="U304" pin="9"/>
     </net>
     <net code="6" name="Net-(C126-Pad2)">
+      <node ref="W113" pin="1"/>
+      <node ref="C126" pin="2"/>
+      <node ref="L106" pin="2"/>
       <node ref="L108" pin="1"/>
       <node ref="C128" pin="2"/>
-      <node ref="C126" pin="2"/>
-      <node ref="W113" pin="1"/>
-      <node ref="L106" pin="2"/>
     </net>
     <net code="7" name="Net-(Q102-Pad1)">
-      <node ref="W108" pin="1"/>
       <node ref="U107" pin="3"/>
+      <node ref="W108" pin="1"/>
       <node ref="Q102" pin="1"/>
     </net>
     <net code="8" name="Net-(D102-Pad1)">
@@ -3305,28 +3300,28 @@
     </net>
     <net code="9" name="Net-(C117-Pad1)">
       <node ref="W106" pin="1"/>
-      <node ref="U107" pin="1"/>
       <node ref="D102" pin="2"/>
       <node ref="C117" pin="1"/>
+      <node ref="U107" pin="1"/>
     </net>
     <net code="12" name="+2to+12V">
-      <node ref="C214" pin="1"/>
-      <node ref="L202" pin="2"/>
-      <node ref="J203" pin="1"/>
-      <node ref="U203" pin="11"/>
       <node ref="C119" pin="1"/>
+      <node ref="J203" pin="1"/>
       <node ref="R212" pin="1"/>
+      <node ref="U203" pin="11"/>
+      <node ref="L202" pin="2"/>
       <node ref="L104" pin="1"/>
-      <node ref="C120" pin="1"/>
+      <node ref="C214" pin="1"/>
       <node ref="W204" pin="1"/>
+      <node ref="C120" pin="1"/>
     </net>
     <net code="13" name="Net-(L104-Pad2)">
-      <node ref="L104" pin="2"/>
       <node ref="Q102" pin="2"/>
+      <node ref="L104" pin="2"/>
     </net>
     <net code="14" name="Net-(C122-Pad1)">
-      <node ref="L104" pin="3"/>
       <node ref="C122" pin="1"/>
+      <node ref="L104" pin="3"/>
     </net>
     <net code="17" name="Net-(J101-Pad1)">
       <node ref="J101" pin="1"/>
@@ -3335,702 +3330,702 @@
       <node ref="J101" pin="4"/>
     </net>
     <net code="19" name="Net-(C128-Pad1)">
-      <node ref="J101" pin="3"/>
       <node ref="C128" pin="1"/>
       <node ref="C131" pin="1"/>
+      <node ref="J101" pin="3"/>
       <node ref="L108" pin="2"/>
       <node ref="W117" pin="1"/>
     </net>
-    <net code="20" name="Net-(U203-Pad12)">
+    <net code="20" name="~ANT_CONNECT_INT~">
+      <node ref="U302" pin="48"/>
+      <node ref="D101" pin="2"/>
+    </net>
+    <net code="21" name="Net-(U203-Pad12)">
       <node ref="U203" pin="12"/>
     </net>
-    <net code="21" name="Net-(R210-Pad1)">
-      <node ref="R210" pin="1"/>
+    <net code="22" name="Net-(R210-Pad1)">
       <node ref="U203" pin="3"/>
+      <node ref="R210" pin="1"/>
     </net>
-    <net code="22" name="Net-(C211-Pad2)">
+    <net code="23" name="Net-(C211-Pad2)">
       <node ref="C211" pin="2"/>
       <node ref="U203" pin="9"/>
     </net>
-    <net code="23" name="Net-(C213-Pad1)">
+    <net code="24" name="Net-(C213-Pad1)">
       <node ref="U203" pin="10"/>
       <node ref="U203" pin="4"/>
       <node ref="C213" pin="1"/>
     </net>
-    <net code="24" name="Net-(U201-Pad1)">
-      <node ref="U201" pin="1"/>
-    </net>
-    <net code="25" name="Net-(U201-Pad2)">
-      <node ref="U201" pin="2"/>
-    </net>
-    <net code="26" name="Net-(C203-Pad2)">
+    <net code="25" name="+3V3_L8">
+      <node ref="J304" pin="2"/>
       <node ref="R204" pin="1"/>
-      <node ref="C203" pin="2"/>
-      <node ref="L201" pin="2"/>
-      <node ref="U201" pin="7"/>
-    </net>
-    <net code="27" name="DI_SCL">
-      <node ref="R306" pin="2"/>
-      <node ref="U304" pin="4"/>
-      <node ref="U201" pin="3"/>
-      <node ref="TP301" pin="3"/>
-      <node ref="U307" pin="3"/>
-    </net>
-    <net code="28" name="DI_SDA">
-      <node ref="U201" pin="4"/>
-      <node ref="U304" pin="5"/>
       <node ref="TP301" pin="2"/>
-      <node ref="R307" pin="2"/>
-      <node ref="U307" pin="6"/>
+      <node ref="C312" pin="1"/>
+      <node ref="X301" pin="4"/>
+      <node ref="P302" pin="1"/>
+      <node ref="C310" pin="1"/>
+      <node ref="C318" pin="2"/>
+      <node ref="R307" pin="1"/>
+      <node ref="U304" pin="7"/>
+      <node ref="U304" pin="1"/>
+      <node ref="C308" pin="1"/>
+      <node ref="C311" pin="2"/>
+      <node ref="R306" pin="1"/>
+      <node ref="U303" pin="5"/>
+      <node ref="U305" pin="5"/>
     </net>
-    <net code="29" name="Net-(R203-Pad1)">
+    <net code="26" name="Net-(R203-Pad1)">
       <node ref="U202" pin="3"/>
-      <node ref="R203" pin="1"/>
       <node ref="R204" pin="2"/>
+      <node ref="R203" pin="1"/>
     </net>
-    <net code="30" name="Net-(R207-Pad1)">
-      <node ref="U202" pin="1"/>
+    <net code="27" name="Net-(R207-Pad1)">
       <node ref="R207" pin="1"/>
+      <node ref="U202" pin="1"/>
       <node ref="U203" pin="1"/>
     </net>
-    <net code="31" name="Net-(R206-Pad1)">
-      <node ref="U202" pin="4"/>
-      <node ref="R206" pin="1"/>
-      <node ref="R207" pin="2"/>
+    <net code="28" name="TX_FINAL_VOLTAGE_ENABLE">
+      <node ref="U302" pin="9"/>
+      <node ref="U203" pin="5"/>
     </net>
-    <net code="32" name="Net-(D201-Pad2)">
+    <net code="29" name="Net-(D201-Pad2)">
       <node ref="R205" pin="1"/>
       <node ref="P203" pin="2"/>
       <node ref="D201" pin="2"/>
     </net>
-    <net code="33" name="Net-(C207-Pad1)">
-      <node ref="C207" pin="1"/>
+    <net code="30" name="Net-(C207-Pad1)">
       <node ref="R208" pin="2"/>
+      <node ref="C207" pin="1"/>
     </net>
-    <net code="34" name="Net-(C208-Pad1)">
-      <node ref="C208" pin="1"/>
+    <net code="31" name="Net-(C208-Pad1)">
       <node ref="R208" pin="1"/>
       <node ref="U203" pin="2"/>
+      <node ref="C208" pin="1"/>
     </net>
-    <net code="35" name="+3V3_L8">
-      <node ref="U305" pin="5"/>
-      <node ref="C310" pin="1"/>
-      <node ref="U304" pin="7"/>
-      <node ref="C312" pin="1"/>
-      <node ref="U304" pin="1"/>
-      <node ref="P302" pin="1"/>
-      <node ref="X301" pin="4"/>
-      <node ref="C318" pin="2"/>
-      <node ref="C316" pin="2"/>
-      <node ref="U307" pin="1"/>
-      <node ref="C201" pin="2"/>
-      <node ref="U201" pin="6"/>
-      <node ref="R307" pin="1"/>
-      <node ref="C308" pin="1"/>
-      <node ref="R306" pin="1"/>
-      <node ref="C311" pin="2"/>
-      <node ref="L201" pin="1"/>
-      <node ref="U307" pin="7"/>
-      <node ref="U307" pin="8"/>
-      <node ref="U303" pin="5"/>
+    <net code="32" name="Net-(R206-Pad1)">
+      <node ref="R207" pin="2"/>
+      <node ref="R206" pin="1"/>
+      <node ref="U202" pin="4"/>
     </net>
-    <net code="36" name="Net-(P201-Pad1)">
+    <net code="33" name="Net-(P201-Pad1)">
       <node ref="P201" pin="1"/>
     </net>
-    <net code="37" name="Net-(P201-Pad2)">
+    <net code="34" name="Net-(P201-Pad2)">
       <node ref="P201" pin="2"/>
     </net>
-    <net code="38" name="Net-(R203-Pad2)">
-      <node ref="U201" pin="8"/>
-      <node ref="R203" pin="2"/>
-      <node ref="W205" pin="1"/>
-    </net>
-    <net code="39" name="Net-(R216-Pad2)">
-      <node ref="U204" pin="1"/>
+    <net code="35" name="Net-(R216-Pad2)">
       <node ref="R216" pin="2"/>
+      <node ref="U204" pin="1"/>
     </net>
-    <net code="40" name="Net-(Q203-Pad1)">
-      <node ref="R218" pin="2"/>
+    <net code="36" name="Net-(Q203-Pad1)">
       <node ref="Q203" pin="1"/>
-      <node ref="Q203" pin="2"/>
-      <node ref="Q203" pin="3"/>
       <node ref="U204" pin="4"/>
+      <node ref="Q203" pin="3"/>
+      <node ref="R218" pin="2"/>
+      <node ref="Q203" pin="2"/>
     </net>
-    <net code="41" name="Net-(Q203-Pad4)">
+    <net code="37" name="Net-(Q203-Pad4)">
       <node ref="Q203" pin="4"/>
       <node ref="U204" pin="7"/>
     </net>
-    <net code="42" name="Net-(C206-Pad1)">
+    <net code="38" name="Net-(C206-Pad1)">
+      <node ref="C206" pin="1"/>
+      <node ref="R209" pin="1"/>
       <node ref="Q201" pin="6"/>
       <node ref="Q202" pin="2"/>
-      <node ref="C206" pin="1"/>
       <node ref="Q202" pin="4"/>
-      <node ref="R209" pin="1"/>
     </net>
-    <net code="43" name="Net-(R214-Pad1)">
+    <net code="39" name="Net-(R214-Pad1)">
       <node ref="R214" pin="1"/>
-      <node ref="R217" pin="2"/>
       <node ref="U204" pin="2"/>
+      <node ref="R217" pin="2"/>
     </net>
-    <net code="44" name="Net-(C219-Pad1)">
-      <node ref="U204" pin="5"/>
+    <net code="40" name="Net-(C219-Pad1)">
       <node ref="C219" pin="1"/>
+      <node ref="U204" pin="5"/>
     </net>
-    <net code="45" name="Net-(Q202-Pad7)">
-      <node ref="R214" pin="2"/>
-      <node ref="Q202" pin="8"/>
+    <net code="41" name="Net-(Q202-Pad7)">
       <node ref="Q202" pin="7"/>
+      <node ref="Q202" pin="8"/>
+      <node ref="R214" pin="2"/>
     </net>
-    <net code="46" name="Net-(C209-Pad1)">
-      <node ref="Q202" pin="1"/>
-      <node ref="Q202" pin="3"/>
-      <node ref="C209" pin="1"/>
-      <node ref="R209" pin="2"/>
+    <net code="42" name="Net-(C209-Pad1)">
       <node ref="C215" pin="1"/>
+      <node ref="C209" pin="1"/>
       <node ref="D202" pin="1"/>
+      <node ref="Q202" pin="3"/>
+      <node ref="Q202" pin="1"/>
+      <node ref="R209" pin="2"/>
     </net>
-    <net code="47" name="Net-(C218-Pad1)">
+    <net code="43" name="Net-(C218-Pad1)">
       <node ref="C218" pin="1"/>
       <node ref="R216" pin="1"/>
     </net>
-    <net code="48" name="Net-(D202-Pad2)">
-      <node ref="Q203" pin="7"/>
-      <node ref="Q203" pin="8"/>
+    <net code="44" name="Net-(D202-Pad2)">
       <node ref="Q203" pin="5"/>
       <node ref="Q203" pin="6"/>
+      <node ref="Q203" pin="7"/>
+      <node ref="Q203" pin="8"/>
       <node ref="L203" pin="1"/>
       <node ref="D202" pin="2"/>
     </net>
-    <net code="49" name="Net-(C211-Pad1)">
-      <node ref="L202" pin="1"/>
+    <net code="45" name="Net-(C211-Pad1)">
       <node ref="U203" pin="7"/>
+      <node ref="L202" pin="1"/>
       <node ref="C211" pin="1"/>
     </net>
-    <net code="50" name="EXTERNAL_3.6V-15V_SUPPLY">
-      <node ref="C217" pin="1"/>
+    <net code="46" name="EXTERNAL_3.6V-15V_SUPPLY">
+      <node ref="C314" pin="2"/>
+      <node ref="L203" pin="2"/>
       <node ref="U204" pin="8"/>
+      <node ref="C217" pin="1"/>
+      <node ref="D201" pin="1"/>
       <node ref="U308" pin="1"/>
       <node ref="U308" pin="3"/>
-      <node ref="D201" pin="1"/>
-      <node ref="L203" pin="2"/>
       <node ref="C216" pin="2"/>
-      <node ref="C314" pin="2"/>
     </net>
-    <net code="51" name="PROC_PTT_OUT">
-      <node ref="U302" pin="40"/>
-      <node ref="R311" pin="2"/>
-    </net>
-    <net code="52" name="/Digital/PB1">
-      <node ref="U302" pin="41"/>
-    </net>
-    <net code="53" name="PROC_TONE_OUT">
-      <node ref="U302" pin="43"/>
-      <node ref="R308" pin="1"/>
-    </net>
-    <net code="54" name="/Digital/PB4">
-      <node ref="U302" pin="44"/>
-    </net>
-    <net code="55" name="MOSI">
-      <node ref="U302" pin="1"/>
-      <node ref="P301" pin="4"/>
-    </net>
-    <net code="56" name="MISO">
-      <node ref="P301" pin="1"/>
-      <node ref="U302" pin="2"/>
-    </net>
-    <net code="57" name="SCK">
-      <node ref="U302" pin="3"/>
-      <node ref="P301" pin="3"/>
-    </net>
-    <net code="58" name="~ANT_CONNECT_INT~">
-      <node ref="D101" pin="2"/>
-      <node ref="U302" pin="24"/>
-    </net>
-    <net code="59" name="/Digital/PC4">
-      <node ref="R302" pin="2"/>
-      <node ref="U302" pin="23"/>
-    </net>
-    <net code="60" name="/Digital/PC2">
-      <node ref="U302" pin="21"/>
-      <node ref="SW301" pin="1"/>
-    </net>
-    <net code="61" name="/Digital/PC3">
-      <node ref="R301" pin="2"/>
-      <node ref="U302" pin="22"/>
-    </net>
-    <net code="62" name="RTC_SDA">
-      <node ref="U307" pin="5"/>
-      <node ref="U301" pin="15"/>
-      <node ref="TP302" pin="3"/>
-      <node ref="U302" pin="20"/>
-    </net>
-    <net code="63" name="RTC_SCL">
-      <node ref="U301" pin="16"/>
-      <node ref="U307" pin="2"/>
-      <node ref="TP302" pin="4"/>
-      <node ref="U302" pin="19"/>
-    </net>
-    <net code="64" name="RXD_TO_FTDI">
-      <node ref="U302" pin="9"/>
-      <node ref="D307" pin="1"/>
-      <node ref="J301" pin="8"/>
-    </net>
-    <net code="65" name="/Digital/TXD0">
-      <node ref="U302" pin="10"/>
-      <node ref="R304" pin="1"/>
-    </net>
-    <net code="66" name="/Digital/RXD1">
-      <node ref="U305" pin="4"/>
-      <node ref="U302" pin="11"/>
-    </net>
-    <net code="67" name="HF_ENABLE">
-      <node ref="Q101" pin="2"/>
-      <node ref="U302" pin="13"/>
-    </net>
-    <net code="68" name="3V3_PWR_ENABLE">
-      <node ref="U303" pin="3"/>
-      <node ref="U302" pin="14"/>
-      <node ref="R303" pin="2"/>
-    </net>
-    <net code="69" name="MAIN_PWR_ENABLE">
-      <node ref="R215" pin="2"/>
-      <node ref="U302" pin="15"/>
-      <node ref="U204" pin="3"/>
-      <node ref="Q201" pin="2"/>
-    </net>
-    <net code="70" name="TX_FINAL_VOLTAGE_ENABLE">
-      <node ref="U203" pin="5"/>
-      <node ref="U302" pin="16"/>
-    </net>
-    <net code="71" name="Net-(U304-Pad10)">
-      <node ref="U304" pin="10"/>
-    </net>
-    <net code="72" name="Net-(U304-Pad3)">
-      <node ref="U304" pin="3"/>
-    </net>
-    <net code="73" name="Net-(U304-Pad6)">
-      <node ref="U304" pin="6"/>
-    </net>
-    <net code="74" name="~RESET~">
-      <node ref="U302" pin="4"/>
-      <node ref="P301" pin="5"/>
-      <node ref="D301" pin="4"/>
-      <node ref="R305" pin="1"/>
-      <node ref="C309" pin="1"/>
-    </net>
-    <net code="75" name="Net-(X301-Pad1)">
-      <node ref="X301" pin="1"/>
-    </net>
-    <net code="76" name="Net-(U304-Pad2)">
-      <node ref="U304" pin="2"/>
-      <node ref="X301" pin="3"/>
-    </net>
-    <net code="77" name="Net-(U301-Pad1)">
-      <node ref="W301" pin="1"/>
-      <node ref="U301" pin="1"/>
-    </net>
-    <net code="78" name="Net-(U301-Pad4)">
-      <node ref="W302" pin="1"/>
-      <node ref="U301" pin="4"/>
-    </net>
-    <net code="79" name="Net-(BT301-Pad1)">
-      <node ref="BT301" pin="1"/>
-      <node ref="U301" pin="14"/>
-    </net>
-    <net code="80" name="RTC_SQW">
-      <node ref="U301" pin="3"/>
-      <node ref="U302" pin="42"/>
-    </net>
-    <net code="81" name="Net-(MOD301-Pad12)">
-      <node ref="MOD301" pin="12"/>
-    </net>
-    <net code="82" name="Net-(MOD301-Pad13)">
-      <node ref="MOD301" pin="13"/>
-    </net>
-    <net code="83" name="Net-(MOD301-Pad14)">
-      <node ref="W309" pin="1"/>
-      <node ref="MOD301" pin="14"/>
-    </net>
-    <net code="84" name="Net-(MOD301-Pad15)">
-      <node ref="MOD301" pin="15"/>
-    </net>
-    <net code="85" name="Net-(MOD301-Pad16)">
-      <node ref="W310" pin="1"/>
-      <node ref="MOD301" pin="16"/>
-    </net>
-    <net code="86" name="Net-(MOD301-Pad17)">
-      <node ref="W311" pin="1"/>
-      <node ref="MOD301" pin="17"/>
-    </net>
-    <net code="87" name="Net-(MOD301-Pad18)">
-      <node ref="W312" pin="1"/>
-      <node ref="MOD301" pin="18"/>
-    </net>
-    <net code="88" name="Net-(MOD301-Pad2)">
-      <node ref="W316" pin="1"/>
-      <node ref="MOD301" pin="2"/>
-    </net>
-    <net code="89" name="Net-(MOD301-Pad23)">
-      <node ref="MOD301" pin="23"/>
-    </net>
-    <net code="90" name="Net-(MOD301-Pad3)">
-      <node ref="MOD301" pin="3"/>
-    </net>
-    <net code="91" name="Net-(MOD301-Pad4)">
-      <node ref="MOD301" pin="4"/>
-      <node ref="W315" pin="1"/>
-    </net>
-    <net code="92" name="Net-(MOD301-Pad5)">
-      <node ref="MOD301" pin="5"/>
-    </net>
-    <net code="93" name="Net-(MOD301-Pad6)">
-      <node ref="MOD301" pin="6"/>
-      <node ref="W314" pin="1"/>
-    </net>
-    <net code="94" name="Net-(MOD301-Pad7)">
-      <node ref="MOD301" pin="7"/>
-      <node ref="W313" pin="1"/>
-    </net>
-    <net code="95" name="Net-(MOD301-Pad8)">
-      <node ref="MOD301" pin="8"/>
-    </net>
-    <net code="96" name="Net-(MOD301-Pad22)">
-      <node ref="P304" pin="2"/>
-      <node ref="MOD301" pin="22"/>
-    </net>
-    <net code="97" name="Net-(P304-Pad3)">
-      <node ref="P304" pin="3"/>
-    </net>
-    <net code="98" name="Net-(MOD301-Pad24)">
-      <node ref="P304" pin="4"/>
-      <node ref="MOD301" pin="24"/>
-    </net>
-    <net code="99" name="Net-(MOD301-Pad25)">
-      <node ref="P304" pin="5"/>
-      <node ref="MOD301" pin="25"/>
-    </net>
-    <net code="100" name="Net-(MOD301-Pad26)">
-      <node ref="P304" pin="6"/>
-      <node ref="MOD301" pin="26"/>
-    </net>
-    <net code="101" name="Net-(C313-Pad2)">
-      <node ref="C313" pin="2"/>
-      <node ref="U306" pin="5"/>
-      <node ref="MOD301" pin="9"/>
-    </net>
-    <net code="102" name="DI_TXD0">
-      <node ref="MOD301" pin="19"/>
-      <node ref="U302" pin="12"/>
-    </net>
-    <net code="103" name="Net-(MOD301-Pad20)">
-      <node ref="MOD301" pin="20"/>
-      <node ref="U305" pin="1"/>
-    </net>
-    <net code="104" name="WIFI_ENABLE">
-      <node ref="R310" pin="1"/>
-      <node ref="U302" pin="25"/>
-      <node ref="U306" pin="3"/>
-    </net>
-    <net code="105" name="Net-(U308-Pad4)">
-      <node ref="U308" pin="4"/>
-    </net>
-    <net code="106" name="Net-(U306-Pad4)">
-      <node ref="U306" pin="4"/>
-    </net>
-    <net code="107" name="~WIFI_RESET~">
-      <node ref="MOD301" pin="1"/>
-      <node ref="U302" pin="26"/>
-      <node ref="U305" pin="2"/>
-    </net>
-    <net code="108" name="Net-(C304-Pad2)">
-      <node ref="C304" pin="2"/>
-      <node ref="U302" pin="29"/>
-    </net>
-    <net code="109" name="PROC_HT_AUDIO_IN">
-      <node ref="C320" pin="1"/>
-      <node ref="R312" pin="2"/>
-      <node ref="R313" pin="1"/>
-      <node ref="U302" pin="30"/>
-    </net>
-    <net code="110" name="TX_PA_VOLTAGE">
-      <node ref="R212" pin="2"/>
-      <node ref="R211" pin="1"/>
-      <node ref="U302" pin="31"/>
-      <node ref="C212" pin="2"/>
-    </net>
-    <net code="111" name="TX_BATTERY_VOLTAGE">
-      <node ref="C204" pin="2"/>
-      <node ref="R213" pin="1"/>
-      <node ref="R205" pin="2"/>
-      <node ref="U302" pin="32"/>
-    </net>
-    <net code="112" name="TX_+12_VOLTAGE">
-      <node ref="U302" pin="33"/>
-      <node ref="R202" pin="1"/>
-      <node ref="R201" pin="1"/>
-      <node ref="C202" pin="1"/>
-    </net>
-    <net code="113" name="80M_ANTENNA_DETECT">
-      <node ref="D101" pin="1"/>
-      <node ref="U302" pin="35"/>
-      <node ref="U302" pin="34"/>
-      <node ref="D104" pin="1"/>
-      <node ref="J101" pin="5"/>
-    </net>
-    <net code="114" name="/Digital/PA1">
-      <node ref="U302" pin="36"/>
-    </net>
-    <net code="115" name="/Digital/PA0">
-      <node ref="U302" pin="37"/>
-    </net>
-    <net code="116" name="GND">
-      <node ref="P304" pin="1"/>
-      <node ref="MOD301" pin="21"/>
-      <node ref="MOD301" pin="11"/>
-      <node ref="MOD301" pin="10"/>
-      <node ref="BT301" pin="2"/>
-      <node ref="W308" pin="1"/>
-      <node ref="W307" pin="1"/>
-      <node ref="C305" pin="1"/>
-      <node ref="C312" pin="2"/>
-      <node ref="U305" pin="3"/>
-      <node ref="C123" pin="2"/>
-      <node ref="D307" pin="2"/>
-      <node ref="C315" pin="1"/>
-      <node ref="U307" pin="4"/>
-      <node ref="W205" pin="2"/>
-      <node ref="C313" pin="1"/>
-      <node ref="C314" pin="1"/>
-      <node ref="C317" pin="1"/>
-      <node ref="C318" pin="1"/>
-      <node ref="C301" pin="2"/>
-      <node ref="W116" pin="1"/>
-      <node ref="U306" pin="2"/>
-      <node ref="U301" pin="9"/>
-      <node ref="U301" pin="8"/>
-      <node ref="U301" pin="7"/>
-      <node ref="U301" pin="6"/>
-      <node ref="U301" pin="5"/>
-      <node ref="U301" pin="13"/>
-      <node ref="U301" pin="12"/>
-      <node ref="U301" pin="11"/>
-      <node ref="U308" pin="2"/>
-      <node ref="U301" pin="10"/>
-      <node ref="X301" pin="2"/>
-      <node ref="C304" pin="1"/>
-      <node ref="C310" pin="2"/>
-      <node ref="P301" pin="6"/>
-      <node ref="U304" pin="8"/>
-      <node ref="C219" pin="2"/>
-      <node ref="C316" pin="1"/>
-      <node ref="U302" pin="18"/>
-      <node ref="R215" pin="1"/>
-      <node ref="C217" pin="2"/>
-      <node ref="R211" pin="2"/>
-      <node ref="C212" pin="1"/>
-      <node ref="C204" pin="1"/>
-      <node ref="C202" pin="2"/>
-      <node ref="C209" pin="2"/>
-      <node ref="Q201" pin="1"/>
-      <node ref="R210" pin="2"/>
-      <node ref="W114" pin="1"/>
-      <node ref="U302" pin="28"/>
-      <node ref="C216" pin="1"/>
-      <node ref="C205" pin="1"/>
-      <node ref="C203" pin="1"/>
-      <node ref="R202" pin="2"/>
-      <node ref="R303" pin="1"/>
-      <node ref="U302" pin="39"/>
-      <node ref="C218" pin="2"/>
-      <node ref="U107" pin="4"/>
-      <node ref="U302" pin="6"/>
-      <node ref="U107" pin="5"/>
-      <node ref="R310" pin="2"/>
-      <node ref="C215" pin="2"/>
-      <node ref="R218" pin="1"/>
-      <node ref="C120" pin="2"/>
-      <node ref="C308" pin="2"/>
-      <node ref="C126" pin="1"/>
-      <node ref="W105" pin="2"/>
-      <node ref="C311" pin="1"/>
-      <node ref="C302" pin="1"/>
-      <node ref="C307" pin="1"/>
-      <node ref="C306" pin="1"/>
-      <node ref="W108" pin="2"/>
+    <net code="47" name="GND">
       <node ref="R217" pin="1"/>
+      <node ref="R218" pin="1"/>
       <node ref="C206" pin="2"/>
       <node ref="U204" pin="6"/>
+      <node ref="C215" pin="2"/>
+      <node ref="D306" pin="2"/>
+      <node ref="C218" pin="2"/>
+      <node ref="C306" pin="1"/>
+      <node ref="C307" pin="1"/>
+      <node ref="W205" pin="2"/>
+      <node ref="C302" pin="1"/>
+      <node ref="C311" pin="1"/>
+      <node ref="U107" pin="5"/>
+      <node ref="U107" pin="4"/>
+      <node ref="R202" pin="2"/>
+      <node ref="C308" pin="2"/>
+      <node ref="W114" pin="1"/>
+      <node ref="C120" pin="2"/>
+      <node ref="C126" pin="1"/>
+      <node ref="R310" pin="2"/>
+      <node ref="C303" pin="1"/>
+      <node ref="W105" pin="2"/>
+      <node ref="W108" pin="2"/>
       <node ref="R213" pin="2"/>
+      <node ref="C205" pin="1"/>
+      <node ref="C216" pin="1"/>
+      <node ref="R210" pin="2"/>
+      <node ref="Q201" pin="1"/>
+      <node ref="R303" pin="1"/>
       <node ref="W204" pin="2"/>
+      <node ref="C318" pin="1"/>
+      <node ref="C209" pin="2"/>
+      <node ref="C202" pin="2"/>
+      <node ref="C204" pin="1"/>
       <node ref="C208" pin="2"/>
       <node ref="C207" pin="2"/>
+      <node ref="C212" pin="1"/>
+      <node ref="R211" pin="2"/>
+      <node ref="C217" pin="2"/>
+      <node ref="W111" pin="2"/>
       <node ref="P203" pin="E"/>
       <node ref="P203" pin="1"/>
       <node ref="C214" pin="2"/>
+      <node ref="R215" pin="1"/>
+      <node ref="C317" pin="1"/>
+      <node ref="C219" pin="2"/>
       <node ref="U202" pin="2"/>
-      <node ref="Y301" pin="2"/>
-      <node ref="RV301" pin="3"/>
-      <node ref="D306" pin="2"/>
-      <node ref="J301" pin="6"/>
-      <node ref="W111" pin="2"/>
-      <node ref="W113" pin="2"/>
-      <node ref="W117" pin="2"/>
-      <node ref="D304" pin="1"/>
-      <node ref="D305" pin="1"/>
-      <node ref="SW301" pin="2"/>
-      <node ref="C303" pin="1"/>
-      <node ref="W106" pin="2"/>
+      <node ref="C314" pin="1"/>
+      <node ref="U306" pin="7"/>
       <node ref="R206" pin="2"/>
-      <node ref="C201" pin="1"/>
-      <node ref="U201" pin="5"/>
+      <node ref="U303" pin="2"/>
+      <node ref="W113" pin="2"/>
+      <node ref="RV301" pin="3"/>
+      <node ref="U306" pin="6"/>
+      <node ref="C313" pin="1"/>
+      <node ref="C315" pin="1"/>
+      <node ref="D307" pin="2"/>
+      <node ref="C312" pin="2"/>
+      <node ref="U302" pin="15"/>
+      <node ref="Q301" pin="2"/>
+      <node ref="U302" pin="29"/>
+      <node ref="U302" pin="43"/>
+      <node ref="U304" pin="8"/>
+      <node ref="U306" pin="3"/>
+      <node ref="R313" pin="2"/>
+      <node ref="TP302" pin="1"/>
+      <node ref="P301" pin="6"/>
+      <node ref="C310" pin="2"/>
+      <node ref="C304" pin="1"/>
+      <node ref="X301" pin="2"/>
+      <node ref="U301" pin="10"/>
+      <node ref="U301" pin="11"/>
+      <node ref="U301" pin="12"/>
+      <node ref="U301" pin="13"/>
+      <node ref="SW301" pin="2"/>
+      <node ref="D305" pin="1"/>
+      <node ref="J301" pin="6"/>
+      <node ref="W116" pin="1"/>
+      <node ref="U301" pin="5"/>
+      <node ref="U301" pin="6"/>
+      <node ref="U301" pin="7"/>
+      <node ref="U301" pin="8"/>
+      <node ref="U301" pin="9"/>
+      <node ref="C301" pin="2"/>
       <node ref="C210" pin="2"/>
+      <node ref="W117" pin="2"/>
+      <node ref="J304" pin="1"/>
+      <node ref="D304" pin="1"/>
+      <node ref="U308" pin="2"/>
       <node ref="C213" pin="2"/>
+      <node ref="W106" pin="2"/>
       <node ref="U203" pin="6"/>
       <node ref="U203" pin="13"/>
-      <node ref="TP302" pin="1"/>
-      <node ref="Q102" pin="3"/>
-      <node ref="J102" pin="1"/>
+      <node ref="C305" pin="1"/>
+      <node ref="C123" pin="2"/>
       <node ref="TP301" pin="1"/>
-      <node ref="C131" pin="2"/>
-      <node ref="R313" pin="2"/>
+      <node ref="W307" pin="1"/>
+      <node ref="W308" pin="1"/>
+      <node ref="Q102" pin="3"/>
       <node ref="C119" pin="2"/>
+      <node ref="J102" pin="1"/>
+      <node ref="C131" pin="2"/>
+      <node ref="BT301" pin="2"/>
       <node ref="J101" pin="E"/>
       <node ref="J101" pin="2"/>
-      <node ref="Q301" pin="2"/>
+      <node ref="MOD301" pin="10"/>
+      <node ref="MOD301" pin="11"/>
+      <node ref="C316" pin="2"/>
       <node ref="C117" pin="2"/>
-      <node ref="U303" pin="2"/>
       <node ref="Q101" pin="4"/>
+      <node ref="MOD301" pin="21"/>
       <node ref="D104" pin="2"/>
+      <node ref="U305" pin="3"/>
+      <node ref="P304" pin="1"/>
+      <node ref="R314" pin="2"/>
     </net>
-    <net code="117" name="Net-(U302-Pad8)">
-      <node ref="Y301" pin="1"/>
+    <net code="48" name="PROC_PTT_OUT">
+      <node ref="R311" pin="2"/>
+      <node ref="U302" pin="4"/>
+    </net>
+    <net code="49" name="PROC_TONE_OUT">
+      <node ref="R308" pin="1"/>
+      <node ref="U302" pin="5"/>
+    </net>
+    <net code="50" name="MAIN_PWR_ENABLE">
+      <node ref="U204" pin="3"/>
       <node ref="U302" pin="8"/>
+      <node ref="R215" pin="2"/>
+      <node ref="Q201" pin="2"/>
     </net>
-    <net code="118" name="Net-(U302-Pad7)">
-      <node ref="Y301" pin="3"/>
+    <net code="51" name="/Digital/PC5">
+      <node ref="R301" pin="2"/>
+      <node ref="U302" pin="17"/>
+    </net>
+    <net code="52" name="/Digital/SDA1">
+      <node ref="TP301" pin="3"/>
+      <node ref="U302" pin="6"/>
+      <node ref="R307" pin="2"/>
+      <node ref="U304" pin="5"/>
+    </net>
+    <net code="53" name="/Digital/SCL1">
+      <node ref="TP301" pin="4"/>
+      <node ref="U304" pin="4"/>
+      <node ref="R306" pin="2"/>
       <node ref="U302" pin="7"/>
     </net>
-    <net code="119" name="Net-(C309-Pad2)">
-      <node ref="J301" pin="2"/>
-      <node ref="C309" pin="2"/>
+    <net code="54" name="/Digital/PA1">
+      <node ref="U302" pin="45"/>
     </net>
-    <net code="120" name="Net-(J301-Pad4)">
-      <node ref="J301" pin="4"/>
+    <net code="55" name="/Digital/PA0">
+      <node ref="U302" pin="44"/>
     </net>
-    <net code="121" name="Net-(D301-Pad1)">
-      <node ref="D301" pin="1"/>
-      <node ref="J301" pin="7"/>
+    <net code="56" name="TX_PA_VOLTAGE">
+      <node ref="R211" pin="1"/>
+      <node ref="R212" pin="2"/>
+      <node ref="C212" pin="2"/>
+      <node ref="U302" pin="25"/>
     </net>
-    <net code="122" name="TXD_TO_FTDI">
+    <net code="57" name="/Digital/ADC7">
+      <node ref="U302" pin="27"/>
+      <node ref="MOD301" pin="13"/>
+      <node ref="R314" pin="1"/>
+    </net>
+    <net code="58" name="Net-(U304-Pad10)">
+      <node ref="U304" pin="10"/>
+    </net>
+    <net code="59" name="Net-(U304-Pad3)">
+      <node ref="U304" pin="3"/>
+    </net>
+    <net code="60" name="Net-(U304-Pad6)">
+      <node ref="U304" pin="6"/>
+    </net>
+    <net code="61" name="Net-(P301-Pad1)">
+      <node ref="P301" pin="1"/>
+      <node ref="U302" pin="41"/>
+    </net>
+    <net code="62" name="Net-(P301-Pad3)">
+      <node ref="P301" pin="3"/>
+    </net>
+    <net code="63" name="Net-(P301-Pad4)">
+      <node ref="P301" pin="4"/>
+    </net>
+    <net code="64" name="Net-(P301-Pad5)">
+      <node ref="P301" pin="5"/>
+    </net>
+    <net code="65" name="Net-(X301-Pad1)">
+      <node ref="X301" pin="1"/>
+    </net>
+    <net code="66" name="Net-(U304-Pad2)">
+      <node ref="X301" pin="3"/>
+      <node ref="U304" pin="2"/>
+    </net>
+    <net code="67" name="Net-(U301-Pad4)">
+      <node ref="U301" pin="4"/>
+      <node ref="W302" pin="1"/>
+    </net>
+    <net code="68" name="32KHZ_SQUAREWAVE">
+      <node ref="U302" pin="16"/>
+      <node ref="U301" pin="1"/>
+    </net>
+    <net code="69" name="Net-(BT301-Pad1)">
+      <node ref="BT301" pin="1"/>
+      <node ref="U301" pin="14"/>
+    </net>
+    <net code="70" name="/Digital/PC7">
+      <node ref="SW301" pin="1"/>
+      <node ref="U302" pin="19"/>
+    </net>
+    <net code="71" name="TX_+12_VOLTAGE">
+      <node ref="R202" pin="1"/>
+      <node ref="U302" pin="24"/>
+      <node ref="R201" pin="1"/>
+      <node ref="C202" pin="1"/>
+    </net>
+    <net code="72" name="TX_BATTERY_VOLTAGE">
+      <node ref="U302" pin="23"/>
+      <node ref="R213" pin="1"/>
+      <node ref="R205" pin="2"/>
+      <node ref="C204" pin="2"/>
+    </net>
+    <net code="73" name="80M_ANTENNA_DETECT">
+      <node ref="J101" pin="5"/>
+      <node ref="D104" pin="1"/>
+      <node ref="U302" pin="21"/>
+      <node ref="U302" pin="20"/>
+      <node ref="D101" pin="1"/>
+    </net>
+    <net code="74" name="/Digital/PE3">
+      <node ref="U302" pin="33"/>
+      <node ref="J304" pin="10"/>
+    </net>
+    <net code="75" name="TXD_TO_FTDI">
       <node ref="D306" pin="1"/>
       <node ref="J301" pin="9"/>
       <node ref="R304" pin="2"/>
     </net>
-    <net code="123" name="Net-(D304-Pad2)">
-      <node ref="D304" pin="2"/>
-      <node ref="R301" pin="1"/>
+    <net code="76" name="Net-(MOD301-Pad12)">
+      <node ref="MOD301" pin="12"/>
     </net>
-    <net code="124" name="Net-(D305-Pad2)">
+    <net code="77" name="Net-(MOD301-Pad14)">
+      <node ref="W309" pin="1"/>
+      <node ref="MOD301" pin="14"/>
+    </net>
+    <net code="78" name="Net-(MOD301-Pad15)">
+      <node ref="MOD301" pin="15"/>
+    </net>
+    <net code="79" name="Net-(MOD301-Pad16)">
+      <node ref="W310" pin="1"/>
+      <node ref="MOD301" pin="16"/>
+    </net>
+    <net code="80" name="Net-(MOD301-Pad17)">
+      <node ref="W311" pin="1"/>
+      <node ref="MOD301" pin="17"/>
+    </net>
+    <net code="81" name="Net-(MOD301-Pad18)">
+      <node ref="W312" pin="1"/>
+      <node ref="MOD301" pin="18"/>
+    </net>
+    <net code="82" name="Net-(MOD301-Pad2)">
+      <node ref="W316" pin="1"/>
+      <node ref="MOD301" pin="2"/>
+    </net>
+    <net code="83" name="Net-(MOD301-Pad23)">
+      <node ref="MOD301" pin="23"/>
+    </net>
+    <net code="84" name="Net-(MOD301-Pad3)">
+      <node ref="MOD301" pin="3"/>
+    </net>
+    <net code="85" name="Net-(MOD301-Pad4)">
+      <node ref="W315" pin="1"/>
+      <node ref="MOD301" pin="4"/>
+    </net>
+    <net code="86" name="Net-(MOD301-Pad5)">
+      <node ref="MOD301" pin="5"/>
+    </net>
+    <net code="87" name="Net-(MOD301-Pad6)">
+      <node ref="W314" pin="1"/>
+      <node ref="MOD301" pin="6"/>
+    </net>
+    <net code="88" name="Net-(MOD301-Pad7)">
+      <node ref="W313" pin="1"/>
+      <node ref="MOD301" pin="7"/>
+    </net>
+    <net code="89" name="Net-(MOD301-Pad8)">
+      <node ref="MOD301" pin="8"/>
+    </net>
+    <net code="90" name="Net-(MOD301-Pad22)">
+      <node ref="MOD301" pin="22"/>
+      <node ref="P304" pin="2"/>
+    </net>
+    <net code="91" name="Net-(P304-Pad3)">
+      <node ref="P304" pin="3"/>
+    </net>
+    <net code="92" name="Net-(MOD301-Pad24)">
+      <node ref="P304" pin="4"/>
+      <node ref="MOD301" pin="24"/>
+    </net>
+    <net code="93" name="Net-(MOD301-Pad25)">
+      <node ref="MOD301" pin="25"/>
+      <node ref="P304" pin="5"/>
+    </net>
+    <net code="94" name="Net-(MOD301-Pad26)">
+      <node ref="MOD301" pin="26"/>
+      <node ref="P304" pin="6"/>
+    </net>
+    <net code="95" name="WIFI_RX">
+      <node ref="MOD301" pin="19"/>
+      <node ref="U302" pin="10"/>
+    </net>
+    <net code="96" name="Net-(MOD301-Pad20)">
+      <node ref="MOD301" pin="20"/>
+      <node ref="U305" pin="1"/>
+    </net>
+    <net code="97" name="~WIFI_RESET~">
+      <node ref="MOD301" pin="1"/>
+      <node ref="U305" pin="2"/>
+      <node ref="U302" pin="2"/>
+    </net>
+    <net code="98" name="WIFI_TX">
+      <node ref="U305" pin="4"/>
+      <node ref="U302" pin="11"/>
+    </net>
+    <net code="99" name="Net-(U308-Pad4)">
+      <node ref="U308" pin="4"/>
+    </net>
+    <net code="100" name="FET_DRIVER_ENABLE">
+      <node ref="U302" pin="47"/>
+      <node ref="Q101" pin="2"/>
+    </net>
+    <net code="101" name="RTC_SQW">
+      <node ref="U302" pin="46"/>
+      <node ref="U301" pin="3"/>
+    </net>
+    <net code="102" name="PROC_HT_AUDIO_IN">
+      <node ref="U302" pin="22"/>
+      <node ref="R312" pin="2"/>
+      <node ref="R313" pin="1"/>
+      <node ref="C320" pin="1"/>
+    </net>
+    <net code="103" name="Net-(C309-Pad2)">
+      <node ref="C309" pin="2"/>
+      <node ref="J301" pin="2"/>
+    </net>
+    <net code="104" name="Net-(J301-Pad4)">
+      <node ref="J301" pin="4"/>
+    </net>
+    <net code="105" name="Net-(D301-Pad1)">
+      <node ref="J301" pin="7"/>
+      <node ref="D301" pin="1"/>
+    </net>
+    <net code="106" name="Net-(D305-Pad2)">
       <node ref="D305" pin="2"/>
       <node ref="R302" pin="1"/>
     </net>
-    <net code="125" name="Net-(Q301-Pad1)">
+    <net code="107" name="WIFI_ENABLE">
+      <node ref="R310" pin="1"/>
+      <node ref="U306" pin="5"/>
+      <node ref="U302" pin="1"/>
+    </net>
+    <net code="108" name="Net-(Q301-Pad1)">
       <node ref="Q301" pin="1"/>
       <node ref="R311" pin="1"/>
     </net>
-    <net code="126" name="Net-(C320-Pad2)">
+    <net code="109" name="Net-(C320-Pad2)">
       <node ref="J301" pin="5"/>
       <node ref="C320" pin="2"/>
     </net>
-    <net code="127" name="Net-(R309-Pad1)">
-      <node ref="SJ301" pin="1"/>
+    <net code="110" name="Net-(R309-Pad1)">
       <node ref="R309" pin="1"/>
+      <node ref="SJ301" pin="1"/>
     </net>
-    <net code="128" name="Net-(C319-Pad2)">
+    <net code="111" name="Net-(C319-Pad2)">
       <node ref="C319" pin="2"/>
       <node ref="R309" pin="2"/>
       <node ref="J301" pin="1"/>
     </net>
-    <net code="129" name="Net-(R308-Pad2)">
-      <node ref="R308" pin="2"/>
+    <net code="112" name="Net-(R308-Pad2)">
       <node ref="RV301" pin="1"/>
+      <node ref="R308" pin="2"/>
     </net>
-    <net code="130" name="Net-(C319-Pad1)">
+    <net code="113" name="Net-(C319-Pad1)">
       <node ref="C319" pin="1"/>
       <node ref="RV301" pin="2"/>
     </net>
-    <net code="131" name="Net-(U303-Pad4)">
+    <net code="114" name="Net-(U303-Pad4)">
       <node ref="U303" pin="4"/>
     </net>
-    <net code="132" name="Net-(D301-Pad2)">
+    <net code="115" name="Net-(D301-Pad2)">
       <node ref="D301" pin="2"/>
     </net>
-    <net code="133" name="Net-(D301-Pad5)">
+    <net code="116" name="Net-(D301-Pad5)">
       <node ref="D301" pin="5"/>
     </net>
-    <net code="134" name="Net-(J301-Pad3)">
-      <node ref="Q301" pin="3"/>
+    <net code="117" name="Net-(J301-Pad3)">
       <node ref="SJ301" pin="2"/>
+      <node ref="Q301" pin="3"/>
       <node ref="J301" pin="3"/>
     </net>
-    <net code="135" name="Vproc">
-      <node ref="C306" pin="2"/>
-      <node ref="C307" pin="2"/>
-      <node ref="C302" pin="2"/>
-      <node ref="D301" pin="6"/>
-      <node ref="TP302" pin="2"/>
-      <node ref="U302" pin="5"/>
-      <node ref="R305" pin="2"/>
-      <node ref="U302" pin="38"/>
-      <node ref="U302" pin="27"/>
-      <node ref="U302" pin="17"/>
-      <node ref="P301" pin="2"/>
-      <node ref="R312" pin="1"/>
-      <node ref="U308" pin="5"/>
-      <node ref="U301" pin="2"/>
-      <node ref="C301" pin="1"/>
-      <node ref="C317" pin="2"/>
-      <node ref="D301" pin="3"/>
-      <node ref="C305" pin="2"/>
-    </net>
-    <net code="136" name="Net-(D301-Pad2)">
+    <net code="118" name="Net-(D301-Pad2)">
       <node ref="D301" pin="2"/>
     </net>
-    <net code="137" name="Net-(D301-Pad5)">
+    <net code="119" name="Net-(D301-Pad5)">
       <node ref="D301" pin="5"/>
     </net>
-    <net code="139" name="Net-(J303-Pad1)">
+    <net code="120" name="3V3_PWR_ENABLE">
+      <node ref="R303" pin="2"/>
+      <node ref="U303" pin="3"/>
+      <node ref="U302" pin="3"/>
+    </net>
+    <net code="121" name="Net-(J303-Pad1)">
       <node ref="J303" pin="1"/>
     </net>
-    <net code="140" name="Net-(J303-Pad3)">
+    <net code="122" name="Net-(J303-Pad3)">
       <node ref="J303" pin="3"/>
     </net>
-    <net code="141" name="Net-(J303-Pad4)">
+    <net code="123" name="Net-(J303-Pad4)">
       <node ref="J303" pin="4"/>
     </net>
-    <net code="142" name="Net-(J303-Pad5)">
+    <net code="124" name="Net-(J303-Pad5)">
       <node ref="J303" pin="5"/>
     </net>
-    <net code="143" name="GND1">
-      <node ref="J302" pin="1"/>
+    <net code="125" name="GND1">
       <node ref="J302" pin="2"/>
+      <node ref="J302" pin="1"/>
       <node ref="J303" pin="6"/>
     </net>
-    <net code="144" name="Net-(J302-Pad3)">
-      <node ref="J303" pin="7"/>
+    <net code="126" name="Net-(J302-Pad3)">
       <node ref="J302" pin="3"/>
+      <node ref="J303" pin="7"/>
     </net>
-    <net code="145" name="Net-(J302-Pad4)">
-      <node ref="J303" pin="8"/>
+    <net code="127" name="Net-(J302-Pad4)">
       <node ref="J302" pin="4"/>
+      <node ref="J303" pin="8"/>
     </net>
-    <net code="146" name="Net-(J302-Pad5)">
-      <node ref="J303" pin="9"/>
+    <net code="128" name="Net-(J302-Pad5)">
       <node ref="J302" pin="5"/>
+      <node ref="J303" pin="9"/>
     </net>
-    <net code="147" name="Net-(J302-Pad6)">
+    <net code="129" name="Net-(J302-Pad6)">
       <node ref="J302" pin="6"/>
       <node ref="J303" pin="2"/>
+    </net>
+    <net code="130" name="/Digital/PC6">
+      <node ref="R302" pin="2"/>
+      <node ref="U302" pin="18"/>
+    </net>
+    <net code="131" name="DAC_OUTPUT">
+      <node ref="W205" pin="1"/>
+      <node ref="R203" pin="2"/>
+      <node ref="U302" pin="26"/>
+    </net>
+    <net code="132" name="/Digital/TXD4">
+      <node ref="U302" pin="30"/>
+      <node ref="J304" pin="7"/>
+      <node ref="R304" pin="1"/>
+    </net>
+    <net code="133" name="RXD_TO_FTDI">
+      <node ref="U302" pin="31"/>
+      <node ref="J304" pin="8"/>
+      <node ref="D307" pin="1"/>
+      <node ref="J301" pin="8"/>
+    </net>
+    <net code="134" name="/Digital/PE2">
+      <node ref="U302" pin="32"/>
+      <node ref="J304" pin="9"/>
+    </net>
+    <net code="135" name="Net-(U302-Pad34)">
+      <node ref="U302" pin="34"/>
+    </net>
+    <net code="136" name="Net-(U302-Pad35)">
+      <node ref="U302" pin="35"/>
+    </net>
+    <net code="137" name="/Digital/PF2">
+      <node ref="J304" pin="3"/>
+      <node ref="U302" pin="36"/>
+    </net>
+    <net code="138" name="/Digital/PF3">
+      <node ref="U302" pin="37"/>
+      <node ref="J304" pin="4"/>
+    </net>
+    <net code="139" name="/Digital/PF4">
+      <node ref="U302" pin="38"/>
+      <node ref="J304" pin="5"/>
+    </net>
+    <net code="140" name="/Digital/PF5">
+      <node ref="J304" pin="6"/>
+      <node ref="U302" pin="39"/>
+    </net>
+    <net code="141" name="~RESET~">
+      <node ref="U302" pin="40"/>
+      <node ref="D301" pin="4"/>
+      <node ref="C316" pin="1"/>
+      <node ref="C309" pin="1"/>
+      <node ref="R305" pin="1"/>
+    </net>
+    <net code="142" name="Vproc">
+      <node ref="U302" pin="14"/>
+      <node ref="U308" pin="5"/>
+      <node ref="U302" pin="28"/>
+      <node ref="U302" pin="42"/>
+      <node ref="R312" pin="1"/>
+      <node ref="D301" pin="3"/>
+      <node ref="P301" pin="2"/>
+      <node ref="C304" pin="2"/>
+      <node ref="C302" pin="2"/>
+      <node ref="D301" pin="6"/>
+      <node ref="C307" pin="2"/>
+      <node ref="C306" pin="2"/>
+      <node ref="R316" pin="1"/>
+      <node ref="C305" pin="2"/>
+      <node ref="R305" pin="2"/>
+      <node ref="C317" pin="2"/>
+      <node ref="R315" pin="1"/>
+      <node ref="U301" pin="2"/>
+      <node ref="C301" pin="1"/>
+      <node ref="TP302" pin="2"/>
+    </net>
+    <net code="143" name="Net-(D304-Pad2)">
+      <node ref="D304" pin="2"/>
+      <node ref="R301" pin="1"/>
+    </net>
+    <net code="144" name="RTC_SCL">
+      <node ref="U302" pin="13"/>
+      <node ref="TP302" pin="4"/>
+      <node ref="U301" pin="16"/>
+      <node ref="R315" pin="2"/>
+    </net>
+    <net code="145" name="RTC_SDA">
+      <node ref="U301" pin="15"/>
+      <node ref="R316" pin="2"/>
+      <node ref="U302" pin="12"/>
+      <node ref="TP302" pin="3"/>
+    </net>
+    <net code="146" name="Net-(C313-Pad2)">
+      <node ref="U306" pin="2"/>
+      <node ref="C313" pin="2"/>
+      <node ref="U306" pin="1"/>
+      <node ref="MOD301" pin="9"/>
+    </net>
+    <net code="147" name="Net-(U306-Pad4)">
+      <node ref="U306" pin="4"/>
     </net>
     <net code="148" name="Net-(J401-Pad1)">
       <node ref="J401" pin="1"/>
