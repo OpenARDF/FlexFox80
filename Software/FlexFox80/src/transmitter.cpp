@@ -226,7 +226,7 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 		if(!err)
 		{
 			code = txSetParameters(&pwr_mW, NULL);
-			if(code == ERROR_CODE_NO_ERROR)
+			if((code == ERROR_CODE_NO_ERROR) || (code == ERROR_CODE_NO_ANTENNA_PREVENTS_POWER_SETTING))
 			{
 				g_tx_initialized = true;
 			}

@@ -593,9 +593,9 @@ ISR(TCB0_INT_vect)
 // 
 // 			conversionInProcess = false;
 // 		}
-
-        TCB0.INTFLAGS = TCB_CAPT_bm; /* clear interrupt flag */
     }
+
+    TCB0.INTFLAGS = TCB_CAPT_bm; /* clear interrupt flag */
 }
 
 
@@ -1726,7 +1726,7 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 		g_time_needed_for_ID = 0;   /* ID will never be sent */
 	}
 
-	time_t now = time(NULL);
+	time_t now = g_current_epoch; // time(NULL);
 	if(g_event_finish_time < now)   /* the event has already finished */
 	{
 		if(statusCode)
@@ -1879,7 +1879,6 @@ void startEventNow(EventActionSource_t activationSource)
 {
 	ConfigurationState_t conf = clockConfigurationCheck();
 
-	cli();
 	if(activationSource == POWER_UP)
 	{
 		if(conf == CONFIGURATION_ERROR)
@@ -1930,7 +1929,6 @@ void startEventNow(EventActionSource_t activationSource)
 	}
 
 // 	g_LED_enunciating = false;
-	sei();
 }
 
 void stopEventNow(EventActionSource_t activationSource)
@@ -2006,8 +2004,6 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 
  	g_current_epoch = ds3231_get_epoch(null);
 
-	cli();
-	
 	g_event_commenced = false;					/* get things running immediately */
 	g_event_enabled = false;					/* get things running immediately */
 
@@ -2211,14 +2207,45 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 
  		g_use_rtc_for_startstop = false;
  		g_transmissions_disabled = true;
+		keyTransmitter(OFF);
+		LED_set_level(OFF);
+		powerToTransmitter(OFF);
 	}
 	else if(action == START_EVENT_NOW)
 	{
 // 		g_seconds_since_sync = 0;                   /* Total elapsed time since synchronization */
- 		g_use_rtc_for_startstop = false;
- 		g_transmissions_disabled = false;
-		g_event_commenced = true;					/* get things running immediately */
-		g_event_enabled = true;						/* get things running immediately */
+//  		g_use_rtc_for_startstop = false;
+//  		g_transmissions_disabled = false;
+// 		g_event_commenced = true;					/* get things running immediately */
+// 		g_event_enabled = true;						/* get things running immediately */
+
+		EC result;
+		g_current_epoch = ds3231_get_epoch(&result);
+		
+		if(result == ERROR_CODE_NO_ERROR)
+		{
+			g_event_start_time = g_current_epoch;
+			if(g_event_start_time > g_event_finish_time)
+			{
+				g_event_finish_time = g_event_start_time + DAY;
+			}
+		}
+		
+		SC status = STATUS_CODE_IDLE;
+		result = launchEvent(&status);
+		
+		if(g_go_to_sleep && g_sleepType)
+		{
+			g_sleepType = SLEEP_AFTER_WIFI_GOES_OFF;
+			g_go_to_sleep = false;
+		}
+
+		g_WiFi_shutdown_seconds = 60;
+
+		if(!result)
+		{
+			g_ee_mgr.saveAllEEPROM();
+		}
 	}
 	else if(action == START_TRANSMISSIONS_NOW)                                  /* Immediately start transmitting, regardless RTC or time slot */
 	{
@@ -2259,8 +2286,6 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 // 	g_sendAMmodulation = false;
 // 	g_LED_enunciating = false;
 // 	g_config_error = NULL_CONFIG;           /* Trigger a new configuration enunciation */
-
-	sei();
 }
 
 time_t validateTimeString(char* str, time_t* epochVar, int8_t offsetHours)
