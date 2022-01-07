@@ -431,7 +431,7 @@ void ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-2
 		bool failure;
 		uint8_t data[1];
 		
-		data[0] = enable ? 0x40:0x00;	
+		data[0] = enable ? 0x00:0x04;	
 		while(tries-- && (failure = (I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_CONTROL, data, 1) != 1)));
 		
 		return(failure);

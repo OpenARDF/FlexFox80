@@ -37,7 +37,7 @@
  */
 int32_t timeDif(time_t a, time_t b)
 {
-	int32_t dif; // = difftime(now, g_event_start_time); // returns arg1 - arg2
+	int32_t dif; // = difftime(now, g_event_start_epoch); // returns arg1 - arg2
 	if(a > b)
 		dif = a - b;
 	else
