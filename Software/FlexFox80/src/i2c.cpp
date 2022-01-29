@@ -170,6 +170,7 @@ uint8_t I2C_0_SendData(uint8_t slaveAddr, uint8_t regAddr, uint8_t *pData, uint8
 			{
 				retVal++;
 				pData++;
+				if(!len) I2C_0_EndSession();
 				continue;
 			}
 			else // did not get ACK after client address
@@ -347,6 +348,7 @@ uint8_t I2C_1_SendData(uint8_t slaveAddr, uint8_t regAddr, uint8_t *pData, uint8
 			{
 				retVal++;
 				pData++;
+				if(!len) I2C_1_EndSession();
 				continue;
 			}
 			else // did not get ACK after client address

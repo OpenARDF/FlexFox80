@@ -130,7 +130,7 @@ typedef struct
 } SerialbusRxBuffer;
 
 #define WAITING_FOR_UPDATE -1
-#define HELP_TEXT_TXT (char*)"\nCommands:\n  CLK [T|S|F [\"YYMMDDhhmmss\"]] - Read/set time/start/finish\n  FOX [fox]- Set fox role\n  FRE [frequency] - Set tx frequency\n  PWR [power] - Set transmit power\n  ID [callsign] -  Set callsign\n  SYN 0-3 - Synchronize\n  PWD [pwd] - Set DTMF password\n  UTI - Read volts & temp\n  SET S [setting] - Set ID code speed\n\0"
+#define HELP_TEXT_TXT (char*)"\nCommands:\n  CLK [T|S|F [\"YYMMDDhhmmss\"]] - Read/set time/start/finish\n  FOX [fox]- Set fox role\n  FRE [frequency] - Set tx frequency\n  PWR [0-5000] - Set transmit power mW\n  ID [callsign] -  Set callsign\n  SYN 0-3 - Synchronize\n  PWD [pwd] - Set DTMF password\n  UTI - Read volts & temp\n  SET S [setting] - Set ID code speed\n\0"
 
 
 /**

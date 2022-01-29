@@ -41,12 +41,13 @@ bool only_digits(char *s);
  *  Print Formatting Utility Functions
  ************************************************************************************************/
 
-#ifdef DATE_STRING_SUPPORT_ENABLED
 /**
  * Converts a string of format "yyyy-mm-ddThh:mm:ss" to seconds since 1900
  */
 uint32_t convertTimeStringToEpoch(char * s);
 bool mystrptime(char* s, struct tm* ltm);
-#endif // DATE_STRING_SUPPORT_ENABLED
+bool frequencyString(char* result, uint32_t freq);
+bool frequencyVal(char* str, Frequency_Hz* result);
+bool fox2Text(char* str, Fox_t fox);
 
 #endif  /* UTIL_H_ */
