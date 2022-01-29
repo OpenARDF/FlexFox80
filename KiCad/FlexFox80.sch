@@ -121,12 +121,12 @@ $EndComp
 $Comp
 L power:+12V #PWR0117
 U 1 1 58BF361E
-P 2750 2750
-F 0 "#PWR0117" H 2750 2600 50  0001 C CNN
-F 1 "+12V" H 2750 2890 50  0000 C CNN
-F 2 "" H 2750 2750 50  0000 C CNN
-F 3 "" H 2750 2750 50  0000 C CNN
-	1    2750 2750
+P 2050 1850
+F 0 "#PWR0117" H 2050 1700 50  0001 C CNN
+F 1 "+12V" H 2050 1990 50  0000 C CNN
+F 2 "" H 2050 1850 50  0000 C CNN
+F 3 "" H 2050 1850 50  0000 C CNN
+	1    2050 1850
 	1    0    0    -1  
 $EndComp
 $Sheet
@@ -135,7 +135,7 @@ U 591BC960
 F0 "ARDF Tx Continued" 60
 F1 "file591BC95F.sch" 60
 $EndSheet
-Text Notes 1650 4200 1    157  ~ 31
+Text Notes 1400 4200 1    157  ~ 31
 80m RF Section
 Wire Wire Line
 	4250 2700 4350 2700
@@ -176,31 +176,17 @@ F 5 "np" H 1050 7200 60  0001 C CNN "Link"
 	1    0    0    -1  
 $EndComp
 Connection ~ 850  7350
-Wire Wire Line
-	3600 2750 3800 2750
-Wire Wire Line
-	3800 2750 3800 1800
-Wire Wire Line
-	3800 1800 3050 1800
-Wire Wire Line
-	3050 1800 3050 2250
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0123
 U 1 1 5A7B67DA
-P 3350 2750
-F 0 "#PWR0123" H 3350 2500 50  0001 C CNN
-F 1 "GND_L8" H 3500 2600 50  0001 C CNN
-F 2 "" H 3350 2750 50  0000 C CNN
-F 3 "" H 3350 2750 50  0000 C CNN
-	1    3350 2750
+P 2600 2650
+F 0 "#PWR0123" H 2600 2400 50  0001 C CNN
+F 1 "GND_L8" H 2750 2500 50  0001 C CNN
+F 2 "" H 2600 2650 50  0000 C CNN
+F 3 "" H 2600 2650 50  0000 C CNN
+	1    2600 2650
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	2750 2750 2750 2800
-Wire Wire Line
-	2750 2800 2900 2800
-Wire Wire Line
-	2900 2800 2900 2750
 Connection ~ 3150 3250
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0140
@@ -286,7 +272,7 @@ F1 "file5BC7F38B.sch" 61
 $EndSheet
 Text GLabel 2250 3850 0    39   Input ~ 0
 CLK1
-Text GLabel 3450 2250 1    39   Input ~ 0
+Text GLabel 2200 2350 0    39   Input ~ 0
 FET_DRIVER_ENABLE
 $Comp
 L Device:C_Small C120
@@ -627,23 +613,6 @@ F 8 "CAP CER 22UF 25V X5R 1210" V 3350 3250 50  0001 C CNN "Description"
 F 9 "C337455" H 3350 3250 50  0001 C CNN "LCSC Part Number"
 	1    3350 3250
 	0    -1   -1   0   
-$EndComp
-$Comp
-L Power_Protection:LMN200B01 Q101
-U 1 1 5C64951A
-P 3250 2500
-F 0 "Q101" V 2950 2350 61  0000 L CNB
-F 1 "LMN200B02" V 3200 1550 61  0000 L CNB
-F 2 "TO_SOT_Packages_SMD:SOT-363-0.65" H 3265 2300 50  0001 L CNN
-F 3 "https://www.diodes.com/assets/Datasheets/ds30658.pdf" H 3265 2300 50  0001 L CNN
-F 4 "LMN200B02DICT-ND" H 3250 2500 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=LMN200B02DICT-ND\">Link</a>" H 3250 2500 60  0001 C CNN "Link"
-F 6 "Diodes Incorporated" V 3250 2500 50  0001 C CNN "Manufacturer"
-F 7 "LMN200B02-7" V 3250 2500 50  0001 C CNN "Manufacturer PN"
-F 8 "MCU LOAD SWITCH 200MA SOT-363" V 3250 2500 50  0001 C CNN "Description"
-F 9 "C150757" H 3250 2500 50  0001 C CNN "LCSC Part Number"
-	1    3250 2500
-	0    1    1    0   
 $EndComp
 Text Notes 2200 3050 0    39   ~ 0
 Optional voltage-dropping\ndiode for batteries > 12V.\nShort across if not used.
@@ -989,6 +958,66 @@ F 1 "GND_L8" H 3450 4000 50  0001 C CNN
 F 2 "" H 3450 4150 50  0000 C CNN
 F 3 "" H 3450 4150 50  0000 C CNN
 	1    3450 4150
+	1    0    0    -1  
+$EndComp
+NoConn ~ 3000 2450
+NoConn ~ 3000 2350
+Wire Wire Line
+	3000 2250 3150 2250
+Wire Wire Line
+	3150 2250 3150 2750
+Wire Wire Line
+	2050 1850 2050 2050
+Wire Wire Line
+	2050 2250 2200 2250
+$Comp
+L Device:C_Small C101
+U 1 1 62881448
+P 1900 2050
+F 0 "C101" V 2000 1950 50  0000 L CNN
+F 1 "10uF" V 1750 1950 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805" H 1900 2050 50  0001 C CNN
+F 3 "" H 1900 2050 50  0001 C CNN
+F 4 "490-5523-1-ND" H 1900 2050 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-5523-1-ND\">Link</a>" H 1900 2050 60  0001 C CNN "Link"
+F 6 "Murata" V 1900 2050 50  0001 C CNN "Manufacturer"
+F 7 "GRM21BR61E106KA73L" V 1900 2050 50  0001 C CNN "Manufacturer PN"
+F 8 "CAP CER 10UF 25V X5R 0805" V 1900 2050 50  0001 C CNN "Description"
+F 9 "C84416" H 1900 2050 50  0001 C CNN "LCSC Part Number"
+	1    1900 2050
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	2000 2050 2050 2050
+Connection ~ 2050 2050
+Wire Wire Line
+	2050 2050 2050 2250
+$Comp
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0127
+U 1 1 628838B3
+P 1800 2050
+F 0 "#PWR0127" H 1800 1800 50  0001 C CNN
+F 1 "GND_L8" H 1800 1900 50  0001 C CNN
+F 2 "" H 1800 2050 50  0000 C CNN
+F 3 "" H 1800 2050 50  0000 C CNN
+	1    1800 2050
+	0    1    1    0   
+$EndComp
+$Comp
+L Power_Management:TPS22810DBVT U101
+U 1 1 628D7F12
+P 2600 2350
+F 0 "U101" H 2600 2717 50  0000 C CNN
+F 1 "TPS22810DBVT" H 2600 2626 50  0000 C CNN
+F 2 "TO_SOT_Packages_SMD:SOT-23-6" H 2600 1650 50  0001 C CNN
+F 3 "http://www.ti.com/lit/ds/symlink/tps22810.pdf" H 2600 2350 50  0001 C CNN
+F 4 "296-45304-1-ND" H 2600 2350 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=296-45304-1-ND\">Link</a>" H 2600 2350 50  0001 C CNN "Link"
+F 6 "Texas Instruments" H 2600 2350 50  0001 C CNN "Manufacturer"
+F 7 "TPS22810DBVT" H 2600 2350 50  0001 C CNN "Manufacturer PN"
+F 8 "Power Switch/Driver 1:1 N-Channel 2A SOT-23-6" H 2600 2350 50  0001 C CNN "Description"
+F 9 "C2680364" H 2600 2350 50  0001 C CNN "LCSC Part Number"
+	1    2600 2350
 	1    0    0    -1  
 $EndComp
 $EndSCHEMATC
