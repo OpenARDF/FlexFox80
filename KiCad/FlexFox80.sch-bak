@@ -118,25 +118,12 @@ F 3 "" H 4350 2550 50  0000 C CNN
 	1    4350 2550
 	1    0    0    -1  
 $EndComp
-$Comp
-L power:+12V #PWR0117
-U 1 1 58BF361E
-P 2050 1850
-F 0 "#PWR0117" H 2050 1700 50  0001 C CNN
-F 1 "+12V" H 2050 1990 50  0000 C CNN
-F 2 "" H 2050 1850 50  0000 C CNN
-F 3 "" H 2050 1850 50  0000 C CNN
-	1    2050 1850
-	1    0    0    -1  
-$EndComp
 $Sheet
 S -1850 700  1050 650 
 U 591BC960
 F0 "ARDF Tx Continued" 60
 F1 "file591BC95F.sch" 60
 $EndSheet
-Text Notes 1400 4200 1    157  ~ 31
-80m RF Section
 Wire Wire Line
 	4250 2700 4350 2700
 Connection ~ 4350 2700
@@ -176,17 +163,6 @@ F 5 "np" H 1050 7200 60  0001 C CNN "Link"
 	1    0    0    -1  
 $EndComp
 Connection ~ 850  7350
-$Comp
-L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0123
-U 1 1 5A7B67DA
-P 2600 2650
-F 0 "#PWR0123" H 2600 2400 50  0001 C CNN
-F 1 "GND_L8" H 2750 2500 50  0001 C CNN
-F 2 "" H 2600 2650 50  0000 C CNN
-F 3 "" H 2600 2650 50  0000 C CNN
-	1    2600 2650
-	1    0    0    -1  
-$EndComp
 Connection ~ 3150 3250
 $Comp
 L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0140
@@ -272,8 +248,6 @@ F1 "file5BC7F38B.sch" 61
 $EndSheet
 Text GLabel 2250 3850 0    39   Input ~ 0
 CLK1
-Text GLabel 2200 2350 0    39   Input ~ 0
-FET_DRIVER_ENABLE
 $Comp
 L Device:C_Small C120
 U 1 1 5BE9CF68
@@ -618,23 +592,6 @@ Text Notes 2200 3050 0    39   ~ 0
 Optional voltage-dropping\ndiode for batteries > 12V.\nShort across if not used.
 Wire Wire Line
 	2750 3250 3150 3250
-$Comp
-L Diode:BZT52C4V7 D102
-U 1 1 5C71D9FE
-P 3150 2950
-F 0 "D102" H 3150 3050 50  0000 C CNN
-F 1 "4.7V" H 3150 2850 50  0000 C CNN
-F 2 "Diodes_SMD:SOD-123_Handsolder" H 3150 2950 50  0001 C CNN
-F 3 "" H 3150 2950 50  0001 C CNN
-F 4 "BZT52C4V7-13FDICT-ND" H 3150 2950 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=BZT52C4V7-13FDICT-ND\">Link</a>" H 3150 2950 60  0001 C CNN "Link"
-F 6 "Diodes Incorporated" H 3150 2950 50  0001 C CNN "Manufacturer"
-F 7 "BZT52C4V7-13-F" H 3150 2950 50  0001 C CNN "Manufacturer PN"
-F 8 "DIODE ZENER 4.7V 500MW SOD123" H 3150 2950 50  0001 C CNN "Description"
-F 9 "C151054" H 3150 2950 50  0001 C CNN "LCSC Part Number"
-	1    3150 2950
-	0    1    1    0   
-$EndComp
 Wire Wire Line
 	3150 3150 3150 3250
 $Comp
@@ -960,12 +917,34 @@ F 3 "" H 3450 4150 50  0000 C CNN
 	1    3450 4150
 	1    0    0    -1  
 $EndComp
-NoConn ~ 3000 2450
-NoConn ~ 3000 2350
+Text Notes 1400 4200 1    157  ~ 31
+80m RF Section
+$Comp
+L power:+12V #PWR0117
+U 1 1 58BF361E
+P 2050 1850
+F 0 "#PWR0117" H 2050 1700 50  0001 C CNN
+F 1 "+12V" H 2050 1990 50  0000 C CNN
+F 2 "" H 2050 1850 50  0000 C CNN
+F 3 "" H 2050 1850 50  0000 C CNN
+	1    2050 1850
+	1    0    0    -1  
+$EndComp
+$Comp
+L FlexFox80-rescue:GND_L8-ARDF-2-Band-MiniTx-rescue #PWR0123
+U 1 1 5A7B67DA
+P 2600 2650
+F 0 "#PWR0123" H 2600 2400 50  0001 C CNN
+F 1 "GND_L8" H 2750 2500 50  0001 C CNN
+F 2 "" H 2600 2650 50  0000 C CNN
+F 3 "" H 2600 2650 50  0000 C CNN
+	1    2600 2650
+	1    0    0    -1  
+$EndComp
+Text GLabel 3300 2350 2    39   Input ~ 0
+FET_DRIVER_ENABLE
 Wire Wire Line
 	3000 2250 3150 2250
-Wire Wire Line
-	3150 2250 3150 2750
 Wire Wire Line
 	2050 1850 2050 2050
 Wire Wire Line
@@ -1018,6 +997,29 @@ F 7 "TPS22810DBVT" H 2600 2350 50  0001 C CNN "Manufacturer PN"
 F 8 "Power Switch/Driver 1:1 N-Channel 2A SOT-23-6" H 2600 2350 50  0001 C CNN "Description"
 F 9 "C2680364" H 2600 2350 50  0001 C CNN "LCSC Part Number"
 	1    2600 2350
-	1    0    0    -1  
+	-1   0    0    -1  
 $EndComp
+Wire Wire Line
+	3150 2250 3150 2750
+$Comp
+L Diode:BZT52C4V7 D102
+U 1 1 5C71D9FE
+P 3150 2950
+F 0 "D102" H 3150 3050 50  0000 C CNN
+F 1 "4.7V" H 3150 2850 50  0000 C CNN
+F 2 "Diodes_SMD:SOD-123_Handsolder" H 3150 2950 50  0001 C CNN
+F 3 "" H 3150 2950 50  0001 C CNN
+F 4 "BZT52C4V7-13FDICT-ND" H 3150 2950 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=BZT52C4V7-13FDICT-ND\">Link</a>" H 3150 2950 60  0001 C CNN "Link"
+F 6 "Diodes Incorporated" H 3150 2950 50  0001 C CNN "Manufacturer"
+F 7 "BZT52C4V7-13-F" H 3150 2950 50  0001 C CNN "Manufacturer PN"
+F 8 "DIODE ZENER 4.7V 500MW SOD123" H 3150 2950 50  0001 C CNN "Description"
+F 9 "C151054" H 3150 2950 50  0001 C CNN "LCSC Part Number"
+	1    3150 2950
+	0    1    1    0   
+$EndComp
+NoConn ~ 2200 2350
+NoConn ~ 2200 2450
+Wire Wire Line
+	3300 2350 3000 2350
 $EndSCHEMATC
