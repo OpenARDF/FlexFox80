@@ -980,7 +980,7 @@ F 2 "Capacitors_SMD:C_0805" H 1900 2050 50  0001 C CNN
 F 3 "" H 1900 2050 50  0001 C CNN
 F 4 "490-5523-1-ND" H 1900 2050 50  0001 C CNN "Digi-Key Part No."
 F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-5523-1-ND\">Link</a>" H 1900 2050 60  0001 C CNN "Link"
-F 6 "Murata" V 1900 2050 50  0001 C CNN "Manufacturer"
+F 6 "Murata Electronics" V 1900 2050 50  0001 C CNN "Manufacturer"
 F 7 "GRM21BR61E106KA73L" V 1900 2050 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 10UF 25V X5R 0805" V 1900 2050 50  0001 C CNN "Description"
 F 9 "C84416" H 1900 2050 50  0001 C CNN "LCSC Part Number"

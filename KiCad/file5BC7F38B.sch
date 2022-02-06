@@ -2940,7 +2940,6 @@ Wire Wire Line
 	8850 7050 8150 7050
 Connection ~ 8150 7050
 NoConn ~ 7800 4150
-NoConn ~ 7800 4050
 Text Notes 1400 4800 1    39   ~ 8
 I2C pull-ups can be provided by uC \nport pin pull-ups on SCL and SDA.
 $Comp
@@ -3096,8 +3095,6 @@ Wire Wire Line
 	8700 5050 9000 5050
 Wire Wire Line
 	10950 5600 10950 5300
-Wire Bus Line
-	7700 3300 7700 8000
 Connection ~ 10950 5300
 Wire Wire Line
 	10950 5300 11000 5300
@@ -3134,4 +3131,107 @@ F 3 "" H 10950 5700 50  0000 C CNN
 	1    10950 5700
 	0    1    1    0   
 $EndComp
+$Comp
+L Power_Management:TPS22810DBVT U307
+U 1 1 6203E823
+P 15100 3900
+F 0 "U307" H 15100 4267 50  0000 C CNN
+F 1 "TPS22810DBVT" H 15100 4176 50  0000 C CNN
+F 2 "TO_SOT_Packages_SMD:SOT-23-6" H 15100 3200 50  0001 C CNN
+F 3 "http://www.ti.com/lit/ds/symlink/tps22810.pdf" H 15100 3900 50  0001 C CNN
+F 4 "296-45304-1-ND" H 15100 3900 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=296-45304-1-ND\">Link</a>" H 15100 3900 50  0001 C CNN "Link"
+F 6 "Texas Instruments" H 15100 3900 50  0001 C CNN "Manufacturer"
+F 7 "TPS22810DBVT" H 15100 3900 50  0001 C CNN "Manufacturer PN"
+F 8 "IC PWR SWITCH N-CHAN 1:1 SOT23-6" H 15100 3900 50  0001 C CNN "Description"
+F 9 "C2680364" H 15100 3900 50  0001 C CNN "LCSC Part Number"
+	1    15100 3900
+	1    0    0    -1  
+$EndComp
+Text GLabel 7950 4050 2    39   Output ~ 0
+FAN_ENABLE
+Wire Wire Line
+	7800 4050 7950 4050
+Text GLabel 14700 3900 0    39   Input ~ 0
+FAN_ENABLE
+$Comp
+L power:GNDD #PWR0309
+U 1 1 62087421
+P 15100 4200
+F 0 "#PWR0309" H 15100 3950 50  0001 C CNN
+F 1 "GNDD" H 15100 4050 50  0000 C CNN
+F 2 "" H 15100 4200 50  0000 C CNN
+F 3 "" H 15100 4200 50  0000 C CNN
+	1    15100 4200
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x02 J308
+U 1 1 6208B0C7
+P 15700 3700
+F 0 "J308" H 15850 3650 50  0000 C CNN
+F 1 "Conn_01x02" H 15618 3466 50  0001 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x02" H 15700 3700 50  0001 C CNN
+F 3 "" H 15700 3700 50  0001 C CNN
+F 4 "np" H 15700 3700 50  0001 C CNN "Digi-Key Part No."
+F 5 "np" H 15700 3700 50  0001 C CNN "Link"
+F 6 "np" H 15700 3700 50  0001 C CNN "Manufacturer"
+	1    15700 3700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	14700 3800 14500 3800
+Wire Wire Line
+	14500 3800 14500 3600
+Wire Wire Line
+	14500 3400 15500 3400
+Wire Wire Line
+	15500 3400 15500 3700
+NoConn ~ 15500 3900
+NoConn ~ 15500 4000
+$Comp
+L Device:C_Small C304
+U 1 1 620FA271
+P 14300 3600
+F 0 "C304" V 14071 3600 50  0000 C CNN
+F 1 "10uF" V 14162 3600 50  0000 C CNN
+F 2 "Capacitors_SMD:C_0805" H 14300 3600 50  0001 C CNN
+F 3 "" H 14300 3600 50  0001 C CNN
+F 4 "490-5523-1-ND" H 14300 3600 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=490-5523-1-ND\">Link</a>" H 14300 3600 50  0001 C CNN "Link"
+F 6 "Murata Electronics" H 14300 3600 50  0001 C CNN "Manufacturer"
+F 7 "GRM21BR61E106KA73L" H 14300 3600 50  0001 C CNN "Manufacturer PN"
+F 8 "CAP CER 10UF 25V X5R 0805" H 14300 3600 50  0001 C CNN "Description"
+F 9 "C84416" H 14300 3600 50  0001 C CNN "LCSC Part Number"
+	1    14300 3600
+	0    1    1    0   
+$EndComp
+$Comp
+L power:GNDD #PWR0308
+U 1 1 620FFD9F
+P 14200 3600
+F 0 "#PWR0308" H 14200 3350 50  0001 C CNN
+F 1 "GNDD" H 14200 3450 50  0000 C CNN
+F 2 "" H 14200 3600 50  0000 C CNN
+F 3 "" H 14200 3600 50  0000 C CNN
+	1    14200 3600
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	14400 3600 14500 3600
+Connection ~ 14500 3600
+Wire Wire Line
+	14500 3600 14500 3400
+Wire Notes Line
+	13800 3000 13800 4550
+Wire Notes Line
+	13800 4550 16000 4550
+Wire Notes Line
+	16000 4550 16000 3000
+Wire Notes Line
+	16000 3000 13800 3000
+Text Notes 14300 2950 0    61   ~ 12
+OPTIONAL FAN CONTROL
+Wire Bus Line
+	7700 3300 7700 8000
 $EndSCHEMATC
