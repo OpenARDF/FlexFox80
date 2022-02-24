@@ -67,7 +67,7 @@ SJ301 ,SolderJumper_2_Open,1,Wire_Connections_Bridges:Solder-Jumper-NO-SMD-Pad_S
 SW301 ,SPST,1,Buttons_Switches_SMD:PTS645SL50SMTR92,,SWITCH TACTILE SPST-NO 0.05A 12V,CKN9088CT-ND,C221877,<a href="https://www.digikey.com/products/en?keywords=CKN9088CT-ND">Link</a>,C&K,PTS645SL50SMTR92 LFS, 
 TP302 ,I2C0,1,Pin_Headers:Pin_Header_Straight_1x04,, ,np, ,np,np, , 
 TP301 ,I2C1,1,Pin_Headers:Pin_Header_Straight_1x04,, ,np, ,np,np, , 
-U107 ,LM5134B,1,TO_SOT_Packages_SMD:SOT-23-6-LM5134,,IC GATE DRVR LOW-SIDE SOT23-6,296-40244-1-ND, ,<a href="https://www.digikey.com/products/en?keywords=296-40244-1-ND">Link</a>,Texas Instruments,LM5134BMFX/NOPB, 
+U107 ,LM5134B,1,TO_SOT_Packages_SMD:SOT-23-6-LM5134,,IC GATE DRVR LOW-SIDE SOT23-6,296-40244-1-ND,C2677086,<a href="https://www.digikey.com/products/en?keywords=296-40244-1-ND">Link</a>,Texas Instruments,LM5134BMFX/NOPB, 
 U101 ,TPS22810DBVT,1,TO_SOT_Packages_SMD:SOT-23-6,,Power Switch/Driver 1:1 N-Channel 2A SOT-23-6,296-45304-1-ND,C2680364,<a href="https://www.digikey.com/products/en?keywords=296-45304-1-ND">Link</a>,Texas Instruments,TPS22810DBVT, 
 U203 ,LTC3600,1,Housings_SSOP:SSOP-12_Pad,,IC REG BUCK PROG 1.5A 12MSOP,LTC3600EMSE#PBF-ND,C580752,<a href="https://www.digikey.com/products/en?keywords=LTC3600EMSE%23PBF-ND">Link</a>,Analog Devices Inc.,LTC3600EMSE#PBF, 
 U202 ,OPA171,1,TO_SOT_Packages_SMD:SOT-23-5_MCP,,IC OPAMP GP 1 CIRCUIT SOT23-5,296-37698-1-ND,C88036,<a href="https://www.digikey.com/products/en?keywords=296-37698-1-ND">Link</a>,Texas Instruments,OPA171AIDBVR, 
@@ -76,8 +76,8 @@ U304 ,SI5351A,1,Housings_SSOP:MSOP-10_3x3mm_Pitch0.5mm,,IC CLK GENERATOR 200MHZ 
 U301 ,DS3231,1,SMD_Packages:SO16,,IC RTC CLK/CALENDAR I2C 16-SOIC,DS3231S#T&RCT-ND,C2651514,<a href="https://www.digikey.com/products/en?keywords=DS3231S%23T%26RCT-ND">Link</a>,Maxim Integrated,DS3231S#T&R, 
 U305 ,74HC1G08,1,TO_SOT_Packages_SMD:SOT-23-5,,IC GATE AND 1CH 2-INP 5TSOP,MC74HC1G08DTT1GOSCT-ND,C108694,<a href="https://www.digikey.com/products/en?keywords=MC74HC1G08DTT1GOSCT-ND">Link</a>,ON Semiconductor,MC74HC1G08DTT1G, 
 U303 U308 ,LD2985BM33R,2,TO_SOT_Packages_SMD:SOT-23-5,,IC REG LINEAR 3.3V 150MA SOT23-5,497-3499-1-ND,C222396,<a href="https://www.digikey.com/products/en?keywords=497-3499-1-ND">Link</a>,STMicroelectronics,LD2985BM33R, 
-U302 ,AVR128DA48,1,Housings_QFP:TQFP-48_7x7mm_Pitch0.5mm,,IC MCU 8BIT 128KB FLASH 48TQFP,150-AVR128DA48T-E/PTCT-ND,C1870720,<a href="https://www.digikey.com/products/en?keywords=150-AVR128DA48T-E/PTCT-ND">Link</a>,Microchip Technology,AVR128DA48T-E/PT, 
-U306 ,LT1763CS8-5,1,Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm,, , , , , , , 
+U302 ,AVR128DA48,1,Housings_QFP:TQFP-48_7x7mm_Pitch0.5mm_AVR128DA48,,IC MCU 8BIT 128KB FLASH 48TQFP,150-AVR128DA48T-E/PTCT-ND,C1870720,<a href="https://www.digikey.com/products/en?keywords=150-AVR128DA48T-E/PTCT-ND">Link</a>,Microchip Technology,AVR128DA48T-E/PT, 
+U306 ,LT1763CS8-5,1,Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm,,IC REG LINEAR 5V 500MA 8SOIC,LT1763CS8-5#TRPBFCT-ND,C193629,<a href="https://www.digikey.com/products/en?keywords=LT1763CS8-5#TRPBFCT-ND">Link</a>,Analog Devices Inc.,LT1763CS8-5#TRPBF, 
 U307 ,TPS22810DBVT,1,TO_SOT_Packages_SMD:SOT-23-6,,IC PWR SWITCH N-CHAN 1:1 SOT23-6,296-45304-1-ND,C2680364,<a href="https://www.digikey.com/products/en?keywords=296-45304-1-ND">Link</a>,Texas Instruments,TPS22810DBVT, 
 W116 ,GND,1,Pin_Headers:Pin_Header_Straight_1x01,, , , ,np, , ,np
 W114 ,GND,1,Measurement_Points:Measurement_Point_Round-SMD-Pad_Small,, , , ,np, , ,np

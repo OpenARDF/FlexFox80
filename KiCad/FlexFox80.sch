@@ -224,6 +224,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=296-40244-1-ND\">Lin
 F 6 "Texas Instruments" H 3150 3950 50  0001 C CNN "Manufacturer"
 F 7 "LM5134BMFX/NOPB" H 3150 3950 50  0001 C CNN "Manufacturer PN"
 F 8 "IC GATE DRVR LOW-SIDE SOT23-6" H 3150 3950 50  0001 C CNN "Description"
+F 9 "C2677086" H 3150 3950 50  0001 C CNN "LCSC Part Number"
 	1    3150 3950
 	1    0    0    -1  
 $EndComp

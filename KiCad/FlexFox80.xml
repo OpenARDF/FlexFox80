@@ -2,7 +2,7 @@
 <export version="D">
   <design>
     <source>/Users/Charles/Documents/GitHub/FlexFox80/KiCad/FlexFox80.sch</source>
-    <date>Monday, February 07, 2022 at 04:48:54 PM</date>
+    <date>Wednesday, February 23, 2022 at 09:23:40 PM</date>
     <tool>Eeschema (5.1.9-0-10_14)</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -115,6 +115,7 @@
       <fields>
         <field name="Description">IC GATE DRVR LOW-SIDE SOT23-6</field>
         <field name="Digi-Key Part No.">296-40244-1-ND</field>
+        <field name="LCSC Part Number">C2677086</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=296-40244-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">Texas Instruments</field>
         <field name="Manufacturer PN">LM5134BMFX/NOPB</field>
@@ -2048,7 +2049,7 @@
     </comp>
     <comp ref="U302">
       <value>AVR128DA48</value>
-      <footprint>Housings_QFP:TQFP-48_7x7mm_Pitch0.5mm</footprint>
+      <footprint>Housings_QFP:TQFP-48_7x7mm_Pitch0.5mm_AVR128DA48</footprint>
       <fields>
         <field name="Description">IC MCU 8BIT 128KB FLASH 48TQFP</field>
         <field name="Digi-Key Part No.">150-AVR128DA48T-E/PTCT-ND</field>
@@ -2179,6 +2180,14 @@
     <comp ref="U306">
       <value>LT1763CS8-5</value>
       <footprint>Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm</footprint>
+      <fields>
+        <field name="Description">IC REG LINEAR 5V 500MA 8SOIC</field>
+        <field name="Digi-Key Part No.">LT1763CS8-5#TRPBFCT-ND</field>
+        <field name="LCSC Part Number">C193629</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=LT1763CS8-5#TRPBFCT-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">Analog Devices Inc.</field>
+        <field name="Manufacturer PN">LT1763CS8-5#TRPBF</field>
+      </fields>
       <libsource lib="Regulator_Linear" part="LT1763CS8-5" description="Linear Voltage Regulator IC Positive Fixed SOT-223-5"/>
       <sheetpath names="/Digital/" tstamps="/5BC7F38C/"/>
       <tstamp>61B31D21</tstamp>
@@ -2777,7 +2786,7 @@
         <pin num="24" name="PD4" type="BiDi"/>
         <pin num="25" name="PD5" type="BiDi"/>
         <pin num="26" name="PD6" type="BiDi"/>
-        <pin num="27" name="PD7" type="BiDi"/>
+        <pin num="27" name="PD7" type="input"/>
         <pin num="28" name="AVDD" type="power_in"/>
         <pin num="29" name="GND" type="power_in"/>
         <pin num="30" name="PE0" type="BiDi"/>
