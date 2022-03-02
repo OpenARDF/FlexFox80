@@ -493,6 +493,7 @@ F 5 "<a href=\"https://www.digikey.com/products/en?keywords=478-10247-1-ND\">Lin
 F 6 "KYOCERA AVX" V 7100 3100 50  0001 C CNN "Manufacturer"
 F 7 "06031U910FAT2A" V 7100 3100 50  0001 C CNN "Manufacturer PN"
 F 8 "CAP CER 91PF 100V NP0 0603" V 7100 3100 50  0001 C CNN "Description"
+F 9 "C2170042" H 7100 3100 50  0001 C CNN "LCSC Part Number"
 	1    7100 3100
 	0    1    1    0   
 $EndComp

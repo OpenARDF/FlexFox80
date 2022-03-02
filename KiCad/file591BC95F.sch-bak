@@ -1644,14 +1644,13 @@ U 1 1 618D43F0
 P 8850 2650
 F 0 "L202" H 8850 2750 50  0000 C CNN
 F 1 "6.8uH" H 8850 2600 50  0000 C CNN
-F 2 "Inductors:NRS8030" H 8850 2650 50  0001 C CNN
+F 2 "Inductors:CDR7D28MN" H 8850 2650 50  0001 C CNN
 F 3 "" H 8850 2650 50  0001 C CNN
-F 4 "587-2970-1-ND" H 8850 2650 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=587-2970-1-ND\">Link</a>" H 8850 2650 60  0001 C CNN "Link"
-F 6 "Taiyo Yuden" H 8850 2650 50  0001 C CNN "Manufacturer"
-F 7 "NRS8030T6R8MJGJ" H 8850 2650 50  0001 C CNN "Manufacturer PN"
-F 8 "FIXED IND 6.8UH 3A 37.7 MOHM SMD" H 8850 2650 50  0001 C CNN "Description"
-F 9 "C223024" H 8850 2650 50  0001 C CNN "LCSC Part Number"
+F 4 "308-1328-1-ND" H 8850 2650 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=308-1328-1-ND\">Link</a>" H 8850 2650 60  0001 C CNN "Link"
+F 6 "Sumida America Components Inc." H 8850 2650 50  0001 C CNN "Manufacturer"
+F 7 "CDR7D28MNNP-6R8NC" H 8850 2650 50  0001 C CNN "Manufacturer PN"
+F 8 "FIXED IND 6.8UH 2.75A 46.3 MOHM" H 8850 2650 50  0001 C CNN "Description"
 	1    8850 2650
 	1    0    0    -1  
 $EndComp
@@ -1707,18 +1706,17 @@ Wire Wire Line
 	1950 4900 1950 5450
 $Comp
 L FlexFox80-rescue:INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue L203
-U 1 1 62248002
+U 1 1 622783B2
 P 3500 5450
 F 0 "L203" H 3500 5550 50  0000 C CNN
 F 1 "6.8uH" H 3500 5400 50  0000 C CNN
-F 2 "Inductors:NRS8030" H 3500 5450 50  0001 C CNN
+F 2 "Inductors:CDR7D28MN" H 3500 5450 50  0001 C CNN
 F 3 "" H 3500 5450 50  0001 C CNN
-F 4 "587-2970-1-ND" H 3500 5450 50  0001 C CNN "Digi-Key Part No."
-F 5 "<a href=\"https://www.digikey.com/products/en?keywords=587-2970-1-ND\">Link</a>" H 3500 5450 60  0001 C CNN "Link"
-F 6 "Taiyo Yuden" H 3500 5450 50  0001 C CNN "Manufacturer"
-F 7 "NRS8030T6R8MJGJ" H 3500 5450 50  0001 C CNN "Manufacturer PN"
-F 8 "FIXED IND 6.8UH 3A 37.7 MOHM SMD" H 3500 5450 50  0001 C CNN "Description"
-F 9 "C223024" H 3500 5450 50  0001 C CNN "LCSC Part Number"
+F 4 "308-1328-1-ND" H 3500 5450 50  0001 C CNN "Digi-Key Part No."
+F 5 "<a href=\"https://www.digikey.com/products/en?keywords=308-1328-1-ND\">Link</a>" H 3500 5450 60  0001 C CNN "Link"
+F 6 "Sumida America Components Inc." H 3500 5450 50  0001 C CNN "Manufacturer"
+F 7 "CDR7D28MNNP-6R8NC" H 3500 5450 50  0001 C CNN "Manufacturer PN"
+F 8 "FIXED IND 6.8UH 2.75A 46.3 MOHM" H 3500 5450 50  0001 C CNN "Description"
 	1    3500 5450
 	1    0    0    -1  
 $EndComp
