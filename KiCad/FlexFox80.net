@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source /Users/Charles/Documents/GitHub/FlexFox80/KiCad/FlexFox80.sch)
-    (date "Sunday, February 27, 2022 at 01:11:51 PM")
+    (date "Friday, March 04, 2022 at 10:08:24 AM")
     (tool "Eeschema (5.1.9-0-10_14)")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -214,6 +214,7 @@
       (fields
         (field (name Description) "CAP CER 91PF 100V NP0 0603")
         (field (name "Digi-Key Part No.") 478-10247-1-ND)
+        (field (name "LCSC Part Number") C2170042)
         (field (name Link) "<a href=\"https://www.digikey.com/products/en?keywords=478-10247-1-ND\">Link</a>")
         (field (name Manufacturer) "KYOCERA AVX")
         (field (name "Manufacturer PN") 06031U910FAT2A))
@@ -374,7 +375,7 @@
       (tstamp 628D7F12))
     (comp (ref D102)
       (value 4.7V)
-      (footprint Diodes_SMD:SOD-123_Handsolder)
+      (footprint Diodes_SMD:SOD-123)
       (fields
         (field (name Description) "DIODE ZENER 4.7V 500MW SOD123")
         (field (name "Digi-Key Part No.") BZT52C4V7-13FDICT-ND)

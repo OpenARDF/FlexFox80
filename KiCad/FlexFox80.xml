@@ -2,7 +2,7 @@
 <export version="D">
   <design>
     <source>/Users/Charles/Documents/GitHub/FlexFox80/KiCad/FlexFox80.sch</source>
-    <date>Sunday, February 27, 2022 at 01:33:06 PM</date>
+    <date>Friday, March 04, 2022 at 10:18:28 AM</date>
     <tool>Eeschema (5.1.9-0-10_14)</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -254,6 +254,7 @@
       <fields>
         <field name="Description">CAP CER 91PF 100V NP0 0603</field>
         <field name="Digi-Key Part No.">478-10247-1-ND</field>
+        <field name="LCSC Part Number">C2170042</field>
         <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=478-10247-1-ND"&gt;Link&lt;/a&gt;</field>
         <field name="Manufacturer">KYOCERA AVX</field>
         <field name="Manufacturer PN">06031U910FAT2A</field>
@@ -440,7 +441,7 @@
     </comp>
     <comp ref="D102">
       <value>4.7V</value>
-      <footprint>Diodes_SMD:SOD-123_Handsolder</footprint>
+      <footprint>Diodes_SMD:SOD-123</footprint>
       <fields>
         <field name="Description">DIODE ZENER 4.7V 500MW SOD123</field>
         <field name="Digi-Key Part No.">BZT52C4V7-13FDICT-ND</field>
