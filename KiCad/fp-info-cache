@@ -1,4 +1,4 @@
-4013446431534330
+4015122330001330
 Air_Coils_SML_NEOSID
 Neosid_Air-Coil_SML_1turn_HDM0131A
 Neosid, Air-Coil, SML, 1turn, HDM0131A,
@@ -3990,6 +3990,13 @@ DPAK, Dual Diode
 0
 3
 3
+Diodes_SMD
+D_0805
+Diode SMD 0805, reflow soldering
+0
+0
+2
+2
 Diodes_SMD
 Diode_0805_Handsoldering
 Diode 0805 Handsoldering
@@ -15107,7 +15114,7 @@ SOT-363-0.5
 6
 6
 TO_SOT_Packages_SMD
-SOT-363-0.65
+SOT-363-0.65_MBD54
 
 0
 0

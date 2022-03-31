@@ -1,7 +1,7 @@
 M48
-; DRILL file {KiCad (5.1.9-0-10_14)} date Thursday, March 10, 2022 at 10:22:05 AM
+; DRILL file {KiCad (5.1.9-0-10_14)} date Monday, March 28, 2022 at 09:33:07 AM
 ; FORMAT={3:3/ absolute / metric / suppress leading zeros}
-; #@! TF.CreationDate,2022-03-10T10:22:05-05:00
+; #@! TF.CreationDate,2022-03-28T09:33:07-04:00
 ; #@! TF.GenerationSoftware,Kicad,Pcbnew,(5.1.9-0-10_14)
 ; #@! TF.FileFunction,Plated,1,4,PTH
 FMAT,2
@@ -201,9 +201,9 @@ X60510Y-60750
 X60570Y-51090
 X60690Y-85160
 X60700Y-45670
-X60820Y-93130
 X60930Y-55280
 X61120Y-70420
+X61250Y-93190
 X61565Y-86716
 X61580Y-67720
 X61850Y-40440
