@@ -12,3 +12,5 @@ The KiCad folder holds files for generating the schematic, BOM, and PCB files us
 <b>Software</b>
 
 The Software folder holds files for compiling executable code using Atmel Studio 7. 
+
+![Docs/Proto-Flexfox4.jpeg](Docs/Proto-Flexfox2.jpeg)
