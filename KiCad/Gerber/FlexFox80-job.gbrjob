@@ -7,7 +7,7 @@
       "Application": "Pcbnew",
       "Version":     "(5.1.9-0-10_14)"
     },
-    "CreationDate":  "2021-05-14T21:18:02-04:00"
+    "CreationDate":  "2022-03-31T14:03:38-04:00"
   },
   "GeneralSpecs":
   {
@@ -42,8 +42,8 @@
       "PadToTrack":  0.127,
       "TrackToTrack":  0.127,
       "MinLineWidth":  0.250,
-      "TrackToRegion":  0.127,
-      "RegionToRegion":  0.127
+      "TrackToRegion":  0.200,
+      "RegionToRegion":  0.200
     }
   ],
   "FilesAttributes":
@@ -66,6 +66,16 @@
     {
       "Path":  "FlexFox80-B_Cu.gbl",
       "FileFunction":  "Copper,L4,Bot",
+      "FilePolarity":  "Positive"
+    },
+    {
+      "Path":  "FlexFox80-F_Paste.gtp",
+      "FileFunction":  "SolderPaste,Top",
+      "FilePolarity":  "Positive"
+    },
+    {
+      "Path":  "FlexFox80-B_Paste.gbp",
+      "FileFunction":  "SolderPaste,Bot",
       "FilePolarity":  "Positive"
     },
     {
@@ -99,6 +109,10 @@
     {
       "Type":  "Legend",
       "Notes":  "Layer F.SilkS"
+    },
+    {
+      "Type":  "SolderPaste",
+      "Notes":  "Layer F.Paste"
     },
     {
       "Type":  "SolderMask",
@@ -138,6 +152,10 @@
     {
       "Type":  "SolderMask",
       "Notes":  "Layer B.Mask"
+    },
+    {
+      "Type":  "SolderPaste",
+      "Notes":  "Layer B.Paste"
     },
     {
       "Type":  "Legend",

@@ -1,4 +1,4 @@
 (sym_lib_table
-  (lib (name special)(type Legacy)(uri "/Library/Application Support/kicad/docs/KiCad/kicad libraries/special.lib")(options "")(descr ""))
-  (lib (name FlexFox80-rescue)(type Legacy)(uri ${KIPRJMOD}/FlexFox80-rescue.lib)(options "")(descr ""))
+  (lib (name "special")(type "KiCad")(uri "/Library/Application Support/kicad/docs/KiCad/kicad libraries/special.kicad_sym")(options "")(descr ""))
+  (lib (name "FlexFox80-rescue")(type "KiCad")(uri "${KIPRJMOD}/FlexFox80-rescue.kicad_sym")(options "")(descr ""))
 )
