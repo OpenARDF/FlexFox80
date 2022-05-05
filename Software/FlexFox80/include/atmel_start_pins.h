@@ -213,13 +213,13 @@ PORTC Helper Functions
  *
  * \param[in] pull_mode Pin pull mode
  */
-static inline void LED_set_pull_mode(const enum port_pull_mode pull_mode)
+static inline void LED_set_RED_pull_mode(const enum port_pull_mode pull_mode)
 {
 	PORTC_set_pin_pull_mode(6, pull_mode);
 }
 
 /**
- * \brief Set LED data direction
+ * \brief Set red LED data direction
  *
  * Select if the pin data direction is input, output or disabled.
  * If disabled state is not possible, this function throws an assert.
@@ -229,9 +229,25 @@ static inline void LED_set_pull_mode(const enum port_pull_mode pull_mode)
  *                      PORT_DIR_OFF = Disables the pin
  *                      (low power state)
  */
-static inline void LED_set_dir(const enum port_dir dir)
+static inline void LED_set_RED_dir(const enum port_dir dir)
 {
 	PORTC_set_pin_dir(6, dir);
+}
+
+/**
+ * \brief Set green LED data direction
+ *
+ * Select if the pin data direction is input, output or disabled.
+ * If disabled state is not possible, this function throws an assert.
+ *
+ * \param[in] direction PORT_DIR_IN  = Data direction in
+ *                      PORT_DIR_OUT = Data direction out
+ *                      PORT_DIR_OFF = Disables the pin
+ *                      (low power state)
+ */
+static inline void LED_set_GREEN_dir(const enum port_dir dir)
+{
+	PORTC_set_pin_dir(5, dir);
 }
 
 /**
@@ -247,7 +263,7 @@ static inline void LED_set_dir(const enum port_dir dir)
  *                PORT_ISC_INPUT_DISABLE_gc = Digital Input Buffer disabled
  *                PORT_ISC_LEVEL_gc         = Sense low Level
  */
-static inline void LED_set_isc(const PORT_ISC_t isc)
+static inline void LED_set_RED_isc(const PORT_ISC_t isc)
 {
 	PORTC_pin_set_isc(6, isc);
 }
@@ -260,32 +276,55 @@ static inline void LED_set_isc(const PORT_ISC_t isc)
  * \param[in] inverted true  = I/O on LED is inverted
  *                     false = I/O on LED is not inverted
  */
-static inline void LED_set_inverted(const bool inverted)
+static inline void LED_set_RED_inverted(const bool inverted)
 {
 	PORTC_pin_set_inverted(6, inverted);
 }
 
 /**
- * \brief Set LED level
+ * \brief Set red LED level
  *
  * Sets output level on a pin
  *
  * \param[in] level true  = Pin level set to "high" state
  *                  false = Pin level set to "low" state
  */
-static inline void LED_set_level(const bool level)
+static inline void LED_set_RED_level(const bool level)
 {
-	PORTC_set_pin_level(6, !level); /* Low == LED on */
+	PORTC_set_pin_level(6, level); /* Low == LED off */
 }
 
 /**
- * \brief Toggle output level on LED
+ * \brief Set green LED level
+ *
+ * Sets output level on a pin
+ *
+ * \param[in] level true  = Pin level set to "high" state
+ *                  false = Pin level set to "low" state
+ */
+static inline void LED_set_GREEN_level(const bool level)
+{
+	PORTC_set_pin_level(5, level); /* Low == LED off */
+}
+
+/**
+ * \brief Toggle output level on red LED
  *
  * Toggle the pin level
  */
-static inline void LED_toggle_level()
+static inline void LED_toggle_RED_level()
 {
 	PORTC_toggle_pin_level(6);
+}
+
+/**
+ * \brief Toggle output level on green LED
+ *
+ * Toggle the pin level
+ */
+static inline void LED_toggle_GREEN_level()
+{
+	PORTC_toggle_pin_level(5);
 }
 
 /**
@@ -293,7 +332,7 @@ static inline void LED_toggle_level()
  *
  * Reads the level on a pin
  */
-static inline bool LED_get_level()
+static inline bool LED_get_RED_level()
 {
 	return PORTC_get_pin_level(6);
 }

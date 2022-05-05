@@ -133,7 +133,7 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 				{
 					g_80m_power_level_mW = power;
 
-					if(txIsAntennaForBand())
+					if(g_antenna_connect_state == ANT_CONNECTED)
 					{
 						DAC0_setVal(drainVoltageDAC);
 					}
@@ -343,28 +343,4 @@ EC txMilliwattsToSettings(uint16_t* powerMW, uint8_t* driveLevel, uint8_t* modLe
 	*driveLevel = MIN(*driveLevel, MAX_80M_PWR_SETTING);
 
 	return(ec);
-}
-
-/**
- */
-bool __attribute__((optimize("O0"))) txIsAntennaForBand(void)
-{
-	bool result = false;
-
-	switch(g_antenna_connect_state)
-	{
-		case ANT_80M_CONNECTED:
-		{
-			result = true;
-		}
-		break;
-
-		default:
-		{
-
-		}
-		break;
-	}
-
-	return( result);
 }

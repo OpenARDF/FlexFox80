@@ -546,6 +546,7 @@ static inline void PORTC_pin_set_isc(const uint8_t pin, const PORT_ISC_t isc)
 	*port_pin_ctrl = (*port_pin_ctrl & ~PORT_ISC_gm) | isc;
 }
 
+
 /**
  * \brief Set port data direction
  *

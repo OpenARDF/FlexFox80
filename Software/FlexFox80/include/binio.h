@@ -33,8 +33,8 @@
 #define ANT_CONNECT_INT 4
 #define FET_DRIVER_ENABLE 3
 #define RTC_SQW 2
-#define RXD0 1
-#define TXD0 0
+#define FAN_ENABLE 1
+// #define unused 0
 
 /* PORTB *************************************************************************************/
 #define TX_FINAL_VOLTAGE_ENABLE 5
@@ -48,7 +48,7 @@
 #define SWITCH 7
 #define LED_RED 6
 #define LED_GREEN 5
-#define X32KHZ_SQUAREWAVE 4
+// #define unused 0
 #define RTC_SCL 3
 #define RTC_SDA 2
 #define FRoM_WIFI_TX 1
@@ -68,7 +68,7 @@
 // TBD
 
 /* PORTF *************************************************************************************/
-// TBD
+#define X32KHZ_SQUAREWAVE 0
 
 
 void BINIO_init(void);

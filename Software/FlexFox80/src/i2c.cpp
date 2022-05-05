@@ -87,7 +87,7 @@ static uint8_t i2c_0_WaitW(void)
 {
 	uint8_t state = I2C_INIT;
 	
-	g_i2c0_timeout_ticks = 300;
+	g_i2c0_timeout_ticks = 1000;
 	
 	do
 	{

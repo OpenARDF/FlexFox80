@@ -15,6 +15,11 @@
 #include "util.h"
 #include "binio.h"
 #include "eeprommanager.h"
+#include "binio.h"
+
+#include <cpuint.h>
+#include <ccp.h>
+#include <atomic.h>
 
 
 /* ADC Defines */
@@ -49,6 +54,8 @@ static volatile EC g_last_error_code = ERROR_CODE_NO_ERROR;
 static volatile SC g_last_status_code = STATUS_CODE_IDLE;
 
 static volatile bool g_powering_off = false;
+static bool g_powerUp_initialization_complete = false;
+static bool g_perform_3V3_init = false;
 
 static volatile uint16_t g_util_tick_countdown = 0;
 static volatile bool g_battery_measurements_active = false;
@@ -57,6 +64,9 @@ volatile BatteryType g_battery_type = BATTERY_UNKNOWN;
 
 static volatile bool g_antenna_connection_changed = true;
 volatile AntConnType g_antenna_connect_state = ANT_CONNECTION_UNDETERMINED;
+
+static volatile bool g_start_event = false;
+static volatile bool g_end_event = false;
 
 static volatile int32_t g_on_the_air = 0;
 static volatile int g_sendID_seconds_countdown = 0;
@@ -104,6 +114,7 @@ static volatile uint16_t g_tickCountdownADCFlag[NUMBER_OF_POLLED_ADC_CHANNELS] =
 static volatile uint16_t g_lastConversionResult[NUMBER_OF_POLLED_ADC_CHANNELS];
 
 extern Goertzel g_goertzel;
+volatile uint16_t g_switch_closed_count = 0;
 
 EepromManager g_ee_mgr;
 
@@ -129,6 +140,10 @@ EC hw_init(void);
 EC rtc_init(void);
 void set_ports(SleepType initType);
 bool antennaIsConnected(void);
+void updateAntennaStatus(void);
+void powerDown3V3(void);
+void powerUp3V3(void);
+
 
 /*******************************/
 /* Hardcoded event support     */
@@ -147,284 +162,270 @@ void reportConfigErrors(void);
 /* End hardcoded event support */
 /*******************************/
 
-
-/**
-One-second counter based on CPU clock.
-*/
+/* LED enunciation timer interrupt */
 ISR(TCB3_INT_vect)
 {
- 	static uint16_t cnt = 0;
-	
-    /* Insert your TCB interrupt handling code */
-    /**
-     * The interrupt flag is cleared by writing 1 to it, or when the Capture register
-     * is read in Capture mode
-     */
-
     if(TCB3.INTFLAGS & TCB_CAPT_bm)
     {
-		if(cnt++ == 299) /* check for 1-second interval */
+        TCB3.INTFLAGS = TCB_CAPT_bm; /* clear interrupt flag */
+	}
+}
+
+/**
+PORTA interrupts:
+One-second counter based on RTC 1-second square wave output.
+*/
+ISR(PORTA_PORT_vect)
+{
+    if(PORTA.INTFLAGS & (1 << RTC_SQW)) /* Handle 1-second interrupt */
+    {
+		if(!g_event_enabled) 
 		{
-			cnt = 0;
-			if(!g_event_enabled) LED_toggle_level();
-					
-			static bool lastAntennaConnectionState = false;
-			static uint8_t antennaReadCount = 3;
-			bool ant = antennaIsConnected();
+			LED_toggle_GREEN_level();
+		}
+		
+		system_tick();
 
-			if(!ant)    /* immediately detect disconnection */
+		if(g_sleeping)
+		{
+			if(g_seconds_left_to_sleep)
 			{
-				if(g_antenna_connect_state != ANT_ALL_DISCONNECTED)
-				{
-					g_antenna_connect_state = ANT_ALL_DISCONNECTED;
-					g_antenna_connection_changed = true;
-				}
+				g_seconds_left_to_sleep--;
 			}
-			else if(g_antenna_connect_state == ANT_ALL_DISCONNECTED)
-			{
-				if(ant == lastAntennaConnectionState)
-				{
-					if(antennaReadCount)
-					{
-						antennaReadCount--;
 
-						if(!antennaReadCount)
+			if(!g_seconds_left_to_sleep || g_antenna_connection_changed)
+			{
+				g_go_to_sleep = false;
+				g_sleeping = false;
+			}
+		}
+		else
+		{
+			time_t temp_time = 0;
+
+			if(g_update_timeout_seconds)
+			{
+				g_update_timeout_seconds--;
+			}
+
+			if(g_event_commenced)
+			{
+				if(g_event_finish_epoch && !g_check_for_next_event && !g_shutting_down_wifi)
+				{
+					time(&temp_time);
+
+					if(temp_time >= g_event_finish_epoch)
+					{
+						g_last_status_code = STATUS_CODE_EVENT_FINISHED;
+						g_on_the_air = 0;
+						keyTransmitter(OFF);
+						g_event_enabled = false;
+						g_event_commenced = false;
+						g_check_for_next_event = true;
+						g_update_timeout_seconds = 90;
+						if(g_wifi_active)
 						{
-							g_antenna_connect_state = ANT_CONNECTION_UNDETERMINED;
-							g_antenna_connection_changed = true;
-							antennaReadCount = 3;
+							g_WiFi_shutdown_seconds = 60;
 						}
+						LED_set_RED_level(OFF);
 					}
 				}
-				else
-				{
-					antennaReadCount = 3;
-				}
 			}
 
-			lastAntennaConnectionState = ant;
-
-			system_tick();
-
-			if(g_sleeping)
+			if(g_event_enabled)
 			{
-				if(g_seconds_left_to_sleep)
-				{
-					g_seconds_left_to_sleep--;
-				}
-
-				if(!g_seconds_left_to_sleep || g_antenna_connection_changed)
-				{
-					g_go_to_sleep = false;
-					g_sleeping = false;
-				}
-			}
-			else
-			{
-				time_t temp_time = 0;
-
-				if(g_update_timeout_seconds)
-				{
-					g_update_timeout_seconds--;
-				}
-
 				if(g_event_commenced)
 				{
-					if(g_event_finish_epoch && !g_check_for_next_event && !g_shutting_down_wifi)
-					{
-						time(&temp_time);
+					bool repeat;
 
-						if(temp_time >= g_event_finish_epoch)
-						{
-							g_last_status_code = STATUS_CODE_EVENT_FINISHED;
-							g_on_the_air = 0;
-							keyTransmitter(OFF);
-							g_event_enabled = false;
-							g_event_commenced = false;
-							g_check_for_next_event = true;
-							g_update_timeout_seconds = 90;
-							if(g_wifi_active)
-							{
-								g_WiFi_shutdown_seconds = 60;
-							}
-							LED_set_level(OFF);
-						}
+					if(g_sendID_seconds_countdown)
+					{
+						g_sendID_seconds_countdown--;
 					}
-				}
 
-				if(g_event_enabled)
-				{
-					if(g_event_commenced)
+					if(g_on_the_air)
 					{
-						bool repeat;
-
-						if(g_sendID_seconds_countdown)
+						if(g_on_the_air > 0)    /* on the air */
 						{
-							g_sendID_seconds_countdown--;
-						}
+							g_on_the_air--;
 
-						if(g_on_the_air)
-						{
-							if(g_on_the_air > 0)    /* on the air */
+							if(!g_sendID_seconds_countdown && g_time_needed_for_ID)
 							{
-								g_on_the_air--;
-
-								if(!g_sendID_seconds_countdown && g_time_needed_for_ID)
+								if(g_on_the_air == g_time_needed_for_ID)    /* wait until the end of a transmission */
 								{
-									if(g_on_the_air == g_time_needed_for_ID)    /* wait until the end of a transmission */
-									{
-										g_last_status_code = STATUS_CODE_SENDING_ID;
-										g_sendID_seconds_countdown = g_ID_period_seconds;
-										g_code_throttle = throttleValue(g_id_codespeed);
-										repeat = false;
-										makeMorse(g_messages_text[STATION_ID], &repeat, NULL);  /* Send only once */
-									}
-								}
-
-
-								if(!g_on_the_air)
-								{
-									if(g_off_air_seconds)
-									{
-										keyTransmitter(OFF);
-										g_on_the_air -= g_off_air_seconds;
-										repeat = true;
-										makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);    /* Reset pattern to start */
-										g_last_status_code = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
-										LED_set_level(OFF);
-
-										/* Enable sleep during off-the-air periods */
-										int32_t timeRemaining = 0;
-										time(&temp_time);
-										if(temp_time < g_event_finish_epoch)
-										{
-											timeRemaining = timeDif(g_event_finish_epoch, temp_time);
-										}
-
-										/* Don't sleep for the last cycle to ensure that the event doesn't end while
-										 * the transmitter is sleeping - which can cause problems with loading the next event */
-										if(timeRemaining > (g_off_air_seconds + g_on_air_seconds + 15))
-										{
-											if((g_off_air_seconds > 15) && !g_WiFi_shutdown_seconds)
-											{
-												g_seconds_to_sleep = (time_t)(g_off_air_seconds - 10);
-												g_sleepType = SLEEP_UNTIL_NEXT_XMSN;
-												g_go_to_sleep = true;
-												g_sendID_seconds_countdown = MAX(0, g_sendID_seconds_countdown - (int)g_seconds_to_sleep);
-											}
-										}
-									}
-									else
-									{
-										g_on_the_air = g_on_air_seconds;
-										g_code_throttle = throttleValue(g_pattern_codespeed);
-									}
+									g_last_status_code = STATUS_CODE_SENDING_ID;
+									g_sendID_seconds_countdown = g_ID_period_seconds;
+									g_code_throttle = throttleValue(g_id_codespeed);
+									repeat = false;
+									makeMorse(g_messages_text[STATION_ID], &repeat, NULL);  /* Send only once */
 								}
 							}
-							else if(g_on_the_air < 0)   /* off the air - g_on_the_air = 0 means all transmissions are disabled */
-							{
-								g_on_the_air++;
 
-								if(!g_on_the_air)       /* off-the-air time has expired */
+
+							if(!g_on_the_air)
+							{
+								if(g_off_air_seconds)
 								{
-									g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
+									keyTransmitter(OFF);
+									g_on_the_air -= g_off_air_seconds;
+									repeat = true;
+									makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);    /* Reset pattern to start */
+									g_last_status_code = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
+									LED_set_RED_level(OFF);
+
+									/* Enable sleep during off-the-air periods */
+									int32_t timeRemaining = 0;
+									time(&temp_time);
+									if(temp_time < g_event_finish_epoch)
+									{
+										timeRemaining = timeDif(g_event_finish_epoch, temp_time);
+									}
+
+									/* Don't sleep for the last cycle to ensure that the event doesn't end while
+										* the transmitter is sleeping - which can cause problems with loading the next event */
+									if(timeRemaining > (g_off_air_seconds + g_on_air_seconds + 15))
+									{
+										if((g_off_air_seconds > 15) && !g_WiFi_shutdown_seconds)
+										{
+											g_seconds_to_sleep = (time_t)(g_off_air_seconds - 10);
+											g_sleepType = SLEEP_UNTIL_NEXT_XMSN;
+											g_go_to_sleep = true;
+											g_sendID_seconds_countdown = MAX(0, g_sendID_seconds_countdown - (int)g_seconds_to_sleep);
+										}
+									}
+								}
+								else
+								{
 									g_on_the_air = g_on_air_seconds;
 									g_code_throttle = throttleValue(g_pattern_codespeed);
-									bool repeat = true;
-									makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 								}
 							}
 						}
-					}
-					else if(g_event_start_epoch > 0) /* off the air - waiting for the start time to arrive */
-					{
-						time(&temp_time);
-
-						if(temp_time >= g_event_start_epoch)
+						else if(g_on_the_air < 0)   /* off the air - g_on_the_air = 0 means all transmissions are disabled */
 						{
-							if(g_intra_cycle_delay_time)
-							{
-								g_last_status_code = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
-								g_on_the_air = -g_intra_cycle_delay_time;
-								g_sendID_seconds_countdown = g_intra_cycle_delay_time + g_on_air_seconds - g_time_needed_for_ID;
-							}
-							else
+							g_on_the_air++;
+
+							if(!g_on_the_air)       /* off-the-air time has expired */
 							{
 								g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
 								g_on_the_air = g_on_air_seconds;
-								g_sendID_seconds_countdown = g_on_air_seconds - g_time_needed_for_ID;
 								g_code_throttle = throttleValue(g_pattern_codespeed);
 								bool repeat = true;
 								makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 							}
-
-							g_event_commenced = true;
 						}
 					}
 				}
-
-
-				/**************************************
-				 * Delay before re-enabling linkbus receive
-				 ***************************************/
-				if(g_wifi_enable_delay)
+				else if(g_event_start_epoch > 0) /* off the air - waiting for the start time to arrive */
 				{
-					g_wifi_enable_delay--;
+					time(&temp_time);
 
-					if(g_wifi_enable_delay == (LINKBUS_POWERUP_DELAY_SECONDS - 1))
+					if(temp_time >= g_event_start_epoch)
 					{
-						wifi_power(ON);     /* power on WiFi */
-						wifi_reset(OFF);    /* bring WiFi out of reset */
-					}
-					else if(!g_wifi_enable_delay)
-					{
-						linkbus_init(LB_BAUD, USART_DO_NOT_CHANGE); /* For development board */
-					}
-				}
-				else
-				{
-					if(!g_update_timeout_seconds || g_shutting_down_wifi || (!g_check_for_next_event && !g_waiting_for_next_event))
-					{
-						if(g_WiFi_shutdown_seconds)
+						if(g_intra_cycle_delay_time)
 						{
-							g_WiFi_shutdown_seconds--;
-
-							if(!g_WiFi_shutdown_seconds)
-							{
-								wifi_reset(ON);     /* put WiFi into reset */
-								wifi_power(OFF);    /* power off WiFi */
-								g_shutting_down_wifi = false;
-
-								/* If an event hasn't been enabled by the time that WiFi shuts
-								 *  down, then the transmitter will never run. Just sleep indefinitely
-								 */
-								if(!g_event_enabled)
-								{
-									g_sleepType = SLEEP_FOREVER;
-									g_go_to_sleep = true;
-									g_seconds_to_sleep = MAX_TIME;
-								}
-								else if(g_sleepType == SLEEP_AFTER_WIFI_GOES_OFF)
-								{
-									eventEnabled(); /* Sets sleep time appropriately */
-								}
-
-								g_wifi_active = false;
-							}
+							g_last_status_code = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
+							g_on_the_air = -g_intra_cycle_delay_time;
+							g_sendID_seconds_countdown = g_intra_cycle_delay_time + g_on_air_seconds - g_time_needed_for_ID;
 						}
-					}
+						else
+						{
+							g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
+							g_on_the_air = g_on_air_seconds;
+							g_sendID_seconds_countdown = g_on_air_seconds - g_time_needed_for_ID;
+							g_code_throttle = throttleValue(g_pattern_codespeed);
+							bool repeat = true;
+							makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
+						}
 
-					if(g_wifi_active)
-					{
-						g_report_seconds = true;
+						g_event_commenced = true;
 					}
 				}
 			}
 
-		}
 
-        TCB3.INTFLAGS = TCB_CAPT_bm; /* clear interrupt flag */
+			/**************************************
+			* Delay before re-enabling linkbus receive
+			***************************************/
+			if(g_wifi_enable_delay)
+			{
+				g_wifi_enable_delay--;
+
+				if(g_wifi_enable_delay == (LINKBUS_POWERUP_DELAY_SECONDS - 1))
+				{
+					wifi_power(ON);     /* power on WiFi */
+					wifi_reset(OFF);    /* bring WiFi out of reset */
+				}
+				else if(!g_wifi_enable_delay)
+				{
+					linkbus_init(LB_BAUD, USART_DO_NOT_CHANGE); /* For development board */
+				}
+			}
+			else
+			{
+				if(!g_update_timeout_seconds || g_shutting_down_wifi || (!g_check_for_next_event && !g_waiting_for_next_event))
+				{
+					if(g_WiFi_shutdown_seconds)
+					{
+						g_WiFi_shutdown_seconds--;
+
+						if(!g_WiFi_shutdown_seconds)
+						{
+							wifi_reset(ON);     /* put WiFi into reset */
+							wifi_power(OFF);    /* power off WiFi */
+							g_shutting_down_wifi = false;
+
+							/* If an event hasn't been enabled by the time that WiFi shuts
+								*  down, then the transmitter will never run. Just sleep indefinitely
+								*/
+							if(!g_event_enabled)
+							{
+								g_sleepType = SLEEP_FOREVER;
+								g_go_to_sleep = true;
+								g_seconds_to_sleep = MAX_TIME;
+							}
+							else if(g_sleepType == SLEEP_AFTER_WIFI_GOES_OFF)
+							{
+								eventEnabled(); /* Sets sleep time appropriately */
+							}
+
+							g_wifi_active = false;
+						}
+					}
+				}
+
+				if(g_wifi_active)
+				{
+					g_report_seconds = true;
+				}
+			}
+		}
     }
+
+    PORTA.INTFLAGS = 0xFF; /* Clear all PORTA interrupt flags */
+}
+
+/**
+PORTD interrupts:
+Antenna disconnect interrupt.
+*/
+ISR(PORTD_PORT_vect)
+{
+	if(PORTD.INTFLAGS & (1 << X80M_ANTENNA_DETECT)) /* Handle antenna change */
+	{
+		bool ant = antennaIsConnected();
+
+		if(!ant)    /* immediately detect disconnection */
+		{
+			if(g_antenna_connect_state != ANT_DISCONNECTED)
+			{
+				g_antenna_connect_state = ANT_DISCONNECTED;
+				g_antenna_connection_changed = true;
+			}
+		}
+	}
+
+    PORTD.INTFLAGS = 0xFF; /* Clear all PORTD interrupt flags */
 }
 
 
@@ -455,6 +456,14 @@ ISR(TCB0_INT_vect)
 		{
 			g_util_tick_countdown--;
 		}
+		
+		// Check switch state		
+		if(!PORTC_get_pin_level(SWITCH))
+		{
+			if(g_switch_closed_count<1000) g_switch_closed_count++;
+		}		
+							
+		updateAntennaStatus();
 
 		static bool key = false;
 
@@ -482,14 +491,14 @@ ISR(TCB0_INT_vect)
 						if(key)
 						{
 							powerToTransmitter(ON);
-							LED_set_level(ON);
+							LED_set_RED_level(ON);
 						}
 					}
 				}
 				else
 				{
 					keyTransmitter(key);
-					LED_set_level(key);
+					LED_set_RED_level(key);
 					codeInc = g_code_throttle;
 				}
 			}
@@ -499,7 +508,7 @@ ISR(TCB0_INT_vect)
 				{
 					key = OFF;
 					keyTransmitter(OFF);
-					LED_set_level(OFF);
+					LED_set_RED_level(OFF);
 					powerToTransmitter(OFF);
 					g_last_status_code = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
 				}
@@ -602,6 +611,58 @@ ISR(TCB0_INT_vect)
     TCB0.INTFLAGS = TCB_CAPT_bm; /* clear interrupt flag */
 }
 
+/**
+Handle switch closure interrupts
+*/
+ISR(PORTC_PORT_vect)
+{
+	static int count = 0;
+	
+	if(PORTC.INTFLAGS & (1 << SWITCH))
+	{
+		if(g_switch_closed_count > 10)
+		{
+			count++;
+			
+			if(count % 2)
+			{
+				PORTA_set_pin_level(FET_DRIVER_ENABLE, HIGH);
+				PORTA_set_pin_level(FAN_ENABLE, HIGH);
+				PORTA_set_pin_level(WIFI_ENABLE, HIGH);
+				PORTA_set_pin_level(WIFI_RESET, HIGH);
+				g_start_event = true;
+			}
+			else
+			{
+				g_end_event = true;
+// 				PORTA_set_pin_level(FET_DRIVER_ENABLE, LOW);
+// 				PORTA_set_pin_level(FAN_ENABLE, LOW);
+// 				PORTA_set_pin_level(WIFI_ENABLE, LOW);
+// 				PORTA_set_pin_level(WIFI_RESET, LOW);
+			}
+		}
+		
+		g_switch_closed_count = 0;
+	}
+	
+	PORTC.INTFLAGS = 0xFF; /* Clear all flags */
+}
+
+
+void powerDown3V3(void)
+{
+	PORTA_set_pin_level(V3V3_PWR_ENABLE, LOW);	
+	PORTB_set_pin_level(MAIN_PWR_ENABLE, LOW);
+	g_powerUp_initialization_complete = false;
+}
+
+void powerUp3V3(void)
+{
+	PORTB_set_pin_level(MAIN_PWR_ENABLE, HIGH);
+	PORTA_set_pin_level(V3V3_PWR_ENABLE, HIGH);
+	g_perform_3V3_init = true;
+}
+
 
 int main(void)
 {
@@ -609,7 +670,10 @@ int main(void)
 // 	static int16_t tempC = 0;
 
 	atmel_start_init();
-	LED_set_level(OFF);
+	LED_set_RED_level(OFF);
+	PORTB_set_pin_level(MAIN_PWR_ENABLE, ON);	
+	wifi_power(ON);
+	powerUp3V3();
 	
 	g_ee_mgr.initializeEEPROMVars();
 	g_ee_mgr.readNonVols();
@@ -621,12 +685,6 @@ int main(void)
 	sprintf(g_tempStr, "\nSW Ver: %s\n", SW_REVISION);
 	sb_send_string(g_tempStr);
 	sb_send_string(HELP_TEXT_TXT);
-	
-	if(init_transmitter() == ERROR_CODE_RF_OSCILLATOR_ERROR)
-	{
-		sb_send_NewLine();
-		sb_send_string(TEXT_TX_NOT_RESPONDING_TXT);
-	}
 	
 	if(rtc_init() == ERROR_CODE_RTC_NONRESPONSIVE)
 	{
@@ -651,9 +709,7 @@ int main(void)
 	
 	sb_send_NewLine();
 	sb_send_NewPrompt();
-
-	startEventNow(POWER_UP); /* If an event is scheduled or in progress, then set things up to run it */
-
+	
 	while (1) {
 		while(util_delay_ms(250))
 		{
@@ -666,6 +722,36 @@ int main(void)
 			handleSerialBusMsgs();
 		}
 		
+		if(g_perform_3V3_init)
+		{			
+			if(init_transmitter() != ERROR_CODE_RF_OSCILLATOR_ERROR)
+			{
+				g_powerUp_initialization_complete = true;
+				g_perform_3V3_init = false;
+				//startEventNow(POWER_UP); /* If an event is scheduled or in progress, then set things up to run it */
+			}
+		}
+		
+		if(g_start_event)
+		{
+			g_start_event = false;	
+			
+			if(g_powerUp_initialization_complete)
+			{
+				Fox_t f = FOX_1;
+				setupForFox(&f, START_EVENT_NOW);
+			}
+		}
+		
+		if(g_end_event)
+		{
+			g_end_event = false;			
+			stopEventNow(PROGRAMMATIC);
+		}
+		
+
+// 		DAC0_setVal(dacval++);
+// 		if(dacval > 1023) dacval = 0;
 		
 //		tempC = temperatureC();
 //		sprintf(g_tempStr, "Seconds: %d: %d\n", count++, tempC);
@@ -1209,14 +1295,14 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					}
 					else if(f1 == '3')                      /* ESP is ready for power off" */
 					{
-						cli();
+//						cli();
 						g_wifi_enable_delay = 0;
 						g_WiFi_shutdown_seconds = 1;        /* Shut down WiFi in 1 seconds */
 						g_waiting_for_next_event = false;   /* Prevents resetting shutdown settings */
 						g_check_for_next_event = false;     /* Prevents resetting shutdown settings */
 						g_wifi_active = false;
 						g_shutting_down_wifi = true;
-						sei();
+//						sei();
 					}
 				}
 			}
@@ -1264,7 +1350,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 
 				if((f1 == '1') || (f1 == '2'))
 				{
-					if(!txIsAntennaForBand() && !g_tx_power_is_zero)
+					if((g_antenna_connect_state != ANT_CONNECTED) && !g_tx_power_is_zero)
 					{
 						g_last_error_code = ERROR_CODE_NO_ANTENNA_FOR_BAND;
 					}
@@ -1272,14 +1358,15 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					{
 						if(f1 == '1')   /* Xmit immediately using current settings */
 						{
-							if(txIsAntennaForBand() || g_tx_power_is_zero)
+							if((g_antenna_connect_state == ANT_CONNECTED) || g_tx_power_is_zero)
 							{
 								/* Set the Morse code pattern and speed */
-								cli();
+//								cli();
+								g_event_enabled = false; // prevent interrupts from affecting the settings
 								bool repeat = true;
 								makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 								g_code_throttle = throttleValue(g_pattern_codespeed);
-								sei();
+//								sei();
 								g_event_start_epoch = 1;                     /* have it start a long time ago */
 								g_event_finish_epoch = MAX_TIME;             /* run for a long long time */
 								g_on_air_seconds = 9999;                    /* on period is very long */
@@ -1347,9 +1434,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					if(mtime)
 					{
 						g_event_start_epoch = mtime;
-						cli();
 						set_system_time(ds3231_get_epoch(NULL));    /* update system clock */
-						sei();
 						event_parameter_count++;
 					}
 				}
@@ -1627,6 +1712,47 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
  *
  * These functions are available only within this file
  ************************************************************************/
+void updateAntennaStatus(void)
+{
+	static bool lastAntennaConnectionState = false;
+	static uint8_t antennaReadCount = 3;
+	bool ant = antennaIsConnected();
+
+	if(!ant)    /* immediately detect disconnection */
+	{
+		if(g_antenna_connect_state != ANT_DISCONNECTED)
+		{
+			g_antenna_connect_state = ANT_DISCONNECTED;
+			g_antenna_connection_changed = true;
+		}
+		
+		antennaReadCount = 3;
+	}
+	else if(g_antenna_connect_state != ANT_CONNECTED)
+	{
+		if(ant == lastAntennaConnectionState)
+		{
+			if(antennaReadCount)
+			{
+				antennaReadCount--;
+
+				if(!antennaReadCount)
+				{
+					g_antenna_connect_state = ANT_CONNECTED;
+					g_antenna_connection_changed = true;
+					antennaReadCount = 3;
+				}
+			}
+		}
+		else
+		{
+			antennaReadCount = 3;
+		}
+	}
+
+	lastAntennaConnectionState = ant;
+}
+
 bool __attribute__((optimize("O0"))) eventEnabled()
 {
 	time_t now;
@@ -1812,11 +1938,14 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 
 			if(turnOnTransmitter)
 			{
-				cli();
+//				cli();
+				bool hold = g_event_enabled;
+				g_event_enabled = false; // prevent interrupts from affecting the settings
 				bool repeat = true;
 				makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 				g_code_throttle = throttleValue(g_pattern_codespeed);
-				sei();
+				g_event_enabled = hold;
+//				sei();
 			}
 			else
 			{
@@ -1879,7 +2008,8 @@ void set_ports(SleepType initType)
 
 bool antennaIsConnected()
 {
-	return true;
+	bool val = PORTD_get_pin_level(X80M_ANTENNA_DETECT);
+	return(!val);
 }
 
 void initializeAllEventSettings(bool disableEvent)
@@ -2018,11 +2148,10 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 		}
 	}
 
- 	g_current_epoch = ds3231_get_epoch(null);
-
-	g_event_commenced = false;
 	g_event_enabled = false;
-	LED_set_level(OFF);
+	g_event_commenced = false;
+	LED_set_RED_level(OFF);
+ 	g_current_epoch = ds3231_get_epoch(null);
 
 	switch(g_fox)
 	{
@@ -2243,7 +2372,7 @@ void setupForFox(Fox_t* fox, EventAction_t action)
  		g_use_rtc_for_startstop = false;
  		g_event_enabled = false;
 		keyTransmitter(OFF);
-		LED_set_level(OFF);
+		LED_set_RED_level(OFF);
 		powerToTransmitter(OFF);
 	}
 	else if(action == START_EVENT_NOW)

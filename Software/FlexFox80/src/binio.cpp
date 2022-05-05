@@ -26,6 +26,9 @@
 #include "binio.h"
 #include "port.h"
 #include "defs.h"
+#include "atmel_start_pins.h"
+
+extern volatile uint16_t g_switch_closed_count;
 
 // default constructor
 binio::binio()
@@ -81,44 +84,26 @@ bool wifiPresent(void)
 
 
 /**
-Handle switch closure interrupts
-*/
-ISR(PORTC_PORT_vect)
-{
-	static int count = 0;
-	
-	if(PORTC.INTFLAGS & (1 << SWITCH))
-	{
-		count++;
-	}
-	
-	if(PORTC.INTFLAGS & (1 << X32KHZ_SQUAREWAVE))
-	{
-		count++;
-	}
-	
-	PORTC.INTFLAGS = 0xFF; /* Clear all flags */
-}
-
-/**
 
 */
-ISR(PORTA_PORT_vect)
-{
-	static int count = 0;
-	
-	if(PORTA.INTFLAGS & (1 << RTC_SQW))
-	{
-		count++;
-	}
-	
-	if(PORTA.INTFLAGS & (1 << ANT_CONNECT_INT))
-	{
-		count++;
-	}	
-	
-	PORTA.INTFLAGS = 0xFF; /* Clear all flags */
-}
+// ISR(PORTA_PORT_vect)
+// {
+// 	static int count = 0;
+// 	
+// 	if(PORTA.INTFLAGS & (1 << RTC_SQW))
+// 	{
+// 		count++;
+// 	}
+// 	
+// 	if(PORTA.INTFLAGS & (1 << ANT_CONNECT_INT))
+// 	{
+// 		count++;
+// 	}	
+// 	
+// 	LED_toggle_GREEN_level();
+// 	
+// 	PORTA.INTFLAGS = 0xFF; /* Clear all flags */
+// }
 
 void BINIO_init(void)
 {
@@ -127,16 +112,19 @@ void BINIO_init(void)
 	/* PORTA.PIN0 = TXDO USART */
 	/* PORTA.PIN1 = RXD0 USART */
 	
+	PORTA_set_pin_dir(FAN_ENABLE, PORT_DIR_OUT);
+	PORTA_set_pin_level(FAN_ENABLE, LOW);
+	
 	PORTA_set_pin_dir(RTC_SQW, PORT_DIR_IN);
-//	PORTA_set_pin_pull_mode(RTC_SQW, PORT_PULL_UP);
+	PORTA_set_pin_pull_mode(RTC_SQW, PORT_PULL_UP);
 	PORTA_pin_set_isc(RTC_SQW, PORT_ISC_RISING_gc);
 	
 	PORTA_set_pin_dir(FET_DRIVER_ENABLE, PORT_DIR_OUT);
 	PORTA_set_pin_level(FET_DRIVER_ENABLE, LOW);
 	
-	PORTA_set_pin_dir(ANT_CONNECT_INT, PORT_DIR_IN);
-	PORTA_set_pin_pull_mode(ANT_CONNECT_INT, PORT_PULL_UP);
-	PORTA_pin_set_isc(ANT_CONNECT_INT, PORT_ISC_FALLING_gc);
+// 	PORTA_set_pin_dir(ANT_CONNECT_INT, PORT_DIR_IN);
+// 	PORTA_set_pin_pull_mode(ANT_CONNECT_INT, PORT_PULL_UP);
+// 	PORTA_pin_set_isc(ANT_CONNECT_INT, PORT_ISC_FALLING_gc);
 
 	PORTA_set_pin_dir(WIFI_ENABLE, PORT_DIR_OUT);
 	PORTA_set_pin_level(WIFI_ENABLE, LOW);
@@ -171,8 +159,6 @@ void BINIO_init(void)
 	/* PORTC.PIN2 = SDA0 I2C */
 	/* PORTC.PIN3 = SCL0 I2C */
 
-	PORTC_set_pin_dir(X32KHZ_SQUAREWAVE, PORT_DIR_IN);
-	
 	PORTC_set_pin_dir(LED_GREEN, PORT_DIR_OUT);
 	PORTC_set_pin_level(LED_GREEN, LOW);
 	
@@ -181,14 +167,14 @@ void BINIO_init(void)
 	
 	PORTC_set_pin_dir(SWITCH, PORT_DIR_IN);
 	PORTC_set_pin_pull_mode(SWITCH, PORT_PULL_UP);
-	PORTC_pin_set_isc(SWITCH, PORT_ISC_FALLING_gc);
+	PORTC_pin_set_isc(SWITCH, PORT_ISC_RISING_gc);
 	
 	/* PORTD *************************************************************************************/
-	PORTD_set_pin_dir(X80M_ANTENNA_DETECT_V, PORT_DIR_IN);
+	PORTD_set_pin_dir(X80M_ANTENNA_DETECT_V, PORT_DIR_IN); /* use ADC for reading voltage at antenna detect pin */
 	
 	PORTD_set_pin_dir(X80M_ANTENNA_DETECT, PORT_DIR_IN);
 	PORTD_set_pin_pull_mode(X80M_ANTENNA_DETECT, PORT_PULL_UP);
-	PORTD_pin_set_isc(X80M_ANTENNA_DETECT, PORT_ISC_FALLING_gc);
+	PORTD_pin_set_isc(X80M_ANTENNA_DETECT, PORT_ISC_BOTHEDGES_gc);
 	
 	/* PORTD.PIN2 = ACD2 Audio in PROC_HT_AUDIO_IN */
 	/* PORTD.PIN3 = ACD3 Audio in TX_BATTERY_VOLTAGE */
@@ -197,7 +183,7 @@ void BINIO_init(void)
 	/* PORTD.PIN6 = DAC0 voltage out DAC_OUTPUT */
 	
 	PORTD_set_pin_dir(WIFI_MODULE_DETECT, PORT_DIR_IN); /* Detect presence of Huzzah module */
-	PORTC_set_pin_pull_mode(WIFI_MODULE_DETECT, PORT_PULL_OFF);
+	PORTD_set_pin_pull_mode(WIFI_MODULE_DETECT, PORT_PULL_OFF);
 
 	/* PORTE *************************************************************************************/
 	PORTE_set_pin_dir(0, PORT_DIR_OFF); /* Unused */
@@ -206,9 +192,15 @@ void BINIO_init(void)
 	PORTE_set_pin_dir(3, PORT_DIR_OFF); /* Unused */
 
 	/* PORTF *************************************************************************************/
+	PORTF_set_pin_dir(X32KHZ_SQUAREWAVE, PORT_DIR_OFF);	
+	PORTF_set_pin_dir(1, PORT_DIR_OFF);	/* Unused */
 	PORTF_set_pin_dir(2, PORT_DIR_OFF); /* Unused */
 	PORTF_set_pin_dir(3, PORT_DIR_OFF); /* Unused */
 	PORTF_set_pin_dir(4, PORT_DIR_OFF); /* Unused */
 	PORTF_set_pin_dir(5, PORT_DIR_OFF); /* Unused */
 	/* PORTF.PIN6 = Reset */
+	
+	/* PORT Pin Interrupts */
+	PORTA.PIN2CTRL = 0x0A; /* Enable RTC SQW 1-sec interrupts */
+	PORTD.PIN1CTRL = 0x09; /* Enable antenna change interrupts */
 }

@@ -33,5 +33,4 @@
  */ 
 bool wifi_enabled(void);
 
-
 #endif /* HUZZAH_H_ */

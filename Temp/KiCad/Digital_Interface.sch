@@ -1,0 +1,3012 @@
+EESchema Schematic File Version 2
+LIBS:Digital_Interface-rescue
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:special
+LIBS:Digital_Interface-cache
+EELAYER 25 0
+EELAYER END
+$Descr B 17000 11000
+encoding utf-8
+Sheet 1 3
+Title "Digital Interface Module"
+Date "2018-04-07"
+Rev "X.2.9"
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L ATMEGA328P-A U1004
+U 1 1 5797AFB0
+P 5050 7500
+F 0 "U1004" H 5050 8900 60  0000 C CNB
+F 1 "ATMEGA328P" H 5050 8800 60  0000 C CNB
+F 2 "Housings_QFP:TQFP-32_7x7mm_Pitch0.8mm" H 5050 7500 50  0001 C CIN
+F 3 "http://www.atmel.com/images/Atmel-8271-8-bit-AVR-Microcontroller-ATmega48A-48PA-88A-88PA-168A-168PA-328-328P_datasheet_Complete.pdf" H 5050 7500 50  0001 C CNN
+	1    5050 7500
+	1    0    0    -1  
+$EndComp
+$Comp
+L +3.3V #PWR01
+U 1 1 5797C63D
+P 8550 5050
+F 0 "#PWR01" H 8550 4900 50  0001 C CNN
+F 1 "+3.3V" H 8550 5190 50  0000 C CNN
+F 2 "" H 8550 5050 50  0000 C CNN
+F 3 "" H 8550 5050 50  0000 C CNN
+	1    8550 5050
+	1    0    0    -1  
+$EndComp
+$Comp
+L GNDD #PWR02
+U 1 1 5797CE10
+P 7050 5850
+F 0 "#PWR02" H 7050 5600 50  0001 C CNN
+F 1 "GNDD" H 7050 5700 50  0000 C CNN
+F 2 "" H 7050 5850 50  0000 C CNN
+F 3 "" H 7050 5850 50  0000 C CNN
+	1    7050 5850
+	1    0    0    -1  
+$EndComp
+$Comp
+L +3.3V #PWR03
+U 1 1 5797CE2A
+P 7050 5450
+F 0 "#PWR03" H 7050 5300 50  0001 C CNN
+F 1 "+3.3V" H 7050 5590 50  0000 C CNN
+F 2 "" H 7050 5450 50  0000 C CNN
+F 3 "" H 7050 5450 50  0000 C CNN
+	1    7050 5450
+	1    0    0    -1  
+$EndComp
+$Comp
+L GNDD #PWR04
+U 1 1 5797D116
+P 4100 8800
+F 0 "#PWR04" H 4100 8550 50  0001 C CNN
+F 1 "GNDD" H 4100 8650 50  0000 C CNN
+F 2 "" H 4100 8800 50  0000 C CNN
+F 3 "" H 4100 8800 50  0000 C CNN
+	1    4100 8800
+	1    0    0    -1  
+$EndComp
+$Comp
+L +3.3V #PWR05
+U 1 1 5797D16F
+P 3900 5300
+F 0 "#PWR05" H 3900 5150 50  0001 C CNN
+F 1 "+3.3V" H 3900 5440 50  0000 C CNN
+F 2 "" H 3900 5300 50  0000 C CNN
+F 3 "" H 3900 5300 50  0000 C CNN
+	1    3900 5300
+	1    0    0    -1  
+$EndComp
+$Comp
+L +3.3V #PWR06
+U 1 1 5797D1C6
+P 10450 5600
+F 0 "#PWR06" H 10450 5450 50  0001 C CNN
+F 1 "+3.3V" H 10450 5740 50  0000 C CNN
+F 2 "" H 10450 5600 50  0000 C CNN
+F 3 "" H 10450 5600 50  0000 C CNN
+	1    10450 5600
+	1    0    0    -1  
+$EndComp
+$Comp
+L GNDA #PWR07
+U 1 1 5797D770
+P 3850 8800
+F 0 "#PWR07" H 3850 8550 50  0001 C CNN
+F 1 "GNDA" H 3850 8650 50  0000 C CNN
+F 2 "" H 3850 8800 50  0000 C CNN
+F 3 "" H 3850 8800 50  0000 C CNN
+	1    3850 8800
+	1    0    0    -1  
+$EndComp
+Text Label 6050 6400 0    39   ~ 0
+PB0
+Entry Wire Line
+	6150 6400 6250 6500
+Text Label 6050 6500 0    39   ~ 0
+PB1
+Text Label 6050 6600 0    39   ~ 0
+PB2
+Text Label 6050 6700 0    39   ~ 0
+PB3
+Text Label 6050 6800 0    39   ~ 0
+PB4
+Text Label 6050 6900 0    39   ~ 0
+PB5
+Text Label 6050 7000 0    39   ~ 0
+PB6
+Text Label 6050 7100 0    39   ~ 0
+PB7
+Text Label 6050 7250 0    39   ~ 0
+PC0
+Text Label 6050 7350 0    39   ~ 0
+PC1
+Text Label 6050 7450 0    39   ~ 0
+PC2
+Text Label 6050 7550 0    39   ~ 0
+PC3
+Text Label 6050 7650 0    39   ~ 0
+SDA
+Text Label 6050 7750 0    39   ~ 0
+SCL
+Text Label 6050 7850 0    39   ~ 0
+~RESET~
+Text Label 6050 8000 0    39   ~ 0
+PD0
+Text Label 6050 8100 0    39   ~ 0
+PD1
+Text Label 6050 8200 0    39   ~ 0
+PD2
+Text Label 6050 8300 0    39   ~ 0
+PD3
+Text Label 6050 8400 0    39   ~ 0
+PD4
+Text Label 6050 8500 0    39   ~ 0
+PD5
+Text Label 6050 8600 0    39   ~ 0
+PD6
+Text Label 6050 8700 0    39   ~ 0
+PD7
+Entry Wire Line
+	6150 6500 6250 6600
+Entry Wire Line
+	6150 6600 6250 6700
+Entry Wire Line
+	6150 6700 6250 6800
+Entry Wire Line
+	6150 6800 6250 6900
+Entry Wire Line
+	6150 6900 6250 7000
+Entry Wire Line
+	6150 7000 6250 7100
+Entry Wire Line
+	6150 7100 6250 7200
+Entry Wire Line
+	6150 7250 6250 7350
+Entry Wire Line
+	6150 7350 6250 7450
+Entry Wire Line
+	6150 7450 6250 7550
+Entry Wire Line
+	6150 7550 6250 7650
+Entry Wire Line
+	6150 7650 6250 7750
+Entry Wire Line
+	6150 7750 6250 7850
+Entry Wire Line
+	6150 7850 6250 7950
+Entry Wire Line
+	6150 8000 6250 8100
+Entry Wire Line
+	6150 8100 6250 8200
+Entry Wire Line
+	6150 8200 6250 8300
+Entry Wire Line
+	6150 8300 6250 8400
+Entry Wire Line
+	6150 8400 6250 8500
+Entry Wire Line
+	6150 8500 6250 8600
+Entry Wire Line
+	6150 8600 6250 8700
+Entry Wire Line
+	6150 8700 6250 8800
+Text Label 8550 5700 2    39   ~ 0
+SCL
+Text Label 8550 5800 2    39   ~ 0
+SDA
+Entry Wire Line
+	6250 6800 6350 6700
+Entry Wire Line
+	6250 6900 6350 6800
+Text Label 6350 6700 0    39   ~ 0
+SCL
+Text Label 6350 6800 0    39   ~ 0
+SDA
+Entry Wire Line
+	6250 8600 6350 8500
+Text Label 6350 7350 0    39   ~ 0
+PC2
+Entry Wire Line
+	6250 7650 6350 7550
+Text Label 6350 6200 0    39   ~ 0
+PC3
+Text Label 12350 3500 3    39   ~ 0
+PC1
+Entry Wire Line
+	6250 6700 6350 6600
+Text Label 6350 6500 0    39   ~ 0
+PB5
+Text Label 4150 7750 2    39   ~ 0
+ADC6
+$Comp
+L R R1007
+U 1 1 57994C50
+P 12750 5200
+F 0 "R1007" V 12830 5200 50  0000 C CNN
+F 1 "69.8k" V 12750 5200 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 12680 5200 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 12750 5200 50  0001 C CNN
+	1    12750 5200
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R1008
+U 1 1 57994CAF
+P 12750 5700
+F 0 "R1008" V 12830 5700 50  0000 C CNN
+F 1 "20k" V 12750 5700 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 12680 5700 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 12750 5700 50  0001 C CNN
+	1    12750 5700
+	1    0    0    -1  
+$EndComp
+$Comp
+L GNDA #PWR08
+U 1 1 57994D06
+P 12750 5900
+F 0 "#PWR08" H 12750 5650 50  0001 C CNN
+F 1 "GNDA" H 12750 5750 50  0000 C CNN
+F 2 "" H 12750 5900 50  0000 C CNN
+F 3 "" H 12750 5900 50  0000 C CNN
+	1    12750 5900
+	1    0    0    -1  
+$EndComp
+$Comp
+L C C1018
+U 1 1 5799529A
+P 12500 5700
+F 0 "C1018" H 12250 5800 50  0000 L CNN
+F 1 "10uF" H 12200 5600 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 12538 5550 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 12500 5700 50  0001 C CNN
+	1    12500 5700
+	1    0    0    -1  
+$EndComp
+$Comp
+L GNDA #PWR09
+U 1 1 579952EE
+P 12500 5900
+F 0 "#PWR09" H 12500 5650 50  0001 C CNN
+F 1 "GNDA" H 12500 5750 50  0000 C CNN
+F 2 "" H 12500 5900 50  0000 C CNN
+F 3 "" H 12500 5900 50  0000 C CNN
+	1    12500 5900
+	1    0    0    -1  
+$EndComp
+Text Label 4150 7850 2    39   ~ 0
+ADC7
+Entry Wire Line
+	6250 8700 6350 8600
+Text Label 6350 8400 0    39   ~ 0
+PB0
+Entry Wire Line
+	6250 7800 6350 7700
+Text Label 6350 7700 0    39   ~ 0
+PD5
+Entry Wire Line
+	6250 8500 6350 8400
+Text Label 6350 8200 0    39   ~ 0
+PD7
+Entry Wire Line
+	6250 7900 6350 7800
+Entry Wire Line
+	6250 8000 6350 7900
+Entry Wire Line
+	6250 8100 6350 8000
+Entry Wire Line
+	6250 8200 6350 8100
+Text Label 6350 7800 0    39   ~ 0
+PD0
+Text Label 6350 8500 0    39   ~ 0
+PD4
+Text Label 6350 8100 0    39   ~ 0
+PD3
+Text Label 6350 8000 0    39   ~ 0
+PD2
+Entry Wire Line
+	6250 8800 6350 8700
+Text Label 6350 8700 0    39   ~ 0
+PB7
+Text Label 6350 6600 0    39   ~ 0
+PB1
+Entry Wire Line
+	6250 8900 6350 8800
+Text Label 6350 8800 0    39   ~ 0
+PB6
+Entry Wire Line
+	6250 7250 6350 7150
+Text GLabel 8800 6700 2    39   Output ~ 0
+DI_SCL
+Text GLabel 8800 6800 2    39   Output ~ 0
+DI_SDA
+$Comp
+L GND #PWR010
+U 1 1 57AA9CFC
+P 11200 2850
+F 0 "#PWR010" H 11200 2600 50  0001 C CNN
+F 1 "GND" H 11050 2800 50  0000 C CNN
+F 2 "" H 11200 2850 50  0000 C CNN
+F 3 "" H 11200 2850 50  0000 C CNN
+	1    11200 2850
+	1    0    0    -1  
+$EndComp
+Entry Wire Line
+	6250 8300 6350 8200
+Text Label 6350 7900 0    39   ~ 0
+PD1
+$Comp
+L SI5351 U1005
+U 1 1 57ABD6C6
+P 9200 5600
+F 0 "U1005" H 9200 6100 60  0000 C CNB
+F 1 "SI5351A" H 9200 5600 60  0000 C CNB
+F 2 "Housings_SSOP:MSOP-10_3x3mm_Pitch0.5mm_Handsolder" H 9200 5600 50  0001 C CNN
+F 3 "http://www.silabs.com/Support%20Documents/TechnicalDocs/Si5351-B.pdf" H 9200 5600 50  0001 C CNN
+	1    9200 5600
+	1    0    0    -1  
+$EndComp
+Text GLabel 10950 4500 3    39   Input ~ 0
+SCL
+Text GLabel 11050 4500 3    39   Input ~ 0
+SDA
+$Comp
+L GNDD #PWR011
+U 1 1 57ACA074
+P 10650 4400
+F 0 "#PWR011" H 10650 4150 50  0001 C CNN
+F 1 "GNDD" H 10650 4250 50  0000 C CNN
+F 2 "" H 10650 4400 50  0000 C CNN
+F 3 "" H 10650 4400 50  0000 C CNN
+	1    10650 4400
+	1    0    0    -1  
+$EndComp
+$Comp
+L +3.3V #PWR012
+U 1 1 57ACA2AA
+P 10650 4000
+F 0 "#PWR012" H 10650 3850 50  0001 C CNN
+F 1 "+3.3V" H 10650 4140 50  0000 C CNN
+F 2 "" H 10650 4000 50  0000 C CNN
+F 3 "" H 10650 4000 50  0000 C CNN
+	1    10650 4000
+	1    0    0    -1  
+$EndComp
+$Comp
+L GNDD #PWR013
+U 1 1 57ACA369
+P 11400 4150
+F 0 "#PWR013" H 11400 3900 50  0001 C CNN
+F 1 "GNDD" H 11400 4000 50  0000 C CNN
+F 2 "" H 11400 4150 50  0000 C CNN
+F 3 "" H 11400 4150 50  0000 C CNN
+	1    11400 4150
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR014
+U 1 1 57ACAA82
+P 10650 3650
+F 0 "#PWR014" H 10650 3400 50  0001 C CNN
+F 1 "GND" H 10650 3500 50  0000 C CNN
+F 2 "" H 10650 3650 50  0000 C CNN
+F 3 "" H 10650 3650 50  0000 C CNN
+	1    10650 3650
+	1    0    0    -1  
+$EndComp
+Text Label 6350 7150 0    39   ~ 0
+~RESET~
+$Comp
+L R R1004
+U 1 1 57AD3D94
+P 7300 7150
+F 0 "R1004" V 7380 7150 50  0000 C CNN
+F 1 "10k" V 7300 7150 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 7230 7150 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 7300 7150 50  0001 C CNN
+	1    7300 7150
+	0    1    1    0   
+$EndComp
+Text GLabel 7150 7000 2    39   Input ~ 0
+~RESET~
+$Comp
+L CONN_02X03 P1001
+U 1 1 57AD5B1A
+P 5200 9400
+F 0 "P1001" H 5200 9600 50  0000 C CNN
+F 1 "ISP/PDI" H 5200 9200 50  0000 C CNN
+F 2 "Pin_Headers:SM_Pin_Header_Straight_2x03" H 5200 8200 50  0001 C CNN
+F 3 "http://katalog.we-online.de/em/datasheet/6100xx21121.pdf" H 5200 8200 50  0001 C CNN
+	1    5200 9400
+	1    0    0    -1  
+$EndComp
+Text GLabel 4850 9600 0    39   Output ~ 0
+~RESET~
+$Comp
+L GNDD #PWR015
+U 1 1 57AD5D10
+P 5550 9600
+F 0 "#PWR015" H 5550 9350 50  0001 C CNN
+F 1 "GNDD" H 5550 9450 50  0000 C CNN
+F 2 "" H 5550 9600 50  0000 C CNN
+F 3 "" H 5550 9600 50  0000 C CNN
+	1    5550 9600
+	1    0    0    -1  
+$EndComp
+$Comp
+L +3.3V #PWR016
+U 1 1 57AD5F80
+P 5550 9250
+F 0 "#PWR016" H 5550 9100 50  0001 C CNN
+F 1 "+3.3V" H 5550 9390 50  0000 C CNN
+F 2 "" H 5550 9250 50  0000 C CNN
+F 3 "" H 5550 9250 50  0000 C CNN
+	1    5550 9250
+	1    0    0    -1  
+$EndComp
+Text GLabel 5600 9400 2    39   Input ~ 0
+MOSI
+Entry Wire Line
+	6250 6400 6350 6300
+Text Label 6350 6300 0    39   ~ 0
+PB3
+Text GLabel 6500 6300 2    39   Output ~ 0
+MOSI
+Text GLabel 4800 9200 0    39   Input ~ 0
+MISO
+Entry Wire Line
+	6250 6500 6350 6400
+Text Label 6350 6400 0    39   ~ 0
+PB4
+Text GLabel 6500 6400 2    39   Output ~ 0
+MISO
+Entry Wire Line
+	6250 6600 6350 6500
+Text GLabel 6500 6500 2    39   Output ~ 0
+SCK
+Text GLabel 4800 9400 0    39   Input ~ 0
+SCK
+Entry Wire Line
+	6250 8400 6350 8300
+Text Label 6350 8300 0    39   ~ 0
+PD6
+Entry Wire Line
+	6250 7550 6350 7450
+Entry Wire Line
+	6250 6300 6350 6200
+Text Label 6350 7450 0    39   ~ 0
+PC0
+Text Label 6350 7550 0    39   ~ 0
+PC1
+Entry Wire Line
+	6250 7450 6350 7350
+Text Label 6350 8600 0    39   ~ 0
+PB2
+NoConn ~ 8550 5600
+$Comp
+L PWR_FLAG #FLG017
+U 1 1 57B2CC95
+P 3650 6700
+F 0 "#FLG017" H 3650 6795 50  0001 C CNN
+F 1 "PWR_FLAG" H 3650 6880 50  0000 C CNN
+F 2 "" H 3650 6700 50  0000 C CNN
+F 3 "" H 3650 6700 50  0000 C CNN
+	1    3650 6700
+	1    0    0    -1  
+$EndComp
+$Comp
+L C C1012
+U 1 1 57B33427
+P 10650 4250
+F 0 "C1012" H 10400 4350 50  0000 L CNN
+F 1 "100nF" H 10350 4150 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 10688 4100 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 10650 4250 50  0001 C CNN
+	1    10650 4250
+	1    0    0    -1  
+$EndComp
+$Comp
+L C C1010
+U 1 1 57B42379
+P 8300 5100
+F 0 "C1010" H 8325 5200 50  0000 L CNN
+F 1 "470nF" H 8325 5000 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 8338 4950 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 8300 5100 50  0001 C CNN
+	1    8300 5100
+	0    1    1    0   
+$EndComp
+$Comp
+L GNDD #PWR018
+U 1 1 57B42657
+P 8050 5150
+F 0 "#PWR018" H 8050 4900 50  0001 C CNN
+F 1 "GNDD" H 8050 5000 50  0000 C CNN
+F 2 "" H 8050 5150 50  0000 C CNN
+F 3 "" H 8050 5150 50  0000 C CNN
+	1    8050 5150
+	1    0    0    -1  
+$EndComp
+$Comp
+L C C1011
+U 1 1 57B42FC2
+P 10450 5900
+F 0 "C1011" H 10475 6000 50  0000 L CNN
+F 1 "470nF" H 10475 5800 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 10488 5750 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 10450 5900 50  0001 C CNN
+	1    10450 5900
+	-1   0    0    1   
+$EndComp
+$Comp
+L GNDD #PWR019
+U 1 1 57B4BF2C
+P 3200 5900
+F 0 "#PWR019" H 3200 5650 50  0001 C CNN
+F 1 "GNDD" H 3200 5750 50  0000 C CNN
+F 2 "" H 3200 5900 50  0000 C CNN
+F 3 "" H 3200 5900 50  0000 C CNN
+	1    3200 5900
+	0    1    1    0   
+$EndComp
+$Comp
+L GNDD #PWR020
+U 1 1 57B4C04E
+P 4450 6100
+F 0 "#PWR020" H 4450 5850 50  0001 C CNN
+F 1 "GNDD" H 4450 5950 50  0000 C CNN
+F 2 "" H 4450 6100 50  0000 C CNN
+F 3 "" H 4450 6100 50  0000 C CNN
+	1    4450 6100
+	0    -1   -1   0   
+$EndComp
+$Comp
+L C_Small C1009
+U 1 1 57B51AE4
+P 7050 5650
+F 0 "C1009" H 7060 5720 50  0000 L CNN
+F 1 "100nF" H 7060 5570 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 7050 5650 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 7050 5650 50  0001 C CNN
+	1    7050 5650
+	1    0    0    -1  
+$EndComp
+$Comp
+L C_Small C1006
+U 1 1 57AE8E4C
+P 3550 6100
+F 0 "C1006" V 3450 6000 50  0000 L CNN
+F 1 "100nF" V 3650 6000 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 3550 6100 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 3550 6100 50  0001 C CNN
+	1    3550 6100
+	0    1    1    0   
+$EndComp
+$Comp
+L C_Small C1008
+U 1 1 57AE90C4
+P 4200 6100
+F 0 "C1008" V 4100 6000 50  0000 L CNN
+F 1 "100nF" V 4300 6000 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 4200 6100 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 4200 6100 50  0001 C CNN
+	1    4200 6100
+	0    1    1    0   
+$EndComp
+Text Notes 6650 1200 0    79   ~ 16
+Client Module\nConnectors
+Text Notes 13850 7850 0    79   ~ 16
+Main +3.3V Linear Regulator
+Text Notes 11050 1550 0    79   ~ 16
+Audio Amplifier
+Text Notes 4650 5850 0    79   ~ 16
+Microcontroller
+Text Notes 8200 3000 0    39   ~ 0
+Module SIP Pin Usage\nPort P1002\n1. GND\n2. EX_GPA7\n3. EX_GPA6\n4. EX_GPA5\n5. EX_GPA4\n6. EX_GPA3\n7. EX_GPA2\n8. EX_GPA1\n9. EX_GPA0\n10. PROC_PC0*\n11. PROC_PC1*\n12. PROC_PC2 \n13. PROC_PC3\n14. EXT_PROC_PWR (IN)\n15. +V Main (IN or OUT)\n16. +V Main (IN or OUT)\n17. CLK0 (OUT)\n18. CLK1 (OUT)\n19. CLK2 (OUT)\n20. GND\n\n* These nodes connect to multiple devices - it is\nnecessary to plan for their use by an external\nmodule by depopulating devices on the Digital\nInterface Module.\n
+Text Notes 9200 2700 0    39   ~ 0
+Module SIP Pin Usage\nPort P1003\n1. GND\n2. PROC_PB0\n3. PROC_PB1\n4. PROC_PB2\n5. PROC_PB6\n6. PROC_PB7\n7. PROC_ADC6\n8. PROC_ADC7*\n9. ~CLOCK_RESET~\n10. PROC_PD4\n11. PROC_PD5*\n12. PROC_PD6\n13. USB +5V OUT\n14. DI_TXD0*\n15. DI_RXD0 AND INPUT (IN)\n16. I2C SCL\n17. I2C SDA\n18. Audio Ch2 (IN)\n19. Audio Ch1 (IN)\n20. GND\n
+Text GLabel 6350 2950 0    39   Output ~ 0
++V_MAIN
+$Comp
+L GNDIF #PWR021
+U 1 1 57B0E34C
+P 12050 10300
+F 0 "#PWR021" H 12050 10050 50  0001 C CNN
+F 1 "GNDIF" H 12050 10150 50  0000 C CNN
+F 2 "" H 12050 10300 50  0000 C CNN
+F 3 "" H 12050 10300 50  0000 C CNN
+	1    12050 10300
+	1    0    0    -1  
+$EndComp
+Text GLabel 7300 3000 2    39   Input ~ 0
+SCL
+Text GLabel 7300 3100 2    39   Input ~ 0
+SDA
+$Comp
+L GNDA #PWR022
+U 1 1 57B0FFE1
+P 11800 10300
+F 0 "#PWR022" H 11800 10050 50  0001 C CNN
+F 1 "GNDA" H 11800 10150 50  0000 C CNN
+F 2 "" H 11800 10300 50  0000 C CNN
+F 3 "" H 11800 10300 50  0000 C CNN
+	1    11800 10300
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R1005
+U 1 1 57B1D60C
+P 11600 3900
+F 0 "R1005" V 11680 3900 50  0000 C CNN
+F 1 "100k" V 11600 3900 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 11530 3900 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 11600 3900 50  0001 C CNN
+	1    11600 3900
+	1    0    0    -1  
+$EndComp
+$Comp
+L INDUCTOR L1001
+U 1 1 57B4248B
+P 3550 6400
+F 0 "L1001" V 3650 6550 50  0000 C CNN
+F 1 "10uH" V 3650 6300 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 3550 6400 50  0001 C CNN
+F 3 "http://www.abracon.com/Magnetics/chips/AIML-1206.pdf" H 3550 6400 50  0001 C CNN
+	1    3550 6400
+	0    -1   -1   0   
+$EndComp
+$Comp
+L GNDA #PWR023
+U 1 1 57B43438
+P 3250 7100
+F 0 "#PWR023" H 3250 6850 50  0001 C CNN
+F 1 "GNDA" H 3250 6950 50  0000 C CNN
+F 2 "" H 3250 7100 50  0000 C CNN
+F 3 "" H 3250 7100 50  0000 C CNN
+	1    3250 7100
+	1    0    0    -1  
+$EndComp
+$Comp
+L C_Small C1004
+U 1 1 57B43F7B
+P 3250 6900
+F 0 "C1004" H 3000 6850 50  0000 L CNN
+F 1 "10uF" H 2950 6950 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 3250 6900 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 3250 6900 50  0001 C CNN
+	1    3250 6900
+	-1   0    0    1   
+$EndComp
+$Comp
+L MIC5219 U1009
+U 1 1 57B45940
+P 14150 8350
+F 0 "U1009" H 14150 8650 60  0000 C CNB
+F 1 "MIC5219-3.3BM5" H 14150 8550 60  0000 C CNB
+F 2 "TO_SOT_Packages_SMD:SOT-23-5_Handsolder" H 14150 8450 50  0001 C CIN
+F 3 "" H 14150 8350 50  0000 C CNN
+	1    14150 8350
+	1    0    0    -1  
+$EndComp
+$Comp
+L MIC5219 U1008
+U 1 1 57B45A19
+P 13550 1300
+F 0 "U1008" H 13550 1600 60  0000 C CNB
+F 1 "MIC5219-3.3BM5" H 13550 1500 60  0000 C CNB
+F 2 "TO_SOT_Packages_SMD:SOT-23-5_Handsolder" H 13550 1400 50  0001 C CIN
+F 3 "" H 13550 1300 50  0000 C CNN
+	1    13550 1300
+	-1   0    0    -1  
+$EndComp
+$Comp
+L CP1_Small C1025
+U 1 1 57B46B7E
+P 14200 1400
+F 0 "C1025" H 14210 1470 50  0000 L CNN
+F 1 "10uF" H 14210 1320 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 14200 1400 50  0001 C CNN
+F 3 "http://datasheets.avx.com/TAJ_LOW_PROFILE.pdf" H 14200 1400 50  0001 C CNN
+	1    14200 1400
+	1    0    0    -1  
+$EndComp
+$Comp
+L CP1_Small C1024
+U 1 1 57B46F52
+P 13500 8450
+F 0 "C1024" H 13510 8520 50  0000 L CNN
+F 1 "2.2uF" H 13510 8370 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 13500 8450 50  0001 C CNN
+F 3 "http://datasheets.avx.com/TAJ_LOW_PROFILE.pdf" H 13500 8450 50  0001 C CNN
+	1    13500 8450
+	-1   0    0    -1  
+$EndComp
+$Comp
+L GNDD #PWR024
+U 1 1 57B4758F
+P 14200 1550
+F 0 "#PWR024" H 14200 1300 50  0001 C CNN
+F 1 "GNDD" H 14200 1400 50  0000 C CNN
+F 2 "" H 14200 1550 50  0000 C CNN
+F 3 "" H 14200 1550 50  0000 C CNN
+	1    14200 1550
+	1    0    0    -1  
+$EndComp
+$Comp
+L GNDD #PWR025
+U 1 1 57B476C6
+P 13500 8600
+F 0 "#PWR025" H 13500 8350 50  0001 C CNN
+F 1 "GNDD" H 13500 8450 50  0000 C CNN
+F 2 "" H 13500 8600 50  0000 C CNN
+F 3 "" H 13500 8600 50  0000 C CNN
+	1    13500 8600
+	-1   0    0    -1  
+$EndComp
+$Comp
+L GNDD #PWR026
+U 1 1 57B48074
+P 14900 8900
+F 0 "#PWR026" H 14900 8650 50  0001 C CNN
+F 1 "GNDD" H 14900 8750 50  0000 C CNN
+F 2 "" H 14900 8900 50  0000 C CNN
+F 3 "" H 14900 8900 50  0000 C CNN
+	1    14900 8900
+	-1   0    0    -1  
+$EndComp
+$Comp
+L C_Small C1020
+U 1 1 57B48CA4
+P 13050 1550
+F 0 "C1020" H 13060 1620 50  0000 L CNN
+F 1 "470pF" H 13060 1470 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 13050 1550 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 13050 1550 50  0001 C CNN
+	1    13050 1550
+	1    0    0    -1  
+$EndComp
+$Comp
+L C_Small C1027
+U 1 1 57B48F8E
+P 14650 8600
+F 0 "C1027" H 14660 8670 50  0000 L CNN
+F 1 "470pF" H 14660 8520 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 14650 8600 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 14650 8600 50  0001 C CNN
+	1    14650 8600
+	-1   0    0    -1  
+$EndComp
+$Comp
+L CP1_Small C1019
+U 1 1 57B4A3CD
+P 12750 1550
+F 0 "C1019" H 12760 1620 50  0000 L CNN
+F 1 "47uF" H 12760 1470 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 12750 1550 50  0001 C CNN
+F 3 "http://datasheets.avx.com/TAJ_LOW_PROFILE.pdf" H 12750 1550 50  0001 C CNN
+	1    12750 1550
+	1    0    0    -1  
+$EndComp
+$Comp
+L CP1_Small C1028
+U 1 1 57B4A52C
+P 14900 8600
+F 0 "C1028" H 14910 8670 50  0000 L CNN
+F 1 "2.2uF" H 14910 8520 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 14900 8600 50  0001 C CNN
+F 3 "http://datasheets.avx.com/TAJ_LOW_PROFILE.pdf" H 14900 8600 50  0001 C CNN
+	1    14900 8600
+	-1   0    0    -1  
+$EndComp
+$Comp
+L +3.3V #PWR027
+U 1 1 57B4A68D
+P 14900 8200
+F 0 "#PWR027" H 14900 8050 50  0001 C CNN
+F 1 "+3.3V" H 14900 8340 50  0000 C CNN
+F 2 "" H 14900 8200 50  0000 C CNN
+F 3 "" H 14900 8200 50  0000 C CNN
+	1    14900 8200
+	-1   0    0    -1  
+$EndComp
+$Comp
+L GND #PWR028
+U 1 1 57B4C8EB
+P 13300 1850
+F 0 "#PWR028" H 13300 1600 50  0001 C CNN
+F 1 "GND" H 13450 1800 50  0000 C CNN
+F 2 "" H 13300 1850 50  0000 C CNN
+F 3 "" H 13300 1850 50  0000 C CNN
+	1    13300 1850
+	1    0    0    -1  
+$EndComp
+$Comp
+L LM4811-RESCUE-Digital_Interface U1007
+U 1 1 57B5EB4D
+P 12250 2600
+F 0 "U1007" H 12000 3500 60  0000 C CNB
+F 1 "LM4811MM/NOPB" H 12000 3400 60  0000 C CNB
+F 2 "Housings_SSOP:MSOP-10_3x3mm_Pitch0.5mm_Handsolder" H 12250 2600 50  0001 C CNN
+F 3 "http://www.ti.com/lit/ds/symlink/lm4811.pdf" H 12250 2600 50  0001 C CNN
+	1    12250 2600
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR029
+U 1 1 57B5EFFB
+P 12150 3450
+F 0 "#PWR029" H 12150 3200 50  0001 C CNN
+F 1 "GND" H 12150 3300 50  0000 C CNN
+F 2 "" H 12150 3450 50  0000 C CNN
+F 3 "" H 12150 3450 50  0000 C CNN
+	1    12150 3450
+	1    0    0    -1  
+$EndComp
+$Comp
+L CP1_Small C1016
+U 1 1 57B61741
+P 11500 3050
+F 0 "C1016" V 11350 2950 50  0000 L CNN
+F 1 "1uF" V 11650 3000 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 11500 3050 50  0001 C CNN
+F 3 "http://datasheets.avx.com/TAJ_LOW_PROFILE.pdf" H 11500 3050 50  0001 C CNN
+	1    11500 3050
+	0    1    1    0   
+$EndComp
+$Comp
+L CP1_Small C1017
+U 1 1 57B61FEB
+P 11550 2150
+F 0 "C1017" V 11400 2050 50  0000 L CNN
+F 1 "1uF" V 11700 2100 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 11550 2150 50  0001 C CNN
+F 3 "http://datasheets.avx.com/f93.pdf" H 11550 2150 50  0001 C CNN
+	1    11550 2150
+	0    1    1    0   
+$EndComp
+$Comp
+L CP1_Small C1015
+U 1 1 57B625AD
+P 11200 2750
+F 0 "C1015" H 11210 2820 50  0000 L CNN
+F 1 "1uF" H 11210 2670 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 11200 2750 50  0001 C CNN
+F 3 "http://datasheets.avx.com/TAJ_LOW_PROFILE.pdf" H 11200 2750 50  0001 C CNN
+	1    11200 2750
+	1    0    0    -1  
+$EndComp
+Text Label 11950 3500 3    39   ~ 0
+PC0
+$Comp
+L R R1006
+U 1 1 57B6AD7E
+P 12550 3700
+F 0 "R1006" V 12630 3700 50  0000 C CNN
+F 1 "100k" V 12550 3700 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" V 12480 3700 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 12550 3700 50  0001 C CNN
+	1    12550 3700
+	-1   0    0    1   
+$EndComp
+Text Label 5450 9400 0    39   ~ 0
+PB3
+Text Label 4950 9300 2    39   ~ 0
+PB4
+Text Label 4950 9400 2    39   ~ 0
+PB5
+Text Notes 8100 4750 0    79   ~ 16
+SI5351 Clock
+Text GLabel 14200 1150 1    39   Input ~ 0
++V_MAIN
+$Comp
+L CONN_01X01 P1007
+U 1 1 57BD16E6
+P 15100 8300
+F 0 "P1007" H 15100 8400 50  0000 C CNN
+F 1 "Thru" H 15200 8300 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x01" H 15100 8300 50  0001 C CNN
+F 3 "" H 15100 8300 50  0000 C CNN
+	1    15100 8300
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X01 P1005
+U 1 1 57BD33AA
+P 8750 5100
+F 0 "P1005" H 8750 5200 50  0000 C CNN
+F 1 "Thru" H 8850 5100 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x01" H 8750 5100 50  0001 C CNN
+F 3 "" H 8750 5100 50  0000 C CNN
+	1    8750 5100
+	1    0    0    -1  
+$EndComp
+$Comp
+L PWR_FLAG #FLG030
+U 1 1 57BDEA73
+P 14300 4900
+F 0 "#FLG030" H 14300 4995 50  0001 C CNN
+F 1 "PWR_FLAG" H 14300 5080 50  0000 C CNN
+F 2 "" H 14300 4900 50  0000 C CNN
+F 3 "" H 14300 4900 50  0000 C CNN
+	1    14300 4900
+	1    0    0    -1  
+$EndComp
+$Comp
+L GNDD #PWR031
+U 1 1 57CD7539
+P 6550 3400
+F 0 "#PWR031" H 6550 3150 50  0001 C CNN
+F 1 "GNDD" H 6550 3250 50  0000 C CNN
+F 2 "" H 6550 3400 50  0000 C CNN
+F 3 "" H 6550 3400 50  0000 C CNN
+	1    6550 3400
+	0    1    1    0   
+$EndComp
+$Comp
+L GND #PWR032
+U 1 1 58305F95
+P 12550 3900
+F 0 "#PWR032" H 12550 3650 50  0001 C CNN
+F 1 "GND" H 12550 3750 50  0000 C CNN
+F 2 "" H 12550 3900 50  0000 C CNN
+F 3 "" H 12550 3900 50  0000 C CNN
+	1    12550 3900
+	1    0    0    -1  
+$EndComp
+$Comp
+L C C1022
+U 1 1 582E373C
+P 13050 2950
+F 0 "C1022" V 13200 2800 50  0000 L CNN
+F 1 "100uF non-polarized" V 13000 3050 50  0000 L CNN
+F 2 "Capacitors_SMD:C_1210_HandSoldering" H 13088 2800 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 13050 2950 50  0001 C CNN
+	1    13050 2950
+	0    1    1    0   
+$EndComp
+$Comp
+L C C1021
+U 1 1 582E2EE7
+P 13050 2750
+F 0 "C1021" V 12900 2600 50  0000 L CNN
+F 1 "100uF non-polarized" V 13000 2850 50  0000 L CNN
+F 2 "Capacitors_SMD:C_1210_HandSoldering" H 13088 2600 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 13050 2750 50  0001 C CNN
+	1    13050 2750
+	0    1    1    0   
+$EndComp
+$Comp
+L R R1012
+U 1 1 5838CEAA
+P 13800 1750
+F 0 "R1012" V 13880 1750 50  0000 C CNN
+F 1 "10k" V 13800 1750 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" V 13730 1750 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 13800 1750 50  0001 C CNN
+	1    13800 1750
+	0    -1   -1   0   
+$EndComp
+$Comp
+L C_Small C1014
+U 1 1 5848903D
+P 11050 3250
+F 0 "C1014" H 11060 3320 50  0000 L CNN
+F 1 "np" H 11060 3170 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 11050 3250 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 11050 3250 50  0001 C CNN
+	1    11050 3250
+	-1   0    0    -1  
+$EndComp
+$Comp
+L C_Small C1013
+U 1 1 58489806
+P 10750 2550
+F 0 "C1013" H 10760 2620 50  0000 L CNN
+F 1 "10nF" H 10760 2470 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 10750 2550 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 10750 2550 50  0001 C CNN
+	1    10750 2550
+	-1   0    0    -1  
+$EndComp
+Text Notes 8000 7000 0    39   ~ 8
+I2C pull-ups are provided by uC \nport pin pull-ups on SCL and SDA.
+$Comp
+L CONN_01X20 P1002
+U 1 1 586FC7BE
+P 6750 2450
+F 0 "P1002" H 6750 3500 50  0000 C CNN
+F 1 "CONN_01X20" V 6850 2450 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x20" H 6750 2450 50  0001 C CNN
+F 3 "" H 6750 2450 50  0000 C CNN
+	1    6750 2450
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X20 P1003
+U 1 1 586FC916
+P 7100 2450
+F 0 "P1003" H 7100 3500 50  0000 C CNN
+F 1 "CONN_01X20" V 7200 2450 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x20" H 7100 2450 50  0001 C CNN
+F 3 "" H 7100 2450 50  0000 C CNN
+	1    7100 2450
+	-1   0    0    -1  
+$EndComp
+$Comp
+L FILTER FB1002
+U 1 1 5872A7BE
+P 14050 3500
+F 0 "FB1002" H 14050 3650 50  0000 C CNN
+F 1 "BK2125LM252-T" H 14050 3400 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 14050 3500 50  0001 C CNN
+F 3 "" H 14050 3500 50  0000 C CNN
+	1    14050 3500
+	0    -1   -1   0   
+$EndComp
+$Comp
+L GND #PWR033
+U 1 1 5872A888
+P 14050 3850
+F 0 "#PWR033" H 14050 3600 50  0001 C CNN
+F 1 "GND" H 14050 3700 50  0000 C CNN
+F 2 "" H 14050 3850 50  0000 C CNN
+F 3 "" H 14050 3850 50  0000 C CNN
+	1    14050 3850
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R1011
+U 1 1 5872B5B1
+P 13750 3900
+F 0 "R1011" V 13830 3900 50  0000 C CNN
+F 1 "1k" V 13750 3900 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" V 13680 3900 50  0001 C CNN
+F 3 "" H 13750 3900 50  0000 C CNN
+	1    13750 3900
+	1    0    0    -1  
+$EndComp
+Text Label 15250 2950 2    39   ~ 0
+RIGHT_EAR
+Text Label 15250 2850 2    39   ~ 0
+LEFT_EAR
+$Comp
+L FOUR_CONDUCTOR_JACK_HEADPHONE_STEREO J1001
+U 1 1 5874D324
+P 15750 2850
+F 0 "J1001" H 15750 3250 50  0000 C CNN
+F 1 "3.5mm Earphone Jack" H 15700 3150 50  0000 C CNN
+F 2 "Audio_Jacks:SJ-4351X-SMT" H 15850 2700 50  0001 C CNN
+F 3 "" H 15850 2700 50  0000 C CNN
+	1    15750 2850
+	-1   0    0    -1  
+$EndComp
+$Comp
+L ASTX-H11 X1001
+U 1 1 58755171
+P 7750 5650
+F 0 "X1001" H 7750 6000 61  0000 C CNB
+F 1 "ASTX-H11-25.MHZ" H 7750 5650 61  0000 C CNB
+F 2 "Crystals:ASTX-H11" H 7750 5650 60  0001 C CNN
+F 3 "" H 7750 5650 60  0000 C CNN
+	1    7750 5650
+	1    0    0    -1  
+$EndComp
+$Comp
+L TEST_1P W1001
+U 1 1 587A8789
+P 1500 9000
+F 0 "W1001" V 1500 9270 50  0000 C CNN
+F 1 "TEST_1P" H 1500 9200 50  0001 C CNN
+F 2 "Measurement_Points:Measurement_Point_Square-SMD-Pad_Small" H 1700 9000 50  0001 C CNN
+F 3 "" H 1700 9000 50  0000 C CNN
+	1    1500 9000
+	0    -1   1    0   
+$EndComp
+$Comp
+L TEST_1P W1002
+U 1 1 587A8A8E
+P 1450 9500
+F 0 "W1002" V 1450 9770 50  0000 C CNN
+F 1 "TEST_1P" H 1450 9700 50  0001 C CNN
+F 2 "Measurement_Points:Measurement_Point_Square-SMD-Pad_Small" H 1650 9500 50  0001 C CNN
+F 3 "" H 1650 9500 50  0000 C CNN
+	1    1450 9500
+	1    0    0    1   
+$EndComp
+Text Notes 1400 8250 0    79   ~ 16
+Real-Time Clock
+Text Notes 12350 9800 0    118  ~ 24
+PCB: Digital Interface Board (p. 1/3)
+$Comp
+L PWR_FLAG #FLG034
+U 1 1 58739FB3
+P 11550 9800
+F 0 "#FLG034" H 11550 9895 50  0001 C CNN
+F 1 "PWR_FLAG" H 11550 9980 50  0000 C CNN
+F 2 "" H 11550 9800 50  0000 C CNN
+F 3 "" H 11550 9800 50  0000 C CNN
+	1    11550 9800
+	1    0    0    -1  
+$EndComp
+$Comp
+L AD5245 U1006
+U 1 1 587E7550
+P 11050 4050
+F 0 "U1006" V 11700 3800 61  0000 C CNB
+F 1 "AD5245" V 11600 3750 61  0000 C CNB
+F 2 "TO_SOT_Packages_SMD:SOT-23-8_Handsolder" H 11050 4050 60  0001 C CNN
+F 3 "" H 11050 4050 60  0000 C CNN
+	1    11050 4050
+	0    -1   -1   0   
+$EndComp
+$Comp
+L GNDD #PWR035
+U 1 1 587E83E3
+P 11150 4500
+F 0 "#PWR035" H 11150 4250 50  0001 C CNN
+F 1 "GNDD" H 11200 4350 50  0000 C CNN
+F 2 "" H 11150 4500 50  0000 C CNN
+F 3 "" H 11150 4500 50  0000 C CNN
+	1    11150 4500
+	1    0    0    -1  
+$EndComp
+$Comp
+L 1SS319_Schottky_Ind D1003
+U 1 1 59166500
+P 7300 7350
+F 0 "D1003" H 7700 7350 50  0000 C CNN
+F 1 "1SS319_Schottky_Ind" H 7325 7625 50  0001 C CNN
+F 2 "Diodes_SMD:SC-61_Handsolder" H 7300 7350 50  0001 C CNN
+F 3 "" H 7300 7350 50  0000 C CNN
+	1    7300 7350
+	1    0    0    -1  
+$EndComp
+Text GLabel 6500 7800 2    39   Output ~ 0
+DI_RXD0
+Text GLabel 7100 7900 2    39   Output ~ 0
+DI_TXD0
+Text GLabel 12500 5250 1    39   Output ~ 0
+PROC_ADC7*
+Text Notes 14000 900  2    79   ~ 16
+Audio Amp Power
+$Comp
+L SDM40E20LC D1005
+U 1 1 591CDC43
+P 13750 4250
+F 0 "D1005" H 13950 4150 50  0000 C CNN
+F 1 "SDMG0340LC-7-F" H 13750 4350 50  0001 C CNN
+F 2 "TO_SOT_Packages_SMD:SOT-323_Handsolder" H 13750 4250 50  0001 C CNN
+F 3 "https://www.diodes.com/assets/Datasheets/ds30248.pdf" H 13750 4250 50  0001 C CNN
+	1    13750 4250
+	1    0    0    1   
+$EndComp
+$Comp
+L DMP4025LSD Q1001
+U 1 1 591CF3B2
+P 13300 4900
+F 0 "Q1001" V 13100 5300 50  0000 L CNN
+F 1 "DMP4025LSD" V 13200 4950 50  0000 L CNN
+F 2 "Power_Integrations:SO-8_Handsolder" H 13550 4825 50  0001 L CIN
+F 3 "" H 13300 4900 50  0000 L CNN
+	1    13300 4900
+	0    -1   1    0   
+$EndComp
+$Comp
+L R R1009
+U 1 1 591D08B7
+P 13550 4750
+F 0 "R1009" V 13630 4750 50  0000 C CNN
+F 1 "100k" V 13550 4750 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 13480 4750 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 13550 4750 50  0001 C CNN
+	1    13550 4750
+	1    0    0    -1  
+$EndComp
+$Comp
+L C_Small C1023
+U 1 1 591D139C
+P 13150 4250
+F 0 "C1023" V 13050 4200 50  0000 L CNN
+F 1 "100nF" V 13300 4150 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 13150 4250 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 13150 4250 50  0001 C CNN
+	1    13150 4250
+	0    1    1    0   
+$EndComp
+$Comp
+L GND #PWR036
+U 1 1 591D1615
+P 13050 4250
+F 0 "#PWR036" H 13050 4000 50  0001 C CNN
+F 1 "GND" H 13200 4200 50  0000 C CNN
+F 2 "" H 13050 4250 50  0000 C CNN
+F 3 "" H 13050 4250 50  0000 C CNN
+	1    13050 4250
+	0    1    1    0   
+$EndComp
+$Comp
+L 1SS319_Schottky_Ind D1004
+U 2 1 591D29C5
+P 14550 5300
+F 0 "D1004" V 14600 5100 50  0000 C CNN
+F 1 "1SS319_Schottky_Ind" H 14575 5575 50  0001 C CNN
+F 2 "Diodes_SMD:SC-61_Handsolder" H 14550 5300 50  0001 C CNN
+F 3 "" H 14550 5300 50  0000 C CNN
+	2    14550 5300
+	0    -1   -1   0   
+$EndComp
+$Comp
+L R R1013
+U 1 1 591D2B75
+P 14550 4500
+F 0 "R1013" V 14630 4500 50  0000 C CNN
+F 1 "10k" V 14550 4500 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 14480 4500 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 14550 4500 50  0001 C CNN
+	1    14550 4500
+	1    0    0    -1  
+$EndComp
+$Comp
+L DMP4025LSD Q1001
+U 2 1 591D2FB0
+P 13950 5100
+F 0 "Q1001" V 14300 4900 50  0000 L CNN
+F 1 "DMP4025LSD" V 14200 4900 50  0000 L CNN
+F 2 "Power_Integrations:SO-8_Handsolder" H 14200 5025 50  0001 L CIN
+F 3 "" H 13950 5100 50  0000 L CNN
+	2    13950 5100
+	0    1    -1   0   
+$EndComp
+$Comp
+L R R1010
+U 1 1 591D482E
+P 13550 5300
+F 0 "R1010" V 13630 5300 50  0000 C CNN
+F 1 "100k" V 13550 5300 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 13480 5300 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 13550 5300 50  0001 C CNN
+	1    13550 5300
+	1    0    0    -1  
+$EndComp
+Text GLabel 14700 5000 2    39   Output ~ 0
+EARPHONE_SW_POWER
+Text GLabel 13950 7550 2    39   Input ~ 0
+EARPHONE_SW_POWER
+$Comp
+L MUN5211DW1T1G Q1002
+U 1 1 591D824C
+P 13800 6200
+F 0 "Q1002" H 14000 6275 50  0000 L CNN
+F 1 "MUN5211DW1T1G" H 14000 6200 50  0000 L CNN
+F 2 "TO_SOT_Packages_SMD:SOT-363_Handsolder" H 13800 6200 50  0001 L CNN
+F 3 "" H 13800 6200 50  0000 L CNN
+	1    13800 6200
+	1    0    0    -1  
+$EndComp
+$Comp
+L GNDD #PWR037
+U 1 1 591D88EA
+P 13900 6500
+F 0 "#PWR037" H 13900 6250 50  0001 C CNN
+F 1 "GNDD" H 13900 6350 50  0000 C CNN
+F 2 "" H 13900 6500 50  0000 C CNN
+F 3 "" H 13900 6500 50  0000 C CNN
+	1    13900 6500
+	-1   0    0    -1  
+$EndComp
+Text Notes 14700 5500 0    79   ~ 16
+Headphone Shut-off Circuit
+$Comp
+L DS3231 U1001
+U 1 1 591E6034
+P 1900 9200
+F 0 "U1001" H 2200 10000 60  0000 C CNB
+F 1 "DS3231" H 2250 9900 60  0000 C CNB
+F 2 "SMD_Packages:SO16_Handsolder" H 1900 9200 60  0001 C CNN
+F 3 "" H 1900 9200 60  0000 C CNN
+	1    1900 9200
+	1    0    0    -1  
+$EndComp
+$Comp
+L GNDD #PWR038
+U 1 1 591E61CB
+P 1900 9750
+F 0 "#PWR038" H 1900 9500 50  0001 C CNN
+F 1 "GNDD" H 1900 9600 50  0000 C CNN
+F 2 "" H 1900 9750 50  0000 C CNN
+F 3 "" H 1900 9750 50  0000 C CNN
+	1    1900 9750
+	1    0    0    -1  
+$EndComp
+Text GLabel 1450 9150 0    39   Input ~ 0
+DI_SCL
+Text GLabel 1450 9250 0    39   Input ~ 0
+DI_SDA
+$Comp
+L Battery_Single_Cell-RESCUE-Digital_Interface BT1001
+U 1 1 591E8EF3
+P 2600 9050
+F 0 "BT1001" H 2700 9100 50  0000 L CNN
+F 1 "CR1220" H 2700 9025 50  0000 L CNN
+F 2 "Oddities:BC501SM_CR1220_BAT_Handsolder" V 2600 9090 50  0001 C CNN
+F 3 "" V 2600 9090 50  0000 C CNN
+	1    2600 9050
+	0    -1   -1   0   
+$EndComp
+$Comp
+L GNDD #PWR039
+U 1 1 591E902A
+P 2750 9050
+F 0 "#PWR039" H 2750 8800 50  0001 C CNN
+F 1 "GNDD" H 2750 8900 50  0000 C CNN
+F 2 "" H 2750 9050 50  0000 C CNN
+F 3 "" H 2750 9050 50  0000 C CNN
+	1    2750 9050
+	0    -1   -1   0   
+$EndComp
+$Comp
+L C_Small C1001
+U 1 1 591EA9E9
+P 1700 8650
+F 0 "C1001" V 1600 8500 50  0000 L CNN
+F 1 "1uF" V 1800 8600 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 1700 8650 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 1700 8650 50  0001 C CNN
+	1    1700 8650
+	0    1    1    0   
+$EndComp
+$Comp
+L GNDD #PWR040
+U 1 1 591EABD4
+P 1600 8650
+F 0 "#PWR040" H 1600 8400 50  0001 C CNN
+F 1 "GNDD" H 1600 8500 50  0000 C CNN
+F 2 "" H 1600 8650 50  0000 C CNN
+F 3 "" H 1600 8650 50  0000 C CNN
+	1    1600 8650
+	0    1    -1   0   
+$EndComp
+$Comp
+L TEST_1P W1003
+U 1 1 591EB94A
+P 2400 9000
+F 0 "W1003" V 2400 9270 50  0000 C CNN
+F 1 "TEST_1P" H 2400 9200 50  0001 C CNN
+F 2 "Measurement_Points:Measurement_Point_Square-SMD-Pad_Small" H 2600 9000 50  0001 C CNN
+F 3 "" H 2600 9000 50  0000 C CNN
+	1    2400 9000
+	-1   0    0    -1  
+$EndComp
+$Comp
+L C_Small C1007
+U 1 1 591F02A8
+P 4050 1350
+F 0 "C1007" V 3900 1300 50  0000 L CNN
+F 1 "100nF" V 4150 1200 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 4050 1350 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 4050 1350 50  0001 C CNN
+	1    4050 1350
+	0    1    1    0   
+$EndComp
+$Comp
+L GNDD #PWR042
+U 1 1 591F03BB
+P 4300 3350
+F 0 "#PWR042" H 4300 3100 50  0001 C CNN
+F 1 "GNDD" H 4300 3200 50  0000 C CNN
+F 2 "" H 4300 3350 50  0000 C CNN
+F 3 "" H 4300 3350 50  0000 C CNN
+	1    4300 3350
+	1    0    0    -1  
+$EndComp
+$Comp
+L GNDD #PWR043
+U 1 1 591F04A7
+P 3850 1350
+F 0 "#PWR043" H 3850 1100 50  0001 C CNN
+F 1 "GNDD" H 3850 1200 50  0000 C CNN
+F 2 "" H 3850 1350 50  0000 C CNN
+F 3 "" H 3850 1350 50  0000 C CNN
+	1    3850 1350
+	0    1    1    0   
+$EndComp
+Text GLabel 3700 2250 0    39   Input ~ 0
+DI_SCL
+Text GLabel 3700 2350 0    39   Input ~ 0
+DI_SDA
+$Comp
+L GNDD #PWR044
+U 1 1 591F1044
+P 3650 2550
+F 0 "#PWR044" H 3650 2300 50  0001 C CNN
+F 1 "GNDD" H 3650 2400 50  0000 C CNN
+F 2 "" H 3650 2550 50  0000 C CNN
+F 3 "" H 3650 2550 50  0000 C CNN
+	1    3650 2550
+	0    1    1    0   
+$EndComp
+Text Notes 9400 3650 0    79   ~ 16
+Audio Tone Volume
+$Comp
+L +3.3V #PWR045
+U 1 1 591FED2B
+P 3800 2700
+F 0 "#PWR045" H 3800 2550 50  0001 C CNN
+F 1 "+3.3V" H 3800 2840 50  0000 C CNN
+F 2 "" H 3800 2700 50  0000 C CNN
+F 3 "" H 3800 2700 50  0000 C CNN
+	1    3800 2700
+	0    -1   -1   0   
+$EndComp
+Text Notes 4700 950  2    79   ~ 16
+Binio Port Expander
+Text Notes 16150 2350 2    79   ~ 16
+Headphone Jack
+Text GLabel 4900 2700 2    39   Output ~ 0
+DI_MASTER_~SLAVE~
+$Comp
+L GND #PWR046
+U 1 1 59203AA4
+P 11350 10300
+F 0 "#PWR046" H 11350 10050 50  0001 C CNN
+F 1 "GND" H 11350 10150 50  0000 C CNN
+F 2 "" H 11350 10300 50  0000 C CNN
+F 3 "" H 11350 10300 50  0000 C CNN
+	1    11350 10300
+	1    0    0    -1  
+$EndComp
+$Comp
+L GNDD #PWR047
+U 1 1 59203F23
+P 11550 10300
+F 0 "#PWR047" H 11550 10050 50  0001 C CNN
+F 1 "GNDD" H 11550 10150 50  0000 C CNN
+F 2 "" H 11550 10300 50  0000 C CNN
+F 3 "" H 11550 10300 50  0000 C CNN
+	1    11550 10300
+	1    0    0    -1  
+$EndComp
+$Sheet
+S -1700 450  1450 950 
+U 591CA64F
+F0 "UART Interface" 60
+F1 "file591CA64E.sch" 60
+$EndSheet
+$Comp
+L 1SS319_Schottky_Ind D1002
+U 1 1 591CA825
+P 3600 5250
+F 0 "D1002" V 3600 5050 50  0000 C CNN
+F 1 "1SS319_Schottky_Ind" H 3625 5525 50  0001 C CNN
+F 2 "Diodes_SMD:SC-61_Handsolder" H 3600 5250 50  0001 C CNN
+F 3 "" H 3600 5250 50  0000 C CNN
+	1    3600 5250
+	0    1    1    0   
+$EndComp
+$Comp
+L Vproc #PWR048
+U 1 1 591CAC09
+P 4400 5500
+F 0 "#PWR048" H 4400 5350 50  0001 C CNN
+F 1 "Vproc" H 4400 5650 50  0000 C CNN
+F 2 "" H 4400 5500 50  0000 C CNN
+F 3 "" H 4400 5500 50  0000 C CNN
+	1    4400 5500
+	1    0    0    -1  
+$EndComp
+$Comp
+L PWR_FLAG #FLG049
+U 1 1 591CB758
+P 4200 5900
+F 0 "#FLG049" H 4200 5995 50  0001 C CNN
+F 1 "PWR_FLAG" H 4200 6080 50  0000 C CNN
+F 2 "" H 4200 5900 50  0000 C CNN
+F 3 "" H 4200 5900 50  0000 C CNN
+	1    4200 5900
+	1    0    0    -1  
+$EndComp
+$Comp
+L MIC5225YM5-TR U1002
+U 1 1 591CC464
+P 2350 4450
+F 0 "U1002" H 2350 4800 61  0000 C CNB
+F 1 "MIC5225YM5-TR" H 2400 4700 61  0000 C CNB
+F 2 "TO_SOT_Packages_SMD:SOT-23-5_Handsolder" H 2350 4550 50  0001 C CIN
+F 3 "" H 2350 4450 50  0000 C CNN
+	1    2350 4450
+	1    0    0    -1  
+$EndComp
+$Comp
+L C_Small C1002
+U 1 1 591CC890
+P 1750 4700
+F 0 "C1002" H 1760 4770 50  0000 L CNN
+F 1 "2.2uF" H 1760 4620 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 1750 4700 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 1750 4700 50  0001 C CNN
+	1    1750 4700
+	-1   0    0    1   
+$EndComp
+$Comp
+L GNDD #PWR050
+U 1 1 591CCB48
+P 1750 4800
+F 0 "#PWR050" H 1750 4550 50  0001 C CNN
+F 1 "GNDD" H 1750 4650 50  0000 C CNN
+F 2 "" H 1750 4800 50  0000 C CNN
+F 3 "" H 1750 4800 50  0000 C CNN
+	1    1750 4800
+	1    0    0    -1  
+$EndComp
+$Comp
+L GNDD #PWR051
+U 1 1 591CCC40
+P 2350 4750
+F 0 "#PWR051" H 2350 4500 50  0001 C CNN
+F 1 "GNDD" H 2350 4600 50  0000 C CNN
+F 2 "" H 2350 4750 50  0000 C CNN
+F 3 "" H 2350 4750 50  0000 C CNN
+	1    2350 4750
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R1001
+U 1 1 591CD4FF
+P 2950 4750
+F 0 "R1001" V 3030 4750 50  0000 C CNN
+F 1 "100k" V 2950 4750 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 2880 4750 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 2950 4750 50  0001 C CNN
+	1    2950 4750
+	-1   0    0    1   
+$EndComp
+$Comp
+L R R1002
+U 1 1 591CD625
+P 2950 5200
+F 0 "R1002" V 3030 5200 50  0000 C CNN
+F 1 "80.6k" V 2950 5200 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 2880 5200 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 2950 5200 50  0001 C CNN
+	1    2950 5200
+	-1   0    0    1   
+$EndComp
+$Comp
+L GNDD #PWR052
+U 1 1 591CD742
+P 2950 5350
+F 0 "#PWR052" H 2950 5100 50  0001 C CNN
+F 1 "GNDD" H 2950 5200 50  0000 C CNN
+F 2 "" H 2950 5350 50  0000 C CNN
+F 3 "" H 2950 5350 50  0000 C CNN
+	1    2950 5350
+	1    0    0    -1  
+$EndComp
+$Comp
+L C_Small C1003
+U 1 1 591CDF86
+P 3250 4550
+F 0 "C1003" H 2950 4500 50  0000 L CNN
+F 1 "2.2uF" H 2950 4600 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 3250 4550 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 3250 4550 50  0001 C CNN
+	1    3250 4550
+	-1   0    0    1   
+$EndComp
+$Comp
+L GNDD #PWR053
+U 1 1 591CE09F
+P 3250 4650
+F 0 "#PWR053" H 3250 4400 50  0001 C CNN
+F 1 "GNDD" H 3250 4500 50  0000 C CNN
+F 2 "" H 3250 4650 50  0000 C CNN
+F 3 "" H 3250 4650 50  0000 C CNN
+	1    3250 4650
+	1    0    0    -1  
+$EndComp
+$Comp
+L 1SS319_Schottky_Ind D1002
+U 2 1 591CEB33
+P 3900 5500
+F 0 "D1002" V 3900 5700 50  0000 C CNN
+F 1 "1SS319_Schottky_Ind" H 3925 5775 50  0001 C CNN
+F 2 "Diodes_SMD:SC-61_Handsolder" H 3900 5500 50  0001 C CNN
+F 3 "" H 3900 5500 50  0000 C CNN
+	2    3900 5500
+	0    1    1    0   
+$EndComp
+Text Notes 1750 4000 0    79   ~ 16
+Power to Processor Only
+Text GLabel 7300 1600 2    39   Input ~ 0
+PROC_PB0
+Text GLabel 7300 1700 2    39   Input ~ 0
+PROC_PB1
+Text GLabel 7300 1800 2    39   Input ~ 0
+PROC_PB2
+Text GLabel 7300 1900 2    39   Input ~ 0
+PROC_PB6
+Text GLabel 7300 2000 2    39   Input ~ 0
+PROC_PB7
+Text GLabel 6550 2400 0    39   Input ~ 0
+PROC_PC0*
+Text GLabel 6550 2500 0    39   Input ~ 0
+PROC_PC1*
+Text GLabel 6550 2600 0    39   Input ~ 0
+PROC_PC2
+Text GLabel 6550 2700 0    39   Input ~ 0
+PROC_PC3
+Text GLabel 7300 2100 2    39   Input ~ 0
+PROC_ADC6
+Text GLabel 7300 2400 2    39   Input ~ 0
+PROC_PD4
+Text GLabel 7300 2500 2    39   Input ~ 0
+PROC_PD5*
+Text GLabel 7300 2600 2    39   Input ~ 0
+PROC_PD6
+$Comp
+L GNDD #PWR054
+U 1 1 594D7E05
+P 6500 1500
+F 0 "#PWR054" H 6500 1250 50  0001 C CNN
+F 1 "GNDD" H 6500 1350 50  0001 C CNN
+F 2 "" H 6500 1500 50  0000 C CNN
+F 3 "" H 6500 1500 50  0000 C CNN
+	1    6500 1500
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	8550 5050 8550 5400
+Wire Wire Line
+	4150 8600 4100 8600
+Wire Wire Line
+	3900 5700 3900 6500
+Wire Wire Line
+	3900 6500 4150 6500
+Wire Wire Line
+	10450 5700 9850 5700
+Wire Wire Line
+	3900 7000 4150 7000
+Wire Wire Line
+	4150 8700 4100 8700
+Wire Wire Line
+	4100 8600 4100 8800
+Connection ~ 4100 8700
+Wire Wire Line
+	4150 8500 3850 8500
+Wire Wire Line
+	3850 8500 3850 8800
+Wire Wire Line
+	3900 6700 3900 7000
+Connection ~ 3900 6700
+Wire Wire Line
+	6050 6400 6150 6400
+Wire Wire Line
+	6150 6500 6050 6500
+Wire Wire Line
+	6150 6600 6050 6600
+Wire Wire Line
+	6150 6700 6050 6700
+Wire Wire Line
+	6150 6800 6050 6800
+Wire Wire Line
+	6150 6900 6050 6900
+Wire Wire Line
+	6150 7000 6050 7000
+Wire Wire Line
+	6150 7100 6050 7100
+Wire Wire Line
+	6150 7450 6050 7450
+Wire Wire Line
+	6150 7550 6050 7550
+Wire Wire Line
+	6150 7650 6050 7650
+Wire Wire Line
+	6150 7750 6050 7750
+Wire Wire Line
+	6150 7850 6050 7850
+Wire Wire Line
+	6150 8100 6050 8100
+Wire Wire Line
+	6150 8200 6050 8200
+Wire Wire Line
+	6050 8300 6150 8300
+Wire Wire Line
+	6150 8400 6050 8400
+Wire Wire Line
+	6150 8500 6050 8500
+Wire Wire Line
+	6150 8600 6050 8600
+Wire Wire Line
+	6150 8700 6050 8700
+Wire Wire Line
+	9950 5500 9850 5500
+Wire Wire Line
+	6500 6600 6350 6600
+Wire Wire Line
+	12750 5350 12750 5550
+Wire Wire Line
+	12500 5450 12750 5450
+Connection ~ 12750 5450
+Wire Wire Line
+	12500 5250 12500 5550
+Connection ~ 12500 5450
+Wire Wire Line
+	10500 2150 11450 2150
+Wire Wire Line
+	10600 3050 11400 3050
+Wire Wire Line
+	12350 3500 12350 3650
+Wire Wire Line
+	10050 5800 9850 5800
+Wire Wire Line
+	11200 3600 11600 3600
+Wire Wire Line
+	10650 4000 10650 4100
+Wire Wire Line
+	11350 4050 11400 4050
+Wire Wire Line
+	11400 4050 11400 4150
+Wire Wire Line
+	10650 3650 10650 3600
+Wire Wire Line
+	10650 3600 10900 3600
+Wire Wire Line
+	11050 3350 11050 3600
+Wire Wire Line
+	6350 7150 7150 7150
+Wire Wire Line
+	7550 7050 7550 7350
+Wire Wire Line
+	5450 9500 5550 9500
+Wire Wire Line
+	5550 9500 5550 9600
+Wire Wire Line
+	5450 9300 5550 9300
+Wire Wire Line
+	5550 9300 5550 9250
+Wire Wire Line
+	6500 6300 6350 6300
+Wire Wire Line
+	6350 6400 6500 6400
+Wire Wire Line
+	6350 6500 6500 6500
+Wire Wire Line
+	4950 9200 4950 9300
+Wire Wire Line
+	4800 9200 4950 9200
+Wire Wire Line
+	4950 9500 4950 9600
+Wire Wire Line
+	4950 9600 4850 9600
+Wire Wire Line
+	12750 5850 12750 5900
+Wire Wire Line
+	12500 1250 12500 1700
+Wire Wire Line
+	7150 7000 7100 7000
+Wire Wire Line
+	10650 4050 10750 4050
+Wire Wire Line
+	12500 5900 12500 5850
+Wire Wire Line
+	12150 3500 12150 3450
+Wire Wire Line
+	11050 3050 11050 3150
+Wire Wire Line
+	11950 3500 11950 3650
+Wire Wire Line
+	9850 4400 5700 4400
+Wire Wire Line
+	3250 6700 4150 6700
+Connection ~ 3650 6700
+Wire Wire Line
+	8550 5500 8250 5500
+Connection ~ 10650 4050
+Wire Wire Line
+	8450 5100 8550 5100
+Connection ~ 8550 5100
+Wire Wire Line
+	10450 5600 10450 5750
+Wire Wire Line
+	7100 7000 7100 7350
+Connection ~ 7100 7150
+Wire Wire Line
+	3850 6400 4150 6400
+Connection ~ 4200 5900
+Wire Wire Line
+	3250 5900 3200 5900
+Wire Wire Line
+	7050 5450 7050 5550
+Wire Wire Line
+	7050 5500 7250 5500
+Wire Wire Line
+	7050 5750 7050 5850
+Wire Wire Line
+	5700 4400 5700 3100
+Wire Wire Line
+	9950 4300 5800 4300
+Wire Wire Line
+	5800 4300 5800 3200
+Wire Wire Line
+	10500 2150 10500 3200
+Wire Wire Line
+	5900 3300 5900 4200
+Wire Wire Line
+	7050 5800 7250 5800
+Connection ~ 3900 6400
+Wire Wire Line
+	3250 6400 3250 6800
+Connection ~ 3250 6700
+Wire Wire Line
+	3250 7000 3250 7100
+Wire Wire Line
+	13700 8450 13750 8450
+Wire Wire Line
+	14000 1400 13950 1400
+Wire Wire Line
+	13950 1250 14200 1250
+Wire Wire Line
+	13500 8300 13750 8300
+Connection ~ 13700 8300
+Wire Wire Line
+	13500 8250 13500 8350
+Wire Wire Line
+	14200 1150 14200 1300
+Wire Wire Line
+	13500 8550 13500 8600
+Wire Wire Line
+	14200 1500 14200 1550
+Wire Wire Line
+	14150 8650 14150 8800
+Wire Wire Line
+	13550 1750 13550 1600
+Wire Wire Line
+	14650 8500 14650 8450
+Wire Wire Line
+	14650 8450 14550 8450
+Wire Wire Line
+	13050 1450 13050 1400
+Wire Wire Line
+	13050 1400 13150 1400
+Wire Wire Line
+	14900 8200 14900 8500
+Wire Wire Line
+	12500 1250 13150 1250
+Connection ~ 14900 8300
+Wire Wire Line
+	14900 8700 14900 8900
+Wire Wire Line
+	14150 8800 14900 8800
+Wire Wire Line
+	14650 8700 14650 8800
+Connection ~ 14650 8800
+Wire Wire Line
+	12750 1650 12750 1750
+Wire Wire Line
+	12750 1750 13650 1750
+Wire Wire Line
+	13050 1650 13050 1750
+Connection ~ 13050 1750
+Wire Wire Line
+	12550 3500 12550 3550
+Wire Wire Line
+	11600 3050 11700 3050
+Wire Wire Line
+	11650 2150 11700 2150
+Wire Wire Line
+	11200 2650 11200 2600
+Wire Wire Line
+	11200 2600 11700 2600
+Wire Wire Line
+	6150 7250 6050 7250
+Wire Wire Line
+	6150 7350 6050 7350
+Wire Wire Line
+	8450 5800 8550 5800
+Wire Wire Line
+	8350 5700 8550 5700
+Wire Wire Line
+	8150 5100 8050 5100
+Wire Wire Line
+	8050 5100 8050 5150
+Connection ~ 7050 5500
+Connection ~ 7050 5800
+Connection ~ 14900 8800
+Connection ~ 14200 1250
+Wire Wire Line
+	12750 1250 12750 1450
+Wire Wire Line
+	5900 4200 10050 4200
+Wire Wire Line
+	7550 7150 7450 7150
+Wire Wire Line
+	6350 8300 6500 8300
+Wire Wire Line
+	14550 8300 14900 8300
+Wire Wire Line
+	13300 1850 13300 1750
+Connection ~ 13300 1750
+Wire Wire Line
+	12550 3900 12550 3850
+Wire Wire Line
+	13200 2950 14250 2950
+Wire Wire Line
+	12800 2950 12900 2950
+Wire Wire Line
+	12900 2750 12900 2750
+Connection ~ 12750 1250
+Connection ~ 13550 1750
+Wire Wire Line
+	13950 1750 14000 1750
+Wire Wire Line
+	14000 2150 13800 2150
+Connection ~ 14000 1750
+Wire Wire Line
+	14000 1400 14000 2150
+Wire Wire Line
+	10600 3300 10600 3050
+Connection ~ 11050 3050
+Wire Wire Line
+	11600 3600 11600 3750
+Wire Wire Line
+	10750 2450 10750 2150
+Connection ~ 10750 2150
+Wire Wire Line
+	10750 2650 10750 3500
+Wire Wire Line
+	10750 3500 11050 3500
+Connection ~ 11050 3500
+Wire Wire Line
+	4800 2300 6550 2300
+Wire Wire Line
+	12800 2250 12900 2250
+Wire Wire Line
+	12900 2250 12900 2750
+Wire Wire Line
+	13750 2950 13750 3750
+Connection ~ 13750 2950
+Wire Wire Line
+	6150 8000 6050 8000
+Wire Wire Line
+	15250 2850 14800 2850
+Wire Wire Line
+	13200 2750 14050 2750
+Wire Wire Line
+	4800 9400 4950 9400
+Wire Wire Line
+	5600 9400 5450 9400
+Wire Wire Line
+	7550 7350 7500 7350
+Connection ~ 7550 7150
+Wire Wire Line
+	6350 7800 6500 7800
+Wire Wire Line
+	6350 7900 6750 7900
+Wire Wire Line
+	3950 7750 4150 7750
+Wire Wire Line
+	13050 5000 13050 5650
+Wire Wire Line
+	12750 5000 13100 5000
+Wire Wire Line
+	13100 5100 13050 5100
+Connection ~ 13050 5100
+Wire Wire Line
+	13350 4250 13350 4700
+Wire Wire Line
+	13250 4250 13450 4250
+Wire Wire Line
+	13500 5000 13750 5000
+Wire Wire Line
+	13550 4900 13550 5150
+Wire Wire Line
+	13550 4600 13550 4400
+Wire Wire Line
+	13550 4400 13350 4400
+Connection ~ 13350 4400
+Connection ~ 13350 4250
+Wire Wire Line
+	14550 4350 14550 4250
+Wire Wire Line
+	14550 4250 14050 4250
+Connection ~ 13550 5000
+Wire Wire Line
+	14550 4650 14550 5100
+Wire Wire Line
+	14150 5000 14700 5000
+Connection ~ 14550 5000
+Connection ~ 14550 4900
+Wire Wire Line
+	13550 5450 13550 5500
+Wire Wire Line
+	13550 5500 13900 5500
+Wire Wire Line
+	13900 5300 13900 6000
+Wire Wire Line
+	13800 4600 13700 4600
+Wire Wire Line
+	13700 4600 13700 5000
+Connection ~ 13700 5000
+Wire Wire Line
+	14550 5500 14550 5650
+Wire Wire Line
+	14550 5650 13050 5650
+Connection ~ 13900 5500
+Wire Wire Line
+	13900 6500 13900 6400
+Wire Wire Line
+	13700 7650 13700 8450
+Connection ~ 13050 5000
+Wire Wire Line
+	14150 4900 14550 4900
+Wire Wire Line
+	12750 5050 12750 5000
+Wire Wire Line
+	1700 9650 1700 9700
+Wire Wire Line
+	1700 9700 2100 9700
+Wire Wire Line
+	2100 9700 2100 9650
+Wire Wire Line
+	1750 9650 1750 9700
+Connection ~ 1750 9700
+Wire Wire Line
+	1800 9650 1800 9700
+Connection ~ 1800 9700
+Wire Wire Line
+	1850 9650 1850 9700
+Connection ~ 1850 9700
+Wire Wire Line
+	1900 9650 1900 9750
+Wire Wire Line
+	1950 9650 1950 9700
+Connection ~ 1950 9700
+Wire Wire Line
+	2000 9650 2000 9700
+Connection ~ 2000 9700
+Wire Wire Line
+	2050 9650 2050 9700
+Connection ~ 2050 9700
+Connection ~ 1900 9700
+Wire Wire Line
+	1450 9150 1500 9150
+Wire Wire Line
+	1450 9250 1500 9250
+Wire Wire Line
+	1900 8600 1900 8750
+Wire Wire Line
+	1800 8650 1900 8650
+Connection ~ 1900 8650
+Wire Wire Line
+	2300 9050 2450 9050
+Wire Wire Line
+	2400 9000 2400 9050
+Connection ~ 2400 9050
+Wire Wire Line
+	6550 2200 4800 2200
+Wire Wire Line
+	4800 2100 6550 2100
+Wire Wire Line
+	4800 2000 6550 2000
+Wire Wire Line
+	4800 1900 6550 1900
+Wire Wire Line
+	4800 1800 6550 1800
+Wire Wire Line
+	4800 1700 6550 1700
+Wire Wire Line
+	3700 2250 3800 2250
+Wire Wire Line
+	3700 2350 3800 2350
+Wire Wire Line
+	3700 2600 3800 2600
+Wire Wire Line
+	4300 3300 4300 3350
+Wire Wire Line
+	3850 1350 3950 1350
+Wire Wire Line
+	4300 1300 4300 1400
+Wire Wire Line
+	4150 1350 4300 1350
+Connection ~ 4300 1350
+Wire Wire Line
+	6500 8000 6350 8000
+Wire Wire Line
+	6350 8100 6500 8100
+Wire Bus Line
+	6250 6200 6250 8900
+Wire Wire Line
+	6500 7350 6350 7350
+Wire Wire Line
+	6500 8200 6350 8200
+Wire Wire Line
+	4800 1600 6550 1600
+Wire Wire Line
+	11350 10300 11350 10200
+Wire Wire Line
+	11350 10200 12050 10200
+Wire Wire Line
+	11550 9800 11550 10300
+Wire Wire Line
+	3800 2500 3700 2500
+Wire Wire Line
+	3700 2500 3700 2600
+Wire Wire Line
+	3650 2550 3700 2550
+Connection ~ 3700 2550
+Wire Wire Line
+	3950 7850 4150 7850
+Wire Wire Line
+	6500 6200 6350 6200
+Connection ~ 3900 5900
+Wire Wire Line
+	3600 5450 3600 5900
+Connection ~ 3600 5900
+Wire Wire Line
+	1750 4400 1750 4600
+Wire Wire Line
+	1400 4400 1950 4400
+Wire Wire Line
+	1950 4550 1750 4550
+Connection ~ 1750 4550
+Connection ~ 1750 4400
+Wire Wire Line
+	2950 4900 2950 5050
+Wire Wire Line
+	2750 4550 2800 4550
+Wire Wire Line
+	2800 4550 2800 5000
+Wire Wire Line
+	2800 5000 2950 5000
+Connection ~ 2950 5000
+Wire Wire Line
+	2750 4400 3600 4400
+Wire Wire Line
+	3250 4400 3250 4450
+Wire Wire Line
+	2950 4600 2950 4400
+Connection ~ 2950 4400
+Connection ~ 3250 4400
+Wire Wire Line
+	4400 5900 4400 5500
+Wire Wire Line
+	6550 3300 5900 3300
+Wire Wire Line
+	5800 3200 6550 3200
+Wire Wire Line
+	5700 3100 6550 3100
+Wire Wire Line
+	6350 2950 6450 2950
+Wire Wire Line
+	6450 2900 6450 3000
+Wire Wire Line
+	6450 2900 6550 2900
+Wire Wire Line
+	6450 3000 6550 3000
+Connection ~ 6450 2950
+Wire Wire Line
+	6550 1500 6500 1500
+Wire Wire Line
+	7300 1500 7350 1500
+Wire Wire Line
+	10500 3200 7300 3200
+Wire Wire Line
+	7300 3300 10600 3300
+Text GLabel 6500 7450 2    39   Output ~ 0
+PROC_PC0*
+Wire Wire Line
+	6500 7450 6350 7450
+Text GLabel 11950 3650 3    39   Input ~ 0
+PROC_PC0*
+Text GLabel 6500 7550 2    39   Output ~ 0
+PROC_PC1*
+Wire Wire Line
+	6500 7550 6350 7550
+Text GLabel 12350 3650 3    39   Input ~ 0
+PROC_PC1*
+Text GLabel 11600 4250 3    39   Input ~ 0
+PROC_PD5*
+Wire Wire Line
+	11600 4050 11600 4250
+Text GLabel 6500 7700 2    39   Output ~ 0
+PROC_PD5*
+Wire Wire Line
+	6350 7700 6500 7700
+Text GLabel 6500 6600 2    39   Output ~ 0
+PROC_PB1
+Wire Wire Line
+	13400 6200 13550 6200
+Text GLabel 3950 7850 0    39   Input ~ 0
+PROC_ADC7*
+Text GLabel 6500 6200 2    39   Output ~ 0
+PROC_PC3
+Text GLabel 3950 7750 0    39   Input ~ 0
+PROC_ADC6
+Text GLabel 6500 8400 2    39   Output ~ 0
+PROC_PB0
+Wire Wire Line
+	6500 8400 6350 8400
+Text GLabel 6500 8500 2    39   Output ~ 0
+PROC_PD4
+Wire Wire Line
+	6500 8500 6350 8500
+Text GLabel 6500 8600 2    39   Output ~ 0
+PROC_PB2
+Wire Wire Line
+	6500 8600 6350 8600
+Text GLabel 6500 8700 2    39   Output ~ 0
+PROC_PB7
+Wire Wire Line
+	6500 8700 6350 8700
+Text GLabel 6500 8800 2    39   Output ~ 0
+PROC_PB6
+Wire Wire Line
+	6500 8800 6350 8800
+Text GLabel 6500 8100 2    39   Output ~ 0
+PROC_PD3
+Text GLabel 2550 9300 2    39   Output ~ 0
+PROC_PD2
+Text GLabel 6500 8000 2    39   Output ~ 0
+PROC_PD2
+Text GLabel 3750 1900 0    39   Output ~ 0
+PROC_PD7
+Text GLabel 6500 8200 2    39   Output ~ 0
+PROC_PD7
+Text GLabel 6500 8300 2    39   Output ~ 0
+PROC_PD6
+Text GLabel 4900 2600 2    39   Output ~ 0
+AUDIO_AMP_ENABLE
+Text GLabel 6500 7350 2    39   Output ~ 0
+PROC_PC2
+$Sheet
+S -1700 1600 1450 900 
+U 594DB670
+F0 "WiFi Interface" 60
+F1 "file594DB66F.sch" 60
+$EndSheet
+Text GLabel 4900 2800 2    39   Output ~ 0
+WIFI_ENABLE
+Text GLabel 4900 2900 2    39   Output ~ 0
+~WIFI_RESET~
+Text GLabel 4900 3000 2    39   Input ~ 0
+~Clone_Present~
+Text GLabel 4900 3100 2    39   Input ~ 0
+~FTDI_Present~
+Wire Wire Line
+	4900 3100 4800 3100
+Text GLabel 13450 7550 0    39   Input ~ 0
++V_MAIN
+Text GLabel 7300 2200 2    39   Input ~ 0
+PROC_ADC7*
+$Comp
+L MCP23017 U1003
+U 1 1 594EA170
+P 4300 2350
+F 0 "U1003" H 4500 3400 61  0000 C CNB
+F 1 "MCP23017" H 4600 3300 61  0000 C CNB
+F 2 "Housings_SOIC:SOIC-28_7.5x17.9mm_Pitch1.27mm_Handsolder" H 4300 2350 60  0001 C CNN
+F 3 "" H 4300 2350 60  0000 C CNN
+	1    4300 2350
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4800 3000 4900 3000
+Wire Wire Line
+	4800 2900 4900 2900
+Wire Wire Line
+	4800 2800 4900 2800
+Wire Wire Line
+	4800 2700 4900 2700
+Wire Wire Line
+	3800 2000 3750 2000
+Text GLabel 3750 2000 0    39   Output ~ 0
+PROC_PD3
+Wire Wire Line
+	3800 1900 3750 1900
+Text GLabel 7300 2900 2    39   Output ~ 0
+DI_RXD0_AND_EXT
+Text GLabel 7300 2800 2    39   Input ~ 0
+DI_TXD0
+Text GLabel 6500 2800 0    39   Output ~ 0
+EXT_PROC_PWR
+Wire Wire Line
+	6550 2800 6500 2800
+Text GLabel 1400 3850 1    39   Input ~ 0
+EXT_PROC_PWR
+Wire Wire Line
+	6350 6700 8800 6700
+Wire Wire Line
+	8350 5700 8350 6700
+Connection ~ 8350 6700
+Wire Wire Line
+	8450 6800 8450 5800
+Connection ~ 8450 6800
+$Comp
+L R R1003
+U 1 1 594E78F8
+P 6900 7900
+F 0 "R1003" V 6980 7900 50  0000 C CNN
+F 1 "10" V 6900 7900 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" V 6830 7900 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 6900 7900 50  0001 C CNN
+	1    6900 7900
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	7050 7900 7100 7900
+$Comp
+L PWR_FLAG #FLG055
+U 1 1 594E8778
+P 1750 4400
+F 0 "#FLG055" H 1750 4495 50  0001 C CNN
+F 1 "PWR_FLAG" H 1750 4580 50  0000 C CNN
+F 2 "" H 1750 4400 50  0000 C CNN
+F 3 "" H 1750 4400 50  0000 C CNN
+	1    1750 4400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4800 2600 4900 2600
+Text GLabel 13800 2150 0    39   Input ~ 0
+AUDIO_AMP_ENABLE
+Text GLabel 4900 2500 2    39   Output ~ 0
+HEADPHONE_PWR_LATCH
+Wire Wire Line
+	4800 2500 4900 2500
+Text GLabel 13400 6200 0    39   Input ~ 0
+HEADPHONE_PWR_LATCH
+Text GLabel 4900 2400 2    39   Output ~ 0
+~EXT_UART_ENABLE~
+Wire Wire Line
+	4800 2400 4900 2400
+Text GLabel 7300 2700 2    39   Input ~ 0
+USB_+5V_DIRECT
+$Comp
+L JUMPERx3_1-2_NC JP1001
+U 1 1 595139AF
+P 13700 7550
+F 0 "JP1001" H 13650 7700 50  0000 L CNN
+F 1 "JUMPERx3_1-2_NC" H 13700 7650 50  0001 C BNN
+F 2 "Wire_Connections_Bridges:Solder-Jumperx3-NC_1-2_SMD-Pad_Small" H 13700 7550 50  0001 C CNN
+F 3 "" H 13700 7550 50  0000 C CNN
+	1    13700 7550
+	-1   0    0    -1  
+$EndComp
+Text Notes 13000 7300 0    59   ~ 0
+In applications where the Headphone\nShut-off Circuit is not used, this\njumper can be configured to provide\nmain +3.3V from main power source.
+$Comp
+L C_Small C1026
+U 1 1 5959110D
+P 14200 5850
+F 0 "C1026" V 14100 5800 50  0000 L CNN
+F 1 "100nF" V 14350 5750 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 14200 5850 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 14200 5850 50  0001 C CNN
+	1    14200 5850
+	0    -1   1    0   
+$EndComp
+$Comp
+L GND #PWR056
+U 1 1 59591113
+P 14300 5850
+F 0 "#PWR056" H 14300 5600 50  0001 C CNN
+F 1 "GND" H 14450 5800 50  0000 C CNN
+F 2 "" H 14300 5850 50  0000 C CNN
+F 3 "" H 14300 5850 50  0000 C CNN
+	1    14300 5850
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	14100 5850 13900 5850
+Connection ~ 13900 5850
+Text GLabel 9700 7850 0    39   Output ~ 0
++V_MAIN
+Text Notes 9900 7550 0    79   ~ 16
+Power Connector\nfor use if Client Module does \nnot supply power to the\nDigital Interface
+Wire Wire Line
+	9700 7850 10550 7850
+Wire Wire Line
+	9900 8000 9900 7850
+Connection ~ 9900 7850
+$Comp
+L GNDD #PWR057
+U 1 1 595941EB
+P 10850 8300
+F 0 "#PWR057" H 10850 8050 50  0001 C CNN
+F 1 "GNDD" H 10850 8150 50  0000 C CNN
+F 2 "" H 10850 8300 50  0000 C CNN
+F 3 "" H 10850 8300 50  0000 C CNN
+	1    10850 8300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	10950 8250 10850 8250
+Wire Wire Line
+	10850 8250 10850 8300
+$Comp
+L 1SS319_Schottky_Ind D1001
+U 2 1 595957C2
+P 1400 4800
+F 0 "D1001" V 1400 5050 50  0000 C CNN
+F 1 "1SS319_Schottky_Ind" H 1425 5075 50  0001 C CNN
+F 2 "Diodes_SMD:SC-61_Handsolder" H 1400 4800 50  0001 C CNN
+F 3 "" H 1400 4800 50  0000 C CNN
+	2    1400 4800
+	0    -1   -1   0   
+$EndComp
+$Comp
+L 1SS319_Schottky_Ind D1001
+U 1 1 59595A13
+P 1400 4050
+F 0 "D1001" V 1450 3850 50  0000 C CNN
+F 1 "1SS319_Schottky_Ind" H 1425 4325 50  0001 C CNN
+F 2 "Diodes_SMD:SC-61_Handsolder" H 1400 4050 50  0001 C CNN
+F 3 "" H 1400 4050 50  0000 C CNN
+	1    1400 4050
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	1400 4250 1400 4600
+Connection ~ 1400 4400
+Text Notes 8900 8750 0    59   ~ 0
+Populate D1006 if it is desired\nfor +5V USB-supplied voltage to \nsupply power to entire Digital Interface.
+Text Notes 700  6100 0    59   ~ 0
+Cut J1007 to prevent +5V USB-supplied \nvoltage from providing power to the processor.
+Text GLabel 10950 7950 0    39   Input ~ 0
+HEADPHONE_PWR_LATCH
+$Comp
+L PWR_FLAG #FLG058
+U 1 1 59599057
+P 13500 8250
+F 0 "#FLG058" H 13500 8345 50  0001 C CNN
+F 1 "PWR_FLAG" H 13500 8430 50  0000 C CNN
+F 2 "" H 13500 8250 50  0000 C CNN
+F 3 "" H 13500 8250 50  0000 C CNN
+	1    13500 8250
+	1    0    0    -1  
+$EndComp
+Connection ~ 13500 8300
+Text GLabel 10950 8050 0    39   Input ~ 0
+EARPHONE_SW_POWER
+$Comp
+L CONN_01X05 P1006
+U 1 1 5959D0FC
+P 11150 8050
+F 0 "P1006" H 11150 8350 50  0000 C CNN
+F 1 "External Power" V 11250 8050 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x05" H 11150 8050 50  0001 C CNN
+F 3 "" H 11150 8050 50  0000 C CNN
+	1    11150 8050
+	1    0    0    1   
+$EndComp
+Text GLabel 10950 8150 0    39   Output ~ 0
+BATTERY_VOLTAGE
+Text GLabel 13800 4600 2    39   Input ~ 0
+BATTERY_VOLTAGE
+Connection ~ 14300 4900
+Text Notes 11100 8750 0    59   ~ 0
+Control pins 2-4 provide support\nfor headphone shut-off and\nbattery level monitoring with external\npower supply.
+$Comp
+L C_Small C1005
+U 1 1 5959ECE9
+P 3350 5900
+F 0 "C1005" V 3450 5950 50  0000 L CNN
+F 1 "10uF" V 3450 5700 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 3350 5900 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 3350 5900 50  0001 C CNN
+	1    3350 5900
+	0    -1   -1   0   
+$EndComp
+$Comp
+L GNDD #PWR059
+U 1 1 595A2417
+P 3350 6100
+F 0 "#PWR059" H 3350 5850 50  0001 C CNN
+F 1 "GNDD" H 3350 5950 50  0000 C CNN
+F 2 "" H 3350 6100 50  0000 C CNN
+F 3 "" H 3350 6100 50  0000 C CNN
+	1    3350 6100
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	3350 6100 3450 6100
+Wire Wire Line
+	3650 6100 4100 6100
+Connection ~ 3900 6100
+Wire Wire Line
+	4450 6100 4300 6100
+Wire Wire Line
+	3450 5900 4400 5900
+Wire Wire Line
+	3600 4400 3600 5050
+Wire Wire Line
+	12050 10200 12050 10300
+Connection ~ 11550 10200
+Wire Wire Line
+	11800 10300 11800 10200
+Connection ~ 11800 10200
+$Comp
+L GNDD #PWR060
+U 1 1 595A7BF6
+P 10450 6050
+F 0 "#PWR060" H 10450 5800 50  0001 C CNN
+F 1 "GNDD" H 10450 5900 50  0000 C CNN
+F 2 "" H 10450 6050 50  0000 C CNN
+F 3 "" H 10450 6050 50  0000 C CNN
+	1    10450 6050
+	1    0    0    -1  
+$EndComp
+$Comp
+L GNDD #PWR061
+U 1 1 595A7E0D
+P 10150 5600
+F 0 "#PWR061" H 10150 5350 50  0001 C CNN
+F 1 "GNDD" H 10150 5450 50  0000 C CNN
+F 2 "" H 10150 5600 50  0000 C CNN
+F 3 "" H 10150 5600 50  0000 C CNN
+	1    10150 5600
+	0    -1   -1   0   
+$EndComp
+Connection ~ 10450 5700
+Wire Wire Line
+	10150 5600 9850 5600
+$Comp
+L GNDD #PWR062
+U 1 1 59D8B6B8
+P 7300 3400
+F 0 "#PWR062" H 7300 3150 50  0001 C CNN
+F 1 "GNDD" H 7300 3250 50  0000 C CNN
+F 2 "" H 7300 3400 50  0000 C CNN
+F 3 "" H 7300 3400 50  0000 C CNN
+	1    7300 3400
+	0    -1   -1   0   
+$EndComp
+$Comp
+L GNDD #PWR063
+U 1 1 59D8BB4F
+P 7350 1500
+F 0 "#PWR063" H 7350 1250 50  0001 C CNN
+F 1 "GNDD" H 7350 1350 50  0001 C CNN
+F 2 "" H 7350 1500 50  0000 C CNN
+F 3 "" H 7350 1500 50  0000 C CNN
+	1    7350 1500
+	0    -1   1    0   
+$EndComp
+$Comp
+L Vproc #PWR064
+U 1 1 59E2AD5F
+P 7550 7050
+F 0 "#PWR064" H 7550 6900 50  0001 C CNN
+F 1 "Vproc" H 7550 7200 50  0000 C CNN
+F 2 "" H 7550 7050 50  0000 C CNN
+F 3 "" H 7550 7050 50  0000 C CNN
+	1    7550 7050
+	1    0    0    -1  
+$EndComp
+$Comp
+L D_Schottky D1006
+U 1 1 59E7B121
+P 9900 8150
+F 0 "D1006" H 9900 8250 50  0000 C CNN
+F 1 "S1G" H 9900 8050 50  0000 C CNN
+F 2 "Diodes_SMD:SOD-128_Handsolder" H 9900 8150 50  0001 C CNN
+F 3 "https://industrial.panasonic.com/content/data/SC/ds/ds4/DB2430100L_E.pdf" H 9900 8150 50  0001 C CNN
+	1    9900 8150
+	0    1    1    0   
+$EndComp
+$Comp
+L D_Schottky D1007
+U 1 1 59E7BE03
+P 10700 7850
+F 0 "D1007" H 10700 7950 50  0000 C CNN
+F 1 "DB2430100L" H 10700 8050 50  0000 C CNN
+F 2 "Diodes_SMD:SOD-128_Handsolder" H 10700 7850 50  0001 C CNN
+F 3 "https://industrial.panasonic.com/content/data/SC/ds/ds4/DB2430100L_E.pdf" H 10700 7850 50  0001 C CNN
+	1    10700 7850
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	10950 7850 10850 7850
+$Comp
+L CONN_01X04 J1002
+U 1 1 59E8FA10
+P 14450 2900
+F 0 "J1002" H 14400 2600 50  0000 C CNN
+F 1 "CONN_01X04" V 14550 2900 50  0001 C CNN
+F 2 "Pin_Headers:Skid_Pins_1x04" H 14450 2900 50  0001 C CNN
+F 3 "" H 14450 2900 50  0001 C CNN
+	1    14450 2900
+	1    0    0    1   
+$EndComp
+$Comp
+L CONN_01X04 J1003
+U 1 1 59E8FB19
+P 14600 2900
+F 0 "J1003" H 14500 2600 50  0000 C CNN
+F 1 "CONN_01X04" V 14700 2900 50  0001 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x04" H 14600 2900 50  0001 C CNN
+F 3 "" H 14600 2900 50  0001 C CNN
+	1    14600 2900
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	14050 2750 14050 2850
+Wire Wire Line
+	14050 2850 14250 2850
+Wire Wire Line
+	14800 2950 15250 2950
+Wire Wire Line
+	14050 3150 14050 3050
+Wire Wire Line
+	14050 3050 14250 3050
+Wire Wire Line
+	16050 3300 14900 3300
+Wire Wire Line
+	14900 3300 14900 3050
+Wire Wire Line
+	14900 3050 14800 3050
+Wire Wire Line
+	14800 2750 15250 2750
+$Comp
+L CONN_01X01 J1004
+U 1 1 59FF6C44
+P 11800 9850
+F 0 "J1004" H 11800 9950 50  0000 C CNN
+F 1 "CONN_01X01" V 11900 9850 50  0001 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x01" H 11800 9850 50  0001 C CNN
+F 3 "" H 11800 9850 50  0001 C CNN
+	1    11800 9850
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X01 J1005
+U 1 1 59FF6D51
+P 11800 10050
+F 0 "J1005" H 11800 10150 50  0000 C CNN
+F 1 "CONN_01X01" V 11900 10050 50  0001 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x01" H 11800 10050 50  0001 C CNN
+F 3 "" H 11800 10050 50  0001 C CNN
+	1    11800 10050
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	11600 9850 11550 9850
+Connection ~ 11550 9850
+Wire Wire Line
+	11600 10050 11550 10050
+Connection ~ 11550 10050
+$Comp
+L CONN_01X03 TP1001
+U 1 1 5A0894A0
+P 7900 6250
+F 0 "TP1001" V 8000 5950 50  0000 C CNN
+F 1 "I2C" V 8000 6250 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x03" H 7900 6250 50  0001 C CNN
+F 3 "" H 7900 6250 50  0001 C CNN
+	1    7900 6250
+	0    1    -1   0   
+$EndComp
+$Comp
+L GNDD #PWR065
+U 1 1 5A0895E4
+P 8000 6450
+F 0 "#PWR065" H 8000 6200 50  0001 C CNN
+F 1 "GNDD" H 8000 6300 50  0000 C CNN
+F 2 "" H 8000 6450 50  0000 C CNN
+F 3 "" H 8000 6450 50  0000 C CNN
+	1    8000 6450
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7800 6450 7800 6700
+Connection ~ 7800 6700
+Wire Wire Line
+	7900 6450 7900 6800
+Connection ~ 7900 6800
+$Comp
+L R R1014
+U 1 1 5A14FCE4
+P 9850 4950
+F 0 "R1014" V 9750 4950 50  0000 C CNN
+F 1 "100" V 9850 4950 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 9780 4950 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 9850 4950 50  0001 C CNN
+	1    9850 4950
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R1015
+U 1 1 5A14FF74
+P 9950 4750
+F 0 "R1015" V 9900 5000 50  0000 C CNN
+F 1 "100" V 9950 4750 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 9880 4750 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 9950 4750 50  0001 C CNN
+	1    9950 4750
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R1016
+U 1 1 5A150082
+P 10050 4550
+F 0 "R1016" V 10150 4650 50  0000 C CNN
+F 1 "100" V 10050 4550 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 9980 4550 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 10050 4550 50  0001 C CNN
+	1    10050 4550
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9850 4800 9850 4400
+Wire Wire Line
+	9950 4600 9950 4300
+Wire Wire Line
+	10050 4200 10050 4400
+Wire Wire Line
+	9850 5100 9850 5400
+Wire Wire Line
+	9950 4900 9950 5500
+Wire Wire Line
+	10050 4700 10050 5800
+$Comp
+L C_Small C1029
+U 1 1 5A1E4150
+P 12300 1550
+F 0 "C1029" V 12100 1400 50  0000 L CNN
+F 1 "470nF" V 12200 1450 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 12300 1550 50  0001 C CNN
+F 3 "http://www.kemet.com/Lists/ProductCatalog/Attachments/53/KEM_C1002_X7R_SMD.pdf" H 12300 1550 50  0001 C CNN
+	1    12300 1550
+	0    1    1    0   
+$EndComp
+$Comp
+L GND #PWR066
+U 1 1 5A1E450D
+P 12200 1550
+F 0 "#PWR066" H 12200 1300 50  0001 C CNN
+F 1 "GND" H 12350 1500 50  0000 C CNN
+F 2 "" H 12200 1550 50  0000 C CNN
+F 3 "" H 12200 1550 50  0000 C CNN
+	1    12200 1550
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	12400 1550 12500 1550
+Connection ~ 12500 1550
+$Comp
+L GND #PWR067
+U 1 1 5A1EDFC3
+P 14250 2750
+F 0 "#PWR067" H 14250 2500 50  0001 C CNN
+F 1 "GND" H 14250 2600 50  0000 C CNN
+F 2 "" H 14250 2750 50  0000 C CNN
+F 3 "" H 14250 2750 50  0000 C CNN
+	1    14250 2750
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	9450 8350 9900 8350
+Text GLabel 9100 8350 0    39   Input ~ 0
+USB_+5V_DIRECT
+Wire Wire Line
+	9250 8350 9100 8350
+$Comp
+L R R1017
+U 1 1 5A64B840
+P 3200 1800
+F 0 "R1017" V 3280 1800 50  0000 C CNN
+F 1 "10k" V 3200 1800 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 3130 1800 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 3200 1800 50  0001 C CNN
+	1    3200 1800
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	3350 1800 3800 1800
+Wire Wire Line
+	6350 6800 8800 6800
+$Comp
+L R R1019
+U 1 1 5A6C903F
+P 8900 6400
+F 0 "R1019" V 8980 6400 50  0000 C CNN
+F 1 "10k" V 8900 6400 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 8830 6400 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 8900 6400 50  0001 C CNN
+	1    8900 6400
+	0    1    1    0   
+$EndComp
+$Comp
+L R R1018
+U 1 1 5A6C9183
+P 8900 6200
+F 0 "R1018" V 8980 6200 50  0000 C CNN
+F 1 "10k" V 8900 6200 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 8830 6200 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 8900 6200 50  0001 C CNN
+	1    8900 6200
+	0    1    1    0   
+$EndComp
+$Comp
+L +3.3V #PWR069
+U 1 1 5A6C931D
+P 9250 6300
+F 0 "#PWR069" H 9250 6150 50  0001 C CNN
+F 1 "+3.3V" H 9250 6440 50  0000 C CNN
+F 2 "" H 9250 6300 50  0000 C CNN
+F 3 "" H 9250 6300 50  0000 C CNN
+	1    9250 6300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9050 6200 9150 6200
+Wire Wire Line
+	9150 6200 9150 6400
+Wire Wire Line
+	9150 6400 9050 6400
+Wire Wire Line
+	9250 6300 9150 6300
+Connection ~ 9150 6300
+Wire Wire Line
+	8750 6400 8650 6400
+Wire Wire Line
+	8650 6400 8650 6800
+Connection ~ 8650 6800
+Wire Wire Line
+	8750 6200 8550 6200
+Wire Wire Line
+	8550 6200 8550 6700
+Connection ~ 8550 6700
+$Comp
+L Jumper_NC_Small J1006
+U 1 1 5A6CE775
+P 9350 8350
+F 0 "J1006" H 9350 8430 50  0000 C CNN
+F 1 "Jumper_NC_Small" H 9360 8290 50  0001 C CNN
+F 2 "Wire_Connections_Bridges:Solder-Jumper-NC-SMD-Pad_Small" H 9350 8350 50  0001 C CNN
+F 3 "" H 9350 8350 50  0000 C CNN
+	1    9350 8350
+	1    0    0    -1  
+$EndComp
+$Comp
+L Vproc #PWR070
+U 1 1 5AB7BA8D
+P 2450 9750
+F 0 "#PWR070" H 2450 9600 50  0001 C CNN
+F 1 "Vproc" H 2450 9900 50  0000 C CNN
+F 2 "" H 2450 9750 50  0000 C CNN
+F 3 "" H 2450 9750 50  0000 C CNN
+	1    2450 9750
+	1    0    0    1   
+$EndComp
+$Comp
+L R R1020
+U 1 1 5AB7C1B6
+P 2450 9600
+F 0 "R1020" V 2350 9600 50  0000 C CNN
+F 1 "20k" V 2450 9600 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" H 2380 9600 50  0001 C CNN
+F 3 "http://www.yageo.com/documents/recent/PYu-RC_Group_51_RoHS_L_04.pdf" H 2450 9600 50  0001 C CNN
+	1    2450 9600
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2300 9300 2550 9300
+Wire Wire Line
+	2450 9450 2450 9300
+Connection ~ 2450 9300
+$Comp
+L Vproc #PWR071
+U 1 1 5AB7DABB
+P 1900 8600
+F 0 "#PWR071" H 1900 8450 50  0001 C CNN
+F 1 "Vproc" H 1900 8750 50  0000 C CNN
+F 2 "" H 1900 8600 50  0000 C CNN
+F 3 "" H 1900 8600 50  0000 C CNN
+	1    1900 8600
+	1    0    0    -1  
+$EndComp
+$Comp
+L Jumper_NC_Small J1008
+U 1 1 5AB7E5B8
+P 3200 5250
+F 0 "J1008" H 3200 5330 50  0000 C CNN
+F 1 "Jumper_NC_Small" H 3210 5190 50  0001 C CNN
+F 2 "Wire_Connections_Bridges:Solder-Jumper-NC-SMD-Pad_Small" H 3200 5250 50  0001 C CNN
+F 3 "" H 3200 5250 50  0000 C CNN
+	1    3200 5250
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	3200 5150 3200 5000
+Wire Wire Line
+	3200 5000 3600 5000
+Connection ~ 3600 5000
+Wire Wire Line
+	3200 5350 3200 5500
+Wire Wire Line
+	3200 5500 3600 5500
+Connection ~ 3600 5500
+Text Notes 3700 5000 0    59   ~ 0
+D1002A is not needed as \nlong as U1002 provides \nreverse-current protection.
+$Comp
+L Jumper_NC_Small J1007
+U 1 1 5AB7F7BD
+P 1400 5100
+F 0 "J1007" H 1400 5180 50  0000 C CNN
+F 1 "Jumper_NC_Small" H 1410 5040 50  0001 C CNN
+F 2 "Wire_Connections_Bridges:Solder-Jumper-NC-SMD-Pad_Small" H 1400 5100 50  0001 C CNN
+F 3 "" H 1400 5100 50  0000 C CNN
+	1    1400 5100
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	1450 9500 1450 9400
+Text GLabel 7300 2300 2    39   Input ~ 0
+~CLOCK_RESET~
+Wire Wire Line
+	1400 9400 1500 9400
+Text GLabel 1400 9400 0    39   Input ~ 0
+~CLOCK_RESET~
+Connection ~ 1450 9400
+Text GLabel 1400 5200 3    39   Input ~ 0
+USB_+5V_DIRECT
+Wire Wire Line
+	9900 8350 9900 8300
+$Comp
+L +3.3V #PWR?
+U 1 1 5ACB3B48
+P 4300 1300
+F 0 "#PWR?" H 4300 1150 50  0001 C CNN
+F 1 "+3.3V" H 4300 1440 50  0000 C CNN
+F 2 "" H 4300 1300 50  0000 C CNN
+F 3 "" H 4300 1300 50  0000 C CNN
+	1    4300 1300
+	-1   0    0    -1  
+$EndComp
+$Comp
+L +3.3V #PWR?
+U 1 1 5ACB3FBD
+P 3050 1800
+F 0 "#PWR?" H 3050 1650 50  0001 C CNN
+F 1 "+3.3V" H 3050 1940 50  0000 C CNN
+F 2 "" H 3050 1800 50  0000 C CNN
+F 3 "" H 3050 1800 50  0000 C CNN
+	1    3050 1800
+	0    -1   1    0   
+$EndComp
+$EndSCHEMATC

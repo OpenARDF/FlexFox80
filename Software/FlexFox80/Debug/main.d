@@ -32,7 +32,8 @@ main.d main.o: .././main.cpp .././atmel_start.h \
  ../include/ds3231.h ../include/morse.h ../include/adc.h \
  ../include/Goertzel.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\math.h \
- ../include/util.h ../include/binio.h ../include/eeprommanager.h
+ ../include/util.h ../include/binio.h ../include/eeprommanager.h \
+ ../include/ccp.h ../include/protected_io.h ../utils/atomic.h
 
 .././atmel_start.h:
 
@@ -135,3 +136,9 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 ../include/binio.h:
 
 ../include/eeprommanager.h:
+
+../include/ccp.h:
+
+../include/protected_io.h:
+
+../utils/atomic.h:

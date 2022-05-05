@@ -97,10 +97,5 @@ EC powerToTransmitter(bool on);
  */
 EC txMilliwattsToSettings(uint16_t* powerMW, uint8_t* powerLevel, uint8_t* modLevelHigh, uint8_t* modLevelLow);
 
-/**
-Returns true if an antenna for the active band is connected to the transmitter
- */
-bool txIsAntennaForBand(void);
-
 
 #endif  /* TRANSMITTER_H_ */
