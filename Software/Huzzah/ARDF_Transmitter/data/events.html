@@ -1,0 +1,2407 @@
+<!DOCTYPE html>
+
+<head>
+    <title>ARDF Events Settings</title>
+    <style type="text/css">
+        .button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+
+        .incbutton {
+            background-color: blue;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+
+        .decbutton {
+            background-color: blue;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+
+        input[type="text"]:value {
+            -webkit-text-font-weight: bold;
+        }
+
+        ::placeholder {
+            color: red;
+            opacity: 1;
+            /* Firefox */
+        }
+
+        :-ms-input-placeholder {
+            /* Internet Explorer 10-11 */
+            color: red;
+        }
+
+        ::-ms-input-placeholder {
+            /* Microsoft Edge */
+            color: red;
+        }
+
+        ::-webkit-input-placeholder {
+            /* Chrome/Opera/Safari */
+            color: red;
+        }
+
+        ::-moz-placeholder {
+            /* Firefox 19+ */
+            color: red;
+        }
+
+        :-moz-placeholder {
+            /* Firefox 18- */
+            color: red;
+        }
+
+        iframe,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        p,
+        blockquote,
+        pre,
+        a,
+        abbr,
+        acronym,
+        address,
+        big,
+        cite,
+        code,
+        del,
+        dfn,
+        em,
+        img,
+        ins,
+        kbd,
+        q,
+        s,
+        samp,
+        small,
+        strike,
+        strong,
+        sub,
+        sup,
+        tt,
+        var,
+        b,
+        u,
+        i,
+        center,
+        dl,
+        dt,
+        dd,
+        ol,
+        ul,
+        li,
+        fieldset,
+        form,
+        label,
+        legend,
+        table,
+        caption,
+        tbody,
+        tfoot,
+        thead,
+        tr,
+        th,
+        td,
+        article,
+        aside,
+        canvas,
+        details,
+        embed,
+        figure,
+        figcaption,
+        footer,
+        header,
+        hgroup,
+        menu,
+        nav,
+        output,
+        ruby,
+        section,
+        summary,
+        time,
+        mark,
+        audio,
+        video {
+            margin: 0;
+            /*      padding: 0; */
+            /*      border: 0; */
+            font-size: 100%;
+            font: inherit;
+            vertical-align: baseline;
+        }
+
+        #overlay {
+            position: fixed;
+            display: none;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2;
+            cursor: pointer;
+        }
+
+        #overlayText {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            font-size: 50px;
+            font-family: verdana;
+            color: white;
+            transform: translate(-50%, -50%);
+            -ms-transform: translate(-50%, -50%);
+        }
+
+    </style>
+</head>
+
+<body onload="javascript:start();">
+    <script>
+        var g_timer = 0;
+        var g_timeUpdateTimer = 0;
+        var g_homeTimer = 0;
+        var g_eventRadioBand = "";
+        var g_timedOut = false;
+
+        var g_starttimeDateUpdateTimer = 0;
+        var g_finishtimeDateUpdateTimer = 0;
+
+        var g_freq1FrequencyHz = "";
+
+        var g_numberOfOpenWebSockets = 0;
+        var g_stillConnected = 0;
+        var g_stillDisconnected = 60;
+        var g_lastPacketTime = 0;
+        var g_delayedPackets = 0;
+        var g_lastSocketTxMessage;
+        var g_transmitterTimeMs = 0;
+        var g_websock = null;
+        var g_timesync_rcvd = 0;
+        var g_webSocketAliveTimer = 0;
+
+        var g_loading_data = true;
+        var g_event_changes_saved = true;
+
+        ///////////////////////////////
+        // Settings
+        var g_eventNumberOfTxTypes = 0; /* Quantity of different "roles": Home, Foxes, Fast Foxes, Slow Foxes, etc. */
+        var g_typeTxNames = [{
+            name: "Name",
+            indices: "0:0"
+        }]; /* Human readable "role" name: "Home", and indices: "0:1" */
+        var g_selectedTxType;
+        var g_typeFrequency = [{
+            frequency: 3510000,
+            role: "Role"
+        }]; /* Frequency used by transmitters in that "role" */
+
+        var g_typePower = [{
+            power: "2000",
+            role: "Role"
+        }]
+
+        var g_eventTableData = [{
+            name: "Event",
+            version: "Ver",
+            start: "Start",
+            finish: "Finish",
+            role: "Fox",
+            callsign: "Call",
+            power: "Power",
+            frequency: "Freq"
+        }]; /* Event data to display in a table header */
+
+        var g_powerLevels = ["0", "10", "100", "200", "300", "400", "500", "600", "800", "1000", "1500", "2000", "2500", "3000", "4000", "5000"];
+        var g_selectedEvent = "";
+        var g_selectedEventStart = 0;
+        var g_selectedEventFinish = 0;
+        var g_powerLevel = g_powerLevels[0];
+
+        ///////////////////////////////
+
+        function selectedTableRowIndex() {
+            var eventNum = g_eventTableData.length;
+            for (var i = 1; i < eventNum; i++) {
+                if (g_selectedEvent == g_eventTableData[i].name) {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        function displayEvents(erase) {
+            var eventNum = g_eventTableData.length;
+            var eventTable = document.getElementById("eventTable");
+            var tableRows = eventTable.getElementsByTagName('tr');
+            var rowCount = tableRows.length;
+
+            console.log("rowCount = ", rowCount);
+
+            if (erase == true) {
+                for (var x = rowCount - 1; x >= 0; x--) {
+                    eventTable.removeChild(tableRows[x]);
+                }
+
+                eventTable.appendChild(eventRow(g_eventTableData[0], true));
+
+                for (var i = 1; i < eventNum; i++) {
+                    eventTable.appendChild(eventRow(g_eventTableData[i], false));
+                }
+            } else {
+                console.log("Refreshing table cells");
+                for (var i = 1, row; row = eventTable.rows[i]; i++) {
+                    var rowData = g_eventTableData[i];
+
+                    for (var j = 0, col; col = row.cells[j]; j++) {
+                        col = rowData[j];
+                    }
+                }
+            }
+        }
+
+        function eventSelect(selection) {
+            var x = document.getElementById("errorreport");
+            if (x != null) x.style.display = "none";
+
+            x = document.getElementById("statusreport");
+            if (x != null) x.style.display = "none";
+
+            if (g_selectedEvent != selection) {
+                var btext = "EVENT_NAME," + selection;
+                console.log(btext);
+                sendToSocket(btext);
+                g_selectedEvent = selection;
+                setOverlay("Loading Events...");
+                g_stillConnected = 200;
+                g_loading_data = true;
+            }
+        }
+
+        function eventRunSelect(selection) {
+            var x = document.getElementById("errorreport");
+            if (x != null) x.style.display = "none";
+
+            x = document.getElementById("statusreport");
+            if (x != null) x.style.display = "none";
+
+            x = document.getElementById("activeRunButton");
+
+            if (x != null) {
+                if (x.value == "Enable") {
+                    enableStartFinishTimes();
+                    newStartTime();
+                    newFinishTime();
+                } else {
+                    executeEvent();
+                }
+            }
+        }
+
+        function eventStopSelect(selection) {
+            if (g_selectedEvent != selection) {
+                var btext = "EVENT_STOP," + selection;
+                console.log(btext);
+                sendToSocket(btext);
+                g_selectedEvent = selection;
+            }
+
+            executeEvent();
+        }
+
+
+        function eventRow(rowData, isHeader) {
+            var row = document.createElement("tr");
+            var cellText;
+            var cell0;
+
+            console.log("rowData = ", rowData);
+
+            if (isHeader == true) {
+                row.setAttribute("style", "font-family:verdana; font-size:15px; color:Black; font-weight:bold; text-align:center;");
+
+                // create cells in row
+                cell0 = document.createElement("td");
+                cell0.setAttribute("border", "1px solid black");
+                row.appendChild(cell0);
+
+                cell0 = document.createElement("td");
+                cellText = document.createTextNode(rowData.name);
+                cell0.setAttribute("border", "1px solid black");
+                cell0.appendChild(cellText);
+                row.appendChild(cell0);
+
+                cell0 = document.createElement("td");
+                cellText = document.createTextNode(rowData.version);
+                cell0.setAttribute("border", "1px solid black");
+                cell0.appendChild(cellText);
+                row.appendChild(cell0);
+
+                cell0 = document.createElement("td");
+                cellText = document.createTextNode(rowData.start);
+                cell0.setAttribute("border", "1px solid black");
+                cell0.appendChild(cellText);
+                row.appendChild(cell0);
+
+                cell0 = document.createElement("td");
+                cellText = document.createTextNode(rowData.finish);
+                cell0.setAttribute("border", "1px solid black");
+                cell0.appendChild(cellText);
+                row.appendChild(cell0);
+
+                cell0 = document.createElement("td");
+                cellText = document.createTextNode("State");
+                cell0.setAttribute("border", "1px solid black");
+                cell0.appendChild(cellText);
+                row.appendChild(cell0);
+
+                cell0 = document.createElement("td");
+                cellText = document.createTextNode(rowData.role);
+                cell0.setAttribute("border", "1px solid black");
+                cell0.appendChild(cellText);
+                row.appendChild(cell0);
+
+                cell0 = document.createElement("td");
+                cellText = document.createTextNode("Call");
+                cell0.setAttribute("border", "1px solid black");
+                cell0.appendChild(cellText);
+                row.appendChild(cell0);
+
+                cell0 = document.createElement("td");
+                cellText = document.createTextNode("Power");
+                cell0.setAttribute("border", "1px solid black");
+                cell0.appendChild(cellText);
+                row.appendChild(cell0);
+
+                cell0 = document.createElement("td");
+                cellText = document.createTextNode("Freq");
+                cell0.setAttribute("border", "1px solid black");
+                cell0.appendChild(cellText);
+                row.appendChild(cell0);
+            } else {
+                // Create Button
+                var btn = document.createElement('input');
+                var entry = rowData.name;
+                btn.type = "button";
+                btn.className = "button";
+                if (g_selectedEvent == rowData.name) {
+                    btn.id = "activeRunButton";
+                    btn.value = "Apply";
+                    btn.onclick = (function(entry) {
+                        return function() {
+                            eventRunSelect(entry);
+                        }
+                    })(entry);
+                    row.setAttribute("style", "font-family:verdana; font-size:17px; color:blue; font-weight:bold; text-align:center;");
+                } else {
+                    btn.id = "runButton";
+                    btn.value = "Select";
+                    btn.style.backgroundColor = "blue";
+                    btn.onclick = (function(entry) {
+                        return function() {
+                            eventSelect(entry);
+                        }
+                    })(entry);
+                    row.setAttribute("style", "font-family:verdana; font-size:15px; color:black; text-align:center;");
+                }
+
+                cell0 = document.createElement("td");
+                cell0.setAttribute("border", "1px solid black");
+                cell0.appendChild(btn);
+                row.appendChild(cell0);
+
+                // Event Name
+                cell0 = document.createElement("td");
+                cellText = document.createTextNode(rowData.name);
+                cell0.setAttribute("border", "1px solid black");
+                if (g_selectedEvent == rowData.name) {
+                    cell0.setAttribute("style", "font-family:verdana; font-size:15px; font-weight:bold; color:black; text-align:center;");
+                    cell0.id = "eventName";
+                } else {
+                    cell0.setAttribute("style", "font-family:verdana; font-size:15px; color:black; text-align:center;");
+                }
+                cell0.appendChild(cellText);
+                row.appendChild(cell0);
+
+                // File Version
+                cell0 = document.createElement("td");
+                cellText = document.createTextNode(rowData.version);
+                cell0.setAttribute("border", "1px solid black");
+                if (g_selectedEvent == rowData.name) {
+                    cell0.setAttribute("style", "font-family:verdana; font-size:15px; font-weight:bold; color:black; text-align:center;");
+                    cell0.id = "eventVersion";
+                } else {
+                    cell0.setAttribute("style", "font-family:verdana; font-size:15px; color:black; text-align:center;");
+                }
+                cell0.appendChild(cellText);
+                row.appendChild(cell0);
+
+                // Start Time
+                cell0 = document.createElement("td");
+                var start = new Date(Number(rowData.start));
+                cellText = document.createTextNode(start);
+                cell0.setAttribute("border", "1px solid black");
+                if (g_selectedEvent == rowData.name) {
+                    g_selectedEventStart = rowData.start;
+                    g_selectedEventFinish = rowData.finish;
+                    cell0.setAttribute("id", "datetimeStartCell");
+                    var i = document.createElement("input");
+                    i.setAttribute("id", "datetimeStart");
+                    i.setAttribute("type", "datetime-local");
+                    i.setAttribute("style", "font-family:verdana; font-size:15px; font-weight:bold; color:blue;");
+                    i.setAttribute("oninput", "newStartTime();");
+                    i.setAttribute("value", epochToLocalDateTimeFormat(rowData.start));
+                    console.log("Start time text =", i.value);
+                    cell0.appendChild(i);
+                } else {
+                    cell0.appendChild(cellText);
+                }
+                row.appendChild(cell0);
+
+                // Finish Time
+                cell0 = document.createElement("td");
+                cell0.setAttribute("border", "1px solid black");
+                if (g_selectedEvent == rowData.name) {
+                    cell0.setAttribute("id", "datetimeFinishCell");
+                    var i = document.createElement("input");
+                    i.setAttribute("id", "datetimeFinish");
+                    i.setAttribute("type", "datetime-local");
+                    i.setAttribute("style", "font-family:verdana; font-size:15px; font-weight:bold; color:blue;");
+                    i.setAttribute("oninput", "newFinishTime();");
+                    i.setAttribute("value", epochToLocalDateTimeFormat(rowData.finish));
+                    console.log("Finish time text =", i.value);
+                    cell0.appendChild(i);
+                } else {
+                    var finish = new Date(Number(rowData.finish));
+                    cellText = document.createTextNode(finish);
+                    cell0.appendChild(cellText);
+                }
+                row.appendChild(cell0);
+
+                cell0 = document.createElement("td");
+                var stat = statusMessageText(rowData.start, rowData.finish);
+                if (g_selectedEvent == rowData.name) {
+                    cell0.setAttribute("id", "statusCell");
+                    console.log("Status: ", stat);
+                }
+
+                cellText = document.createTextNode(stat);
+                cell0.setAttribute("border", "1px solid black");
+                cell0.setAttribute("style", "font-family:verdana; font-size:15px; font-weight:bold; color:black;");
+                cell0.appendChild(cellText);
+                row.appendChild(cell0);
+
+                // Role
+                cell0 = document.createElement("td");
+                cell0.setAttribute("border", "1px solid black");
+                if (g_selectedEvent == rowData.name) {
+
+                    var sel = document.createElement('select'),
+                        option,
+                        i = 0,
+                        il = g_typeTxNames.length;
+
+                    sel.setAttribute("onchange", "foxClick()");
+                    sel.setAttribute("id", "roleSelect");
+                    sel.setAttribute("style", "font-family:verdana; font-size:15px; color:blue; font-weight:bold;");
+
+                    for (; i < il; i += 1) {
+                        option = document.createElement('option');
+                        option.setAttribute('value', g_typeTxNames[i].name);
+                        option.appendChild(document.createTextNode(g_typeTxNames[i].name));
+                        if (g_typeTxNames[i].name == rowData.role) {
+                            option.setAttribute("selected", "true");
+                            g_selectedTxType = rowData.role;
+                        }
+                        sel.appendChild(option);
+                        console.log("TxType name:", g_typeTxNames[i].name);
+                    }
+
+                    cell0.appendChild(sel);
+                } else {
+                    cellText = document.createTextNode(rowData.role);
+                    cell0.appendChild(cellText);
+                }
+                row.appendChild(cell0);
+
+                // Call Sign
+                cell0 = document.createElement("td");
+                console.log("Event Call:", rowData.callsign);
+                cell0.setAttribute("border", "1px solid black");
+                if (g_selectedEvent == rowData.name) {
+                    cell0.setAttribute("id", "datetimeFinishCell");
+                    var t = document.createElement("input");
+                    t.setAttribute("type", "text");
+                    t.setAttribute("id", "callText");
+                    t.setAttribute("style", "font-family:verdana; font-size:15px; font-weight:bold; text-align:center");
+                    t.setAttribute("placeholder", "Callsign");
+                    t.setAttribute("contenteditable", "true");
+                    t.setAttribute("oninput", "callSignEntered();");
+                    t.setAttribute("value", rowData.callsign);
+                    cell0.appendChild(t);
+                } else {
+                    cellText = document.createTextNode(rowData.callsign);
+                    cell0.appendChild(cellText);
+                }
+                row.appendChild(cell0);
+
+
+                // Power Level mW
+                cell0 = document.createElement("td");
+                cell0.setAttribute("border", "1px solid black");
+
+                if (g_selectedEvent == rowData.name) {
+                    var sel, option, i, il;
+                    sel = document.createElement('select'),
+                        option,
+                        i = 0,
+                        il = g_powerLevels.length;
+
+                    sel.setAttribute("onchange", "pwrClick()");
+                    sel.setAttribute("id", "pwrSelect");
+                    sel.setAttribute("style", "font-family:verdana; font-size:15px; color:blue; font-weight:bold;");
+
+                    for (; i < il; i += 1) {
+                        option = document.createElement('option');
+                        option.setAttribute('value', g_powerLevels[i]);
+                        option.appendChild(document.createTextNode(g_powerLevels[i]));
+                        if (g_powerLevels[i] == rowData.power) {
+                            option.setAttribute("selected", "true");
+                        }
+                        console.log("Power option:", g_powerLevels[i]);
+
+                        sel.appendChild(option);
+                    }
+
+                    cell0.appendChild(sel);
+                } else {
+                    cellText = document.createTextNode(rowData.power);
+                    cell0.appendChild(cellText);
+                }
+
+                row.appendChild(cell0);
+
+
+                // Frequency
+                cell0 = document.createElement("td");
+                if (g_selectedEvent == rowData.name) {
+                    var b = document.createElement('input');
+                    entry = rowData.name;
+                    b.setAttribute("type", "button");
+                    b.setAttribute("id", "frequencyButton");
+                    b.setAttribute("class", "incbutton");
+                    b.setAttribute("value", freqDotFormat(rowData.freq));
+                    b.setAttribute("onclick", "toggleFreqSettings();");
+                    cell0.appendChild(b);
+                } else {
+                    cellText = document.createTextNode(freqDotFormat(rowData.freq));
+                    cell0.appendChild(cellText);
+                }
+
+                row.appendChild(cell0);
+            }
+
+            return row;
+        }
+
+        g_timeUpdateTimer = setTimeout(function() {
+            updateDisplayedLocalTime();
+
+            if (g_stillConnected) {
+                g_stillConnected--;
+                if (g_stillConnected == 0) {
+                    setOverlay("Disconnected");
+                    console.log("g_stillConnected timeout!!");
+                    g_timedOut = true;
+                    g_stillDisconnected = 200;
+                    g_loading_data = false;
+                }
+            } else {
+                if (g_stillDisconnected) {
+                    g_stillDisconnected--;
+                    if (g_stillDisconnected == 0) {
+                        g_stillDisconnected = 200;
+                        //                webSocketStart();
+                        //                console.log("Disconnected! Started new websocket");
+                        console.log("Disconnected!");
+                    }
+                }
+            }
+        }, 100);
+
+        function webSocketStart() {
+            var websocketcreated = true;
+            var host = String(window.location.hostname);
+
+            console.log("Host: " + host);
+
+            if (host.length > 0) {
+                if (g_websock != null) // socket already exists
+                {
+                    g_websock.close();
+                    g_websock = null;
+                }
+
+                try {
+                    g_numberOfOpenWebSockets++;
+                    g_websock = new WebSocket("ws://" + window.location.hostname + ":81/");
+                } catch (err) {
+                    document.getElementById("xmtrTime").innerHTML = "Disconnected";
+                    console.log("Unable to create web socket");
+                    websocketcreated = false;
+                    setOverlay("Disconnected\nNo Socket");
+                    if (g_numberOfOpenWebSockets) g_numberOfOpenWebSockets--;
+                }
+            } else {
+                document.getElementById("xmtrTime").innerHTML = "Disconnected\nNo Socket Host";
+                console.log("No websocket host available.");
+                websocketcreated = false;
+                g_websock = null;
+                setOverlay("Disconnected");
+            }
+
+            if (websocketcreated == true) {
+                document.getElementById("xmtrTime").innerHTML = "Connected";
+
+                g_websock.onopen = function(evt) {
+                    console.log("websock open");
+                    websocketcreated = true;
+                    g_stillConnected = Math.max(200, g_stillConnected);
+
+                    setTimeout(function() {
+                        sendSocketAlive();
+                    }, 250);
+                    setTimeout(function() {
+                        sendToSocket("SSID");
+                    }, 500);
+                    setTimeout(function() {
+                        sendToSocket("MAC");
+                    }, 750);
+                    setTimeout(function() {
+                        sendToSocket("SW_VERSIONS");
+                    }, 1000);
+                    setTimeout(function() {
+                        sendToSocket("EVENT_NAME,NEW!");
+                    }, 1250);
+
+                    g_loading_data = true;
+                };
+
+                g_websock.onclose = function(evt) {
+                    if (g_numberOfOpenWebSockets) g_numberOfOpenWebSockets--;
+
+                    if (g_numberOfOpenWebSockets == 0) {
+                        console.log("all websocks closed");
+                        if (websocketcreated == true) { // handle test case where server refuses websocket
+                            setOverlay("Disconnected");
+                        }
+                        websocketcreated = false;
+                        g_websock = null;
+                        g_stillConnected = 0;
+                    } else {
+                        console.log("old websock closed");
+                    }
+                };
+
+                g_websock.onerror = function(evt) {
+                    console.log("Websock error: " + evt);
+                };
+
+                g_websock.onmessage = function(evt) {
+                    var str = evt.data;
+                    var arr = str.split(",");
+
+                    g_stillConnected = Math.max(50, g_stillConnected);
+                    if (g_timedOut) {
+                        g_timedOut = false;
+                    }
+
+                    if (!g_loading_data)
+                        setOverlay(null);
+
+                    switch (arr[0]) {
+                        case "STATUS":
+                            {
+                                var text;
+                                var sc = parseInt(arr[1], 10);
+
+                                switch (sc) {
+
+                                    case 0x00: // STATUS_CODE_IDLE = 0x00
+                                    case 0x01: // STATUS_CODE_REPORT_IDLE = 0x01;
+                                        {
+                                            text = "";
+                                        }
+                                        break;
+
+                                    case 0xE9: // STATUS_CODE_NO_ANT_ATTACHED = 0xE9
+                                        {
+                                            text = "No antennas attached";
+                                        }
+                                        break;
+
+                                    case 0xEA: // STATUS_CODE_2M_ANT_ATTACHED = 0xEA
+                                        {
+                                            text = "2m antenna attached";
+                                        }
+                                        break;
+
+                                    case 0xEB: // STATUS_CODE_80M_ANT_ATTACHED = 0xEB
+                                        {
+                                            text = "80m antenna attached";
+                                        }
+                                        break;
+
+                                    case 0xEC: // STATUS_CODE_RECEIVING_EVENT_DATA = 0xEC
+                                        {
+                                            text = "Transmitter ready to receive event data";
+                                        }
+                                        break;
+
+                                    case 0xED: // STATUS_CODE_RETURNED_FROM_SLEEP = 0xED
+                                        {
+                                            text = "Transmitter returned from sleep";
+                                        }
+                                        break;
+
+                                    case 0xEE: // STATUS_CODE_BEGINNING_XMSN_THIS_CYCLE = 0xEE
+                                        {
+                                            text = "Transmitter will transmit this cycle";
+                                        }
+                                        break;
+
+                                    case 0xEF: // STATUS_CODE_SENDING_ID = 0xEF
+                                        {
+                                            text = "Transmitter sending ID";
+                                        }
+                                        break;
+
+                                    case 0xFB: // STATUS_CODE_EVENT_NEVER_ENDS = 0xFB
+                                        {
+                                            text = "Event never ends";
+                                        }
+                                        break;
+
+                                    case 0xFC: // STATUS_CODE_EVENT_FINISHED = 0xFC
+                                        {
+                                            text = "Event has completed";
+                                        }
+                                        break;
+
+                                    case 0xFD: // STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING = 0xFD
+                                        {
+                                            text = "Transmitter on the air";
+                                        }
+                                        break;
+
+                                    case 0xFE: // STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT = 0xFE
+                                        {
+                                            text = "Transmitter waiting for time slot";
+                                        }
+                                        break;
+
+                                    case 0xFF: // STATUS_CODE_WAITING_FOR_EVENT_START = 0xFF
+                                        {
+                                            text = "Transmitter waiting for event start";
+                                        }
+                                        break;
+
+                                    default:
+                                        {
+                                            text = "Undefined status - update file system";
+                                        }
+                                        break;
+                                }
+
+                                if (text.length) {
+                                    var e = "State: " + text;
+                                    var elem = document.getElementById("statusreport");
+                                    if (elem != null) {
+                                        elem.innerHTML = e;
+                                        elem.setAttribute("style", "font-family:verdana; font-size:25px; color:Black; font-weight:bold; text-align:center;");
+                                    }
+                                } else {
+                                    var x = document.getElementById("statusreport");
+                                    if (x != null) x.style.display = "none";
+
+                                }
+                                console.log("Status Code:" + arr[1]);
+                            }
+                            break;
+
+
+                        case "ERR_CODE":
+                            {
+                                var text;
+                                var ec = parseInt(arr[1], 10);
+
+                                switch (ec) {
+                                    case 0x00: //	ERROR_CODE_NO_ERROR = 0x00
+                                        {
+                                            text = "No error";
+                                        }
+                                        break;
+
+                                    case 0xC7: // ERROR_CODE_EVENT_STATION_ID_ERROR = 0xC7
+                                        {
+                                            text = "Station callsign error";
+                                        }
+                                        break;
+
+                                    case 0xC8: // ERROR_CODE_EVENT_PATTERN_CODE_SPEED_NOT_SPECIFIED = 0xC8
+                                        {
+                                            text = "Pattern code speed not specified";
+                                        }
+                                        break;
+
+                                    case 0xC9: // ERROR_CODE_EVENT_PATTERN_NOT_SPECIFIED = 0xC9
+                                        {
+                                            text = "Morse code pattern not specified";
+                                        }
+                                        break;
+
+                                    case 0xCA: // ERROR_CODE_EVENT_TIMING_ERROR = 0xCA
+                                        {
+                                            text = "Timing parameters invalid";
+                                        }
+                                        break;
+
+                                    case 0xCB: // ERROR_CODE_EVENT_MISSING_TRANSMIT_DURATION
+                                        {
+                                            text = "No transmit duration specified for the transmitter's role";
+                                        }
+                                        break;
+
+                                    case 0xCC: // ERROR_CODE_EVENT_MISSING_START_TIME
+                                        {
+                                            text = "No start time specified for the event";
+                                        }
+                                        break;
+
+                                    case 0xCD: // ERROR_CODE_EVENT_NOT_CONFIGURED
+                                        {
+                                            text = "Transmitter not fully configured for the event";
+                                        }
+                                        break;
+
+                                    case 0xCE: // ERROR_CODE_ILLEGAL_COMMAND_RCVD = 0xCE
+                                        {
+                                            text = "Illegal command";
+                                        }
+                                        break;
+
+                                    case 0xCF: // ERROR_CODE_SW_LOGIC_ERROR = 0xCF
+                                        {
+                                            text = "Software logic error";
+                                        }
+                                        break;
+
+                                    case 0xD0: // ERROR_CODE_EVENT_ENDED_IN_PAST
+                                        {
+                                            text = "Event ended in the past";
+                                        }
+                                        break;
+
+                                    case 0xD1: // ERROR_CODE_ATMEGA_NOT_RESPONDING
+                                        {
+                                            text = "ATMEGA not responding";
+                                        }
+                                        break;
+
+                                    case 0xF5: // ERROR_CODE_POWER_LEVEL_NOT_SUPPORTED = 0xF5
+                                        {
+                                            text = "Transmit power level not supported";
+                                        }
+                                        break;
+
+                                    case 0xF6: // ERROR_CODE_NO_ANTENNA_PREVENTS_POWER_SETTING = 0xF6
+                                        {
+                                            text = "Missing antenna prevents transmissions";
+                                        }
+                                        break;
+
+                                    case 0xF7: // ERROR_CODE_NO_ANTENNA_FOR_BAND = 0xF7
+                                        {
+                                            text = "No antenna connected for that band";
+                                        }
+                                        break;
+
+                                        //	ERROR_CODE_WD_TIMEOUT = 0xF8,
+                                    case 0xF8:
+                                        {
+                                            text = "Watchdog timeout";
+                                        }
+                                        break;
+
+                                        //	ERROR_CODE_SUPPLY_VOLTAGE_ERROR = 0xF9
+                                    case 0xF9:
+                                        {
+                                            text = "Supply voltage out of range";
+                                        }
+                                        break;
+
+                                        //	ERROR_CODE_BUCK_REG_OUTOFSPEC = 0xFA
+                                    case 0xFA:
+                                        {
+                                            text = "Power amplifier voltage out of range";
+                                        }
+                                        break;
+
+                                        //	ERROR_CODE_CLKGEN_NONRESPONSIVE = 0xFB
+                                    case 0xFB:
+                                        {
+                                            text = "Signal generator not responding";
+                                        }
+                                        break;
+
+                                        //	ERROR_CODE_RTC_NONRESPONSIVE = 0xFC
+                                    case 0xFC:
+                                        {
+                                            text = "Real-time clock not responding";
+                                        }
+                                        break;
+
+                                        //	ERROR_CODE_DAC3_NONRESPONSIVE = 0xFD
+                                    case 0xFD:
+                                        {
+                                            text = "DAC3 not responding";
+                                        }
+                                        break;
+
+                                        //	ERROR_CODE_DAC2_NONRESPONSIVE = 0xFE
+                                    case 0xFE:
+                                        {
+                                            text = "DAC2 not responding";
+                                        }
+                                        break;
+
+                                    case 0xFF: //	ERROR_CODE_DAC1_NONRESPONSIVE = 0xFF
+                                        {
+                                            text = "DAC1 not responding";
+                                        }
+                                        break;
+
+                                    default:
+                                        {
+                                            text = "Undefined error - update file system"
+                                        }
+                                        break;
+                                }
+
+                                var e = "Error: " + text;
+                                var elem = document.getElementById("errorreport");
+                                if (elem != null) {
+                                    elem.innerHTML = e;
+                                    elem.setAttribute("style", "font-family:verdana; font-size:25px; color:Red; font-weight:bold; text-align:center;");
+                                }
+                                console.log("Error Code:" + arr[1]);
+                            }
+                            break;
+
+                        case "EVENT_NAME":
+                            {
+                                if (typeof arr[1] == 'undefined') {
+                                    console.log("Error: Null event selected!");
+                                }
+                                setOverlay(null);
+                                g_selectedEvent = arr[1];
+                                g_typeTxNames = [];
+                                g_typeFrequency = [];
+                                g_typePower = [];
+                                g_selectedTxType = "";
+                                hideFreqSettings();
+
+                                g_eventNumberOfTxTypes = 0;
+                                hideFreqSet1();
+                                updateTextFormatting();
+                                g_eventTableData = [{
+                                    name: "Event",
+                                    version: "Ver.",
+                                    start: "Start Time",
+                                    finish: "Finish Time",
+                                    role: "Fox",
+                                    callsign: "Call",
+                                    power: "Power",
+                                    frequency: "Freq"
+                                }];
+                                displayEvents(true);
+                            }
+                            break;
+
+                        case "REFRESH":
+                            {
+                                console.log("Refresh: " + str);
+                                console.log("Parsed data: " + arr[1] + "; " + arr[2] + "; " + arr[3] + "; " + arr[4] + "; " + arr[5] + "; " + arr[6] + "; " + arr[7] + "; " + arr[8] + ";");
+                                if (typeof arr[1] == 'undefined') arr[1] = '?';
+                                if (typeof arr[2] == 'undefined') arr[2] = '?';
+                                if (typeof arr[3] == 'undefined') arr[3] = '0';
+                                if (typeof arr[4] == 'undefined') arr[4] = '0';
+                                if (typeof arr[5] == 'undefined') arr[5] = '?';
+                                if (typeof arr[6] == 'undefined') arr[6] = '?';
+                                if (typeof arr[7] == 'undefined') arr[7] = '?';
+                                if (typeof arr[8] == 'undefined') arr[8] = '?';
+
+                                if (arr[1] == "Done") {
+                                    displayEvents(false);
+                                    g_loading_data = false;
+                                } else {
+                                    var eventLine = {
+                                        name: arr[1],
+                                        version: arr[2],
+                                        start: 1000 * Number(arr[3]),
+                                        finish: 1000 * Number(arr[4]),
+                                        role: arr[5],
+                                        callsign: arr[6],
+                                        power: arr[7],
+                                        freq: arr[8],
+                                        saved: true
+                                    };
+
+                                    var theEvent = g_eventTableData.find(g_eventTableData => g_eventTableData.name == g_selectedEvent);
+                                    theEvent.role = g_selectedTxType;
+                                }
+                            }
+                            break;
+
+                        case "EVENT_DATA":
+                            {
+                                console.log("Data: " + str);
+                                console.log("Parsed data: " + arr[1] + "; " + arr[2] + "; " + arr[3] + "; " + arr[4] + "; " + arr[5] + "; " + arr[6] + "; " + arr[7] + ";" + arr[8] + ";");
+                                if (typeof arr[1] == 'undefined') arr[1] = '?';
+                                if (typeof arr[2] == 'undefined') arr[2] = '?';
+                                if (typeof arr[3] == 'undefined') arr[3] = '0';
+                                if (typeof arr[4] == 'undefined') arr[4] = '0';
+                                if (typeof arr[5] == 'undefined') arr[5] = '?';
+                                if (typeof arr[6] == 'undefined') arr[6] = '?';
+                                if (typeof arr[7] == 'undefined') arr[7] = '?';
+                                if (typeof arr[8] == 'undefined') arr[8] = '?';
+
+                                var eventLine = {
+                                    name: arr[1],
+                                    version: arr[2],
+                                    start: 1000 * Number(arr[3]),
+                                    finish: 1000 * Number(arr[4]),
+                                    role: arr[5],
+                                    callsign: arr[6],
+                                    power: arr[7],
+                                    freq: arr[8],
+                                    saved: true
+                                };
+
+                                g_eventTableData.push(eventLine);
+                            }
+                            break;
+
+                        case "TYPE_NAME":
+                            {
+                                if ((arr[1] == "Done") && (arr[2] == "Done")) {
+                                    displayEvents(true);
+                                } else {
+                                    var tn = {
+                                        name: arr[1],
+                                        indices: arr[2]
+                                    };
+                                    g_typeTxNames.push(tn);
+                                    console.log("TypeName = ", tn);
+                                    g_eventNumberOfTxTypes++;
+                                }
+                            }
+                            break;
+
+                        case "SW_VERSIONS":
+                            {
+                                if (typeof arr[1] == 'undefined') arr[1] = '?';
+                                if (typeof arr[2] == 'undefined') arr[2] = '?';
+
+                                var v1 = document.getElementById("wifiVersion");
+                                var v2 = document.getElementById("ATMEGAVersion");
+                                console.log("Tx SW Versions: ", arr[1], arr[2]);
+
+                                if (v1 != null) {
+                                    v1.innerHTML = "WiFi Module SW Version: " + arr[1];
+                                }
+
+                                if (v2 != null) {
+                                    v2.innerHTML = "ATMEGA SW Version: " + arr[2];
+                                }
+                            }
+                            break;
+
+                        case "SYNC":
+                            {
+                                if (typeof arr[1] != 'undefined') {
+                                    g_transmitterTimeMs = 1000 * arr[1];
+                                    var txd = new Date(g_transmitterTimeMs);
+                                    var d = document.getElementById("xmtrTime");
+                                    if (d != null) d.innerHTML = "TX: " + txd;
+                                    updateDisplayedLocalTime()
+                                }
+                            }
+                            break;
+
+                        case "CLONE":
+                            {
+                                if (typeof arr[1] != 'undefined') {
+                                    var x = document.getElementById("cloneText");
+                                    if (x != null) x.value = arr[1];
+                                }
+                            }
+                            break;
+
+                        case "VERS":
+                            {
+                                if (typeof arr[1] != 'undefined') {
+                                    document.getElementById("version").innerHTML = arr[1];
+                                }
+                            }
+                            break;
+
+                        case "MAC":
+                            {
+                                if (typeof arr[1] != 'undefined') {
+                                    var t = "MAC: " + arr[1];
+                                    var m = document.getElementById("macAddress");
+                                    if (m != null) m.innerHTML = t;
+                                    console.log(t);
+                                }
+                            }
+                            break;
+
+                        case "BAT":
+                            {
+                                if (typeof arr[1] != 'undefined') {
+                                    var t = "Battery: " + arr[1];
+                                    var b = document.getElementById("batteryLevel");
+                                    if (b != null) b.innerHTML = t;
+                                }
+                            }
+                            break;
+
+                        case "TEMP":
+                            {
+                                if (typeof arr[1] != 'undefined') {
+                                    var t = "Temp: " + arr[1];
+                                    var x = document.getElementById("temperature");
+                                    if (x != null) x.innerHTML = t;
+                                }
+                            }
+                            break;
+
+                        case "SSID":
+                            {
+                                if (typeof arr[1] != 'undefined') {
+                                    var t = arr[1] + ": Events Settings";
+                                    var h = document.getElementById("mainHeading");
+                                    if (h != null) h.innerHTML = t;
+                                    console.log(t);
+                                }
+                            }
+                            break;
+
+                        case "CALLSIGN":
+                            {
+                                if (typeof arr[1] == 'undefined') arr[1] = '?';
+
+                                var c = document.getElementById("callText");
+                                if (c != null) {
+                                    c.value = arr[1];
+                                }
+                            }
+                            break;
+
+                        case "BAND":
+                            {
+                                if (typeof arr[1] != 'undefined') {
+                                    var eventBand = arr[1];
+                                    if (eventBand.indexOf("80") > 0) {
+                                        g_eventRadioBand = "80m";
+                                    } else {
+                                        g_eventRadioBand = "2m";
+                                    }
+                                }
+                            }
+                            break;
+
+                        case "START_TIME":
+                            {
+                                if (typeof arr[1] != 'undefined') {
+                                    applyNewStartTime(arr[1]);
+                                }
+                            }
+                            break;
+
+                        case "FINISH_TIME":
+                            {
+                                if (typeof arr[1] != 'undefined') {
+                                    applyNewFinishTime(arr[1]);
+                                }
+                            }
+                            break;
+
+                        case "FREQ":
+                            {
+                                if (arr.length > 2) {
+                                    var freqStr = {
+                                        frequency: arr[1],
+                                        role: arr[2]
+                                    }
+
+                                    g_typeFrequency.push(freqStr);
+                                    console.log(g_typeFrequency.length, "Freq: ", freqStr);
+                                    var freq = Number(arr[1]);
+
+                                    if ((freq < Number("4000000")) && (freq > Number("3500000"))) {
+                                        g_eventRadioBand = "80m";
+                                    } else if ((freq < Number("148000000")) && (freq > Number("144000000"))) {
+                                        g_eventRadioBand = "2m";
+                                    }
+                                } else if (arr[1].length > 1) {
+                                    var freq = Number(arr[1]);
+                                    var b = document.getElementById("frequencyButton");
+                                    if (b != null) {
+                                        b.setAttribute("value", freqDotFormat(freq));
+                                    }
+                                }
+                            }
+                            break;
+
+                        case "TX_ROLE":
+                            {
+                                var text = arr[1];
+
+                                if (text.includes(":")) {
+                                    var colon = text.indexOf(":");
+                                    var newTypeIndex = parseInt(text.substring(0, colon), 10);
+                                    var newSubIndex = parseInt(text.substring(colon + 1), 10);
+                                    console.log("role code: ", arr[1]);
+
+                                    var r = document.getElementById("roleSelect");
+
+                                    if (r) {
+
+                                        var roleIndex = 0;
+
+                                        while ((g_typeTxNames[roleIndex].indices != text) && (roleIndex < g_typeTxNames.length)) {
+                                            roleIndex++;
+                                        }
+
+                                        if (roleIndex < g_typeTxNames.length) {
+                                            r[roleIndex].setAttribute("selected", "true");
+                                            g_selectedTxType = r[roleIndex].role;
+                                        }
+
+                                        var msgText = "FREQ," + currentRoleIndex();
+                                        sendToSocket(msgText);
+                                        msgText = "POWER," + currentRoleIndex();
+                                        sendToSocket(msgText);
+                                    }
+
+                                } else {
+                                    console.log("role name: ", arr[1]);
+                                }
+                            }
+                            break;
+
+                        case "POWER":
+                            {
+                                if (arr.length > 2) {
+                                    var powerStr = {
+                                        power: arr[1],
+                                        role: arr[2]
+                                    }
+
+                                    g_typePower.push(powerStr);
+                                    console.log(g_typePower.length, "Power: ", powerStr);
+                                } else if (arr[1].length > 0) {
+                                    var mw = arr[1];
+
+                                    console.log("tx power: ", arr[1]);
+                                    var pe = document.getElementById("pwrSelect");
+
+                                    if (pe != null) {
+                                        pe.value = arr[1];
+                                    }
+                                }
+                            }
+                            break;
+
+                        case "SAVED_EVENT":
+                            {
+                                g_event_changes_saved = true;
+                            }
+                            break;
+
+                        case "SUS":
+                            {
+                                var role = "";
+                                var event = "";
+
+                                if (arr[1].length < 1) {
+                                    console.log("Error: sync success returned no role");
+                                } else {
+                                    role = arr[1];
+                                }
+
+                                if (arr[2].length < 1) {
+                                    console.log("Error: sync success returned no event");
+                                } else {
+                                    event = arr[2];
+                                }
+
+                                if (role.length || event.length) {
+                                    var e = "Success: " + role + " synced. Next up: " + event;
+                                    var elem = document.getElementById("statusreport");
+                                    if (elem != null) {
+                                        elem.innerHTML = e;
+                                        elem.setAttribute("style", "font-family:verdana; font-size:25px; color:Green; font-weight:bold; text-align:center;");
+                                    }
+                                } else {
+                                    var x = document.getElementById("statusreport");
+                                    if (x != null) x.style.display = "none";
+                                }
+                                console.log("Sync success:" + arr[1]);
+
+                            }
+                            break;
+
+                        case "SUE":
+                            {
+                                var msg = "";
+
+                                if (arr[1].length < 1) {
+                                    console.log("Sync error returned no message");
+                                } else {
+                                    msg = arr[1];
+                                }
+
+                                var e;
+                                if (msg.length) {
+                                    e = "Sync Error: " + msg;
+                                } else {
+                                    e = "Sync Error: transmitter sync failed."
+                                }
+
+                                var elem = document.getElementById("statusreport");
+                                if (elem != null) {
+                                    elem.innerHTML = e;
+                                    elem.setAttribute("style", "font-family:verdana; font-size:25px; color:Red; font-weight:bold; text-align:center;");
+                                }
+
+                                console.log("Sync error:" + arr[1]);
+                            }
+                            break;
+
+                        default:
+                            console.log("Unrecognized message: ", str);
+                            break;
+                    }
+                }
+            }
+        }
+
+        function start() {
+            setOverlay("Loading Events...");
+            g_stillConnected = 200;
+            webSocketStart();
+        }
+
+        function clamp(min, num, max) {
+            return num <= min ? min : num >= max ? max : num;
+        }
+
+        function sendSocketAlive() {
+            console.log("Alive.");
+
+            if (g_webSocketAliveTimer) clearInterval(g_webSocketAliveTimer);
+            g_webSocketAliveTimer = setInterval(function() {
+                sendToSocket("!&");
+            }, 2000);
+        }
+
+        function sendToSocket(msg) {
+            var now = Date.now();
+            var dif = now - g_lastPacketTime;
+
+            if ((g_websock == null) || (g_websock.readyState != g_websock.OPEN)) // wait 5 seconds and try again
+            {
+                if (g_websock != null) {
+                    console.log("Socket not ready. Command delayed.", g_websock, g_websock.readyState);
+                } else {
+                    console.log("Socket null. Command delayed.");
+                }
+
+                setTimeout(function() {
+                    sendToSocket(msg);
+                }, 5000);
+
+            } else {
+                if (dif > 200) {
+                    if (g_delayedPackets) g_delayedPackets--;
+                    console.log("Sending now:", now, g_lastPacketTime, dif, g_delayedPackets, msg);
+                    g_websock.send(msg);
+                    g_lastPacketTime = now;
+                    g_lastSocketTxMessage = msg;
+                } else {
+                    g_delayedPackets++;
+                    console.log("Commands too rapid. Delaying send.", now, g_lastPacketTime, dif, g_delayedPackets, msg);
+                    setTimeout(function() {
+                        sendToSocket(msg);
+                    }, g_delayedPackets * 250);
+                }
+            }
+        }
+
+        function syncClock() {
+            var d = Date();
+
+            if (g_timeUpdateTimer != 0) {
+                clearTimeout(g_timeUpdateTimer);
+                g_timeUpdateTimer = 0;
+            }
+
+            // Sync to seconds transition
+            n = Date();
+            while (d == n) {
+                //               console.log("Syncing...", d, n);
+                n = Date();
+            };
+
+            d = new Date();
+
+            var btext = d.toISOString();
+            btext = "SYNC," + btext;
+            console.log(btext);
+            sendToSocket(btext);
+            updateDisplayedLocalTime();
+
+            g_timeUpdateTimer = setTimeout(function() {
+                if (g_stillConnected) {
+                    updateDisplayedLocalTime();
+                    if (g_stillConnected) {
+                        g_stillConnected--;
+                        if (g_stillConnected == 0) {
+                            console.log("g_stillConnected timeout!");
+                            setOverlay("Disconnected");
+                            g_timedOut = true;
+                        }
+                    }
+                }
+            }, 100);
+        }
+
+        function executeEvent() {
+            sendToSocket("EXECUTE");
+            console.log("Execute message sent to socket.");
+
+        }
+
+        function sendCall() {
+            var b = document.getElementById("callText");
+            var btext = "";
+            if (b != null) {
+                btext = b.value;
+                btext = "CALLSIGN," + btext;
+                sendToSocket(btext);
+                g_event_changes_saved = false;
+            }
+
+            console.log(btext);
+        }
+
+        function sendPower() {
+            var p = document.getElementById("pwrSelect");
+
+            if (p) {
+                var power = p.value;
+                var msgText = "POWER," + currentRoleIndex() + "," + power;
+                sendToSocket(msgText);
+                console.log(msgText);
+                g_powerLevel = power;
+                g_event_changes_saved = false;
+            }
+        }
+
+        function sendFreq() {
+            var f = document.getElementById("frequencyButton");
+
+            if (f) {
+                var freqStr = freqNoDotsFormat(f.value);
+                var msgText = "FREQ," + currentRoleIndex() + "," + freqStr;
+                console.log(msgText);
+                sendToSocket(msgText);
+                g_freq1FrequencyHz = freqStr;
+                g_event_changes_saved = false;
+            }
+        }
+
+        function callSignEntered() {
+            var x = document.getElementById("callText");
+
+            if (x != null) {
+                var callString = x.value;
+                var isValid = false;
+
+                if (hasNumber(callString) && hasAlpha(callString) && (callString.length > 2)) {
+                    x.style.color = "blue";
+                    isValid = true;
+                } else {
+                    x.style.color = "red";
+                }
+
+                if (isValid == true) {
+                    sendCall();
+                }
+            }
+        }
+
+        function currentRoleIndex() {
+            var r = document.getElementById("roleSelect");
+            if (r) {
+                g_selectedTxType = document.getElementById("roleSelect").value;
+                var indices = g_typeTxNames.find(g_typeTxNames => g_typeTxNames.name == g_selectedTxType).indices;
+                return Number(indices.charAt(0));
+            } else {
+                console.log("Warning: Selected role not available!")
+            }
+            return (0);
+        }
+
+        function foxClick() {
+            hideFreqSet1();
+            g_selectedTxType = document.getElementById("roleSelect").value;
+            var indices = g_typeTxNames.find(g_typeTxNames => g_typeTxNames.name == g_selectedTxType).indices;
+            var msgText = "TX_ROLE," + indices;
+            sendToSocket(msgText);
+            var theEvent = g_eventTableData.find(g_eventTableData => g_eventTableData.name == g_selectedEvent);
+            theEvent.role = g_selectedTxType;
+            msgText = "FREQ," + currentRoleIndex();
+            sendToSocket(msgText);
+            msgText = "POWER," + currentRoleIndex();
+            sendToSocket(msgText);
+            g_event_changes_saved = false;
+        }
+
+        function pwrClick() {
+            var x = document.getElementById("errorreport");
+            if (x != null) x.style.display = "none";
+
+            x = document.getElementById("statusreport");
+            if (x != null) x.style.display = "none";
+
+            sendPower();
+        }
+
+        function setOverlay(msgTxt) {
+            if (msgTxt != null) {
+                document.getElementById("overlayText").innerHTML = msgTxt;
+                document.getElementById("overlay").style.display = "block";
+            } else {
+                document.getElementById("overlay").style.display = "none";
+            }
+        }
+
+        // Takes the time string argument and forces it to be UTC with seconds removed, 
+        // then applies any local timezone offset to obtain local time. Returns ISO string of converted time.
+        function forceValueToLocalTime(val) {
+            var sub = val.slice(0, 16); // remove seconds
+            sub = sub + "Z"; // for to UTC
+            var d = new Date(sub);
+            var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
+            var t = d.getTime() + tzoffset;
+            var localISOTime = "";
+            if (t > 0) {
+                localISOTime = (new Date(t)).toISOString();
+            }
+
+            return localISOTime;
+        }
+
+        // Force the argument to be interpreted as UTC then use it to create a Date object
+        function utcTimeToLocalTime(val) {
+            var z = val.indexOf("Z");
+
+            if (z < 0) {
+                val = val + "Z";
+            }
+
+            var d = new Date(val);
+            return d;
+        }
+
+        // Converts the date value argument to UTC, removes seconds, and then returns as a UTC string without seconds
+        // An error will result in the current time being returned as a UTC string without seconds
+        function localTimeToUTC(val, removeSecs) {
+            try {
+                var d = new Date(val).toISOString();
+                var sub;
+                if (removeSecs) {
+                    sub = d.slice(0, 16); // remove seconds 
+                } else {
+                    sub = d.slice(0, 19);
+                }
+                sub = sub + "Z"; // for UTC      
+            } catch (err) {
+                var d = new Date().toISOString();
+                var sub;
+                if (removeSecs) {
+                    sub = d.slice(0, 16); // remove seconds 
+                } else {
+                    sub = d.slice(0, 19);
+                }
+                sub = sub + "Z"; // for UTC      
+            }
+
+            return sub;
+        }
+
+        function validateTimeStructure(str) {
+            try {
+                var d = new Date(str).toISOString();
+            } catch (err) {
+                return false;
+            }
+            return true;
+        }
+
+        function updateDisplayedLocalTime() {
+            var d = Date();
+            var el = document.getElementById("currentTime");
+            if (el != null) {
+                el.innerHTML = "OS: " + d;
+                updateTextFormatting();
+            }
+        }
+
+        function enableStartFinishTimes() {
+            var dtsText = document.getElementById("datetimeStart");
+
+            if (dtsText) {
+                var dtfText = document.getElementById("datetimeFinish");
+
+                if (dtfText) {
+                    var dts = dtsText.value;
+                    var dtf = dtfText.value;
+                    var now = new Date().getTime();
+                    now += 90000;
+                    now = now - (now % 60000);
+
+                    var locals = forceValueToLocalTime(dts);
+                    var localsEpoch = new Date(dts);
+                    localsEpoch = localsEpoch.getTime();
+
+                    var localf = forceValueToLocalTime(dtf);
+                    var localfEpoch = new Date(dtf);
+                    localfEpoch = localfEpoch.getTime();
+
+                    if (localsEpoch > now) {
+                        localfEpoch = localsEpoch + 36000000;
+                        var local = epochToLocalDateTimeFormat(localfEpoch);
+                        applyNewFinishTime(local);
+                    } else {
+                        var dif = 36000000;
+                        if (localfEpoch > localsEpoch) {
+                            dif = localfEpoch - localsEpoch;
+                        }
+
+                        localsEpoch = now;
+                        var local = epochToLocalDateTimeFormat(localsEpoch);
+                        applyNewStartTime(local);
+                        localfEpoch = localsEpoch + dif;
+                        local = epochToLocalDateTimeFormat(localfEpoch);
+                        applyNewFinishTime(local);
+                    }
+                }
+            }
+        }
+
+        function newStartTime() {
+            if (g_starttimeDateUpdateTimer != 0) {
+                clearTimeout(g_starttimeDateUpdateTimer);
+                g_starttimeDateUpdateTimer = 0;
+            }
+
+            var dtText = document.getElementById("datetimeStart");
+
+            if (dtText) {
+
+                g_event_changes_saved = false;
+
+                g_starttimeDateUpdateTimer = setTimeout(function() {
+                    var dt = dtText.value;
+                    var local;
+
+                    var now = new Date().getTime();
+                    var localEpoch;
+
+                    if (!validateTimeStructure(dt)) {
+                        local = Date();
+                        localEpoch = Date.getTime();
+                    } else {
+                        local = forceValueToLocalTime(dt);
+                        localEpoch = new Date(dt);
+                        localEpoch = localEpoch.getTime();
+                    }
+
+                    var utc;
+
+                    if (localEpoch < now) {
+                        local = epochToLocalDateTimeFormat(now);
+                        utc = localTimeToUTC(local, false);
+                        localEpoch = now;
+                    } else {
+                        utc = localTimeToUTC(local, false);
+                    }
+
+                    applyNewStartTime(local);
+                    var msgText = "START_TIME," + utc;
+
+                    console.log(msgText);
+                    sendToSocket(msgText);
+                    var localfEpoch;
+
+                    var dtfText = document.getElementById("datetimeFinish");
+                    if (dtfText) {
+                        var dtf = dtfText.value;
+                        var localf;
+
+                        if (!validateTimeStructure(dtf)) {
+                            localf = Date();
+                            localfEpoch = Date.getTime();
+                        } else {
+                            localf = forceValueToLocalTime(dtf);
+                            localfEpoch = new Date(dtf);
+                            localfEpoch = localfEpoch.getTime();
+                        }
+                    }
+
+                    if (localEpoch > localfEpoch) {
+                        applyNewFinishTime(local);
+                        msgText = "FINISH_TIME," + utc;
+                        console.log(msgText);
+                        sendToSocket(msgText);
+                    }
+
+                }, 750);
+            }
+        }
+
+        function applyNewStartTime(t) {
+            var dtText = document.getElementById("datetimeStart");
+            var local;
+
+            if (t.indexOf("Z") > 0) {
+                local = utcTimeToLocalTime(t);
+            } else {
+                local = new Date(t);
+            }
+
+            var mon = ("0" + (local.getMonth() + 1)).slice(-2);
+            var day = ("0" + local.getDate()).slice(-2);
+            var hour = ("0" + local.getHours()).slice(-2);
+            var min = ("0" + local.getMinutes()).slice(-2);
+            var time = local.getFullYear() + "-" + mon + "-" + day + "T" + hour + ":" + min;
+
+            if (dtText) {
+                dtText.value = time;
+            }
+            g_selectedEventStart = local.getTime();
+        }
+
+        function epochToLocalDateTimeFormat(epoch_ms) {
+            var local = new Date(epoch_ms);
+
+            var mon = ("0" + (local.getMonth() + 1)).slice(-2);
+            var day = ("0" + local.getDate()).slice(-2);
+            var hour = ("0" + local.getHours()).slice(-2);
+            var min = ("0" + local.getMinutes()).slice(-2);
+            var timeStr = local.getFullYear() + "-" + mon + "-" + day + "T" + hour + ":" + min;
+
+            return timeStr;
+        }
+
+        function newFinishTime() {
+            if (g_finishtimeDateUpdateTimer != 0) {
+                clearTimeout(g_finishtimeDateUpdateTimer);
+                g_finishtimeDateUpdateTimer = 0;
+            }
+
+            var dtfText = document.getElementById("datetimeFinish");
+
+            if (dtfText) {
+                g_event_changes_saved = false;
+
+                var dtf = dtfText.value;
+                var localf;
+                var msgText = "";
+
+                if (!validateTimeStructure(dtf)) {
+                    localf = Date();
+                } else {
+                    localf = forceValueToLocalTime(dtf);
+                }
+
+                var now = new Date().getTime();
+                var localfEpoch = new Date(dtf);
+                localfEpoch = localfEpoch.getTime();
+                var utc;
+
+                if (now > localfEpoch) {
+                    localf = epochToLocalDateTimeFormat(now);
+                    utc = localTimeToUTC(localf, false);
+                } else {
+                    utc = localTimeToUTC(localf, false);
+                }
+
+                g_finishtimeDateUpdateTimer = setTimeout(function() {
+                    applyNewFinishTime(localf);
+                    msgText = "FINISH_TIME," + utc;
+
+                    console.log(msgText);
+                    sendToSocket(msgText);
+
+                    var dtsText = document.getElementById("datetimeStart");
+                    if (dtsText) {
+                        var dts = dtsText.value;
+                        var locals;
+                        if (!validateTimeStructure(dts)) {
+                            locals = Date();
+                        } else {
+                            locals = forceValueToLocalTime(dts);
+                        }
+                    }
+
+                    var localsEpoch = new Date(dts);
+                    localsEpoch = localsEpoch.getTime();
+
+                    if (localsEpoch > localfEpoch) {
+                        applyNewStartTime(localf);
+                        msgText = "START_TIME," + utc;
+                        console.log(msgText);
+                        sendToSocket(msgText);
+                    }
+
+                }, 750);
+            }
+        }
+
+        function applyNewFinishTime(t) {
+            var dtText = document.getElementById("datetimeFinish");
+            var local;
+
+            if (t.indexOf("Z") > 0) {
+                local = utcTimeToLocalTime(t);
+            } else {
+                local = new Date(t);
+            }
+
+            var mon = ("0" + (local.getMonth() + 1)).slice(-2);
+            var day = ("0" + local.getDate()).slice(-2);
+            var hour = ("0" + local.getHours()).slice(-2);
+            var min = ("0" + local.getMinutes()).slice(-2);
+            var time = local.getFullYear() + "-" + mon + "-" + day + "T" + hour + ":" + min;
+
+            if (dtText) {
+                dtText.value = time;
+            }
+            g_selectedEventFinish = local.getTime();
+        }
+
+        function hasNumber(myString) {
+            return /\d/.test(myString);
+        }
+
+        function hasAlpha(myString) {
+            return /\D/.test(myString);
+        }
+
+        function statusMessageText(startTimeEpoch, finishTimeEpoch) {
+            var statusMsg;
+            var s = (new Date(startTimeEpoch)).getTime();
+            var n = (new Date).getTime();
+            var f = (new Date(finishTimeEpoch)).getTime();
+
+            if (s > 946684800000) s /= 1000;
+            if (n > 946684800000) n /= 1000;
+            if (f > 946684800000) f /= 1000;
+
+            if (f <= s) {
+                statusMsg = "Disabled";
+            } else if ((n > s) && (n < f)) {
+                statusMsg = "Running";
+            } else if ((n > s) && (n >= f)) {
+                statusMsg = "Disabled";
+            } else {
+                statusMsg = "Starts";
+
+                var del = (s - n);
+                //del = del.toFixed();
+
+                if (del > 3600) {
+                    var h = del / 3600;
+                    del = (del / 60) % 60;
+                    h = Math.floor(h).toFixed();
+                    del = del.toFixed();
+                    statusMsg += " in " + h + "h" + del + "m";
+                } else if (del > 60) {
+                    del /= 60;
+                    del = del.toFixed();
+                    statusMsg += " in " + del + "m";
+                } else {
+                    del = del.toFixed();
+                    statusMsg += " in " + del + "s";
+                }
+
+                if (f <= s) {
+                    statusMsg += "\nDisabled";
+                } else {
+                    del = (f - s);
+                    if (del > 3600) {
+                        var h = del / 3600;
+                        del = (del / 60) % 60;
+                        h = Math.floor(h).toFixed();
+                        del = del.toFixed();
+                        statusMsg += " Runs " + h + "h" + del + "m";
+                    } else if (del > 60) {
+                        del /= 60;
+                        del = Math.floor(del.toFixed());
+                        statusMsg += " Runs " + del + "m";
+                    } else {
+                        del = del.toFixed();
+                        statusMsg += " Runs " + del + "s";
+                    }
+                }
+            }
+
+            return statusMsg;
+        }
+
+
+        function updateTextFormatting() {
+            var callsignText = document.getElementById("callText");
+            var callString = "";
+
+            if (callsignText != null) {
+                callString = String(callsignText.value);
+                if (hasNumber(callString) && hasAlpha(callString) && (callString.length > 2)) {
+                    callsignText.style.color = "blue";
+                } else {
+                    callsignText.style.color = "red";
+                }
+            }
+
+            if (g_stillConnected == 0) {
+                setOverlay("Disconnected");
+            }
+
+            if (g_selectedEvent) {
+                var stat = statusMessageText(g_selectedEventStart, g_selectedEventFinish);
+                var statusEl = document.getElementById("statusCell");
+                if (statusEl != null) statusEl.innerHTML = stat;
+
+                var runButton = document.getElementById("activeRunButton");
+
+                if (runButton) {
+                    if (stat == "Disabled") {
+                        runButton.value = "Enable";
+                        runButton.disabled = false;
+                        runButton.style.backgroundColor = "orange";
+                    } else {
+                        runButton.value = "Apply";
+                    }
+
+                    if (runButton.value == "Apply") {
+                        if (!g_event_changes_saved) {
+                            runButton.disabled = true;
+                            runButton.style.backgroundColor = "gray";
+                        } else {
+                            runButton.disabled = false;
+                            runButton.style.backgroundColor = "#4CAF50";
+                        }
+                    }
+                }
+            }
+
+            var fTime = document.getElementById("xmtrTime");
+
+            if (fTime) {
+                if (fTime.innerHTML.indexOf("Disconnected") !== -1) {
+                    fTime.style.color = "red";
+                } else {
+                    fTime.style.color = "black";
+                }
+            }
+        }
+
+        function pad(num, size) {
+            var s = "000000000" + num;
+            return s.substr(s.length - size);
+        }
+
+        ////////////////////////////////////////////////////////////
+
+        function updateFreqButtonText(compareIndex) {
+            var roleIndex = currentRoleIndex();
+            console.log("Role index = ", roleIndex, " Compare to:", compareIndex);
+            if (roleIndex == compareIndex) {
+                var freqButton = document.getElementById("frequencyButton");
+                freqButton.value = freqDotFormat(g_typeFrequency[roleIndex].frequency);
+            }
+        }
+
+
+        function freq1Change() {
+            var freq = document.querySelector("#freq1");
+            var count = document.querySelector(".freq1val");
+            var f = Math.floor(freq.value);
+
+            if (f > 0) {
+                count.textContent = "\xa0\xa0>\xa0\xa0\xa0>>\xa0\xa0\xa0>>>";
+            } else if (f < 0) {
+                count.textContent = "<<<\xa0\xa0\xa0<<\xa0\xa0\xa0<\xa0\xa0";
+            } else {
+                count.textContent = "<<<\xa0\xa0\xa0<<\xa0\xa0\xa0<\xa0\xa0\xa0>\xa0\xa0\xa0>>\xa0\xa0\xa0>>>";
+            }
+
+            if (g_timer != 0) {
+                clearInterval(g_timer);
+                g_timer = 0;
+            }
+
+            if (f != 0) {
+                if (f < 0) f = -f;
+                var time = 500 - (5 * f);
+                g_timer = setInterval(function() {
+                    incFreq1();
+                }, time);
+            }
+        }
+
+        ////////////////////////////////////////////////////////////
+
+        function incFreq1Click() {
+            var val;
+
+            if (g_eventRadioBand == "2m") {
+                val = Number(g_freq1FrequencyHz) + 5000;
+
+                g_freq1FrequencyHz = clamp(Number("144000000"), val, Number("148000000"));
+            } else {
+                val = Number(g_freq1FrequencyHz) + 100;
+
+                g_freq1FrequencyHz = clamp(Number("3500000"), val, Number("4000000"));
+            }
+
+            g_typeFrequency[currentRoleIndex()].frequency = val;
+            updateFreqButtonText(currentRoleIndex());
+
+            freq1String(g_freq1FrequencyHz)
+            sendFreq();
+        }
+
+        ////////////////////////////////////////////////////////////
+
+        function decFreq1Click() {
+            var val;
+
+            if (g_eventRadioBand == "2m") {
+                val = Number(g_freq1FrequencyHz) - 5000;
+
+                g_freq1FrequencyHz = clamp(Number("144000000"), val, Number("148000000"));
+            } else {
+                val = Number(g_freq1FrequencyHz) - 100;
+
+                g_freq1FrequencyHz = clamp(Number("3500000"), val, Number("4000000"));
+            }
+
+            g_typeFrequency[currentRoleIndex()].frequency = val;
+            updateFreqButtonText(currentRoleIndex());
+
+            freq1String(g_freq1FrequencyHz)
+            sendFreq();
+        }
+
+        ////////////////////////////////////////////////////////////
+
+        function incFreq1() {
+            var ftext = document.getElementById("freq1Text");
+            var freq = document.querySelector("#freq1");
+            var f = Math.floor(Number(freq.value));
+            var val;
+
+            if (f != 0) {
+                if (g_eventRadioBand == "2m") {
+                    if (f < 0) {
+                        val = Number(g_freq1FrequencyHz) - 5000;
+                    } else {
+                        val = Number(g_freq1FrequencyHz) + 5000;
+                    }
+
+                    g_freq1FrequencyHz = clamp(Number("144000000"), val, Number("148000000"));
+                } else {
+                    if (f < 0) {
+                        val = Number(g_freq1FrequencyHz) - 100;
+                    } else {
+                        val = Number(g_freq1FrequencyHz) + 100;
+                    }
+
+                    g_freq1FrequencyHz = clamp(Number("3500000"), val, Number("4000000"));
+                }
+
+                g_typeFrequency[currentRoleIndex()].frequency = val;
+                updateFreqButtonText(currentRoleIndex());
+
+                freq1String(g_freq1FrequencyHz);
+            } else {
+                clearTimeout(g_timer);
+                g_timer = 0;
+            }
+        }
+
+        ////////////////////////////////////////////////////////////
+
+        function resetFreq1Slider() {
+            var freq = document.querySelector("#freq1");
+            var count = document.querySelector(".freq1val");
+
+            freq.value = 0;
+            count.textContent = "<<<\xa0\xa0\xa0<<\xa0\xa0\xa0<\xa0\xa0\xa0>\xa0\xa0\xa0>>\xa0\xa0\xa0>>>";
+
+            setFreqButtonText(g_freq1FrequencyHz);
+            sendFreq();
+        }
+
+        ////////////////////////////////////////////////////////////
+
+        function freq1String(myString) {
+            var f = document.getElementById("freq1Text");
+            g_freq1FrequencyHz = myString;
+            if (f) f.value = freqDotFormat(myString);
+        }
+
+        function freqDotFormat(freqString) {
+            var newString;
+            if (freqString === "*") {
+                newString = "*";
+            } else {
+                var val = Number(freqString);
+                newString = String(Math.floor(val / 1000000)) + "." + pad(Math.floor(((val % 1000000) / 1000)), 3) + "." + pad((val % 1000), 3);
+            }
+            return newString;
+        }
+
+        function freqNoDotsFormat(freqString) {
+            var nodots = freqString.replace(/\./gi, "");
+            return nodots;
+        }
+
+        function setFreqButtonText(freqString) {
+            var b = document.getElementById("frequencyButton");
+
+            if (b) {
+                b.value = freqDotFormat(freqString);
+            }
+        }
+
+        ////////////////////////////////////////////////////////////
+
+        function toggleFreqSettings() {
+            var x = document.getElementById("freqSet1");
+
+            console.log("Toggle: ", x);
+
+            if (x.style.display == "block") {
+                hideFreqSettings();
+            } else {
+                showFreqSettings();
+            }
+        }
+
+        function showFreqSettings() {
+            showFreqSet1();
+            freqStr = g_typeFrequency[currentRoleIndex()].frequency;
+            freq1String(freqStr);
+            document.getElementById("freqSet1Heading").innerHTML = g_typeFrequency[currentRoleIndex()].role + " Frequency";
+        }
+
+        function hideFreqSettings() {
+            hideFreqSet1();
+        }
+
+        ////////////////////////////////////////////////////////////
+
+        function showFreqSet1() {
+            var x = document.getElementById("freqSet1");
+            x.style.display = "block";
+
+        }
+
+        function hideFreqSet1() {
+            var x = document.getElementById("freqSet1");
+            x.style.display = "none";
+        }
+
+        ////////////////////////////////////////////////////////////
+
+        window.addEventListener("mouseup", function() {
+            if (document.getElementById("freq1").value != 0) {
+                resetFreq1Slider();
+            }
+        });
+
+        window.addEventListener("touchend", function() {
+            if (document.getElementById("freq1").value != 0) {
+                resetFreq1Slider();
+            }
+        });
+
+        window.addEventListener("click", function() {
+            if (document.getElementById("freq1").value != 0) {
+                resetFreq1Slider();
+            }
+        });
+
+        ////////////////////////////////////////////////////////////
+
+    </script>
+
+
+    <div id="overlay">
+        <div id="overlayText">Connecting...</div>
+    </div>
+
+    <center>
+        <p style="text-align:left;"><a href=\ "73.73.73.73">[HOME]</a></p>
+        <h1 id="mainHeading" style="font-family:verdana; font-size:30px; color:Black; text-align:center;">Transmitter Settings</h1>
+        <p id="wifiVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
+        <p id="ATMEGAVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
+        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.3.0 - 19 Sep 2021</p>
+
+        <div>
+            <table>
+                <tr>
+                    <td style="width:200px; height:50px; text-align:right; vertical-align:middle;">
+                        <p id="batteryLevel" style="font-family:verdana; font-size:15px; color:Black; font-weight:bold; text-align:center;">Battery: ?</p>
+                    </td>
+                    <td style="width:200px; height:50px; text-align:right; vertical-align:middle;">
+                        <p id="temperature" style="font-family:verdana; font-size:15px; color:Black; font-weight:bold; text-align:center;">Temp: ?</p>
+                    </td>
+                </tr>
+            </table>
+
+            <table>
+                <tr>
+                    <td style="text-align:right;">
+                        <p id="xmtrTime" style="font-family:verdana; font-size:20px; color:Red; font-weight:bold; text-align:center;">Disconnected</p>
+                    </td>
+                </tr>
+            </table>
+
+            <table>
+                <tr>
+                    <td style="text-align:right;">
+                        <p id="currentTime" style="font-family:verdana; font-size:20px; color:Black; font-weight:bold; text-align:center;">Updating...</p>
+                    </td>
+                </tr>
+            </table>
+
+            <table>
+                <tr>
+                    <td style="text-align:left; vertical-align:center;">
+                        <button id="SyncButton" class="incbutton" onclick="syncClock();">Sync</button>
+                    </td>
+                </tr>
+            </table>
+
+            <table>
+                <tr>
+                    <td style="text-align:right;">
+                        <p id="errorreport" style="display:none;"></p>
+                    </td>
+                </tr>
+            </table>
+
+            <table>
+                <tr>
+                    <td style="text-align:right;">
+                        <p id="statusreport" style="display:none;"></p>
+                    </td>
+                </tr>
+            </table>
+
+            <table border="1" id="eventTable"></table>
+
+
+        </div>
+
+        <div id="freqSet1" style="display:none;">
+            <h4 id="freqSet1Heading" style="font-family:verdana; font-size:20px; font-weight:bold; text-align:center">Fox Frequency</h4>
+
+            <table>
+                <tr>
+                    <td>
+                        <button id="FreqDownButton" class="decbutton" onclick="decFreq1Click();">DEC</button>
+                    </td>
+
+                    <td>
+                        <input type="text" style="font-family:verdana; font-size:20px; font-weight:bold; text-align:center" id="freq1Text" name="freq1Text" value="" readonly="readonly" />
+                    </td>
+
+                    <td style="width:14.4px; text-align: left">
+                        <button id="FreqUpButton" class="incbutton" onclick="incFreq1Click();">INC</button>
+                    </td>
+                </tr>
+            </table>
+
+            <div>
+                <span class="freq1val" style="text-align:center; color:black"></span>
+
+                <table>
+                    <tr>
+                        <td></td>
+
+                        <td style="width:400px; text-align:center">
+                            <input style="font-family:verdana; font-size:20px; width:400px; text-align:center; color:black; font-weight:bold;" type="range" name="freq1" id="freq1" min="-100" max="100" step="1" value="0" oninput="freq1Change();" />
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <h3 id="macAddress" style="font-family:verdana; font-size:15px; font-weight:bold; text-align:center">Waiting for MAC Address</h3>
+    </center>
+</body>
+
+</html>

@@ -1,4 +1,0 @@
-(sym_lib_table
-  (lib (name "special")(type "KiCad")(uri "/Library/Application Support/kicad/docs/KiCad/kicad libraries/special.kicad_sym")(options "")(descr ""))
-  (lib (name "FlexFox80-rescue")(type "KiCad")(uri "${KIPRJMOD}/FlexFox80-rescue.kicad_sym")(options "")(descr ""))
-)
