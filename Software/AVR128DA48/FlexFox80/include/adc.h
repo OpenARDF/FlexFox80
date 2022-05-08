@@ -27,7 +27,6 @@
 #define ADC_H_
 
 typedef enum {
-	ADCDisable,
 	ADCAudioInput,
 	ADCExternalBatteryVoltage,
 	ADC12VRegulatedVoltage,

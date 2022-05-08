@@ -5098,18 +5098,11 @@ void handleLBMessage(String message)
     {
       String msg;
 
-      if (temp <= 100)
-      {
-        msg = String(String(SOCK_COMMAND_BATTERY) + "," + temp + "%");
-      }
-      else
-      {
-        temp = temp % 10000;
-        int v = temp / 10;
-        int f = temp % 10;
-        msg = String(String(SOCK_COMMAND_BATTERY) + "," + v + "." + f + "V");
-      }
-
+      temp = temp % 10000;
+      int v = temp / 10;
+      int f = temp % 10;
+      msg = String(String(SOCK_COMMAND_BATTERY) + "," + v + "." + f + "V");
+ 
       g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
     }
   }

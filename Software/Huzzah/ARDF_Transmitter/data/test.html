@@ -1400,6 +1400,11 @@
             }, 100);
         }
 
+        function sendRefresh() {
+            sendToSocket("REFRESH");
+            console.log("Refresh message sent to socket.");
+        }
+
         function sendKeyDown() {
             var btext = "KEY_DOWN";
             console.log(btext);

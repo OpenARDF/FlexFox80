@@ -182,8 +182,6 @@ typedef unsigned char uint8_t;
 #define PA_VOLTAGE_MAX_MV 14100L
 #define VPA(x)((x * PA_VOLTAGE_MAX_MV) / 1023L)
 
-#define VEXT(x) (10000L + ((14L * x + 310) / 100))
-
 typedef uint16_t BatteryLevel;  /* in milliVolts */
 
 #define VOLTS_5 (((5000L - BATTERY_DROP) * 1023L) / BATTERY_VOLTAGE_MAX_MV)

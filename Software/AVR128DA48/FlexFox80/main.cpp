@@ -24,13 +24,6 @@
 #include <atomic.h>
 
 
-/* ADC Defines */
-#define BATTERY_READING 0
-#define PA_VOLTAGE_READING 1
-#define V12V_VOLTAGE_READING 2
-#define BAND_80M_ANTENNA 3
-#define BAND_2M_ANTENNA 4
-
 /***********************************************************************
  * Local Typedefs
  ************************************************************************/
@@ -62,7 +55,6 @@ static bool g_perform_3V3_init = false;
 static volatile uint16_t g_util_tick_countdown = 0;
 static volatile bool g_battery_measurements_active = false;
 static volatile uint16_t g_maximum_battery = 0;
-volatile BatteryType g_battery_type = BATTERY_UNKNOWN;
 
 static volatile bool g_antenna_connection_changed = true;
 volatile AntConnType g_antenna_connect_state = ANT_CONNECTION_UNDETERMINED;
@@ -108,15 +100,24 @@ static volatile bool g_sleeping = false;
 static volatile time_t g_seconds_left_to_sleep = 0;
 static volatile time_t g_seconds_to_sleep = MAX_TIME;
 
-#define NUMBER_OF_POLLED_ADC_CHANNELS 5
-static const uint16_t g_adcChannelConversionPeriod_ticks[NUMBER_OF_POLLED_ADC_CHANNELS] = { TIMER2_0_5HZ, TIMER2_0_5HZ, TIMER2_0_5HZ, TIMER2_5_8HZ, TIMER2_5_8HZ };
-static volatile uint16_t g_tickCountdownADCFlag[NUMBER_OF_POLLED_ADC_CHANNELS] = { TIMER2_0_5HZ, TIMER2_0_5HZ, TIMER2_0_5HZ, TIMER2_5_8HZ, TIMER2_5_8HZ };
-//static uint16_t g_filterADCValue[NUMBER_OF_POLLED_ADC_CHANNELS] = { 500, 500, 500, 500, 500 };
-//static volatile bool g_adcUpdated[NUMBER_OF_POLLED_ADC_CHANNELS] = { false, false, false, false, false };
+// #define NUMBER_OF_POLLED_ADC_CHANNELS 4
+// static const uint16_t g_adcChannelConversionPeriod_ticks[NUMBER_OF_POLLED_ADC_CHANNELS] = { TIMER2_0_5HZ, TIMER2_0_5HZ, TIMER2_0_5HZ, TIMER2_5_8HZ };
+// static volatile uint16_t g_adcCountdownCount[NUMBER_OF_POLLED_ADC_CHANNELS] = { TIMER2_0_5HZ, TIMER2_0_5HZ, TIMER2_0_5HZ, TIMER2_5_8HZ };
+// static uint16_t g_ADCFilterThreshold[NUMBER_OF_POLLED_ADC_CHANNELS] = { 500, 500, 500, 500 };
+// static volatile bool g_adcUpdated[NUMBER_OF_POLLED_ADC_CHANNELS] = { false, false, false, false };
+// static volatile uint16_t g_lastConversionResult[NUMBER_OF_POLLED_ADC_CHANNELS];
+#define NUMBER_OF_POLLED_ADC_CHANNELS 3
+static ADC_Active_Channel_t g_adcChannelOrder[NUMBER_OF_POLLED_ADC_CHANNELS] = { ADCExternalBatteryVoltage, ADC12VRegulatedVoltage, ADCTXAdjustableVoltage };
+enum ADC_Result_Order { EXTERNAL_BATTERY_VOLTAGE, REGULATED_12V, PA_VOLTAGE };
+static const uint16_t g_adcChannelConversionPeriod_ticks[NUMBER_OF_POLLED_ADC_CHANNELS] = { TIMER2_5_8HZ, TIMER2_0_5HZ, TIMER2_0_5HZ };
+static volatile uint16_t g_adcCountdownCount[NUMBER_OF_POLLED_ADC_CHANNELS] = { 100, 1000, 2000 };
+static uint16_t g_ADCFilterThreshold[NUMBER_OF_POLLED_ADC_CHANNELS] = { 500, 500, 500 };
+static volatile bool g_adcUpdated[NUMBER_OF_POLLED_ADC_CHANNELS] = { false, false, false };
 static volatile uint16_t g_lastConversionResult[NUMBER_OF_POLLED_ADC_CHANNELS];
 
 extern Goertzel g_goertzel;
 volatile uint16_t g_switch_closed_count = 0;
+volatile bool g_long_button_press = false;
 
 leds LEDS = leds();
 
@@ -433,8 +434,8 @@ ISR(TCB0_INT_vect)
 {
     if(TCB0.INTFLAGS & TCB_CAPT_bm)
     {
-//		static bool conversionInProcess = false;
-//		static int8_t indexConversionInProcess;
+		static bool conversionInProcess = false;
+		static int8_t indexConversionInProcess = 0;
 		static uint16_t codeInc = 0;
 		bool repeat, finished;
 		
@@ -456,7 +457,10 @@ ISR(TCB0_INT_vect)
 		// Check switch state		
 		if(!PORTC_get_pin_level(SWITCH))
 		{
-			if(g_switch_closed_count<1000) g_switch_closed_count++;
+			if(g_switch_closed_count<1000)
+			{
+				g_switch_closed_count++;
+			}
 		}		
 							
 		updateAntennaStatus();
@@ -514,94 +518,84 @@ ISR(TCB0_INT_vect)
 		/**
 		 * Handle Periodic ADC Readings
 		 * The following algorithm allows multiple ADC channel readings to be performed at different polling intervals. */
-// 		if(!conversionInProcess)
-// 		{
-// 			/* Note: countdowns will pause while a conversion is in process. Conversions are so fast that this should not be an issue though. */
-// 
-// 			volatile uint8_t i; /* volatile to prevent optimization performing undefined behavior */
-// 			indexConversionInProcess = -1;
-// 
-// 			for(i = 0; i < NUMBER_OF_POLLED_ADC_CHANNELS; i++)
-// 			{
-// 				if(g_tickCountdownADCFlag[i])
-// 				{
-// 					g_tickCountdownADCFlag[i]--;
-// 				}
-// 
-// 				if(g_tickCountdownADCFlag[i] == 0)
-// 				{
-// 					indexConversionInProcess = (int8_t)i;
-// 				}
-// 			}
-// 
-// 			if(indexConversionInProcess >= 0)
-// 			{
-// 				g_tickCountdownADCFlag[indexConversionInProcess] = g_adcChannelConversionPeriod_ticks[indexConversionInProcess];    /* reset the tick countdown */
-// //				ADMUX = (ADMUX & 0xF0) | activeADC[indexConversionInProcess];                                                       /* index through all active channels */
-// //				ADCSRA |= (1 << ADSC);                                                                                              /*single conversion mode */
-// 				conversionInProcess = true;
-// 			}
-// 		}
-// 		else if(1 /*!( ADCSRA & (1 << ADSC) ) */)   /* wait for conversion to complete */
-// 		{
-// 			uint16_t hold = 0; //ADC;
-// 			static uint16_t holdConversionResult;
-// 			holdConversionResult = (uint16_t)(((uint32_t)hold * ADC_REF_VOLTAGE_mV) >> 10);                                         /* millivolts at ADC pin */
-// 			uint16_t lastResult = g_lastConversionResult[indexConversionInProcess];
-// 
-// 			g_adcUpdated[indexConversionInProcess] = true;
-// 
-// 			if(indexConversionInProcess == BATTERY_READING)
-// 			{
-// 				bool directionUP = holdConversionResult > lastResult;
-// 				uint16_t delta = directionUP ? holdConversionResult - lastResult : lastResult - holdConversionResult;
-// 
-// 				if(delta > g_filterADCValue[indexConversionInProcess])
-// 				{
-// 					lastResult = holdConversionResult;
-// 					g_tickCountdownADCFlag[indexConversionInProcess] = 100; /* speed up next conversion */
-// 				}
-// 				else
-// 				{
-// 					if(directionUP)
-// 					{
-// 						lastResult++;
-// 					}
-// 					else if(delta)
-// 					{
-// 						lastResult--;
-// 					}
-// 
-// 					g_battery_measurements_active = true;
-// 
-// 					if(lastResult > VOLTS_5)
-// 					{
-// 						g_battery_type = BATTERY_9V;
-// 					}
-// 					else if(lastResult > VOLTS_3_0)
-// 					{
-// 						g_battery_type = BATTERY_4r2V;
-// 					}
-// 				}
-// 			}
-// 			else if(indexConversionInProcess == V12V_VOLTAGE_READING)
-// 			{
-// 				lastResult = holdConversionResult;
-// 			}
-// 	/*		else if(indexConversionInProcess == PA_VOLTAGE_READING)
-// 	 *		{
-// 	 *			lastResult = holdConversionResult;
-// 	 *			g_PA_voltage = holdConversionResult;
-// 	 *		} */
-// 			else
-// 			{
-// 				lastResult = holdConversionResult;
-// 			}
-// 
-// 			g_lastConversionResult[indexConversionInProcess] = lastResult;
-// 
-// 			conversionInProcess = false;
-// 		}
+ 		if(!conversionInProcess)
+ 		{
+			/* Note: countdowns will pause while a conversion is in process. Conversions are so fast that this should not be an issue though. */
+
+			volatile uint8_t i; /* volatile to prevent optimization performing undefined behavior */
+			indexConversionInProcess = -1;
+
+			for(i = 0; i < NUMBER_OF_POLLED_ADC_CHANNELS; i++)
+			{
+				if(g_adcCountdownCount[i])
+				{
+					g_adcCountdownCount[i]--;
+				}
+
+				if(g_adcCountdownCount[i] == 0)
+				{
+					indexConversionInProcess = (int8_t)i;
+				}
+			}
+
+			if(indexConversionInProcess >= 0)
+			{
+				g_adcCountdownCount[indexConversionInProcess] = g_adcChannelConversionPeriod_ticks[indexConversionInProcess];    /* reset the tick countdown */
+				ADC0_setADCChannel(g_adcChannelOrder[indexConversionInProcess]);
+				ADC0_startConversion();
+				conversionInProcess = true;
+			}
+		}
+		else if(ADC0_conversionDone())   /* wait for conversion to complete */
+		{
+			static uint16_t holdConversionResult;
+			uint16_t hold = ADC0_read(); //ADC;
+			
+			if((hold > 10) && (hold < 4090))
+			{
+				holdConversionResult = hold; // (uint16_t)(((uint32_t)hold * ADC_REF_VOLTAGE_mV) >> 10);    /* millivolts at ADC pin */
+				uint16_t lastResult = g_lastConversionResult[indexConversionInProcess];
+
+				g_adcUpdated[indexConversionInProcess] = true;
+
+	// 			if(g_adcChannelOrder[indexConversionInProcess] == ADCExternalBatteryVoltage)
+	// 			{
+	// 				bool directionUP = holdConversionResult > lastResult;
+	// 				uint16_t delta = directionUP ? holdConversionResult - lastResult : lastResult - holdConversionResult;
+	// 
+	// 				if(delta > g_ADCFilterThreshold[indexConversionInProcess])
+	// 				{
+	// 					lastResult = holdConversionResult;
+	// 					g_adcCountdownCount[indexConversionInProcess] = 100; /* speed up next conversion */
+	// 				}
+	// 				else
+	// 				{
+	// 					if(directionUP)
+	// 					{
+	// 						lastResult++;
+	// 					}
+	// 					else if(delta)
+	// 					{
+	// 						lastResult--;
+	// 					}
+	// 
+	// 					g_battery_measurements_active = true;
+	// 				}
+	// 			}
+	// 			else
+	// 			{
+ 					lastResult = holdConversionResult;
+	// 			}
+
+				g_lastConversionResult[indexConversionInProcess] = lastResult;
+			}
+			else
+			{
+				hold = g_lastConversionResult[indexConversionInProcess];
+			}
+
+			conversionInProcess = false;
+		}
     }
 
     TCB0.INTFLAGS = TCB_CAPT_bm; /* clear interrupt flag */
@@ -616,7 +610,11 @@ ISR(PORTC_PORT_vect)
 	
 	if(PORTC.INTFLAGS & (1 << SWITCH))
 	{
-		if(g_switch_closed_count > 10) /* debounce */
+		if(g_switch_closed_count >= 1000)
+		{
+			g_long_button_press = true;
+		}
+		else if(g_switch_closed_count > 10) /* debounce */
 		{
 			count++;
 			
@@ -632,8 +630,8 @@ ISR(PORTC_PORT_vect)
 			}
 			else
 			{
-				LEDS.blink(LEDS_RED_BLINK_FAST);
-				LEDS.blink(LEDS_GREEN_OFF);
+				LEDS.blink(LEDS_GREEN_BLINK_SLOW);
+				LEDS.blink(LEDS_RED_OFF);
 				wifi_power(ON);
 				wifi_reset(ON);
 // 				g_end_event = true;
@@ -679,7 +677,7 @@ int main(void)
 	g_ee_mgr.initializeEEPROMVars();
 	g_ee_mgr.readNonVols();
 					
-	ADC0_setADCChannel(ADCAudioInput);
+//	ADC0_setADCChannel(ADCAudioInput);
 	
 // 	sb_send_NewLine();
 // 	sb_send_string((char *)PRODUCT_NAME_LONG);
@@ -735,6 +733,39 @@ int main(void)
 			}
 		}
 		
+		if(g_switch_closed_count >= 1000)
+		{
+			LEDS.blink(LEDS_GREEN_ON_CONSTANT);
+			LEDS.blink(LEDS_RED_ON_CONSTANT);
+		}
+		
+		if(g_long_button_press)
+		{
+			if(g_event_enabled)
+			{
+				stopEventNow(PROGRAMMATIC);
+				LEDS.blink(LEDS_GREEN_BLINK_SLOW);
+				LEDS.blink(LEDS_RED_OFF);
+			}
+			else
+			{
+				SC status = STATUS_CODE_IDLE;
+				g_last_error_code = launchEvent(&status);
+				
+				if(g_go_to_sleep && g_sleepType)
+				{
+					g_sleepType = SLEEP_AFTER_WIFI_GOES_OFF;
+					g_go_to_sleep = false;
+				}
+
+				g_WiFi_shutdown_seconds = 60;
+				LEDS.blink(LEDS_GREEN_ON_CONSTANT);
+				LEDS.blink(LEDS_RED_OFF);
+			}
+			
+			g_long_button_press = false;
+		}
+		
 		if(g_start_event)
 		{
 			g_start_event = false;	
@@ -749,7 +780,6 @@ int main(void)
 		if(g_end_event)
 		{
 			g_end_event = false;			
-			stopEventNow(PROGRAMMATIC);
 		}
 		
 		
@@ -1669,18 +1699,14 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 
 			case LB_MESSAGE_BAT:
 			{
-				uint16_t bat;
+				float bat = (float)g_lastConversionResult[EXTERNAL_BATTERY_VOLTAGE];
+				bat *= 172.;
+				bat *= 0.0005;
+				bat += 1;
+				
+				uint16_t val = (uint16_t)(bat);	
 
-				if(g_lastConversionResult[BATTERY_READING] > VOLTS_3_0) /* Send % of internal battery charge remaining */
-				{
-					bat = (uint16_t)CLAMP(0, BATTERY_PERCENTAGE(g_lastConversionResult[BATTERY_READING], (int32_t)g_battery_empty_mV), 100);
-				}
-				else                                                    /* Send the voltage of the external battery */
-				{
-					bat = VEXT(g_lastConversionResult[V12V_VOLTAGE_READING]);
-				}
-
-				lb_broadcast_num(bat, "!BAT");
+				lb_broadcast_num(val, "!BAT");
 
 				/* The system clock gets re-initialized whenever a battery message is received. This
 				 * is just to ensure the two stay closely in sync while the user interface is active */
@@ -1821,7 +1847,7 @@ uint16_t throttleValue(uint8_t speed)
 {
 	float temp;
 	speed = CLAMP(5, (int8_t)speed, 20);
-	temp = (4500L / (uint16_t)speed) / 10L;
+	temp = (3544L / (uint16_t)speed) / 10L; /* tune numerator to achieve "PARIS " sent 8 times in 60 seconds at 8 WPM */
 	return( (uint16_t)temp);
 }
 
