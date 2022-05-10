@@ -5064,6 +5064,8 @@ void handleLBMessage(String message)
   else if (type.equals(LB_MESSAGE_TEMP))
   {
     int16_t rawtemp = payload.toInt();
+      
+#ifdef COMPILE_FOR_PROTOTYPE_HARDWARE
     bool negative =  rawtemp & 0x8000;
     if (negative)
     {
@@ -5074,7 +5076,9 @@ void handleLBMessage(String message)
     {
       temp = -temp;
     }
-
+#else
+#endif
+      
     char dataStr[6];    /* allow for possible negative sign */
     dtostrf(temp, 4, 1, dataStr);
     dataStr[5] = '\0';

@@ -25,7 +25,7 @@
 
 #include <Arduino.h>
 
-#define COMPILE_FOR_PROTOTYPE_HARDWARE
+//#define COMPILE_FOR_PROTOTYPE_HARDWARE
 
 /*
     HUZZAH-specific Defines

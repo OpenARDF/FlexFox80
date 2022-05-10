@@ -39,13 +39,19 @@ struct EE_prom
 	time_t event_start_epoch; /* 2 */
 	time_t event_finish_epoch; /* 6 */
  	char stationID_text[MAX_PATTERN_TEXT_LENGTH + 1]; /* 10 */
-	uint8_t unlockCode[MAX_UNLOCK_CODE_LENGTH + 1]; /* 31 */
-	uint8_t id_codespeed;  /* 40 */
-	uint8_t fox_setting;  /* 41 */
-	uint8_t utc_offset; /* 42 */
-	uint32_t frequency; /* 43 */
-	uint32_t rtty_offset; /* 47 */
-	uint16_t rf_power; /* 51 */
+ 	char pattern_text[MAX_PATTERN_TEXT_LENGTH + 1]; /* 31 */
+	uint8_t unlockCode[MAX_UNLOCK_CODE_LENGTH + 1]; /* 52 */
+	uint8_t id_codespeed;  /* 61 */
+	uint8_t fox_setting;  /* 62 */
+	uint8_t utc_offset; /* 63 */
+	uint32_t frequency; /* 64 */
+	uint32_t rtty_offset; /* 68 */
+	uint16_t rf_power; /* 72 */
+	uint8_t pattern_codespeed; /* 74 */
+	int16_t off_air_seconds; /* 75 */
+	int16_t on_air_seconds; /* 77 */
+	int16_t ID_period_seconds; /* 79 */
+	int16_t intra_cycle_delay_time; /* 81 */
 };
 
 typedef enum
@@ -54,13 +60,19 @@ typedef enum
 	Event_start_epoch = 2,
 	Event_finish_epoch = 6,
 	StationID_text = 10,
-	UnlockCode = 31,
-	Id_codespeed = 40,
-	Fox_setting = 41,
-	Utc_offset = 42,
-	Frequency = 43,
-	RTTY_offset = 47,
-	RF_Power = 51
+	Pattern_text = 31,
+	UnlockCode = 52,
+	Id_codespeed = 61,
+	Fox_setting = 62,
+	Utc_offset = 63,
+	Frequency = 64,
+	RTTY_offset = 68,
+	RF_Power = 72,
+	Pattern_Code_Speed = 74,
+	Off_Air_Seconds = 75,
+	On_Air_Seconds = 77,
+	ID_Period_Seconds = 79,
+	Intra_Cycle_Delay_Seconds = 81
 } EE_var_t;
 
 class EepromManager

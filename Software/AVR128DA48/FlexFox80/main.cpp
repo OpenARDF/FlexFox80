@@ -111,7 +111,7 @@ static ADC_Active_Channel_t g_adcChannelOrder[NUMBER_OF_POLLED_ADC_CHANNELS] = {
 enum ADC_Result_Order { EXTERNAL_BATTERY_VOLTAGE, REGULATED_12V, PA_VOLTAGE };
 static const uint16_t g_adcChannelConversionPeriod_ticks[NUMBER_OF_POLLED_ADC_CHANNELS] = { TIMER2_5_8HZ, TIMER2_0_5HZ, TIMER2_0_5HZ };
 static volatile uint16_t g_adcCountdownCount[NUMBER_OF_POLLED_ADC_CHANNELS] = { 100, 1000, 2000 };
-static uint16_t g_ADCFilterThreshold[NUMBER_OF_POLLED_ADC_CHANNELS] = { 500, 500, 500 };
+//static uint16_t g_ADCFilterThreshold[NUMBER_OF_POLLED_ADC_CHANNELS] = { 500, 500, 500 };
 static volatile bool g_adcUpdated[NUMBER_OF_POLLED_ADC_CHANNELS] = { false, false, false };
 static volatile uint16_t g_lastConversionResult[NUMBER_OF_POLLED_ADC_CHANNELS];
 
@@ -175,11 +175,7 @@ ISR(PORTA_PORT_vect)
 {
     if(PORTA.INTFLAGS & (1 << RTC_SQW)) /* Handle 1-second interrupt */
     {
-// 		if(!g_event_enabled) 
-// 		{
-// 			LED_toggle_GREEN_level();
-// 		}
-		
+		g_current_epoch++;
 		system_tick();
 
 		if(g_sleeping)
@@ -687,8 +683,7 @@ int main(void)
 	
 	if(rtc_init() == ERROR_CODE_RTC_NONRESPONSIVE)
 	{
-// 		sb_send_NewLine();
-// 		sb_send_string(TEXT_RTC_NOT_RESPONDING_TXT);
+		/* LEDs should blink an error code */
 	}
 	else
 	{
@@ -706,10 +701,8 @@ int main(void)
 		wifi_reset(ON);
 		g_wifi_enable_delay = 0;
 		g_WiFi_shutdown_seconds = 0;
+		/* LEDs should blink an error code */
 	}
-	
-//	sb_send_NewLine();
-//	sb_send_NewPrompt();
 	
 	while (1) {
 // 		while(util_delay_ms(250))
@@ -725,12 +718,16 @@ int main(void)
 		
 		if(g_perform_3V3_init)
 		{			
+			g_perform_3V3_init = false;
+			
 			if(init_transmitter() != ERROR_CODE_RF_OSCILLATOR_ERROR)
 			{
 				g_powerUp_initialization_complete = true;
-				g_perform_3V3_init = false;
-				//startEventNow(POWER_UP); /* If an event is scheduled or in progress, then set things up to run it */
+				g_start_event = true;
 			}
+			
+			g_WiFi_shutdown_seconds = 60;
+			wifi_reset(OFF);
 		}
 		
 		if(g_switch_closed_count >= 1000)
@@ -743,22 +740,14 @@ int main(void)
 		{
 			if(g_event_enabled)
 			{
-				stopEventNow(PROGRAMMATIC);
+				g_end_event = true;
 				LEDS.blink(LEDS_GREEN_BLINK_SLOW);
 				LEDS.blink(LEDS_RED_OFF);
+				g_last_status_code = STATUS_CODE_REPORT_IDLE;
 			}
 			else
 			{
-				SC status = STATUS_CODE_IDLE;
-				g_last_error_code = launchEvent(&status);
-				
-				if(g_go_to_sleep && g_sleepType)
-				{
-					g_sleepType = SLEEP_AFTER_WIFI_GOES_OFF;
-					g_go_to_sleep = false;
-				}
-
-				g_WiFi_shutdown_seconds = 60;
+				g_start_event = true;
 				LEDS.blink(LEDS_GREEN_ON_CONSTANT);
 				LEDS.blink(LEDS_RED_OFF);
 			}
@@ -770,16 +759,33 @@ int main(void)
 		{
 			g_start_event = false;	
 			
-			if(g_powerUp_initialization_complete)
+			/* Start event based on fox setting */
+// 			if(g_powerUp_initialization_complete)
+// 			{
+// 				Fox_t f = FOX_1;
+// 				setupForFox(&f, START_EVENT_NOW);
+// 			}
+
+			SC status = STATUS_CODE_IDLE;
+			g_last_error_code = launchEvent(&status);
+				
+			if(g_go_to_sleep && g_sleepType)
 			{
-				Fox_t f = FOX_1;
-				setupForFox(&f, START_EVENT_NOW);
+				g_sleepType = SLEEP_AFTER_WIFI_GOES_OFF;
+				g_go_to_sleep = false;
 			}
+
+			g_WiFi_shutdown_seconds = 60;
+			LEDS.blink(LEDS_GREEN_BLINK_FAST);
+			LEDS.blink(LEDS_RED_OFF);
 		}
 		
 		if(g_end_event)
 		{
-			g_end_event = false;			
+			g_end_event = false;		
+			suspendEvent();	
+			LEDS.blink(LEDS_GREEN_ON_CONSTANT);
+			LEDS.blink(LEDS_RED_OFF);
 		}
 		
 		
@@ -790,14 +796,19 @@ int main(void)
 			lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_CLOCK_LABEL, g_tempStr);
 		}
 
-		
+		if(g_last_error_code)
+		{
+			sprintf(g_tempStr, "%u", g_last_error_code);
+			lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_ERRORCODE_LABEL, g_tempStr);
+			g_last_error_code = ERROR_CODE_NO_ERROR;
+		}
 
-// 		DAC0_setVal(dacval++);
-// 		if(dacval > 1023) dacval = 0;
-		
-//		tempC = temperatureC();
-//		sprintf(g_tempStr, "Seconds: %d: %d\n", count++, tempC);
-//		lb_send_text(g_tempStr);
+		if(g_last_status_code)
+		{
+			sprintf(g_tempStr, "%u", g_last_status_code);
+			lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_STATUSCODE_LABEL, g_tempStr);
+			g_last_status_code = STATUS_CODE_IDLE;
+		}
 	}
 }
 
@@ -1270,7 +1281,8 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 {
 	LinkbusRxBuffer* lb_buff;
-	static uint8_t event_parameter_count = 0;
+	static uint8_t new_event_parameter_count = 0;
+	static uint8_t event_parameter_commands_rcvd_count = 0;
 	bool send_ack = true;
 
 	while((lb_buff = nextFullLBRxBuffer()))
@@ -1366,19 +1378,24 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					{
 						pwr_mW = (uint16_t)atoi(lb_buff->fields[LB_MSG_FIELD1]);
 					}
-
-					ec = txSetParameters(&pwr_mW, NULL);
-					if(ec)
+					
+					if(pwr_mW != txGetPowerMw())
 					{
-						g_last_error_code = ec;
-					}
-					else
-					{
-						event_parameter_count++;
-					}
+						ec = txSetParameters(&pwr_mW, NULL);
+						if(ec)
+						{
+							g_last_error_code = ec;
+						}
+						else
+						{
+							new_event_parameter_count++;
+						}
 
-					sprintf(g_tempStr, "M,%u", pwr_mW);
-					lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_TX_POWER_LABEL, g_tempStr);
+						sprintf(g_tempStr, "M,%u", pwr_mW);
+						lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_TX_POWER_LABEL, g_tempStr);
+					}
+					
+					event_parameter_commands_rcvd_count++;
 				}
 			}
 			break;
@@ -1430,27 +1447,38 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 						else if(f1 == '2')  /* enables a downloaded event stored in EEPROM */
 						{
 							/* This command configures the transmitter to launch an event at its scheduled start time */
-							if(event_parameter_count < NUMBER_OF_ESSENTIAL_EVENT_PARAMETERS)
+							if(event_parameter_commands_rcvd_count && (event_parameter_commands_rcvd_count < NUMBER_OF_ESSENTIAL_EVENT_PARAMETERS))
 							{
 								g_last_error_code = ERROR_CODE_EVENT_NOT_CONFIGURED;
 							}
 							else
 							{
-								SC status = STATUS_CODE_IDLE;
-								static EC ec;
-								ec = launchEvent(&status);
-								if(g_go_to_sleep && g_sleepType)
+								if(new_event_parameter_count)
 								{
-									g_sleepType = SLEEP_AFTER_WIFI_GOES_OFF;
-									g_go_to_sleep = false;
+									if(g_event_enabled)
+									{
+										suspendEvent();
+									}
+									
+									g_ee_mgr.saveAllEEPROM();
+								}
+								
+								if(!g_event_enabled)
+								{
+									SC status = STATUS_CODE_IDLE;
+									EC ec = launchEvent(&status);
+									
+									if(g_go_to_sleep && g_sleepType)
+									{
+										g_sleepType = SLEEP_AFTER_WIFI_GOES_OFF;
+										g_go_to_sleep = false;
+									}
 								}
 
 								g_WiFi_shutdown_seconds = 60;
-
-								if(!ec)
-								{
-									g_ee_mgr.saveAllEEPROM();
-								}
+							
+								new_event_parameter_count = 0;
+								event_parameter_commands_rcvd_count = 0;
 							}
 						}
 					}
@@ -1459,7 +1487,8 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 				{
 					suspendEvent();
 					/* Restore saved event settings */
-					event_parameter_count = 0;
+					new_event_parameter_count = 0;
+					event_parameter_commands_rcvd_count = 0;
 					g_last_status_code = STATUS_CODE_RECEIVING_EVENT_DATA;
 				}
 			}
@@ -1476,12 +1505,14 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 						mtime = atol(lb_buff->fields[LB_MSG_FIELD2]);
 					}
 
-					if(mtime)
+					if(mtime != g_event_start_epoch)
 					{
 						g_event_start_epoch = mtime;
 						set_system_time(ds3231_get_epoch(NULL));    /* update system clock */
-						event_parameter_count++;
+						new_event_parameter_count++;
 					}
+					
+					event_parameter_commands_rcvd_count++;
 				}
 				else
 				{
@@ -1492,11 +1523,13 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 							mtime = atol(lb_buff->fields[LB_MSG_FIELD2]);
 						}
 
-						if(mtime)
+						if(mtime != g_event_finish_epoch)
 						{
 							g_event_finish_epoch = mtime;
-							event_parameter_count++;
+							new_event_parameter_count++;
 						}
+						
+						event_parameter_commands_rcvd_count++;
 					}
 				}
 			}
@@ -1561,16 +1594,21 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 
 			case LB_MESSAGE_SET_STATION_ID:
 			{
-				event_parameter_count++;    /* Any ID or no ID is acceptable */
-
 				if(lb_buff->fields[LB_MSG_FIELD1][0])
 				{
-					strncpy(g_messages_text[STATION_ID], lb_buff->fields[LB_MSG_FIELD1], MAX_PATTERN_TEXT_LENGTH);
-
-					if(g_messages_text[STATION_ID][0])
+					if(strcmp(g_messages_text[STATION_ID], lb_buff->fields[LB_MSG_FIELD1]))
 					{
-						g_time_needed_for_ID = (500 + timeRequiredToSendStrAtWPM(g_messages_text[STATION_ID], g_id_codespeed)) / 1000;
+						strncpy(g_messages_text[STATION_ID], lb_buff->fields[LB_MSG_FIELD1], MAX_PATTERN_TEXT_LENGTH);
+
+						if(g_messages_text[STATION_ID][0])
+						{
+							g_time_needed_for_ID = (500 + timeRequiredToSendStrAtWPM(g_messages_text[STATION_ID], g_id_codespeed)) / 1000;
+						}
+						
+						new_event_parameter_count++;    /* Any ID or no ID is acceptable */
 					}
+					
+					event_parameter_commands_rcvd_count++;
 				}
 				else
 				{
@@ -1592,24 +1630,36 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 				{
 					if(lb_buff->fields[LB_MSG_FIELD2][0])
 					{
-						speed = atol(lb_buff->fields[LB_MSG_FIELD2]);
-						g_id_codespeed = CLAMP(MIN_CODE_SPEED_WPM, speed, MAX_CODE_SPEED_WPM);
-						event_parameter_count++;
-
-						if(g_messages_text[STATION_ID][0])
+						speed = CLAMP(MIN_CODE_SPEED_WPM, atol(lb_buff->fields[LB_MSG_FIELD2]), MAX_CODE_SPEED_WPM);
+						
+						if(speed != g_id_codespeed)
 						{
-							g_time_needed_for_ID = (500 + timeRequiredToSendStrAtWPM(g_messages_text[STATION_ID], g_id_codespeed)) / 1000;
+							g_id_codespeed = speed;
+							new_event_parameter_count++;
+
+							if(g_messages_text[STATION_ID][0])
+							{
+								g_time_needed_for_ID = (500 + timeRequiredToSendStrAtWPM(g_messages_text[STATION_ID], g_id_codespeed)) / 1000;
+							}
 						}
+						
+						event_parameter_commands_rcvd_count++;
 					}
 				}
 				else if(lb_buff->fields[LB_MSG_FIELD1][0] == 'P')
 				{
 					if(lb_buff->fields[LB_MSG_FIELD2][0])
 					{
-						speed = atol(lb_buff->fields[LB_MSG_FIELD2]);
-						g_pattern_codespeed = CLAMP(5, speed, 20);
-						event_parameter_count++;
-						g_code_throttle = throttleValue(g_pattern_codespeed);
+						speed = CLAMP(MIN_CODE_SPEED_WPM, atol(lb_buff->fields[LB_MSG_FIELD2]), MAX_CODE_SPEED_WPM);
+						
+						if(speed != g_pattern_codespeed)
+						{
+							g_pattern_codespeed = speed;
+							new_event_parameter_count++;
+							g_code_throttle = throttleValue(g_pattern_codespeed);
+						}
+						
+						event_parameter_commands_rcvd_count++;
 					}
 				}
 			}
@@ -1617,15 +1667,21 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 
 			case LB_MESSAGE_TIME_INTERVAL:
 			{
-				uint16_t time = 0;
+				int16_t time = 0;
 
 				if(lb_buff->fields[LB_MSG_FIELD1][0] == '0')
 				{
 					if(lb_buff->fields[LB_MSG_FIELD2][0])
 					{
 						time = atol(lb_buff->fields[LB_MSG_FIELD2]);
-						g_off_air_seconds = time;
-						event_parameter_count++;
+						
+						if(time != g_off_air_seconds)
+						{
+							g_off_air_seconds = time;
+							new_event_parameter_count++;
+						}
+						
+						event_parameter_commands_rcvd_count++;
 					}
 				}
 				else if(lb_buff->fields[LB_MSG_FIELD1][0] == '1')
@@ -1633,8 +1689,14 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					if(lb_buff->fields[LB_MSG_FIELD2][0])
 					{
 						time = atol(lb_buff->fields[LB_MSG_FIELD2]);
-						g_on_air_seconds = time;
-						event_parameter_count++;
+						
+						if(time != g_on_air_seconds)
+						{
+							g_on_air_seconds = time;
+							new_event_parameter_count++;
+						}
+						
+						event_parameter_commands_rcvd_count++;
 					}
 				}
 				else if(lb_buff->fields[LB_MSG_FIELD1][0] == 'I')
@@ -1642,8 +1704,14 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					if(lb_buff->fields[LB_MSG_FIELD2][0])
 					{
 						time = atol(lb_buff->fields[LB_MSG_FIELD2]);
-						g_ID_period_seconds = time;
-						event_parameter_count++;
+						
+						if(time != g_ID_period_seconds)
+						{
+							g_ID_period_seconds = time;
+							new_event_parameter_count++;
+						}
+						
+						event_parameter_commands_rcvd_count++;
 					}
 				}
 				else if(lb_buff->fields[LB_MSG_FIELD1][0] == 'D')
@@ -1651,8 +1719,14 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					if(lb_buff->fields[LB_MSG_FIELD2][0])
 					{
 						time = atol(lb_buff->fields[LB_MSG_FIELD2]);
-						g_intra_cycle_delay_time = time;
-						event_parameter_count++;
+						
+						if(time != g_intra_cycle_delay_time)
+						{
+							g_intra_cycle_delay_time = time;
+							new_event_parameter_count++;
+						}
+						
+						event_parameter_commands_rcvd_count++;
 					}
 				}
 			}
@@ -1662,8 +1736,13 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 			{
 				if(lb_buff->fields[LB_MSG_FIELD1][0])
 				{
-					strncpy(g_messages_text[PATTERN_TEXT], lb_buff->fields[LB_MSG_FIELD1], MAX_PATTERN_TEXT_LENGTH);
-					event_parameter_count++;
+					if(strcmp(g_messages_text[PATTERN_TEXT], lb_buff->fields[LB_MSG_FIELD1]))
+					{
+						strncpy(g_messages_text[PATTERN_TEXT], lb_buff->fields[LB_MSG_FIELD1], MAX_PATTERN_TEXT_LENGTH);
+						new_event_parameter_count++;
+					}
+					
+					event_parameter_commands_rcvd_count++;
 				}
 			}
 			break;
@@ -1674,15 +1753,18 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 
 				if(lb_buff->fields[LB_MSG_FIELD1][0])
 				{
-					static Frequency_Hz f;
-					f = atol(lb_buff->fields[LB_MSG_FIELD1]);
+					Frequency_Hz f = atol(lb_buff->fields[LB_MSG_FIELD1]);
 
-					Frequency_Hz ff = f;
-					if(!txSetFrequency(&ff, true))
+					if(f != txGetFrequency())
 					{
-						transmitter_freq = ff;
-						event_parameter_count++;
+						if(!txSetFrequency(&f, true))
+						{
+							transmitter_freq = f;
+							new_event_parameter_count++;
+						}
 					}
+					
+					event_parameter_commands_rcvd_count++;
 				}
 				else
 				{
@@ -1702,7 +1784,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 				float bat = (float)g_lastConversionResult[EXTERNAL_BATTERY_VOLTAGE];
 				bat *= 172.;
 				bat *= 0.0005;
-				bat += 1;
+				bat += 1.;
 				
 				uint16_t val = (uint16_t)(bat);	
 
@@ -1716,11 +1798,15 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 
 			case LB_MESSAGE_TEMP:
 			{
-				int16_t v;
-				if(!ds3231_get_temp(&v))
-				{
-					lb_broadcast_num(v, "!TEM");
-				}
+// 				int16_t v;
+// 				if(!ds3231_get_temp(&v))
+// 				{
+// 					lb_broadcast_num(v, "!TEM");
+// 				}
+				
+				int16_t tempC = temperatureC();
+				lb_broadcast_num(tempC, "!TEM");
+				
 			}
 			break;
 
@@ -2058,7 +2144,11 @@ void initializeAllEventSettings(bool disableEvent)
 
 void suspendEvent()
 {
-	
+	g_event_enabled = false;    /* get things stopped immediately */
+	g_on_the_air = 0;           /*  stop transmitting */
+	g_event_commenced = false;  /* get things stopped immediately */
+	keyTransmitter(OFF);
+	powerToTransmitter(OFF);
 }
 
 

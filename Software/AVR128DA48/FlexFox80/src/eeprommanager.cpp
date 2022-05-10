@@ -22,7 +22,7 @@
  *  SOFTWARE.
  */
 
-
+#include "defs.h"
 #include "eeprommanager.h"
 #include "serialbus.h"
 #include "i2c.h"
@@ -64,17 +64,22 @@ const struct EE_prom EEMEM EepromManager::ee_vars =
 	/* .utc_offset = */ 0
 };
 
-extern char g_messages_text[][MAX_PATTERN_TEXT_LENGTH + 1];
-extern volatile uint8_t g_id_codespeed;
-extern volatile uint8_t g_pattern_codespeed;
 extern volatile Fox_t g_fox;
-extern volatile time_t g_event_start_epoch;
-extern volatile time_t g_event_finish_epoch;
 extern volatile int8_t g_utc_offset;
 extern uint8_t g_unlockCode[];
-extern uint32_t g_80m_frequency;
 extern uint32_t g_rtty_offset;
+
+extern char g_messages_text[][MAX_PATTERN_TEXT_LENGTH + 1];
+extern uint32_t g_80m_frequency;
+extern volatile time_t g_event_start_epoch;
+extern volatile time_t g_event_finish_epoch;
 extern uint16_t g_80m_power_level_mW;
+extern volatile uint8_t g_id_codespeed;
+extern volatile uint8_t g_pattern_codespeed;
+extern volatile int16_t g_off_air_seconds;
+extern volatile int16_t g_on_air_seconds;
+extern volatile int16_t g_ID_period_seconds;
+extern volatile int16_t g_intra_cycle_delay_time;
 
 extern char g_tempStr[];
 
@@ -160,6 +165,23 @@ void EepromManager::updateEEPROMVar(EE_var_t v, void* val)
 		}
 		break;
 
+		case Pattern_text:
+		{
+			char* char_addr = (char*)val;
+			char c = *char_addr++;
+			
+			eeprom_addr_t j = (eeprom_addr_t)Pattern_text;
+
+			while(c)
+			{
+				avr_eeprom_write_byte(j++, c);
+				c = *char_addr++;
+			}
+
+			avr_eeprom_write_byte(j, 0);
+		}
+		break;
+
 		case UnlockCode:
 		{
 			uint8_t* uint8_addr = (uint8_t*)val;
@@ -204,6 +226,36 @@ void EepromManager::updateEEPROMVar(EE_var_t v, void* val)
 		case Utc_offset:
 		{
 			avr_eeprom_write_byte(Utc_offset, *(uint8_t*)val);
+		}
+		break;
+		
+		case Pattern_Code_Speed:
+		{
+			avr_eeprom_write_byte(Pattern_Code_Speed, *(uint8_t*)val);
+		}
+		break;
+
+		case Off_Air_Seconds:
+		{
+			avr_eeprom_write_word(Off_Air_Seconds, *(uint16_t*)val);
+		}
+		break;
+		
+		case On_Air_Seconds:
+		{
+			avr_eeprom_write_word(On_Air_Seconds, *(uint16_t*)val);
+		}
+		break;
+		
+		case ID_Period_Seconds:
+		{
+			avr_eeprom_write_word(ID_Period_Seconds, *(uint16_t*)val);
+		}
+		break;
+		
+		case Intra_Cycle_Delay_Seconds:
+		{
+			avr_eeprom_write_word(Intra_Cycle_Delay_Seconds, *(uint16_t*)val);
 		}
 		break;
 
@@ -262,6 +314,15 @@ void EepromManager::saveAllEEPROM(void)
 		}
 	}
 
+	for(i = 0; i < MAX_PATTERN_TEXT_LENGTH; i++)
+	{
+		if(g_messages_text[PATTERN_TEXT][i] != (char)eeprom_read_byte((uint8_t*)(&(EepromManager::ee_vars.pattern_text[i]))))
+		{
+			updateEEPROMVar(Pattern_text, (void*)g_messages_text[PATTERN_TEXT]);
+			break;
+		}
+	}
+
 	for(i = 0; i < MAX_UNLOCK_CODE_LENGTH; i++)
 	{
 		if(g_unlockCode[i] != (char)eeprom_read_byte((uint8_t*)(&(EepromManager::ee_vars.unlockCode[i]))))
@@ -285,6 +346,31 @@ void EepromManager::saveAllEEPROM(void)
 	{
 		updateEEPROMVar(RF_Power, (void*)&g_80m_power_level_mW);
 	}
+	
+	if(g_pattern_codespeed != eeprom_read_byte(&(EepromManager::ee_vars.pattern_codespeed)))
+	{
+		updateEEPROMVar(Pattern_Code_Speed, (void*)&g_pattern_codespeed);
+	}
+
+	if(g_off_air_seconds != (int16_t)eeprom_read_word((const uint16_t *)&(EepromManager::ee_vars.off_air_seconds)))
+	{
+		updateEEPROMVar(Off_Air_Seconds, (void*)&g_off_air_seconds);
+	}
+	
+	if(g_on_air_seconds != (int16_t)eeprom_read_word((const uint16_t *)&(EepromManager::ee_vars.on_air_seconds)))
+	{
+		updateEEPROMVar(On_Air_Seconds, (void*)&g_on_air_seconds);
+	}
+	
+	if(g_ID_period_seconds != (int16_t)eeprom_read_word((const uint16_t *)&(EepromManager::ee_vars.ID_period_seconds)))
+	{
+		updateEEPROMVar(ID_Period_Seconds, (void*)&g_ID_period_seconds);
+	}
+	
+	if(g_intra_cycle_delay_time != (int16_t)eeprom_read_word((const uint16_t *)&(EepromManager::ee_vars.intra_cycle_delay_time)))
+	{
+		updateEEPROMVar(Intra_Cycle_Delay_Seconds, (void*)&g_intra_cycle_delay_time);
+	}	
 }
 
 
@@ -311,6 +397,15 @@ bool EepromManager::readNonVols(void)
 			}
 		}
 
+		for(i = 0; i < MAX_PATTERN_TEXT_LENGTH; i++)
+		{
+			g_messages_text[PATTERN_TEXT][i] = (char)eeprom_read_byte((uint8_t*)(&(EepromManager::ee_vars.pattern_text[i])));
+			if(!g_messages_text[PATTERN_TEXT][i])
+			{
+				break;
+			}
+		}
+
 		for(i = 0; i < MAX_UNLOCK_CODE_LENGTH; i++)
 		{
 			g_unlockCode[i] = (char)eeprom_read_byte((uint8_t*)(&(EepromManager::ee_vars.unlockCode[i])));
@@ -329,6 +424,12 @@ bool EepromManager::readNonVols(void)
 		{
 			g_event_finish_epoch = g_event_start_epoch + SECONDS_24H;
 		}
+		
+		g_pattern_codespeed = CLAMP(5, eeprom_read_byte((uint8_t*)(&(EepromManager::ee_vars.pattern_codespeed))), 20);
+		g_off_air_seconds = CLAMP(0, (int16_t)eeprom_read_word((const uint16_t*)&(EepromManager::ee_vars.off_air_seconds)), 3600);
+		g_on_air_seconds = CLAMP(0, (int16_t)eeprom_read_word((const uint16_t*)&(EepromManager::ee_vars.on_air_seconds)), 3600);
+		g_ID_period_seconds = CLAMP(0, (int16_t)eeprom_read_word((const uint16_t*)&(EepromManager::ee_vars.ID_period_seconds)), 3600);
+		g_intra_cycle_delay_time = CLAMP(0, (int16_t)eeprom_read_word((const uint16_t*)&(EepromManager::ee_vars.intra_cycle_delay_time)), 3600);
 
 		failure = false;
 	}
@@ -366,6 +467,11 @@ bool EepromManager::readNonVols(void)
 			g_messages_text[STATION_ID][0] = '\0';
 			avr_eeprom_write_byte(StationID_text, 0);
 
+			g_messages_text[PATTERN_TEXT][0] = 'M';
+			g_messages_text[PATTERN_TEXT][0] = 'O';
+			g_messages_text[PATTERN_TEXT][0] = '\0';
+			avr_eeprom_write_byte(Pattern_text, 0);
+
 			uint8_t *v = (uint8_t*)EEPROM_DTMF_UNLOCK_CODE_DEFAULT;
 			i = UnlockCode;
 			for(j = 0; j < strlen(EEPROM_DTMF_UNLOCK_CODE_DEFAULT); j++)
@@ -385,6 +491,21 @@ bool EepromManager::readNonVols(void)
 
 			g_80m_power_level_mW = EEPROM_TX_80M_POWER_MW_DEFAULT;
 			avr_eeprom_write_dword(RF_Power, g_80m_power_level_mW);
+			
+			g_pattern_codespeed = EEPROM_PATTERN_CODE_SPEED_DEFAULT;
+			avr_eeprom_write_byte(Pattern_Code_Speed, g_pattern_codespeed);
+			
+			g_off_air_seconds = EEPROM_OFF_AIR_TIME_DEFAULT;
+			avr_eeprom_write_word(Off_Air_Seconds, g_off_air_seconds);
+			
+			g_on_air_seconds = EEPROM_ON_AIR_TIME_DEFAULT;
+			avr_eeprom_write_word(On_Air_Seconds, g_on_air_seconds);
+			
+			g_ID_period_seconds = EEPROM_ID_TIME_INTERVAL_DEFAULT;
+			avr_eeprom_write_word(ID_Period_Seconds, g_ID_period_seconds);
+			
+			g_intra_cycle_delay_time = EEPROM_INTRA_CYCLE_DELAY_TIME_DEFAULT;
+			avr_eeprom_write_word(Intra_Cycle_Delay_Seconds, g_intra_cycle_delay_time);
 
 			/* Done */
 

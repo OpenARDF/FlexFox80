@@ -50,17 +50,16 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
  */
 	bool txSetFrequency(Frequency_Hz *freq, bool leaveClockOff)
 	{
-		bool err = false;
+		bool err = true;
 
+		if(!freq) return(err);
+		
 		if((*freq < TX_MAXIMUM_80M_FREQUENCY) && (*freq > TX_MINIMUM_80M_FREQUENCY))    /* 80m */
 		{
-			if(si5351_set_freq(*freq, TX_CLOCK_HF_0, leaveClockOff))
-			{
-				err = true; 
-			}
-			else
+			if(!si5351_set_freq(*freq, TX_CLOCK_HF_0, leaveClockOff))
 			{
 				g_80m_frequency = *freq;
+				err = false;
 			}
 		}
 
