@@ -145,13 +145,13 @@ int ADC0_read(void)
 	return ADC0.RES; 	/* Reading the result also clears the interrupt flag */
 }
 
-int16_t temperatureC()
+float temperatureC(void)
 {
 	uint16_t sigrow_offset = SIGROW.TEMPSENSE1; // Read unsigned value from signature row
 	uint16_t sigrow_slope = SIGROW.TEMPSENSE0; // Read unsigned value from signature row
-	static uint32_t wait = 100000;
+	static uint32_t wait = 10000;
 	uint16_t adc_reading;
-	int16_t temperature_in_C = -273.15;
+	float temperature_in_C = -273.15;
 	uint8_t holdMux;
 	
 	holdMux = ADC0.MUXPOS;
@@ -168,7 +168,7 @@ int16_t temperatureC()
 		temp *= sigrow_slope; // Result will overflow 16-bit variable
 		temp += 0x0800; // Add 4096/2 to get correct rounding on division below
 		temp >>= 12; // Round off to nearest degree in Kelvin, by dividing with 2^12 (4096)
-		temperature_in_C += temp;
+		temperature_in_C += (float)temp;
 	}
 	
 	ADC0.MUXPOS = holdMux; /* Restore ADC registers */

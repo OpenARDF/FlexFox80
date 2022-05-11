@@ -72,9 +72,6 @@
 
 
 void BINIO_init(void);
-void wifi_power(bool state);
-void wifi_reset(bool state);
-bool wifiPresent(void);
 void fet_driver(bool state);
 
 class binio

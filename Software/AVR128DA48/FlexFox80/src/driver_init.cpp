@@ -60,3 +60,28 @@ void system_init()
 	BOD_init();
 }
 
+void system_sleep()
+{
+	mcu_init();
+
+//	CLKCTRL_init(); /* Set CPU clock speed appropriately */
+	TIMERB_sleep(); /* Timers must be initialized before utility_delay functions will work */
+//	CPUINT_init(); /* Interrupts must also be enabled before timer interrupts will function */
+//	BINIO_init();
+
+	LED_set_RED_dir(PORT_DIR_OUT);
+	LED_set_RED_level(OFF);
+	LED_set_GREEN_dir(PORT_DIR_OUT);
+	LED_set_GREEN_level(OFF);
+
+	SLPCTRL_init();
+	SLPCTRL_set_sleep_mode(SLPCTRL_SMODE_STDBY_gc);
+	
+	DAC0_init();
+
+	linkbus_init(LB_BAUD, LINKBUS_USART);
+	serialbus_init(SB_BAUD, SERIALBUS_USART);
+
+	BOD_init();
+}
+

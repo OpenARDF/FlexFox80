@@ -24,11 +24,55 @@
 
 
 #include "huzzah.h"
+#include "binio.h"
+#include "port.h"
 
-#define WIFI_RESET_gc (1 << 6)  /* WiFi reset port pin */
-#define WIFI_POWER_gc (1 << 5)  /* WiFi enable power port pin */
+#define WIFI_RESET_gc (1 << 6)  /* WiFi reset port pin on PORTA*/
+#define WIFI_POWER_gc (1 << 5)  /* WiFi enable power port pin on PORTA */
+#define WIFI_MODULE_DETECT_gc (1 << 7) /* WiFi module detect pin on PORTD */
 
-bool wifi_enabled(void)
+void wifi_power(bool state)
 {
-	return  VPORTA.OUT & WIFI_RESET_gc; /* read setting on reset line */
+	if(state == ON)
+	{
+		PORTA_set_pin_level(WIFI_ENABLE, HIGH);
+	}
+	else
+	{
+		PORTA_set_pin_level(WIFI_ENABLE, LOW);
+	}
 }
+
+void wifi_reset(bool state)
+{
+	if(state == ON)
+	{
+		PORTA_set_pin_level(WIFI_RESET, LOW);
+	}
+	else
+	{
+		PORTA_set_pin_level(WIFI_RESET, HIGH);
+	}
+}
+
+bool wifiPresent(void)
+{
+	return(VPORTD.IN & WIFI_MODULE_DETECT_gc);
+}
+
+bool wifiEnabled(void)
+{
+	if(!(PORTA.OUT & (1 << WIFI_ENABLE))) /* read output setting on power-enable line */
+	{
+		return false;
+	}
+	
+	if(!(PORTA.OUT & (1 << WIFI_RESET))) /* read output setting on reset line */
+	{
+		return false;
+	}
+
+	return true;
+}
+
+

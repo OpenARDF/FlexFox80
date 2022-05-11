@@ -235,6 +235,6 @@ void lb_send_msg(LBMessageType msgType, const char* msgLabel, char* msgStr);
 
 /**
  */
-void lb_broadcast_num(uint16_t data, const char* str);
+void lb_broadcast_str(const char* data, const char* str);
 
 #endif  /* LINKBUS_H_ */

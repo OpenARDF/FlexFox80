@@ -57,8 +57,7 @@ void DAC0_init(void)
 	/* Disable pull-up resistor */
 	PORTD.PIN6CTRL &= ~PORT_PULLUPEN_bm;
 	DAC0.CTRLA = DAC_ENABLE_bm          /* Enable DAC */
-	| DAC_OUTEN_bm           /* Enable output buffer */
-	| DAC_RUNSTDBY_bm;       /* Enable Run in Standby mode */
+	| DAC_OUTEN_bm;           /* Enable output buffer */
 	
 	DAC0_setVal(DAC_DEFAULT_VALUE);
 }

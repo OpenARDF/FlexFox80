@@ -134,11 +134,6 @@ bool leds::active(void)
 	return(led_timeout_count && (TCB3.INTCTRL & (1 << TCB_CAPT_bp)));
 }
 
-Blink_t leds::setting(void)
-{
-	return lastBlinkSetting;
-}
-
 
 void leds::blink(Blink_t blinkMode)
 {

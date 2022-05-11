@@ -40,7 +40,7 @@ public:
 	
 	void blink(Blink_t blinkMode);
 	bool active(void);
-	Blink_t setting(void);
+
 protected:
 private:
 //	leds( const leds &c );

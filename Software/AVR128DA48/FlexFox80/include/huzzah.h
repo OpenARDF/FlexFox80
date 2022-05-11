@@ -31,6 +31,10 @@
 /*
  * Returns state of WiFi enable (power) bit
  */ 
-bool wifi_enabled(void);
+void wifi_power(bool state);
+void wifi_reset(bool state);
+bool wifiPresent(void);
+bool wifiEnabled(void);
+
 
 #endif /* HUZZAH_H_ */

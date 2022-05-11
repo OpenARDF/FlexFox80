@@ -33,8 +33,8 @@ main.d main.o: .././main.cpp .././atmel_start.h \
  ../include/Goertzel.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\math.h \
  ../include/util.h ../include/binio.h ../include/eeprommanager.h \
- ../include/leds.h ../include/ccp.h ../include/protected_io.h \
- ../utils/atomic.h
+ ../include/leds.h ../include/huzzah.h ../include/ccp.h \
+ ../include/protected_io.h ../utils/atomic.h
 
 .././atmel_start.h:
 
@@ -139,6 +139,8 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 ../include/eeprommanager.h:
 
 ../include/leds.h:
+
+../include/huzzah.h:
 
 ../include/ccp.h:
 

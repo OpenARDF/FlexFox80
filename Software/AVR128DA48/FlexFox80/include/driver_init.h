@@ -44,6 +44,7 @@ extern "C" {
 #endif
 
 void system_init(void);
+void system_sleep(void);
 
 #ifdef __cplusplus
 }

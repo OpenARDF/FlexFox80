@@ -32,8 +32,10 @@
 int8_t SLPCTRL_init()
 {
 
-	// SLPCTRL.CTRLA = 0 << SLPCTRL_SEN_bp /* Sleep enable: disabled */
-	//		 | SLPCTRL_SMODE_IDLE_gc; /* Idle mode */
+	SLPCTRL.CTRLA = 0 << SLPCTRL_SEN_bp /* Sleep enable: disabled */
+//			 | SLPCTRL_SMODE_IDLE_gc;  /* Idle mode */
+//			 | SLPCTRL_SMODE_STDBY_gc; /* Standby Mode */
+//			 | SLPCTRL_SMODE_PDOWN_gc; /* Power-down Mode */
 
 	return 0;
 }

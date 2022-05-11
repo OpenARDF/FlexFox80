@@ -2962,20 +2962,27 @@ void httpWebServerLoop(int blinkRate)
 
       case TX_POWER_DOWN_NOW:
         {
+          if(g_webSocketServer.connectedClients(false))
+          {
+            g_webSocketServer.disconnect();
+          }
+            
+          if(activeFile) activeFile.close();
+            
+          g_http_server.stop();
+          g_http_server.close();
+                  
           int secs2try = 5;
-          static unsigned long last = 0;
-          if (secs2try)
+          unsigned long last = 0;
+            
+          while(secs2try)
           {
             if (abs(millis() - last) > 1000)
             {
                 last = millis();
+                g_LBOutputBuff->put(LB_MESSAGE_ESP_SHUTDOWN);
+                linkbusLoop();
                 secs2try--;
-
-                if(!secs2try)
-                {
-                    g_LBOutputBuff->put(LB_MESSAGE_ESP_SHUTDOWN);
-                    secs2try = 5;
-                }
             }
           }
             
@@ -4993,6 +5000,16 @@ void handleLBMessage(String message)
         g_onlyUpdateEvent = true;
       }
     }
+    else if(payload.equals("X")) /* Atmega is asking ESP to shut down now */
+    {
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
+        if (g_debug_prints_enabled)
+        {
+          Serial.println(String("Rcvd ESP shutdown: ") + payload);
+    }
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+        g_ESP_Comm_State = TX_POWER_DOWN_NOW;
+    }
   }
   else if (type.equals(LB_MESSAGE_TIME))
   {
@@ -5063,9 +5080,8 @@ void handleLBMessage(String message)
   }
   else if (type.equals(LB_MESSAGE_TEMP))
   {
+#ifdef PROTOTYPE_HARDWARE
     int16_t rawtemp = payload.toInt();
-      
-#ifdef COMPILE_FOR_PROTOTYPE_HARDWARE
     bool negative =  rawtemp & 0x8000;
     if (negative)
     {
@@ -5076,9 +5092,7 @@ void handleLBMessage(String message)
     {
       temp = -temp;
     }
-#else
-#endif
-      
+
     char dataStr[6];    /* allow for possible negative sign */
     dtostrf(temp, 4, 1, dataStr);
     dataStr[5] = '\0';
@@ -5093,6 +5107,18 @@ void handleLBMessage(String message)
                 Serial.println(msg);
               } */
     }
+#else
+    if (g_numberOfSocketClients)
+    {
+      String msg = String(String(SOCK_COMMAND_TEMPERATURE) + "," + payload + "C");
+
+      g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
+      /*      if (g_debug_prints_enabled)
+              {
+                Serial.println(msg);
+              } */
+    }
+#endif
   }
   else if (type.equals(LB_MESSAGE_BATTERY))
   {

@@ -18,6 +18,7 @@
 #include "binio.h"
 #include "leds.h"
 #include "linkbus.h"
+#include "huzzah.h"
 
 #include <cpuint.h>
 #include <ccp.h>
@@ -126,7 +127,7 @@ EepromManager g_ee_mgr;
 Fox_t g_fox = FOX_1;
 int8_t g_utc_offset;
 uint8_t g_unlockCode[8];
-time_t g_current_epoch = 0;
+//time_t g_current_epoch = 0;
 bool g_use_rtc_for_startstop = false;
 
 /***********************************************************************
@@ -175,7 +176,7 @@ ISR(PORTA_PORT_vect)
 {
     if(PORTA.INTFLAGS & (1 << RTC_SQW)) /* Handle 1-second interrupt */
     {
-		g_current_epoch++;
+//		g_current_epoch++;
 		system_tick();
 
 		if(g_sleeping)
@@ -602,8 +603,6 @@ Handle switch closure interrupts
 */
 ISR(PORTC_PORT_vect)
 {
-	static int count = 0;
-	
 	if(PORTC.INTFLAGS & (1 << SWITCH))
 	{
 		if(g_switch_closed_count >= 1000)
@@ -612,29 +611,16 @@ ISR(PORTC_PORT_vect)
 		}
 		else if(g_switch_closed_count > 10) /* debounce */
 		{
-			count++;
-			
-			if(count % 2)
+			if(wifiEnabled())
 			{
-				LEDS.blink(LEDS_GREEN_BLINK_FAST);
-				LEDS.blink(LEDS_RED_OFF);
-// 				PORTA_set_pin_level(FET_DRIVER_ENABLE, HIGH);
-// 				PORTA_set_pin_level(FAN_ENABLE, HIGH);
-				wifi_power(ON);
-				wifi_reset(OFF);
-// 				g_start_event = true;
+				sprintf(g_tempStr, "$ESP,X;"); /* send shutdown message to allow WiFi to prepare for shutdown */
+				lb_send_msg(LINKBUS_MSG_COMMAND, LB_MESSAGE_ESP_LABEL, g_tempStr);
+				g_WiFi_shutdown_seconds = 10;
 			}
 			else
 			{
-				LEDS.blink(LEDS_GREEN_BLINK_SLOW);
-				LEDS.blink(LEDS_RED_OFF);
 				wifi_power(ON);
-				wifi_reset(ON);
-// 				g_end_event = true;
-// 				PORTA_set_pin_level(FET_DRIVER_ENABLE, LOW);
-// 				PORTA_set_pin_level(FAN_ENABLE, LOW);
-// 				PORTA_set_pin_level(WIFI_ENABLE, OFF);
-// 				PORTA_set_pin_level(WIFI_RESET, ON);
+				wifi_reset(OFF);
 			}
 		}
 		
@@ -665,22 +651,11 @@ int main(void)
 	atmel_start_init();
 	LED_set_RED_level(OFF);
 	PORTB_set_pin_level(MAIN_PWR_ENABLE, ON);	
-	wifi_power(ON);
-	wifi_reset(ON);
-	g_wifi_enable_delay = 100;
 	powerUp3V3();
 	
 	g_ee_mgr.initializeEEPROMVars();
 	g_ee_mgr.readNonVols();
 					
-//	ADC0_setADCChannel(ADCAudioInput);
-	
-// 	sb_send_NewLine();
-// 	sb_send_string((char *)PRODUCT_NAME_LONG);
-// 	sprintf(g_tempStr, "\nSW Ver: %s\n", SW_REVISION);
-// 	sb_send_string(g_tempStr);
-// 	sb_send_string(HELP_TEXT_TXT);
-	
 	if(rtc_init() == ERROR_CODE_RTC_NONRESPONSIVE)
 	{
 		/* LEDs should blink an error code */
@@ -688,14 +663,18 @@ int main(void)
 	else
 	{
 		EC result;
-		g_current_epoch = ds3231_get_epoch(&result);
+		 time_t current_epoch = ds3231_get_epoch(&result);
 		if(result == ERROR_CODE_NO_ERROR)
 		{
-			set_system_time(g_current_epoch);
+			set_system_time(current_epoch);
 		}
 	}
 	
-	if(!wifiPresent())
+	if(wifiPresent())
+	{
+		g_wifi_enable_delay = 3;
+	}
+	else
 	{
 		wifi_power(OFF);
 		wifi_reset(ON);
@@ -705,16 +684,8 @@ int main(void)
 	}
 	
 	while (1) {
-// 		while(util_delay_ms(250))
-// 		{
-// 			if(g_goertzel.SamplesReady())
-// 			{
-// 				ADC0.INTCTRL = 0x01; /* enable ADC interrupt */
-// 			}
-
-			handleLinkBusMsgs();
-			handleSerialBusMsgs();
-// 		}
+		handleLinkBusMsgs();
+		handleSerialBusMsgs();
 		
 		if(g_perform_3V3_init)
 		{			
@@ -726,7 +697,7 @@ int main(void)
 				g_start_event = true;
 			}
 			
-			g_WiFi_shutdown_seconds = 60;
+			g_WiFi_shutdown_seconds = 120;
 			wifi_reset(OFF);
 		}
 		
@@ -741,15 +712,11 @@ int main(void)
 			if(g_event_enabled)
 			{
 				g_end_event = true;
-				LEDS.blink(LEDS_GREEN_BLINK_SLOW);
-				LEDS.blink(LEDS_RED_OFF);
 				g_last_status_code = STATUS_CODE_REPORT_IDLE;
 			}
 			else
 			{
 				g_start_event = true;
-				LEDS.blink(LEDS_GREEN_ON_CONSTANT);
-				LEDS.blink(LEDS_RED_OFF);
 			}
 			
 			g_long_button_press = false;
@@ -759,13 +726,6 @@ int main(void)
 		{
 			g_start_event = false;	
 			
-			/* Start event based on fox setting */
-// 			if(g_powerUp_initialization_complete)
-// 			{
-// 				Fox_t f = FOX_1;
-// 				setupForFox(&f, START_EVENT_NOW);
-// 			}
-
 			SC status = STATUS_CODE_IDLE;
 			g_last_error_code = launchEvent(&status);
 				
@@ -788,7 +748,6 @@ int main(void)
 			LEDS.blink(LEDS_RED_OFF);
 		}
 		
-		
 		if(g_report_seconds)
 		{
 			g_report_seconds = false;
@@ -808,6 +767,38 @@ int main(void)
 			sprintf(g_tempStr, "%u", g_last_status_code);
 			lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_STATUSCODE_LABEL, g_tempStr);
 			g_last_status_code = STATUS_CODE_IDLE;
+		}
+		
+		/********************************
+		 * Handle sleep
+		 ******************************/
+		if(g_go_to_sleep)
+		{
+			g_sufficient_power_detected = false;    /* init hardware on return from sleep */
+			g_seconds_left_to_sleep = g_seconds_to_sleep;
+			linkbus_disable();
+
+			while(g_go_to_sleep)
+			{
+				set_ports(g_sleepType); /* Sleep occurs here */
+			}
+
+			set_ports(NOT_SLEEPING);
+			linkbus_enable();
+			wdt_init(WD_HW_RESETS);         /* enable hardware interrupts */
+			wdt_reset();                    /* HW watchdog */
+
+			if((g_sleepType == SLEEP_UNTIL_NEXT_XMSN) || (g_sleepType == SLEEP_UNTIL_START_TIME))
+			{
+				g_perform_3V3_init = true;
+			}
+			else
+			{
+				g_wifi_enable_delay = 2;
+				g_WiFi_shutdown_seconds = 120;
+				g_last_status_code = STATUS_CODE_RETURNED_FROM_SLEEP;
+				g_check_for_next_event = true;
+			}
 		}
 	}
 }
@@ -1120,15 +1111,16 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 			case SB_MESSAGE_CLOCK:
 			{
 				bool doprint = false;
+ 				time_t now = time(null);
 
 				if(!sb_buff->fields[SB_FIELD1][0] || sb_buff->fields[SB_FIELD1][0] == 'T')   /* Current time format "YYMMDDhhmmss" */
-				{
+				{		 
 					if(sb_buff->fields[SB_FIELD2][0])
 					{
 						strncpy(g_tempStr, sb_buff->fields[SB_FIELD2], 12);
 						g_tempStr[12] = '\0';               /* truncate to no more than 12 characters */
-
- 						time_t t = validateTimeString(g_tempStr, (time_t*)&g_current_epoch, -g_utc_offset);
+						time_t now = time(null);
+ 						time_t t = validateTimeString(g_tempStr, &now, -g_utc_offset);
  
  						if(t)
  						{
@@ -1141,8 +1133,8 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 							else
 							{
 								char t[50];
-								g_current_epoch = ds3231_get_epoch(null);
- 								sprintf(g_tempStr, "Time: %s\n", convertEpochToTimeString(g_current_epoch, t, 50));
+								set_system_time(ds3231_get_epoch(null));
+ 								sprintf(g_tempStr, "Time: %s\n", convertEpochToTimeString(now, t, 50));
  								setupForFox(NULL, START_NOTHING);   /* Avoid timing problems if an event is already active */
 							}
  						}
@@ -1150,8 +1142,7 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 					else
 					{
 							EC result;
-							
- 							g_current_epoch = ds3231_get_epoch(&result);
+							ds3231_get_epoch(&result);
 							 
 							if(result)
 							{
@@ -1160,7 +1151,7 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 							else
 							{
 								char t[50];
-								sprintf(g_tempStr, "Time:   %s\n", convertEpochToTimeString(g_current_epoch, t, 50));
+								sprintf(g_tempStr, "Time:   %s\n", convertEpochToTimeString(now, t, 50));
 								sb_send_string(g_tempStr);
 								sprintf(g_tempStr, "Start:  %s\n", convertEpochToTimeString(g_event_start_epoch, t, 50));
 								sb_send_string(g_tempStr);
@@ -1175,11 +1166,11 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
  								}
  								else
  								{
- 									reportTimeTill(g_current_epoch, g_event_start_epoch, "Starts in: ", "In progress\n");
+ 									reportTimeTill(now, g_event_start_epoch, "Starts in: ", "In progress\n");
  									reportTimeTill(g_event_start_epoch, g_event_finish_epoch, "Lasts: ", NULL);
- 									if(g_event_start_epoch < g_current_epoch)
+ 									if(g_event_start_epoch < now)
  									{
- 										reportTimeTill(g_current_epoch, g_event_finish_epoch, "Time Remaining: ", NULL);
+ 										reportTimeTill(now, g_event_finish_epoch, "Time Remaining: ", NULL);
  									}
  								}
 							}
@@ -1199,7 +1190,7 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
  						g_event_finish_epoch = MAX(g_event_finish_epoch, (g_event_start_epoch + SECONDS_24H));
   						g_ee_mgr.updateEEPROMVar(Event_finish_epoch, (void*)&g_event_finish_epoch);
  						setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);
- 						if(g_event_start_epoch > g_current_epoch) startEventUsingRTC();
+ 						if(g_event_start_epoch > time(null)) startEventUsingRTC();
  					}
  
 					char t[50];
@@ -1216,7 +1207,7 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
  						g_event_finish_epoch = f;
   						g_ee_mgr.updateEEPROMVar(Event_finish_epoch, (void*)&g_event_finish_epoch);
  						setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);
- 						if(g_event_start_epoch > g_current_epoch) startEventUsingRTC();
+ 						if(g_event_start_epoch > now) startEventUsingRTC();
  					}
  
 					char t[50];
@@ -1349,14 +1340,12 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					}
 					else if(f1 == '3')                      /* ESP is ready for power off" */
 					{
-//						cli();
 						g_wifi_enable_delay = 0;
 						g_WiFi_shutdown_seconds = 1;        /* Shut down WiFi in 1 seconds */
 						g_waiting_for_next_event = false;   /* Prevents resetting shutdown settings */
 						g_check_for_next_event = false;     /* Prevents resetting shutdown settings */
 						g_wifi_active = false;
 						g_shutting_down_wifi = true;
-//						sei();
 					}
 				}
 			}
@@ -1466,7 +1455,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 								if(!g_event_enabled)
 								{
 									SC status = STATUS_CODE_IDLE;
-									EC ec = launchEvent(&status);
+									g_last_error_code = launchEvent(&status);
 									
 									if(g_go_to_sleep && g_sleepType)
 									{
@@ -1786,9 +1775,10 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 				bat *= 0.0005;
 				bat += 1.;
 				
-				uint16_t val = (uint16_t)(bat);	
+				dtostrf(bat, 4, 0, g_tempStr);
+				g_tempStr[5] = '\0';
 
-				lb_broadcast_num(val, "!BAT");
+				lb_broadcast_str(g_tempStr, "!BAT");
 
 				/* The system clock gets re-initialized whenever a battery message is received. This
 				 * is just to ensure the two stay closely in sync while the user interface is active */
@@ -1804,8 +1794,10 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 // 					lb_broadcast_num(v, "!TEM");
 // 				}
 				
-				int16_t tempC = temperatureC();
-				lb_broadcast_num(tempC, "!TEM");
+				dtostrf(temperatureC(), 4, 1, g_tempStr);
+				g_tempStr[5] = '\0';
+
+				lb_broadcast_str(g_tempStr, "!TEM");
 				
 			}
 			break;
@@ -2005,7 +1997,8 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 		g_time_needed_for_ID = 0;   /* ID will never be sent */
 	}
 
-	time_t now = g_current_epoch; // time(NULL);
+	time_t now = time(null);
+	
 	if(g_event_finish_epoch < now)   /* the event has already finished */
 	{
 		if(statusCode)
@@ -2128,7 +2121,33 @@ EC rtc_init()
 
 void set_ports(SleepType initType)
 {
-	
+	switch(initType)
+	{
+		case NOT_SLEEPING:
+		{
+		}
+		break;
+		
+		case SLEEP_UNTIL_START_TIME:
+		{
+		}
+		break;
+		
+		case SLEEP_UNTIL_NEXT_XMSN:
+		{
+		}
+		break;
+		
+		case SLEEP_AFTER_WIFI_GOES_OFF:
+		{
+		}
+		break;
+		
+		case SLEEP_FOREVER:
+		{
+		}
+		break;
+	}
 }
 
 bool antennaIsConnected()
@@ -2240,17 +2259,18 @@ void stopEventNow(EventActionSource_t activationSource)
 
 void startEventUsingRTC(void)
 {
-	g_current_epoch = ds3231_get_epoch(null);
+	set_system_time(ds3231_get_epoch(null));
+	time_t now = time(null);
 	ConfigurationState_t state = clockConfigurationCheck();
 
 	if(state != CONFIGURATION_ERROR)
 	{
 		setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);
-		reportTimeTill(g_current_epoch, g_event_start_epoch, "Starts in: ", "In progress\n");
+		reportTimeTill(now, g_event_start_epoch, "Starts in: ", "In progress\n");
 
-		if(g_event_start_epoch < g_current_epoch)
+		if(g_event_start_epoch < now)
 		{
-			reportTimeTill(g_current_epoch, g_event_finish_epoch, "Time Remaining: ", NULL);
+			reportTimeTill(now, g_event_finish_epoch, "Time Remaining: ", NULL);
 		}
 		else
 		{
@@ -2280,7 +2300,7 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 	g_event_enabled = false;
 	g_event_commenced = false;
 	LED_set_RED_level(OFF);
- 	g_current_epoch = ds3231_get_epoch(null);
+ 	set_system_time(ds3231_get_epoch(null));
 
 	switch(g_fox)
 	{
@@ -2513,11 +2533,12 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 // 		g_event_enabled = true;						/* get things running immediately */
 
 		EC result;
-		g_current_epoch = ds3231_get_epoch(&result);
+		set_system_time(ds3231_get_epoch(&result));
+		time_t now = time(null);
 		
 		if(result == ERROR_CODE_NO_ERROR)
 		{
-			g_event_start_epoch = g_current_epoch;
+			g_event_start_epoch = now;
 			if(g_event_start_epoch > g_event_finish_epoch)
 			{
 				g_event_finish_epoch = g_event_start_epoch + DAY;
@@ -2584,15 +2605,16 @@ time_t validateTimeString(char* str, time_t* epochVar, int8_t offsetHours)
 	int len = strlen(str);
 	time_t minimumEpoch = MINIMUM_EPOCH;
 	uint8_t validationType = 0;
+	time_t now = time(null);
 
 	if(epochVar == &g_event_start_epoch)
 	{
-		minimumEpoch = MAX(g_current_epoch, MINIMUM_EPOCH);
+		minimumEpoch = MAX(now, MINIMUM_EPOCH);
 		validationType = 1;
 	}
 	else if(epochVar == &g_event_finish_epoch)
 	{
-		minimumEpoch = MAX(g_event_start_epoch, g_current_epoch);
+		minimumEpoch = MAX(g_event_start_epoch, now);
 		validationType = 2;
 	}
 	
@@ -2622,7 +2644,7 @@ time_t validateTimeString(char* str, time_t* epochVar, int8_t offsetHours)
 			}
 			else if(validationType == 2)    /* finish time validation */
 			{
-				if(ep < g_current_epoch)
+				if(ep < time(null))
 				{
 					sb_send_string(TEXT_ERR_FINISH_IN_PAST_TXT);
 				}
@@ -2714,7 +2736,9 @@ bool reportTimeTill(time_t from, time_t until, const char* prefix, const char* f
 
 ConfigurationState_t clockConfigurationCheck(void)
 {
-	if((g_event_finish_epoch < MINIMUM_EPOCH) || (g_event_start_epoch < MINIMUM_EPOCH) || (g_current_epoch < MINIMUM_EPOCH))
+	time_t now = time(null);
+	
+	if((g_event_finish_epoch < MINIMUM_EPOCH) || (g_event_start_epoch < MINIMUM_EPOCH) || (now < MINIMUM_EPOCH))
 	{
 		return(CONFIGURATION_ERROR);
 	}
@@ -2724,12 +2748,12 @@ ConfigurationState_t clockConfigurationCheck(void)
 		return(CONFIGURATION_ERROR);
 	}
 
-	if(g_current_epoch > g_event_finish_epoch)  /* The scheduled event is over */
+	if(now > g_event_finish_epoch)  /* The scheduled event is over */
 	{
 		return(CONFIGURATION_ERROR);
 	}
 
-	if(g_current_epoch > g_event_start_epoch)       /* Event should be running */
+	if(now > g_event_start_epoch)       /* Event should be running */
 	{
 		if(!g_event_enabled)
 		{
@@ -2750,28 +2774,29 @@ ConfigurationState_t clockConfigurationCheck(void)
 
 void reportConfigErrors(void)
 {
-	g_current_epoch = ds3231_get_epoch(null);
+	set_system_time(ds3231_get_epoch(null));
+	time_t now = time(null);
 
 	if(g_messages_text[STATION_ID][0] == '\0')
 	{
 		sb_send_string(TEXT_SET_ID_TXT);
 	}
 
-	if(g_current_epoch < MINIMUM_EPOCH) /* Current time is invalid */
+	if(now < MINIMUM_EPOCH) /* Current time is invalid */
 	{
 		sb_send_string(TEXT_SET_TIME_TXT);
 	}
 
-	if(g_event_finish_epoch < g_current_epoch)      /* Event has already finished */
+	if(g_event_finish_epoch < now)      /* Event has already finished */
 	{
-		if(g_event_start_epoch < g_current_epoch)   /* Event has already started */
+		if(g_event_start_epoch < now)   /* Event has already started */
 		{
 			sb_send_string(TEXT_SET_START_TXT);
 		}
 
 		sb_send_string(TEXT_SET_FINISH_TXT);
 	}
-	else if(g_event_start_epoch < g_current_epoch)  /* Event has already started */
+	else if(g_event_start_epoch < now)  /* Event has already started */
 	{
 		if(g_event_start_epoch < MINIMUM_EPOCH)     /* Start in invalid */
 		{

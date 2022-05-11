@@ -417,16 +417,11 @@ void lb_send_sync(void)
 }
 
 
-void lb_broadcast_num(uint16_t data, const char* str)
+void lb_broadcast_str(const char* data, const char* str)
 {
-	char t[6] = "\0";
-
-	sprintf(t, "%u", data);
-	g_tempMsgBuff[0] = '\0';
-
 	if(str)
 	{
-		sprintf(g_tempMsgBuff, "%s,%s;", str, t);
+		sprintf(g_tempMsgBuff, "%s,%s;", str, data);
 	}
 
 	if(g_tempMsgBuff[0]) lb_send_text(g_tempMsgBuff);

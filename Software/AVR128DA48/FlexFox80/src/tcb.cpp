@@ -156,4 +156,27 @@ ISR(TCB1_INT_vect)
     }
 }
 
+int8_t TIMERB_sleep()
+{
+	TCB0.INTCTRL = 0   /* Capture or Timeout: disable interrupts */
+	TCB0.CTRLA = 0; /* Disable timer */
+
+	/********************************************************************************/
+
+	TCB1.INTCTRL = 0; /* OverFlow Interrupt: disabled */
+	TCB1.CTRLA = 0; /* Disable timer */
+
+	/********************************************************************************/
+
+	TCB2.INTCTRL = 0; /* OverFlow Interrupt: disabled */
+	TCB2.CTRLA = 0; /* Disable timer */
+
+	/********************************************************************************/
+
+	TCB3.INTCTRL = 0; /* OverFlow Interrupt: disabled */
+	TCB3.CTRLA = 0; /* Disable timer */
+
+
+	return 0;
+}
 
