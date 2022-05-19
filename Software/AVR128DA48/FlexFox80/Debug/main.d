@@ -27,14 +27,15 @@ main.d main.o: .././main.cpp .././atmel_start.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdio.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdarg.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\ctype.h \
- ../include/linkbus.h ../defs.h ../include/usart_basic.h ../atmel_start.h \
- ../include/serialbus.h ../include/transmitter.h ../include/si5351.h \
- ../include/ds3231.h ../include/morse.h ../include/adc.h \
- ../include/Goertzel.h \
+ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\sleep.h \
+ ../utils/atomic.h ../include/linkbus.h ../defs.h \
+ ../include/usart_basic.h ../atmel_start.h ../include/serialbus.h \
+ ../include/transmitter.h ../include/si5351.h ../include/ds3231.h \
+ ../include/morse.h ../include/adc.h ../include/Goertzel.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\math.h \
  ../include/util.h ../include/binio.h ../include/eeprommanager.h \
  ../include/leds.h ../include/huzzah.h ../include/ccp.h \
- ../include/protected_io.h ../utils/atomic.h
+ ../include/protected_io.h ../include/dac0.h
 
 .././atmel_start.h:
 
@@ -108,6 +109,10 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\ctype.h:
 
+c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\sleep.h:
+
+../utils/atomic.h:
+
 ../include/linkbus.h:
 
 ../defs.h:
@@ -146,4 +151,4 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 
 ../include/protected_io.h:
 
-../utils/atomic.h:
+../include/dac0.h:

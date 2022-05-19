@@ -217,6 +217,11 @@ bool g_si5351_initialized = false;
 /* Public functions */
 /*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 
+	void si5351_shutdown(void)
+	{
+		I2C_1_Shutdown();
+	}
+
 /*
  * init(Si5351_Xtal_load_pF xtal_load_c, Frequency_Hz ref_osc_freq)
  *

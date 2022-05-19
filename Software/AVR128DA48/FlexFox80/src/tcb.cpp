@@ -158,7 +158,7 @@ ISR(TCB1_INT_vect)
 
 int8_t TIMERB_sleep()
 {
-	TCB0.INTCTRL = 0   /* Capture or Timeout: disable interrupts */
+	TCB0.INTCTRL = 0;   /* Capture or Timeout: disable interrupts */
 	TCB0.CTRLA = 0; /* Disable timer */
 
 	/********************************************************************************/

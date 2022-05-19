@@ -74,14 +74,5 @@ void system_sleep()
 	LED_set_GREEN_dir(PORT_DIR_OUT);
 	LED_set_GREEN_level(OFF);
 
-	SLPCTRL_init();
-	SLPCTRL_set_sleep_mode(SLPCTRL_SMODE_STDBY_gc);
-	
-	DAC0_init();
-
-	linkbus_init(LB_BAUD, LINKBUS_USART);
-	serialbus_init(SB_BAUD, SERIALBUS_USART);
-
-	BOD_init();
 }
 

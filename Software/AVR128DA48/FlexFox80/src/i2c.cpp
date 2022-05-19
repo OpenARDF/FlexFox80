@@ -64,6 +64,13 @@ volatile uint16_t g_i2c1_timeout_ticks = 200;
 /* I2C_0                                                               */
 /************************************************************************/
 
+void I2C_0_Shutdown(void)
+{
+	/* Set bus state idle */
+	TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;
+	TWI0.MCTRLA = 0;
+}
+
 void I2C_0_Init(void)
 {
 	/* Select I2C pins PC2/PC3 */
@@ -247,6 +254,12 @@ void I2C_0_EndSession(void)
 /* I2C_1                                                               */
 /************************************************************************/
 
+void I2C_1_Shutdown(void)
+{
+	/* Set bus state idle */
+	TWI1.MSTATUS = TWI_BUSSTATE_IDLE_gc;
+	TWI1.MCTRLA = 0;
+}
 
 void I2C_1_Init(void)
 {

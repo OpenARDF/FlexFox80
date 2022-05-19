@@ -42,7 +42,6 @@
 
 */
 
-
 #include <Arduino.h>
 /*#include <GDBStub.h> */
 #include <ESP8266WiFi.h>
@@ -2305,6 +2304,12 @@ void httpWebServerLoop(int blinkRate)
 
           if (firstPageLoad)
           {
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
+              if (g_debug_prints_enabled)
+              {
+                Serial.println("firstPageLoad = true");
+              }
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
             if (g_numberOfEventFilesFound)
             {
               if (g_activeEvent == NULL)
@@ -2329,52 +2334,74 @@ void httpWebServerLoop(int blinkRate)
 
             if (g_numberOfEventFilesFound)
             {
-              if ((g_selectedEventName.length() > 0) && (g_activeEvent != NULL))
+              if(g_numberOfEventFilesFound > 1)
               {
-                bool found = false;
-
-                for (int i = 0; i < g_numberOfEventFilesFound; i++)
-                {
-                  if (g_selectedEventName.equals(g_eventList[i].ename))
+                  if ((g_selectedEventName.length() > 0) && (g_activeEvent != NULL))
                   {
-                    g_activeEventIndex = i;
-                    found = true;
-                    break;
+                    bool found = false;
+
+                    for (int i = 0; i < g_numberOfEventFilesFound; i++)
+                    {
+                      if (g_selectedEventName.equals(g_eventList[i].ename))
+                      {
+                        g_activeEventIndex = i;
+                        found = true;
+                        break;
+                      }
+                    }
+
+                    if (!found)
+                    {
+                      g_activeEventIndex = (g_activeEventIndex + 1) % g_numberOfEventFilesFound;
+                    }
+    #if TRANSMITTER_COMPILE_DEBUG_PRINTS
+                    if (g_debug_prints_enabled)
+                    {
+                        Serial.println("g_selectedEventName");
+                    }
+    #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+
+                    g_activeEvent->readEventFile(g_eventList[g_activeEventIndex].path);
                   }
-                }
+                  else
+                  {
+                    if (g_activeEvent == NULL)
+                    {
+                      g_activeEventIndex = 0;
+    #if TRANSMITTER_COMPILE_DEBUG_PRINTS
+                      g_activeEvent = new Event(g_debug_prints_enabled);
+    #else
+                      g_activeEvent = new Event(false);
+    #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+    #if TRANSMITTER_COMPILE_DEBUG_PRINTS
+                      if (g_debug_prints_enabled)
+                      {
+                            Serial.println("(2) g_activeEvent == NULL");
+                      }
+    #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
-                if (!found)
-                {
-                  g_activeEventIndex = (g_activeEventIndex + 1) % g_numberOfEventFilesFound;
-                }
-
-                g_activeEvent->readEventFile(g_eventList[g_activeEventIndex].path);
+                      g_activeEvent->readEventFile(g_eventList[0].path);
+                      g_selectedEventName = g_activeEvent->getEventName();
+                    }
+                    else if (!firstPageLoad)
+                    {
+    #if TRANSMITTER_COMPILE_DEBUG_PRINTS
+                      if (g_debug_prints_enabled)
+                      {
+                            Serial.println("!firstPageLoad");
+                      }
+    #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+                      g_activeEventIndex = (g_activeEventIndex + 1) % g_numberOfEventFilesFound;
+                      g_activeEvent->readEventFile(g_eventList[g_activeEventIndex].path);
+                      g_selectedEventName = g_activeEvent->getEventName();
+                    }
+                    else
+                    {
+                      firstPageLoad = false;
+                    }
+                  }
               }
-              else
-              {
-                if (g_activeEvent == NULL)
-                {
-                  g_activeEventIndex = 0;
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                  g_activeEvent = new Event(g_debug_prints_enabled);
-#else
-                  g_activeEvent = new Event(false);
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-                  g_activeEvent->readEventFile(g_eventList[0].path);
-                  g_selectedEventName = g_activeEvent->getEventName();
-                }
-                else if (!firstPageLoad)
-                {
-                  g_activeEventIndex = (g_activeEventIndex + 1) % g_numberOfEventFilesFound;
-                  g_activeEvent->readEventFile(g_eventList[g_activeEventIndex].path);
-                  g_selectedEventName = g_activeEvent->getEventName();
-                }
-                else
-                {
-                  firstPageLoad = false;
-                }
-              }
-
+                
               String msg = String(String(SOCK_COMMAND_EVENT_NAME) + "," + g_activeEvent->getEventName() );
               g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
 
@@ -2458,7 +2485,13 @@ void httpWebServerLoop(int blinkRate)
             
       case TX_SEND_NEXT_EVENT_TO_ATMEGA:
         {
-            g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
+ #if TRANSMITTER_COMPILE_DEBUG_PRINTS
+                  if (g_debug_prints_enabled)
+                  {
+                        Serial.println("case TX_SEND_NEXT_EVENT_TO_ATMEGA");
+                  }
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+           g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
             g_numberOfScheduledEvents = numberOfEventsScheduled(g_timeOfDayFromTx);
 
             if (g_numberOfScheduledEvents)
