@@ -1,98 +1,95 @@
-"Source:","/Users/Charles/Documents/GitHub/FlexFox80/KiCad/FlexFox80.kicad_sch"
-"Date:","Thursday, April 21, 2022 at 08:17:05 AM"
-"Tool:","Eeschema (6.0.4-0)"
-"Generator:","/Applications/KiCad/KiCad.app/Contents/SharedSupport/plugins/bom_csv_grouped_by_value_with_fp.py"
-"Component Count:","165"
-"Ref","Qnty","Value","Cmp name","Footprint","Description","Vendor"
-"BOX401, ","1","Chassis Box","CHASSIS_BOX","Oddities:Dummy_Empty","",""
-"BT301, ","1","CR1220","Battery_Single_Cell-ARDF-2-Band-MiniTx-rescue","Oddities:BC501SM_CR1220_BAT_Handsolder","",""
-"C101, C205, C216, C304, C305, ","5","10uF","C_Small","Capacitors_SMD:C_0805","Unpolarized capacitor, small symbol",""
-"C117, C210, ","2","22uF","C_Small","Capacitors_SMD:C_1210","Unpolarized capacitor, small symbol",""
-"C119, C214, C217, ","3","47uF low ESR","CP1_Small-Device","Capacitors_SMD:C_2917","",""
-"C120, C122, C310, C312, ","4","470nF","C","Capacitors_SMD:C_0805","Unpolarized capacitor",""
-"C123, C131, ","2","1100pF","C_Small","Capacitors_SMD:C_0805","Unpolarized capacitor, small symbol",""
-"C126, ","1","1800pF","C_Small","Capacitors_SMD:C_0805","Unpolarized capacitor, small symbol",""
-"C128, ","1","91pF","C_Small","Capacitors_SMD:C_0603","Unpolarized capacitor, small symbol",""
-"C202, C204, C206, C211, C212, C302, C306, C307, C308, C311, C319, C320, ","12","100nF","C_Small","Capacitors_SMD:C_0805","Unpolarized capacitor, small symbol",""
-"C207, ","1","270pF","C_Small","Capacitors_SMD:C_0805","Unpolarized capacitor, small symbol",""
-"C208, ","1","10pF","C_Small","Capacitors_SMD:C_0805","Unpolarized capacitor, small symbol",""
-"C209, C215, ","2","150uF low ESR","CP1_Small-Device","Capacitors_SMD:C_2917","",""
-"C213, C219, C301, ","3","1uF","C_Small","Capacitors_SMD:C_0805","Unpolarized capacitor, small symbol",""
-"C218, ","1","10nF","C_Small","Capacitors_SMD:C_0805","Unpolarized capacitor, small symbol",""
-"C303, C313, C314, C315, C317, C318, ","6","4.7uF","C","Capacitors_SMD:C_0805","Unpolarized capacitor",""
-"D101, D301, ","2","MBD54","MBD54DWT1G_Schottky_Ind-ARDF-2-Band-MiniTx-rescue","TO_SOT_Packages_SMD:SOT-363-0.65_MBD54","",""
-"D102, ","1","4.7V","BZT52C4V7-Diode","Diodes_SMD:SOD-123","",""
-"D104, D306, D307, ","3","ESD","TVS_Diode-Power_Protection","Resistors_SMD:R_0603","",""
-"D201, D202, ","2","B530","D_Schottky_ALT-Device","Diodes_SMD:DO-214AB","",""
-"D304, ","1","GREEN","LED_ALT-Device","Diodes_SMD:D_0805","",""
-"D305, ","1","RED","LED_ALT-Device","Diodes_SMD:D_0805","",""
-"HS101, ","1","Heatsink","Heat-sink","Heatsinks:Heatsink_HF35G","Heat-sink",""
-"J101, ","1","DIN-5_180degree","DIN-5_180degree-Connector","Connect:SDF-50J","",""
-"J102, J305, J306, J307, J308, ","5","Conn_01x02","Conn_01x02","Pin_Headers:Pin_Header_Straight_1x02","Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)",""
-"J203, ","1","V4","CONN_01X01-ARDF-2-Band-MiniTx-rescue","Pin_Headers:Pin_Header_Straight_1x01_circle_pad","",""
-"J301, ","1","DB9_Female","DB9_Female","Connect:DB9F_CI","9-pin female D-SUB connector",""
-"J302, ","1","Conn_01x06","Conn_01x06","Pin_Headers:Pin_Header_Angled_1x06","Generic connector, single row, 01x06, script generated (kicad-library-utils/schlib/autogen/connector/)",""
-"J303, ","1","DB9_Male","DB9_Male","Connect:DB9F_CI","9-pin male D-SUB connector",""
-"J304, ","1","Conn_01x10","Conn_01x10","Pin_Headers:Pin_Header_Straight_1x10","Generic connector, single row, 01x10, script generated (kicad-library-utils/schlib/autogen/connector/)",""
-"J401, ","1","CONN_01X06","Conn_01x06","Oddities:Dummy_Empty","Generic connector, single row, 01x06, script generated (kicad-library-utils/schlib/autogen/connector/)",""
-"J402, J403, ","2","CONN_01X10","Conn_01x10","Oddities:Dummy_Empty","Generic connector, single row, 01x10, script generated (kicad-library-utils/schlib/autogen/connector/)",""
-"JP201, ","1","Boost Bypass","Jumper_NO_Small-Device","Wire_Connections_Bridges:Solder-Jumper-NO-SMD-Pad_Small","",""
-"JP301, ","1","Jumper_NO_Small","Jumper_NO_Small-Device","Wire_Connections_Bridges:Solder-Jumper-NO-SMD-Pad_Small","",""
-"L104, ","1","9T #24 Bifilar T50-43","INDUCTOR_CT-Device","Inductors:Toroid_T-50A_TH_BF_CT_Vertical","",""
-"L106, L108, ","2","2.7uH","INDUCTOR_SMALL-Device","Inductors:Toroid_T-60_2TH_Vertical","",""
-"L202, L203, ","2","6.8uH","INDUCTOR_SMALL-ARDF-2-Band-MiniTx-rescue","Inductors:CDR7D28MN","",""
-"MOD301, ","1","HUZZAH_ESP8266_Breakout","HUZZAH_ESP8266_Breakout","Oddities:Adafruit_HUZZAH_ESP8266_Breakout_SM","AdaFruit HUZZAH ESP8266 Breakout Board",""
-"P201, ","1","Power Pole","Conn_01x02","Oddities:Dummy_Empty_2","Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)",""
-"P203, ","1","Power Pole","PowerPole_1x2_pin-Connector","Connect:PowerPole-ASMPP30-1x2","",""
-"P301, ","1","ISP/PDI","ISP_PDI-Connector","Pin_Headers:SM_Pin_Header_Straight_2x03","",""
-"P302, ","1","Thru","CONN_01X01-ARDF-2-Band-MiniTx-rescue","Pin_Headers:Pin_Header_Straight_1x01","",""
-"P304, ","1","Header","CONN_01X06-ARDF-2-Band-MiniTx-rescue","Pin_Headers:Pin_Header_Straight_1x06","",""
-"PCB401, ","1","Circuit Board","Circuit_Board","Oddities:Dummy_Empty","",""
-"PH401, ","1","Power Pole Staple","PinlessHardware-Device","Oddities:Dummy_Empty","",""
-"Q102, ","1","IRF610","IRF610_TO220-Transistor_FET","TO_SOT_Packages_THT:TO-220_Neutral123_Vertical_LargePads","",""
-"Q201, ","1","MUN5213DW1","MUN5213DW1-Transistor_BJT","TO_SOT_Packages_SMD:SOT-363-0.65","",""
-"Q202, ","1","DMP4025LSD","DMP4025LSD-Transistor_FET","Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm","",""
-"Q203, ","1","RJK0354DSP","SI4884BDY-Transistor_FET","Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm","",""
-"Q301, ","1","PN2222A","PN2222A-Transistor_BJT","TO_SOT_Packages_SMD:SOT-23","",""
-"R201, R205, R212, ","3","162k","R","Resistors_SMD:R_0805","Resistor",""
-"R202, ","1","49.9k","R","Resistors_SMD:R_0805","Resistor",""
-"R203, R206, R208, ","3","27k","R","Resistors_SMD:R_0805","Resistor",""
-"R204, ","1","392k","R","Resistors_SMD:R_0805","Resistor",""
-"R207, R209, R210, R308, R313, ","5","100k","R","Resistors_SMD:R_0805","Resistor",""
-"R211, R213, R214, R215, R216, R303, R306, R307, R310, R311, R315, R316, ","12","10k","R","Resistors_SMD:R_0805","Resistor",""
-"R217, ","1","1.1k","R","Resistors_SMD:R_0805","Resistor",""
-"R218, ","1","0.01 0.5W","R","Resistors_SMD:R_0805","Resistor",""
-"R301, R302, ","2","470","R","Resistors_SMD:R_0805","Resistor",""
-"R304, ","1","10","R","Resistors_SMD:R_0805","Resistor",""
-"R309, ","1","2.2k","R","Resistors_SMD:R_0805","Resistor",""
-"R312, R314, ","2","560k","R","Resistors_SMD:R_0805","Resistor",""
-"RV301, ","1","10k Pot","R_POT-Device","Potentiometers:Potentiometer_ST32ET_Handsolder","",""
-"SCREW401, ","1","QTY 4 SCREWS","SCREW","Oddities:Dummy_Empty","",""
-"SJ301, ","1","SolderJumper_2_Open","SolderJumper_2_Open","Wire_Connections_Bridges:Solder-Jumper-NO-SMD-Pad_Small","Solder Jumper, 2-pole, open",""
-"SW301, ","1","SPST","SPST_small-Switch","Buttons_Switches_SMD:PTS645SL50SMTR92","",""
-"TP301, ","1","I2C1","Conn_01x04","Pin_Headers:Pin_Header_Straight_1x04","Generic connector, single row, 01x04, script generated (kicad-library-utils/schlib/autogen/connector/)",""
-"TP302, ","1","I2C0","Conn_01x04","Pin_Headers:Pin_Header_Straight_1x04","Generic connector, single row, 01x04, script generated (kicad-library-utils/schlib/autogen/connector/)",""
-"U101, U307, ","2","TPS22810DBVT","TPS22810DBVT-Power_Management","TO_SOT_Packages_SMD:SOT-23-6","",""
-"U107, ","1","LM5134B","LM5134-Driver_FET","TO_SOT_Packages_SMD:SOT-23-6-LM5134","",""
-"U202, ","1","OPA171","OPA171-Amplifier_Operational","TO_SOT_Packages_SMD:SOT-23-5_MCP","",""
-"U203, ","1","LTC3600","LTC3600-Regulator_Switching","Housings_SSOP:SSOP-12_Pad","",""
-"U204, ","1","MIC2196","MIC2196-Power_Management","Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm","",""
-"U301, ","1","DS3231","DS3231","SMD_Packages:SO16","I2C Real-Time Clock",""
-"U302, ","1","AVR128DA48","AVR128DA48-I_PT-MCU_Microchip_AVR","Housings_QFP:TQFP-48_7x7mm_Pitch0.5mm_AVR128DA48","",""
-"U303, U308, ","2","LD2985BM33R","LP2992-Regulator_Linear","TO_SOT_Packages_SMD:SOT-23-5","",""
-"U304, ","1","SI5351A","SI5351","Housings_SSOP:MSOP-10_3x3mm_Pitch0.5mm","I2C Programmable CMOS Clock Generator",""
-"U305, ","1","74HC1G08","74HC1G08-74xx","TO_SOT_Packages_SMD:SOT-23-5","",""
-"U306, ","1","LT1763CS8-5","LT1763CS8-5-Regulator_Linear","Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm","",""
-"W105, ","1","T2","TEST_SCOPE","Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small","",""
-"W106, ","1","T3","TEST_SCOPE","Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small","",""
-"W108, ","1","T4","TEST_SCOPE","Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small","",""
-"W111, ","1","T5","TEST_SCOPE","Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small","",""
-"W113, ","1","T6","TEST_SCOPE","Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small","",""
-"W114, ","1","GND","TEST_1P-ARDF-2-Band-MiniTx-rescue","Measurement_Points:Measurement_Point_Round-SMD-Pad_Small","",""
-"W116, ","1","GND","CONN_01X01-ARDF-2-Band-MiniTx-rescue","Pin_Headers:Pin_Header_Straight_1x01","",""
-"W117, ","1","T7","TEST_SCOPE","Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small","",""
-"W204, ","1","V4","TEST_SCOPE","Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small","",""
-"W205, ","1","Vset","TEST_SCOPE","Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small","",""
-"W302, W309, W310, W311, W312, W313, W314, W315, W316, ","9","TEST_1P","TEST_1P-ARDF-2-Band-MiniTx-rescue","Measurement_Points:Measurement_Point_Square-SMD-Pad_Small","",""
-"W307, W308, ","2","CONN_01X01","CONN_01X01-ARDF-2-Band-MiniTx-rescue","Pin_Headers:Pin_Header_Straight_1x01","",""
-"X301, ","1","25.MHZ TCXO","ASTX-H11","Crystals:ASTX-H11-25.000MHZ","HCMOS SMD TCXO",""
+Ref,Value,QTY PER,Footprint,Description,Digi-Key Part No.,LCSC Part Number,Link,Manufacturer,Manufacturer PN,Part No.,
+BOX401 ,Chassis Box,1,Oddities:Dummy_Empty,, , , ,<a href="https://www.digikey.com/products/en?keywords=1554F2GYCL">Link</a>, , ,HM1796-ND
+BT301 ,CR1220,1,Oddities:BC501SM_CR1220_BAT_Handsolder,,BATTERY HOLDER COIN 12MM SMD,BC501SM-ND, ,<a href="https://www.digikey.com/products/en?keywords=BC501SM-ND">Link</a>,MPD (Memory Protection Devices),BC501SM, 
+C101 C205 C216 C304 C305 ,10uF,5,Capacitors_SMD:C_0805,,CAP CER 10UF 25V X5R 0805,490-5523-1-ND,C84416,<a href="https://www.digikey.com/products/en?keywords=490-5523-1-ND">Link</a>,Murata Electronics,GRM21BR61E106KA73L, 
+C117 C210 ,22uF,2,Capacitors_SMD:C_1210,,CAP CER 22UF 25V X5R 1210,1276-3373-1-ND,C337455,<a href="https://www.digikey.com/products/en?keywords=1276-3373-1-ND">Link</a>,Samsung Electro-Mechanics,CL32A226MAJNNNE, 
+C119 C214 C217 ,47uF low ESR,3,Capacitors_SMD:C_2917,,CAP TANT 47UF 10% 20V 2917,399-3904-1-ND,C122333,<a href="https://www.digikey.com/products/en?keywords=399-3904-1-ND">Link</a>,KEMET,T495X476K020ATE150, 
+C120 C122 C310 C312 ,470nF,4,Capacitors_SMD:C_0805,,CAP CER 0.47UF 100V X7R 0805,478-9924-1-ND,C342818,<a href="https://www.digikey.com/products/en?keywords=478-9924-1-ND">Link</a>,AVX Corporation,08051C474K4Z2A, 
+C123 C131 ,1100pF,2,Capacitors_SMD:C_0805,,CAP CER 1100PF 50V NP0 0805,399-14552-1-ND,C2327793,<a href="https://www.digikey.com/products/en?keywords=399-14552-1-ND">Link</a>,KEMET,C0805C112J5GAC7800, 
+C126 ,1800pF,1,Capacitors_SMD:C_0805,,CAP CER 1800PF 100V C0G 0805,445-5752-1-ND,C2173329,<a href="https://www.digikey.com/products/en?keywords=445-5752-1-ND">Link</a>,TDK Corporation,CGA4F2C0G2A182J085AA, 
+C128 ,91pF,1,Capacitors_SMD:C_0603,,CAP CER 91PF 100V NP0 0603,478-10247-1-ND,C2170042,<a href="https://www.digikey.com/products/en?keywords=478-10247-1-ND">Link</a>,KYOCERA AVX,06031U910FAT2A, 
+C202 C204 C206 C211 C212 C302 C306 C307 C308 C311 C319 C320 ,100nF,12,Capacitors_SMD:C_0805,,CAP CER 0.1UF 50V X7R 0805,478-1395-1-ND,C360619,<a href="https://www.digikey.com/products/en?keywords=478-1395-1-ND">Link</a>,AVX Corporation,08055C104KAT2A, 
+C207 ,270pF,1,Capacitors_SMD:C_0805,,CAP CER 270PF 50V C0G/NP0 0805,1276-2624-1-ND,C161109,<a href="https://www.digikey.com/products/en?keywords=1276-2624-1-ND">Link</a>,Samsung Electro-Mechanics,CL21C271GBANNNC, 
+C208 ,10pF,1,Capacitors_SMD:C_0805,,CAP CER 10PF 200V C0G/NP0 0805,478-10457-1-ND,C344177,<a href="https://www.digikey.com/products/en?keywords=478-10457-1-ND">Link<a/>,AVX Corporation,08052U100FAT2A, 
+C209 C215 ,150uF low ESR,2,Capacitors_SMD:C_2917,,CAP TANT 150UF 10% 20V 2917,478-5253-1-ND,C444765,<a href="https://www.digikey.com/products/en?keywords=478-5253-1-ND">Link</a>,AVX Corporation,TPME157K020R0035, 
+C213 C219 C301 ,1uF,3,Capacitors_SMD:C_0805,,CAP CER 1UF 16V X7R 0805,311-1365-1-ND,C344171,<a href="https://www.digikey.com/products/en?keywords=311-1365-1-ND">Link</a>,Yageo,CC0805KKX7R7BB105, 
+C218 ,10nF,1,Capacitors_SMD:C_0805,,CAP CER 10000PF 50V NP0 0805,478-10068-1-ND,C527201,<a href="https://www.digikey.com/products/en?keywords=478-10068-1-ND">Link</a>,AVX Corporation,08055A103JAT2A, 
+C303 C313 C314 C315 C317 C318 ,4.7uF,6,Capacitors_SMD:C_0805,,CAP CER 4.7UF 25V X7R 0805,587-2990-1-ND,C162420,<a href="https://www.digikey.com/products/en?keywords=587-2990-1-ND">Link</a>,Taiyo Yuden,TMK212AB7475KG-T, 
+D101 D301 ,MBD54,2,TO_SOT_Packages_SMD:SOT-363-0.65_MBD54,,DIODE ARRAY SCHOTTKY 30V SC88,MBD54DWT1GOSCT-ND,C152486,<a href="https://www.digikey.com/products/en?keywords=MBD54DWT1GOSCT-ND">Link</a>,ON Semiconductor,MBD54DWT1G, 
+D102 ,4.7V,1,Diodes_SMD:SOD-123,,DIODE ZENER 4.7V 500MW SOD123,BZT52C4V7-13FDICT-ND,C151054,<a href="https://www.digikey.com/products/en?keywords=BZT52C4V7-13FDICT-ND">Link</a>,Diodes Incorporated,BZT52C4V7-13-F, 
+D104 D306 D307 ,ESD,3,Resistors_SMD:R_0603,,VARISTOR 0603,CG0603MLC-05LECT-ND,C2655331,<a href="https://www.digikey.com/products/en?keywords=CG0603MLC-05LECT-ND">Link</a>,Bourns Inc.,CG0603MLC-05LE, 
+D201 D202 ,B530,2,Diodes_SMD:DO-214AB,,DIODE SCHOTTKY 30V 5A SMC,B530C-FDICT-ND,C110488,<a href="https://www.digikey.com/products/en?keywords=B530C-FDICT-ND">Link</a>,Diodes Incorporated,B530C-13-F, 
+D304 ,GREEN,1,Diodes_SMD:D_0805,,LED GREEN CLEAR 0805 SMD,732-4983-1-ND,C98224,<a href="https://www.digikey.com/products/en?keywords=732-4983-1-ND">Link</a>,Wurth Elektronik,150080GS75000, 
+D305 ,RED,1,Diodes_SMD:D_0805,,LED RED CLEAR 0805 SMD,732-4984-1-ND ,C72037,<a href="https://www.digikey.com/products/en?keywords=732-4984-1-ND ">Link</a>,Wurth Elektronik,150080RS75000, 
+HS101 ,Heatsink,1,Heatsinks:Heatsink_HF35G,,TH,HS220-ND, ,<a href="https://www.digikey.com/products/en?keywords=HS220-ND">Link</a>,TH,TH, 
+J101 ,DIN-5_180degree,1,Connect:SDF-50J,,TH,CP-7050-ND, ,<a href="https://www.digikey.com/products/en?keywords=CP-7050-ND">Link</a>,TH,TH, 
+J102 J308 ,Conn_01x02,2,Pin_Headers:Pin_Header_Straight_1x02,, ,np, ,np,np, , 
+J203 ,V4,1,Pin_Headers:Pin_Header_Straight_1x01_circle_pad,, ,np, ,np, , , 
+J301 ,DB9_Female,1,Connect:DB9F_CI,,CONN D-SUB RCPT 9POS SLDR CUP,609-1525-ND, ,<a href="https://www.digikey.com/products/en?keywords=609-1525-ND">Link</a>,Amphenol ICC (FCI),DE09S064TLF, 
+J302 ,Conn_01x06,1,Pin_Headers:Pin_Header_Angled_1x06,, ,929550-01-06-ND, ,<a href="https://www.digikey.com/products/en?keywords=929550-01-06-ND">Link</a>,TH,TH, 
+J303 ,DB9_Male,1,Connect:DB9F_CI,,9 Position D-Sub Plug  Male Pins Connector,609-5908-ND, ,<a href="https://www.digikey.com/products/en?keywords=609-5908-ND">Link</a>,Amphenol ICC (FCI),DE09P065TXLF, 
+J304 ,Conn_01x10,1,Pin_Headers:Pin_Header_Straight_1x10,, ,np, ,np,np, , 
+J305 J306 J307 ,Conn_01x02,3,Pin_Headers:Pin_Header_Straight_1x02,, , , , , , , 
+J401 ,CONN_01X06,1,Oddities:Dummy_Empty,,CONN HDR 6POS 0.1 GOLD SMD,S5637-ND, ,<a href="https://www.digikey.com/product-detail/en/sullins-connector-solutions/NPPC061KFXC-RC/S5637-ND/776096">Link</a>,Sullins Connector Solutions,NPPC061KFXC-RC, 
+J402 J403 ,CONN_01X10,2,Oddities:Dummy_Empty,,CONN HDR 10POS 0.1 GOLD SMD,S5641-ND, ,<a href="https://www.digikey.com/product-detail/en/sullins-connector-solutions/NPPC101KFXC-RC/S5641-ND/776100">Link</a>,Sullins Connector Solutions,NPPC101KFXC-RC, 
+JP201 ,Boost Bypass,1,Wire_Connections_Bridges:Solder-Jumper-NO-SMD-Pad_Small,, ,np, ,np,np, , 
+JP301 ,Jumper_NO_Small,1,Wire_Connections_Bridges:Solder-Jumper-NO-SMD-Pad_Small,, ,np, ,np,np, , 
+L104 ,9T #24 Bifilar T50-43,1,Inductors:Toroid_T-50A_TH_BF_CT_Vertical,,TH,FT50A-43 (Amidon), ,<a href="http://www.amidoncorp.com/ft-50A-43/">Link</a>,TH,TH, 
+L106 L108 ,2.7uH,2,Inductors:Toroid_T-60_2TH_Vertical,,TH,T60-2 (Amidon), ,<a href="http://www.amidoncorp.com/t60-2/">Link</a>,TH,TH, 
+L202 L203 ,6.8uH,2,Inductors:CDR7D28MN,,FIXED IND 6.8UH 2.75A 46.3 MOHM,308-1328-1-ND, ,<a href="https://www.digikey.com/products/en?keywords=308-1328-1-ND">Link</a>,Sumida America Components Inc.,CDR7D28MNNP-6R8NC, 
+MOD301 ,HUZZAH_ESP8266_Breakout,1,Oddities:Adafruit_HUZZAH_ESP8266_Breakout_SM,,ESP8266 HUZZAH BREAKOUT BOARD,1528-1223-ND, ,<a href="https://www.digikey.com/products/en?keywords=1528-1223-ND">Link</a>,Adafruit Industries LLC,2471, 
+P201 ,Power Pole,1,Oddities:Dummy_Empty_2,,TH,2243-ASMPP30-1X2-RK-ND, ,<a href="https://www.digikey.com/products/en?keywords=2243-ASMPP30-1X2-RK-ND">Link</a>,TH,TH, 
+P203 ,Power Pole,1,Connect:PowerPole-ASMPP30-1x2,,TH,2243-ASMPP30-1X2-RK-ND, ,<a href="https://www.digikey.com/products/en?keywords=2243-ASMPP30-1X2-RK-ND">Link</a>,TH,TH, 
+P301 ,ISP/PDI,1,Pin_Headers:SM_Pin_Header_Straight_2x03,,CONN HEADER SMD 6POS 2.54MM,609-3487-1-ND, ,<a href="https://www.digikey.com/products/en?keywords=609-3487-1-ND">Link</a>,Amphenol ICC (FCI),95278-101A06LF, 
+P302 ,Thru,1,Pin_Headers:Pin_Header_Straight_1x01,, , , ,np, , ,np
+P304 ,Header,1,Pin_Headers:Pin_Header_Straight_1x06,, ,np, ,np,np, , 
+PCB401 ,Circuit Board,1,Oddities:Dummy_Empty,, , , ,<a href="https://oshpark.com/shared_projects/sZ495SMd">Link</a>, , ,OSH Park PCB
+PH401 ,Power Pole Staple,1,Oddities:Dummy_Empty,,TH, , ,<a href="https://www.digikey.com/products/en?keywords=2243-114555P2-ND">Link</a>,TH,TH,2243-114555P2-ND
+PH402 PH403 ,PCB Power Pole Pin,2,Oddities:Dummy_Empty,,RIGHT ANGLE PCB CONT .40/1.295 B,2243-1377G2-BK-ND, ,<a href="https://www.digikey.com/products/en?keywords=2243-1377G2-BK-ND">Link</a>,Anderson Power Products  Inc.,1377G2-BK,2243-114555P2-ND
+Q102 ,IRF610,1,TO_SOT_Packages_THT:TO-220_Neutral123_Vertical_LargePads,,TH,IRF610PBF-ND, ,<a href="https://www.digikey.com/products/en?keywords=IRF610PBF-ND">Link</a>,TH,TH, 
+Q201 ,MUN5213DW1,1,TO_SOT_Packages_SMD:SOT-363-0.65,,TRANS PREBIAS 2NPN 50V SC88,MUN5213DW1T1GOSCT-ND,C95381,<a href="https://www.digikey.com/products/en?keywords=MUN5213DW1T1GOSCT-ND">Link</a>,ON Semiconductor,MUN5213DW1T1G, 
+Q202 ,DMP4025LSD,1,Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm,,MOSFET 2P-CH 40V 6.9A 8SO,DMP4025LSD-13DICT-ND,C150763,<a href="https://www.digikey.com/products/en?keywords=DMP4025LSD-13DICT-ND">Link</a>,Diodes Incorporated,DMP4025LSD-13, 
+Q203 ,RJK0354DSP,1,Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm,,MOSFET N-CH 30V 16A 8SOP,RJK0354DSP-00#J0CT-ND,C919563,<a href="https://www.digikey.com/products/en?keywords=RJK0354DSP-00#J0CT-ND">Link</a>,Renesas Electronics America Inc,RJK0354DSP-00#J0, 
+Q301 ,PN2222A,1,TO_SOT_Packages_SMD:SOT-23,,TRANS NPN 40V 0.6A SOT23,MMBT2222ATPMSCT-ND,C194252,<a href="https://www.digikey.com/products/en?keywords=MMBT2222ATPMSCT-ND">Link</a>,Micro Commercial Co,MMBT2222A-TP, 
+R201 R205 R212 ,162k,3,Resistors_SMD:R_0805,,RES SMD 162K OHM 1% 1/8W 0805,311-162KCRCT-ND,C416820,<a href="https://www.digikey.com/products/en?keywords=311-162KCRCT-ND">Link</a>,Yageo,RC0805FR-07162KL, 
+R202 ,49.9k,1,Resistors_SMD:R_0805,,RES SMD 49.9K OHM 0.1% 1/8W 0805,YAG4990CT-ND,C218598,<a href="https://www.digikey.com/products/en?keywords=YAG4990CT-ND">Link</a>,Yageo,RT0805BRE0749K9L, 
+R203 R206 R208 ,27k,3,Resistors_SMD:R_0805,,RES SMD 27K OHM 1% 1/8W 0805,311-27.0KCRCT-ND,C139896,<a href="https://www.digikey.com/products/en?keywords=311-27.0KCRCT-ND">Link</a>,Yageo,RC0805FR-0727KL, 
+R204 ,392k,1,Resistors_SMD:R_0805,,RES SMD 392K OHM 1% 1/8W 0805,311-392KCRCT-ND,C273847,<a href="https://www.digikey.com/products/en?keywords=311-392KCRCT-ND">Link</a>,Yageo,RC0805FR-07392KL, 
+R207 R209 R210 R308 R313 ,100k,5,Resistors_SMD:R_0805,,RES SMD 100K OHM 1% 1/8W 0805,311-100KCRCT-ND,C103905,<a href="https://www.digikey.com/products/en?keywords=311-100KCRCT-ND">Link</a>,Yageo,RC0805FR-07100KL, 
+R211 R213 R214 R215 R216 R303 R306 R307 R310 R311 R315 R316 ,10k,12,Resistors_SMD:R_0805,,RES SMD 10K OHM 1% 1/8W 0805,311-10KLGCT-ND,C38522,<a href="https://www.digikey.com/products/en?keywords=311-10KLGCT-ND">Link</a>,Yageo,AC0805FR-0710KL, 
+R217 ,1.1k,1,Resistors_SMD:R_0805,,RES SMD 1.1K OHM 1% 1/8W 0805,311-1.10KCRCT-ND,C352257,<a href="https://www.digikey.com/products/en?keywords=311-1.10KCRCT-ND">Link</a>,Yageo,RC0805FR-071K1L, 
+R218 ,0.01 0.5W,1,Resistors_SMD:R_0805,,RES 0.01 OHM 1% 1/2W 0805,408-1544-1-ND,C728271,<a href="https://www.digikey.com/products/en?keywords=408-1544-1-ND">Link</a>,Susumu,KRL1220E-M-R010-F-T5, 
+R301 R302 ,470,2,Resistors_SMD:R_0805,,RES 470 OHM 1% 1/4W 0805,2019-RK73H2ATTD4700FCT-ND,C114564,<a href="https://www.digikey.com/products/en?keywords=2019-RK73H2ATTD4700FCT-ND">Link</a>,KOA Speer Electronics  Inc.,RK73H2ATTD4700F, 
+R304 ,10,1,Resistors_SMD:R_0805,,RES SMD 10 OHM 1% 1/8W 0805,311-10.0CRCT-ND,C96347,<a href="https://www.digikey.com/products/en?keywords=311-10.0CRCT-ND">Link</a>,Yageo,RC0805FR-0710RL, 
+R309 ,2.2k,1,Resistors_SMD:R_0805,,RES SMD 2.2K OHM 1% 1/8W 0805,311-2.2KCRCT-ND,C114561,<a href="https://www.digikey.com/products/en?keywords=311-10.0KCRCT-ND">Link</a>,Yageo,RC0805FR-072K2L, 
+R312 R314 ,560k,2,Resistors_SMD:R_0805,,RES SMD 560K OHM 1% 1/8W 0805,13-RT0805FRE07560KLCT-ND,C352198,<a href="https://www.digikey.com/products/en?keywords=13-RT0805FRE07560KLCT-ND">Link</a>,Yageo,RT0805FRE07560KL, 
+RV301 ,10k Pot,1,Potentiometers:Potentiometer_ST32ET_Handsolder,,TRIMMER 10K OHM 0.1W J LEAD TOP,TC33X-103ECT-ND,C719176,<a href="https://www.digikey.com/products/en?keywords=TC33X-103ECT-ND">Link</a>,Bourns Inc.,TC33X-2-103E, 
+SCREW401 ,QTY 4 SCREWS,1,Oddities:Dummy_Empty,, , , ,<a href="https://www.digikey.com/products/en/hardware-fasteners-accessories/screws-bolts/572?k=H742-ND">Link</a>, , ,H742-ND
+SJ301 ,SolderJumper_2_Open,1,Wire_Connections_Bridges:Solder-Jumper-NO-SMD-Pad_Small,, ,np, ,np,np, , 
+SW301 ,SPST,1,Buttons_Switches_SMD:PTS645SL50SMTR92,,SWITCH TACTILE SPST-NO 0.05A 12V,CKN9088CT-ND,C221877,<a href="https://www.digikey.com/products/en?keywords=CKN9088CT-ND">Link</a>,C&K,PTS645SL50SMTR92 LFS, 
+TP301 ,I2C1,1,Pin_Headers:Pin_Header_Straight_1x04,, ,np, ,np,np, , 
+TP302 ,I2C0,1,Pin_Headers:Pin_Header_Straight_1x04,, ,np, ,np,np, , 
+U101 U307 ,TPS22810DBVT,2,TO_SOT_Packages_SMD:SOT-23-6,,Power Switch/Driver 1:1 N-Channel 2A SOT-23-6,296-45304-1-ND,C2680364,<a href="https://www.digikey.com/products/en?keywords=296-45304-1-ND">Link</a>,Texas Instruments,TPS22810DBVT, 
+U107 ,LM5134B,1,TO_SOT_Packages_SMD:SOT-23-6-LM5134,,IC GATE DRVR LOW-SIDE SOT23-6,296-40244-1-ND,C2677086,<a href="https://www.digikey.com/products/en?keywords=296-40244-1-ND">Link</a>,Texas Instruments,LM5134BMFX/NOPB, 
+U202 ,OPA171,1,TO_SOT_Packages_SMD:SOT-23-5_MCP,,IC OPAMP GP 1 CIRCUIT SOT23-5,296-37698-1-ND,C88036,<a href="https://www.digikey.com/products/en?keywords=296-37698-1-ND">Link</a>,Texas Instruments,OPA171AIDBVR, 
+U203 ,LTC3600,1,Housings_SSOP:SSOP-12_Pad,,IC REG BUCK PROG 1.5A 12MSOP,LTC3600EMSE#PBF-ND,C580752,<a href="https://www.digikey.com/products/en?keywords=LTC3600EMSE%23PBF-ND">Link</a>,Analog Devices Inc.,LTC3600EMSE#PBF, 
+U204 ,MIC2196,1,Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm,,IC REG CTRLR BOOST 8SOIC,MIC2196YM-CT-ND,C627808,<a href="https://www.digikey.com/products/en?keywords=MIC2196YM-CT-ND">Link</a>,Microchip Technology,MIC2196YM-TR, 
+U301 ,DS3231,1,SMD_Packages:SO16,,IC RTC CLK/CALENDAR I2C 16-SOIC,DS3231S#T&RCT-ND,C2651514,<a href="https://www.digikey.com/products/en?keywords=DS3231S%23T%26RCT-ND">Link</a>,Maxim Integrated,DS3231S#T&R, 
+U302 ,AVR128DA48,1,Housings_QFP:TQFP-48_7x7mm_Pitch0.5mm_AVR128DA48,,IC MCU 8BIT 128KB FLASH 48TQFP,150-AVR128DA48T-E/PTCT-ND,C1870720,<a href="https://www.digikey.com/products/en?keywords=150-AVR128DA48T-E/PTCT-ND">Link</a>,Microchip Technology,AVR128DA48T-E/PT, 
+U303 U308 ,LD2985BM33R,2,TO_SOT_Packages_SMD:SOT-23-5,,IC REG LINEAR 3.3V 150MA SOT23-5,497-3499-1-ND,C222396,<a href="https://www.digikey.com/products/en?keywords=497-3499-1-ND">Link</a>,STMicroelectronics,LD2985BM33R, 
+U304 ,SI5351A,1,Housings_SSOP:MSOP-10_3x3mm_Pitch0.5mm,,IC CLK GENERATOR 200MHZ 10MSOP,336-2399-5-ND,C529366,<a href="https://www.digikey.com/products/en?keywords=336-2399-5-ND">Link</a>,Silicon Labs,SI5351A-B-GT, 
+U305 ,74HC1G08,1,TO_SOT_Packages_SMD:SOT-23-5,,IC GATE AND 1CH 2-INP 5TSOP,MC74HC1G08DTT1GOSCT-ND,C108694,<a href="https://www.digikey.com/products/en?keywords=MC74HC1G08DTT1GOSCT-ND">Link</a>,ON Semiconductor,MC74HC1G08DTT1G, 
+U306 ,LT1763CS8-5,1,Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm,,IC REG LINEAR 5V 500MA 8SOIC,LT1763CS8-5#TRPBFCT-ND,C193629,<a href="https://www.digikey.com/products/en?keywords=LT1763CS8-5#TRPBFCT-ND">Link</a>,Analog Devices Inc.,LT1763CS8-5#TRPBF, 
+W105 ,T2,1,Measurement:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small,, ,np, ,np, , , 
+W106 ,T3,1,Measurement:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small,, ,np, ,np, , , 
+W108 ,T4,1,Measurement:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small,, ,np, ,np, , , 
+W111 ,T5,1,Measurement:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small,, ,np, ,np, , , 
+W113 ,T6,1,Measurement:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small,, ,np, ,np, , , 
+W114 ,GND,1,Measurement_Points:Measurement_Point_Round-SMD-Pad_Small,, , , ,np, , ,np
+W116 ,GND,1,Pin_Headers:Pin_Header_Straight_1x01,, , , ,np, , ,np
+W117 ,T7,1,Measurement:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small,, ,np, ,np, , , 
+W204 ,V4,1,Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small,, ,np, ,np, , , 
+W205 ,Vset,1,Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small,, ,np, ,np,np, , 
+W302 W309 W310 W311 W312 W313 W314 W315 W316 ,TEST_1P,9,Measurement_Points:Measurement_Point_Square-SMD-Pad_Small,, , , ,np, , ,np
+W307 W308 ,CONN_01X01,2,Pin_Headers:Pin_Header_Straight_1x01,, ,np, ,np,np, , 
+X301 ,25.MHZ TCXO,1,Crystals:ASTX-H11-25.000MHZ,,XTAL OSC TCXO 25MHZ CLPSNW,2780-I537-2O7-25.000MHZCT-ND, ,<a href="https://www.digikey.com/products/en?keywords=2780-I537-2O7-25.000MHZCT-ND">Link</a>,Abracon LLC,I537-2O7-25.000 MHZ, 
