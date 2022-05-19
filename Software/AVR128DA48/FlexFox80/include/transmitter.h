@@ -50,7 +50,7 @@ typedef int16_t Attenuation;
 #define EEPROM_RTTY_OFFSET_FREQUENCY_DEFAULT 170
 #define EEPROM_TX_80M_POWER_MW_DEFAULT 500
 
-#define MAX_80M_PWR_SETTING 255 /* maximum safe DAC setting */
+#define MAX_80M_PWR_SETTING (uint16_t)1024 /* maximum safe DAC setting */
 
 #define BUCK_9V 175
 #define BUCK_8V 150
@@ -58,12 +58,16 @@ typedef int16_t Attenuation;
 #define BUCK_6V 100
 #define BUCK_5V 75
 #define BUCK_0V 0
-                                               /*  0,10,100,200,300,400,500,600,800,1000,1500,2000,2500,3000,4000,5000 */
-#define DEFAULT_80M_POWER_TABLE {0, 2, 20, 40, 54, 62, 70, 78, 91, 100, 130, 155, 180, 200, 245, 254}
+                             /*  0,10,100, 200, 300, 400, 500, 600, 800, 1000, 1500, 2000, 2500, 3000, 4000, 5000 */
+#define DEFAULT_80M_POWER_TABLE {0, 8, 80, 160, 216, 248, 280, 312, 365,  402,  522,  586,  650,  713,  776,  840 }
 
 #define TX_MINIMUM_80M_FREQUENCY (uint32_t)3500000
 #define TX_MAXIMUM_80M_FREQUENCY (uint32_t)4000000
 
+/**
+ */
+	void shutdown_transmitter(void);
+	
 /**
  */
 	EC init_transmitter(void);
@@ -95,7 +99,7 @@ EC powerToTransmitter(bool on);
 
 /**
  */
-EC txMilliwattsToSettings(uint16_t* powerMW, uint8_t* powerLevel, uint8_t* modLevelHigh, uint8_t* modLevelLow);
+EC txMilliwattsToSettings(uint16_t* powerMW, uint16_t* powerLevel, uint8_t* modLevelHigh, uint8_t* modLevelLow);
 
 
 #endif  /* TRANSMITTER_H_ */

@@ -52,6 +52,18 @@ void fet_driver(bool state)
 	}
 }
 
+void final_drain_voltage(bool state)
+{
+	if(state == ON)
+	{
+		PORTB_set_pin_level(TX_FINAL_VOLTAGE_ENABLE, HIGH);
+	}
+	else
+	{
+		PORTB_set_pin_level(TX_FINAL_VOLTAGE_ENABLE, LOW);
+	}
+}
+
 
 /**
 
@@ -97,7 +109,7 @@ void BINIO_init(void)
 // 	PORTA_pin_set_isc(ANT_CONNECT_INT, PORT_ISC_FALLING_gc);
 
 	PORTA_set_pin_dir(WIFI_ENABLE, PORT_DIR_OUT);
-	PORTA_set_pin_level(WIFI_ENABLE, HIGH);
+	PORTA_set_pin_level(WIFI_ENABLE, LOW);
 	
 	PORTA_set_pin_dir(WIFI_RESET, PORT_DIR_OUT);
 	PORTA_set_pin_level(WIFI_RESET, LOW);

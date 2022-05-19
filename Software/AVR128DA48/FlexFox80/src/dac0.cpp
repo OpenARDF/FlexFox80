@@ -40,10 +40,11 @@ static void VREF_init(void);
 
 static void VREF_init(void)
 {
-//	VREF.DAC0REF = VREF_REFSEL_2V048_gc /* Select the 2.048V Internal Voltage Reference for DAC */
-//	VREF.DAC0REF = VREF_REFSEL_2V500_gc /* Select the 2.048V Internal Voltage Reference for DAC */
-//	| VREF_ALWAYSON_bm;    /* Set the Voltage Reference in Always On mode */
+//	VREF.DAC0REF = VREF_REFSEL_VDD_gc; /* Select the 2.048V Internal Voltage Reference for DAC */
+//	VREF.DAC0REF = VREF_REFSEL_2V048_gc; /* Select the 2.048V Internal Voltage Reference for DAC */
 	VREF.DAC0REF = VREF_REFSEL_2V500_gc; /* Select the 2.048V Internal Voltage Reference for DAC */
+//	| VREF_ALWAYSON_bm;    /* Set the Voltage Reference in Always On mode */
+//	VREF.DAC0REF = VREF_REFSEL_2V500_gc; /* Select the 2.048V Internal Voltage Reference for DAC */
 	/* Wait VREF start-up time */
 	while(util_delay_ms(VREF_STARTUP_TIME_MS));
 }
@@ -51,15 +52,25 @@ static void VREF_init(void)
 void DAC0_init(void)
 {
 	VREF_init();
-	/* Disable digital input buffer */
-	PORTD.PIN6CTRL &= ~PORT_ISC_gm;
-	PORTD.PIN6CTRL |= PORT_ISC_INPUT_DISABLE_gc;
-	/* Disable pull-up resistor */
-	PORTD.PIN6CTRL &= ~PORT_PULLUPEN_bm;
-	DAC0.CTRLA = DAC_ENABLE_bm          /* Enable DAC */
-	| DAC_OUTEN_bm;           /* Enable output buffer */
 	
-	DAC0_setVal(DAC_DEFAULT_VALUE);
+    /* Disable digital input buffer */
+    PORTD.PIN6CTRL &= ~PORT_ISC_gm;
+    PORTD.PIN6CTRL |= PORT_ISC_INPUT_DISABLE_gc;
+    /* Disable pull-up resistor */
+    PORTD.PIN6CTRL &= ~PORT_PULLUPEN_bm;   
+    DAC0.CTRLA = DAC_ENABLE_bm          /* Enable DAC */
+               | DAC_OUTEN_bm           /* Enable output buffer */
+               | DAC_RUNSTDBY_bm;       /* Enable Run in Standby mode */
+
+// 	/* Disable digital input buffer */
+// 	PORTD.PIN6CTRL &= ~PORT_ISC_gm;
+// 	PORTD.PIN6CTRL |= PORT_ISC_INPUT_DISABLE_gc;
+// 	/* Disable pull-up resistor */
+// 	PORTD.PIN6CTRL &= ~PORT_PULLUPEN_bm;
+// 	DAC0.CTRLA = DAC_ENABLE_bm          /* Enable DAC */
+// 	| DAC_OUTEN_bm;           /* Enable output buffer */
+// 	
+// 	DAC0_setVal(DAC_DEFAULT_VALUE);
 }
 
 void DAC0_setVal(uint16_t value)

@@ -41,7 +41,7 @@ volatile Frequency_Hz g_rtty_offset = EEPROM_RTTY_OFFSET_FREQUENCY_DEFAULT;
 static volatile bool g_transmitter_keyed = false;
 volatile bool g_tx_power_is_zero = true;
 
-uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
+uint16_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 
 /*
  *       This function sets the VFO frequency (CLK0 of the Si5351) based on the intended frequency passed in by the parameter (freq),
@@ -73,6 +73,7 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 
 	EC powerToTransmitter(bool on)
 	{
+		final_drain_voltage(on);
 		fet_driver(on);
 
 		return(ERROR_CODE_NO_ERROR);
@@ -120,7 +121,8 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 
 			if(power <= MAX_TX_POWER_80M_MW)
 			{
-				uint8_t drainVoltageDAC, modLevelHigh, modLevelLow;
+				uint16_t drainVoltageDAC;
+				uint8_t modLevelHigh, modLevelLow;
 				code = txMilliwattsToSettings(&power, &drainVoltageDAC, &modLevelHigh, &modLevelLow);
 				err = (code == ERROR_CODE_SW_LOGIC_ERROR);
 
@@ -147,6 +149,7 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 					}
 					else
 					{
+						
 						powerToTransmitter(ON); /* Turn on FET driver */
 					}
 				}
@@ -171,12 +174,17 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 		return(code);
 	}
 
+	void shutdown_transmitter(void)
+	{
+		si5351_shutdown();	
+	}
 
 	EC init_transmitter(void)
 	{
 		EC code;
 		bool err;
 		
+		fet_driver(OFF);		
 		DAC0_init();
 
 		if((err = si5351_init(SI5351_CRYSTAL_LOAD_6PF, 0)))
@@ -199,24 +207,6 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 			return( code);
 		}
 
-// 		if((code = si5351_drive_strength(TX_CLOCK_VHF, SI5351_DRIVE_8MA)))
-// 		{
-// 			return( code);
-// 		}
-// 		if((code = si5351_clock_enable(TX_CLOCK_VHF, SI5351_CLK_DISABLED)))
-// 		{
-// 			return( code);
-// 		}
-// 
-// 		if((code = si5351_drive_strength(TX_CLOCK_VHF_FM, SI5351_DRIVE_8MA)))
-// 		{
-// 			return( code);
-// 		}
-// 		if((code = si5351_clock_enable(TX_CLOCK_VHF_FM, SI5351_CLK_DISABLED)))
-// 		{
-// 			return( code);
-// 		}
-
 		uint16_t pwr_mW = g_80m_power_level_mW;
 		
 		err = txSetFrequency((Frequency_Hz*)&g_80m_frequency, true);
@@ -233,10 +223,10 @@ uint8_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 	}
 
 
-EC txMilliwattsToSettings(uint16_t* powerMW, uint8_t* driveLevel, uint8_t* modLevelHigh, uint8_t* modLevelLow)
+EC txMilliwattsToSettings(uint16_t* powerMW, uint16_t* driveLevel, uint8_t* modLevelHigh, uint8_t* modLevelLow)
 {
 	EC ec = ERROR_CODE_NO_ERROR;
-	int16_t maxPwr;
+	uint16_t maxPwr;
 	uint8_t index;
 
 	if(powerMW == NULL)
@@ -246,12 +236,12 @@ EC txMilliwattsToSettings(uint16_t* powerMW, uint8_t* driveLevel, uint8_t* modLe
 
 	maxPwr = MAX_TX_POWER_80M_MW;
 
-	if((int16_t)*powerMW > maxPwr)
+	if(*powerMW > maxPwr)
 	{
 		ec = ERROR_CODE_POWER_LEVEL_NOT_SUPPORTED;
 	}
 
-	*powerMW = CLAMP(0, (int16_t)*powerMW, maxPwr);
+	*powerMW = CLAMP((uint16_t)0, *powerMW, maxPwr);
 
 	if(*powerMW < 5)
 	{

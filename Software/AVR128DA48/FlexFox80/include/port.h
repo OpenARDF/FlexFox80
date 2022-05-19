@@ -542,7 +542,6 @@ static inline void PORTC_pin_set_inverted(const uint8_t pin, const bool inverted
 static inline void PORTC_pin_set_isc(const uint8_t pin, const PORT_ISC_t isc)
 {
 	volatile uint8_t *port_pin_ctrl = ((uint8_t *)&PORTC + 0x10 + pin);
-
 	*port_pin_ctrl = (*port_pin_ctrl & ~PORT_ISC_gm) | isc;
 }
 

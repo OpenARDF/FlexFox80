@@ -73,6 +73,7 @@
 
 void BINIO_init(void);
 void fet_driver(bool state);
+void final_drain_voltage(bool state);
 
 class binio
 {

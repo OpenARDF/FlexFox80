@@ -431,6 +431,10 @@ extern "C" {
 
 /**
  */
+void si5351_shutdown(void);
+
+/**
+ */
 bool si5351_init(Si5351_Xtal_load_pF, Frequency_Hz);
 
 /**

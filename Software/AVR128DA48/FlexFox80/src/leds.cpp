@@ -122,8 +122,8 @@ ISR(TCB3_INT_vect)
 		TCB3.INTCTRL &= ~TCB_CAPT_bm;   /* Capture or Timeout: disabled */
 		LED_set_RED_level(OFF);
 		LED_set_GREEN_level(OFF);
-		red_led_configured = false;
-		green_led_configured = false;
+// 		red_led_configured = false;
+// 		green_led_configured = false;
 	}
 		
 	TCB3.INTFLAGS |= TCB_CAPT_bm; /* clear interrupt flag */
@@ -134,6 +134,44 @@ bool leds::active(void)
 	return(led_timeout_count && (TCB3.INTCTRL & (1 << TCB_CAPT_bp)));
 }
 
+void leds::setRed(bool on)
+{
+	if(on)
+	{
+		if(led_timeout_count)
+		{
+			LED_set_RED_level(ON);
+		}
+	}
+	else
+	{
+		LED_set_RED_level(OFF);
+	}
+}
+
+void leds::setGreen(bool on)
+{
+	if(on)
+	{
+		if(led_timeout_count)
+		{
+			LED_set_GREEN_level(ON);
+		}
+	}
+	else
+	{
+		LED_set_GREEN_level(OFF);
+	}
+}
+
+void leds::resume(void)
+{
+	if(!led_timeout_count)
+	{
+		led_timeout_count = LED_TIMEOUT;
+		TCB3.INTCTRL |= TCB_CAPT_bm;   /* Capture or Timeout: enabled */
+	}
+}
 
 void leds::blink(Blink_t blinkMode)
 {
