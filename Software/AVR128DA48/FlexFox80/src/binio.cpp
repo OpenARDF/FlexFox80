@@ -40,30 +40,6 @@ binio::~binio()
 {
 } //~binio
 
-void fet_driver(bool state)
-{
-	if(state == ON)
-	{
-		PORTA_set_pin_level(FET_DRIVER_ENABLE, HIGH);
-	}
-	else
-	{
-		PORTA_set_pin_level(FET_DRIVER_ENABLE, LOW);
-	}
-}
-
-void final_drain_voltage(bool state)
-{
-	if(state == ON)
-	{
-		PORTB_set_pin_level(TX_FINAL_VOLTAGE_ENABLE, HIGH);
-	}
-	else
-	{
-		PORTB_set_pin_level(TX_FINAL_VOLTAGE_ENABLE, LOW);
-	}
-}
-
 
 /**
 

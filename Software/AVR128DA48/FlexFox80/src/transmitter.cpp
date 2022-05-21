@@ -30,6 +30,7 @@
 #include "i2c.h"    /* DAC on 80m VGA of Rev X1 Receiver board */
 #include "dac0.h"
 #include "binio.h"
+#include "port.h"
 
 extern volatile AntConnType g_antenna_connect_state;
 
@@ -41,7 +42,18 @@ volatile Frequency_Hz g_rtty_offset = EEPROM_RTTY_OFFSET_FREQUENCY_DEFAULT;
 static volatile bool g_transmitter_keyed = false;
 volatile bool g_tx_power_is_zero = true;
 
+static volatile static bool g_drain_voltage_enabled = false;
+static volatile static bool g_fet_driver_enabled = false;
+static volatile static bool g_rf_output_inhibited = false;		
+
 uint16_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
+
+/*
+ * Local Function Prototypes
+ */
+void fet_driver(bool state);
+void final_drain_voltage(bool state);
+
 
 /*
  *       This function sets the VFO frequency (CLK0 of the Si5351) based on the intended frequency passed in by the parameter (freq),
@@ -75,8 +87,58 @@ uint16_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 	{
 		final_drain_voltage(on);
 		fet_driver(on);
-
 		return(ERROR_CODE_NO_ERROR);
+	}
+	
+	void fet_driver(bool state)
+	{
+		g_fet_driver_enabled = state;
+		
+		if(!g_rf_output_inhibited)
+		{
+			if(state == ON)
+			{
+				PORTA_set_pin_level(FET_DRIVER_ENABLE, HIGH);
+			}
+			else
+			{
+				PORTA_set_pin_level(FET_DRIVER_ENABLE, LOW);
+			}
+		}
+	}
+
+	void final_drain_voltage(bool state)
+	{
+		g_drain_voltage_enabled = state;
+
+		if(!g_rf_output_inhibited)
+		{
+			if(state == ON)
+			{
+				PORTB_set_pin_level(TX_FINAL_VOLTAGE_ENABLE, HIGH);
+			}
+			else
+			{
+				PORTB_set_pin_level(TX_FINAL_VOLTAGE_ENABLE, LOW);
+			}
+		}
+	}
+
+	
+	void inhibitRFOutput(bool inhibit)
+	{
+		g_rf_output_inhibited = inhibit;
+		
+		if(inhibit)
+		{
+			PORTB_set_pin_level(TX_FINAL_VOLTAGE_ENABLE, LOW);
+			PORTA_set_pin_level(FET_DRIVER_ENABLE, LOW);
+		}
+		else
+		{
+			final_drain_voltage(g_drain_voltage_enabled);
+			fet_driver(g_fet_driver_enabled);
+		}
 	}
 
 	void keyTransmitter(bool on)
@@ -108,8 +170,8 @@ uint16_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 		return( g_80m_power_level_mW);
 	}
 
-	EC __attribute__((optimize("O0"))) txSetParameters(uint16_t* power_mW, bool* enableDriverPwr)
-/*	EC txSetParameters(uint16_t* power_mW, bool* enableDriverPwr) */
+	EC __attribute__((optimize("O0"))) txSetParameters(uint16_t* power_mW, bool* setEnabled)
+/*	EC txSetParameters(uint16_t* power_mW, bool* setEnabled) */
 	{
 		bool err = false;
 		EC code = ERROR_CODE_NO_ERROR;
@@ -122,8 +184,7 @@ uint16_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 			if(power <= MAX_TX_POWER_80M_MW)
 			{
 				uint16_t drainVoltageDAC;
-				uint8_t modLevelHigh, modLevelLow;
-				code = txMilliwattsToSettings(&power, &drainVoltageDAC, &modLevelHigh, &modLevelLow);
+				code = txMilliwattsToSettings(&power, &drainVoltageDAC);
 				err = (code == ERROR_CODE_SW_LOGIC_ERROR);
 
 				g_tx_power_is_zero = (power == 0);
@@ -145,12 +206,7 @@ uint16_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 
 					if(g_tx_power_is_zero || (drainVoltageDAC == 0))
 					{
-						powerToTransmitter(OFF); /* Turn off FET driver */
-					}
-					else
-					{
-						
-						powerToTransmitter(ON); /* Turn on FET driver */
+						powerToTransmitter(OFF); /* Turn off FET driver and drain voltage */
 					}
 				}
 
@@ -165,9 +221,9 @@ uint16_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 
 		if(!err)
 		{
-			if(enableDriverPwr != NULL)
+			if(setEnabled != NULL)
 			{
-				powerToTransmitter(*enableDriverPwr);
+				powerToTransmitter(*setEnabled);
 			}
 		}
 
@@ -192,10 +248,10 @@ uint16_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 			return(ERROR_CODE_RF_OSCILLATOR_ERROR);
 		}
 
-		if((code = txSetParameters(NULL, NULL)))
-		{
-			return( code);
-		}
+// 		if((code = txSetParameters(NULL, NULL)))
+// 		{
+// 			return( code);
+// 		}
 
 		if((code = si5351_drive_strength(TX_CLOCK_HF_0, SI5351_DRIVE_8MA)))
 		{
@@ -223,7 +279,7 @@ uint16_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 	}
 
 
-EC txMilliwattsToSettings(uint16_t* powerMW, uint16_t* driveLevel, uint8_t* modLevelHigh, uint8_t* modLevelLow)
+EC txMilliwattsToSettings(uint16_t* powerMW, uint16_t* driveLevel)
 {
 	EC ec = ERROR_CODE_NO_ERROR;
 	uint16_t maxPwr;
@@ -325,8 +381,6 @@ EC txMilliwattsToSettings(uint16_t* powerMW, uint16_t* driveLevel, uint8_t* modL
 	}
 
 	*driveLevel = g_80m_power_table[index];
-	*modLevelHigh = 0;
-	*modLevelLow = 0;
 	*driveLevel = MIN(*driveLevel, MAX_80M_PWR_SETTING);
 
 	return(ec);

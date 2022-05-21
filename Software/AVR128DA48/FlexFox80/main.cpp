@@ -357,11 +357,17 @@ ISR(PORTA_PORT_vect)
 							wifi_reset(ON);     /* put WiFi into reset */
 							wifi_power(OFF);    /* power off WiFi */
 							g_shutting_down_wifi = false;
-
-							/* If an event hasn't been enabled by the time that WiFi shuts
-							*  down, then the transmitter will never run. Just sleep indefinitely */
-							eventEnabled(); /* Sets sleep time appropriately */
 							g_wifi_active = false;
+							
+							if(g_sleepType == SLEEP_AFTER_WIFI_GOES_OFF)
+							{
+								g_go_to_sleep_now = true;
+							}
+							else if(!g_event_enabled)
+							{
+								g_seconds_to_sleep = MAX_TIME;
+								g_go_to_sleep_now = true;
+							}
 						}
 					}
 				}
@@ -393,6 +399,7 @@ ISR(PORTD_PORT_vect)
 			{
 				g_antenna_connect_state = ANT_DISCONNECTED;
 				g_antenna_connection_changed = true;
+				inhibitRFOutput(true);
 			}
 		}
 	}
@@ -609,9 +616,7 @@ ISR(PORTC_PORT_vect)
 				}
 				else
 				{
-					LEDS.resume();
 					g_wifi_enable_delay = 2;
-					g_WiFi_shutdown_seconds = 120;
 				}					
 			}
 		}
@@ -632,8 +637,8 @@ void powerDown3V3(void)
 
 void powerUp3V3(void)
 {
-	PORTA_set_pin_level(FET_DRIVER_ENABLE, OFF); /* Turn off power to FET driver */
-	PORTB_set_pin_level(MAIN_PWR_ENABLE, HIGH);  /* Turn of 12V booster circuit */
+	powerToTransmitter(OFF); /* Turn off power to FET driver */
+	PORTB_set_pin_level(MAIN_PWR_ENABLE, HIGH);  /* Turn on 12V booster circuit */
 	PORTA_set_pin_level(V3V3_PWR_ENABLE, HIGH);  /* Enable 3V3 power regulator */
 	g_perform_3V3_init = true;
 }
@@ -690,10 +695,10 @@ int main(void)
 		{			
 			g_perform_3V3_init = false;
 			
-// 			if(init_transmitter() != ERROR_CODE_RF_OSCILLATOR_ERROR)
-// 			{
-// 				g_powerUp_initialization_complete = true;
-// 			}
+			if(init_transmitter() != ERROR_CODE_RF_OSCILLATOR_ERROR)
+			{
+				g_powerUp_initialization_complete = true;
+			}
 		}
 		
 		if(g_powerUp_initialization_complete)
@@ -773,6 +778,14 @@ int main(void)
 		{
 			g_antenna_connection_changed = false;
 			/* Take appropriate action here */
+			if(g_antenna_connect_state == ANT_DISCONNECTED)
+			{
+				inhibitRFOutput(true);
+			}
+			else if(g_event_enabled)
+			{
+				inhibitRFOutput(false);
+			}
 		}
 		
 		/********************************
@@ -1921,15 +1934,16 @@ bool __attribute__((optimize("O0"))) eventEnabled()
 
 	if((dif >= 0) && runsFinite) /* Event has already finished */
 	{
-		g_sleepType = SLEEP_FOREVER;
+		g_sleepType = SLEEP_AFTER_WIFI_GOES_OFF;
 		g_seconds_to_sleep = MAX_TIME;
-		g_go_to_sleep_now = true;
+		g_go_to_sleep_now = false;
+		g_wifi_enable_delay = 2;
 		return( false); /* completed events are never enabled */
 	}
 
 	dif = timeDif(now, g_event_start_epoch);
 
-	if(dif >= -60)  /* Running events are always enabled */
+	if(dif >= -15)  /* Don't sleep if the next transmission starts in 15 seconds or less */
 	{
 		if((g_sleepType != SLEEP_UNTIL_NEXT_XMSN) && g_go_to_sleep_now)
 		{
@@ -1942,7 +1956,7 @@ bool __attribute__((optimize("O0"))) eventEnabled()
 
 	/* If we reach here, we have an event that has not yet started, and a sleep time needs to be calculated
 	 * consider if there is time for sleep prior to the event start */
-	g_seconds_to_sleep = (-dif) - 60;   /* sleep until 60 seconds before the start time */
+	g_seconds_to_sleep = (-dif) - 5;   /* sleep until 5 seconds before the start time */
 	g_sleepType = SLEEP_UNTIL_START_TIME;
 	g_go_to_sleep_now = true;
 

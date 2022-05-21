@@ -66,28 +66,27 @@ typedef int16_t Attenuation;
 
 /**
  */
-	void shutdown_transmitter(void);
+ void shutdown_transmitter(void);
 	
 /**
  */
-	EC init_transmitter(void);
+ EC init_transmitter(void);
 
 /**
  */
-	EC txSetParameters(uint16_t* power_mW, bool* enableDriverPwr);
+ EC txSetParameters(uint16_t* power_mW, bool* setEnabled);
 
 /**
  */
-	bool txSetFrequency(Frequency_Hz *freq, bool leaveClockOff);
+ bool txSetFrequency(Frequency_Hz *freq, bool leaveClockOff);
 
 /**
  */
-	Frequency_Hz txGetFrequency(void);
+ Frequency_Hz txGetFrequency(void);
 	
 /**
  */
-	uint16_t txGetPowerMw(void);
-
+ uint16_t txGetPowerMw(void);
 
 /**
  */
@@ -99,7 +98,15 @@ EC powerToTransmitter(bool on);
 
 /**
  */
-EC txMilliwattsToSettings(uint16_t* powerMW, uint16_t* powerLevel, uint8_t* modLevelHigh, uint8_t* modLevelLow);
+EC txMilliwattsToSettings(uint16_t* powerMW, uint16_t* powerLevel);
+
+/*
+ * Inhibits (or not) RF power from reaching the antenna connector by turning off power to the FET driver and final output FET drain.
+ * When called with inhibit=false the function sets both settings to the values that they had when the function was called with inhibit=true with any
+ * changes that might have been applied during the time that inhibit was in effect.
+ * This is used in instances such as when the antenna is disconnected and reconnected.
+ */
+void inhibitRFOutput(bool inhibit);
 
 
 #endif  /* TRANSMITTER_H_ */
