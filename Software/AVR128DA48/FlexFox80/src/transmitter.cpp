@@ -42,9 +42,9 @@ volatile Frequency_Hz g_rtty_offset = EEPROM_RTTY_OFFSET_FREQUENCY_DEFAULT;
 static volatile bool g_transmitter_keyed = false;
 volatile bool g_tx_power_is_zero = true;
 
-static volatile static bool g_drain_voltage_enabled = false;
-static volatile static bool g_fet_driver_enabled = false;
-static volatile static bool g_rf_output_inhibited = false;		
+static volatile bool g_drain_voltage_enabled = false;
+static volatile bool g_fet_driver_enabled = false;
+static volatile bool g_rf_output_inhibited = false;		
 
 uint16_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
 
