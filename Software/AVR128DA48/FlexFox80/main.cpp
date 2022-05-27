@@ -1496,12 +1496,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 								{
 									SC status = STATUS_CODE_IDLE;
 									g_last_error_code = launchEvent(&status);
-									
-									if(g_go_to_sleep_now && g_sleepType)
-									{
-										g_sleepType = SLEEP_AFTER_WIFI_GOES_OFF;
-										g_go_to_sleep_now = false;
-									}
+									g_wifi_enable_delay = 2; /* Ensure WiFi is enabled and countdown is reset */
 								}
 
 								g_WiFi_shutdown_seconds = 60;
@@ -1514,8 +1509,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 				}
 				else if(f1 == '0')  /* Stop continuous transmit (if enabled) and prepare to receive new event data */
 				{
-//					suspendEvent();
-					/* Restore saved event settings */
+					suspendEvent();
 					new_event_parameter_count = 0;
 					event_parameter_commands_rcvd_count = 0;
 					g_last_status_code = STATUS_CODE_RECEIVING_EVENT_DATA;
