@@ -182,8 +182,6 @@ typedef enum
 #define SOCK_COMMAND_TX_ROLE "TX_ROLE"
 #define SOCK_COMMAND_EXECUTE_EVENT "EXECUTE"
 #define SOCK_COMMAND_REFRESH "REFRESH"
-#define SOCK_COMMAND_KEY_DOWN "KEY_DOWN"
-#define SOCK_COMMAND_KEY_UP "KEY_UP"
 #define SOCK_COMMAND_WIFI_OFF "WIFI_OFF"
 #define SOCK_COMMAND_PASSTHRU "PASS"
 #define SOCK_COMMAND_MASTER "MASTER"
@@ -192,6 +190,10 @@ typedef enum
 #define SOCK_COMMAND_FILE_DATA "FDAT"
 #define SOCK_COMMAND_SLAVE_UPDATE_SUCCESS "SUS"
 #define SOCK_COMMAND_SLAVE_UPDATE_ERROR "SUE"
+#define SOCK_COMMAND_XMIT_NOW "XMIT"
+#define SOCK_COMMAND_PREP4DATA "PREP"
+#define SOCK_COMMAND_KEY_DOWN "KEY_DOWN"
+#define SOCK_COMMAND_KEY_UP "KEY_UP"
 
 #define SLAVE_FREE "0"
 #define SLAVE_CONFIRMED "1"
@@ -244,10 +246,14 @@ typedef enum
 #define LB_MESSAGE_TIME_INTERVAL_SETD "$T,D,"       /* Prefix for sending time interval (sec) for time-slot delay to ATMEGA */
 #define LB_MESSAGE_TIME_INTERVAL_SETID "$T,I,"      /* Prefix for sending time interval (sec) for station identification to ATMEGA */
 #define LB_MESSAGE_WIFI_COMS_OFF "$WI,2;"           /* Tell ATMEGA to disable linkbus to support ESP8266 programming (no exit without power cycle) */
-#define LB_MESSAGE_KEY_DOWN "$GO,1;"                /* Tell ATMEGA to key transmitter continuously */
+#define LB_MESSAGE_XMIT_NOW "$GO,1;"                /* Tell ATMEGA to immediately commence transmissions */
 #define LB_MESSAGE_ACTIVATE_EVENT "$GO,2;"          /* Tell ATMEGA to execute the event as it has been configured */
-#define LB_MESSAGE_KEY_UP "$GO,0;"                  /* Tell ATMEGA to stop continuous transmit */
+#define LB_MESSAGE_PREP4DATA "$GO,0;"               /* Tell ATMEGA to prepare to receive event data */
 #define LB_MESSAGE_WIFI_OFF "$WI,0;"                /* Tell ATMEGA to power off WiFi */
+
+#define LB_MESSAGE_KEY_DOWN "$KEY,[;"               /* Tell ATMEGA to key transmitter continuously */
+#define LB_MESSAGE_KEY_UP "$KEY,];"                 /* Tell ATMEGA to key transmitter continuously */
+#define LB_MESSAGE_KEY "$KEY,"                      /* Tell ATMEGA to key transmitter continuously */
 
 typedef enum
 {

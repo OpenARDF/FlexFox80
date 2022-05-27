@@ -315,7 +315,7 @@
                 }, 1500);
             } else {
                 btn.value = "Xmit";
-                var btext = "KEY_UP";
+                var btext = "PREP";
                 btn.setAttribute("style", "background-color: #4CAF50;");
                 console.log(btext);
                 sendToSocket(btext);
@@ -1406,7 +1406,7 @@
         }
 
         function sendKeyDown() {
-            var btext = "KEY_DOWN";
+            var btext = "XMIT";
             console.log(btext);
             sendToSocket(btext);
         }
@@ -2231,7 +2231,7 @@
         <h1 id="mainHeading" style="font-family:verdana; font-size:30px; color:Black; text-align:center;">Transmitter Test</h1>
         <p id="wifiVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
         <p id="ATMEGAVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
-        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">test.html Version: 0.8 - 29 Jul 2020</p>
+        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">test.html Version: 0.81 - 27 May 2022</p>
 
         <div>
             <table>

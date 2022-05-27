@@ -3818,7 +3818,7 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_CLEAR_ACTIVE_EVENT))
           {
-            g_LBOutputBuff->put(LB_MESSAGE_KEY_UP);
+            g_LBOutputBuff->put(LB_MESSAGE_PREP4DATA);
             if (g_activeEvent)
             {
               delete(g_activeEvent);
@@ -4083,14 +4083,14 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
             }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
           }
-          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_KEY_DOWN))
+          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_XMIT_NOW))
           {
-            String msgOut = String(LB_MESSAGE_KEY_DOWN);
+            String msgOut = String(LB_MESSAGE_XMIT_NOW);
             g_LBOutputBuff->put(msgOut);
           }
-          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_KEY_UP))
+          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_PREP4DATA))
           {
-            String msgOut = String(LB_MESSAGE_KEY_UP);
+            String msgOut = String(LB_MESSAGE_PREP4DATA);
             g_LBOutputBuff->put(msgOut);
           }
           else if (msgHeader == SOCK_COMMAND_WIFI_OFF)
@@ -5237,7 +5237,7 @@ bool sendEventToATMEGA(String * errorTxt)
     {
       case 0: /* Prepare ATMEGA to receive event data */
         {
-          g_LBOutputBuff->put(LB_MESSAGE_KEY_UP);
+          g_LBOutputBuff->put(LB_MESSAGE_PREP4DATA);
         }
         break;
 
