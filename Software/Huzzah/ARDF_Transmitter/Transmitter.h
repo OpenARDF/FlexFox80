@@ -192,8 +192,8 @@ typedef enum
 #define SOCK_COMMAND_SLAVE_UPDATE_ERROR "SUE"
 #define SOCK_COMMAND_XMIT_NOW "XMIT"
 #define SOCK_COMMAND_PREP4DATA "PREP"
-#define SOCK_COMMAND_KEY_DOWN "KEY_DOWN"
-#define SOCK_COMMAND_KEY_UP "KEY_UP"
+#define SOCK_COMMAND_KEYDOWN "KEY_DOWN"
+#define SOCK_COMMAND_KEYUP "KEY_UP"
 
 #define SLAVE_FREE "0"
 #define SLAVE_CONFIRMED "1"
@@ -251,8 +251,8 @@ typedef enum
 #define LB_MESSAGE_PREP4DATA "$GO,0;"               /* Tell ATMEGA to prepare to receive event data */
 #define LB_MESSAGE_WIFI_OFF "$WI,0;"                /* Tell ATMEGA to power off WiFi */
 
-#define LB_MESSAGE_KEY_DOWN "$KEY,[;"               /* Tell ATMEGA to key transmitter continuously */
-#define LB_MESSAGE_KEY_UP "$KEY,];"                 /* Tell ATMEGA to key transmitter continuously */
+#define LB_MESSAGE_KEYDOWN "$KEY,[;"                /* Tell ATMEGA to key transmitter continuously */
+#define LB_MESSAGE_KEYUP "$KEY,];"                  /* Tell ATMEGA to key transmitter continuously */
 #define LB_MESSAGE_KEY "$KEY,"                      /* Tell ATMEGA to key transmitter continuously */
 
 typedef enum
