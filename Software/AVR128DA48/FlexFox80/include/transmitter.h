@@ -96,6 +96,10 @@ void keyTransmitter(bool on);
  */
 EC powerToTransmitter(bool on);
 
+/** 
+ */
+void txKeyDown(bool key);
+
 /**
  */
 EC txMilliwattsToSettings(uint16_t* powerMW, uint16_t* powerLevel);

@@ -48,7 +48,7 @@ bool makeMorse(char* s, bool* repeating, bool* finished)
 	static uint8_t symbolIndex;     /* dits and dahs */
 	static uint8_t elementIndex;    /* units of time: dit = 1, dah = 3, intersymbol = 1, intercharacter = 3, etc. */
 	static uint8_t addedSpace;      /* adds additional time to make an inter-character space */
-	static bool completedString = false;
+	static bool completedString = true;
 	static bool carrierOn = false;
 	static bool holdKeyDown = false;
 
@@ -634,11 +634,19 @@ MorseCharacter getMorseChar(char c)
 		}
 		break;
 
-		case '+':
+		case '+': /* AR */
 		{
 			morse.pattern = 0x0a;   /* 0000 1010; */
 			morse.lengthInSymbols = 5;
 			morse.lengthInElements = 13;
+		}
+		break;
+
+		case '~': /* SK */
+		{
+			morse.pattern = 0x28;   /* 0010 1000; */
+			morse.lengthInSymbols = 6;
+			morse.lengthInElements = 15;
 		}
 		break;
 

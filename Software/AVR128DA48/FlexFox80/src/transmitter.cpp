@@ -90,6 +90,14 @@ void final_drain_voltage(bool state);
 		return(ERROR_CODE_NO_ERROR);
 	}
 	
+	void txKeyDown(bool key)
+	{
+		if(g_tx_initialized)
+		{
+			keyTransmitter(key);
+		}
+	}
+	
 	void fet_driver(bool state)
 	{
 		g_fet_driver_enabled = state;

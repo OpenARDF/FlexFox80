@@ -423,6 +423,7 @@ void linkbus_Rx(uint8_t rx_char)
 	static uint8_t field_len = 0;
 	static uint32_t tempMsg_ID = 0;
 	static bool receiving_msg = false;
+	static bool escapeNext = false;
 
 	if(!buff)
 	{
@@ -432,8 +433,12 @@ void linkbus_Rx(uint8_t rx_char)
 	if(buff)
 	{
 		rx_char = toupper(rx_char);
-
-		if((rx_char == '$') || (rx_char == '!'))    /* start of new message = $ */
+		
+		if(!escapeNext && (rx_char == '\\'))
+		{
+			escapeNext = true;
+		}
+		else if(!escapeNext && ((rx_char == '$') || (rx_char == '!')))    /* start of new message = $ */
 		{
 			charIndex = 0;
 			buff->type = (rx_char == '!') ? LINKBUS_MSG_REPLY : LINKBUS_MSG_COMMAND;
@@ -451,7 +456,7 @@ void linkbus_Rx(uint8_t rx_char)
 		}
 		else if(receiving_msg)
 		{
-			if((rx_char == ',') || (rx_char == ';') || (rx_char == '?'))    /* new field = ,; end of message = ; */
+			if(!escapeNext && ((rx_char == ',') || (rx_char == ';') || (rx_char == '?')))   /* new field = ,; end of message = ; */
 			{
 				/* if(field_index == 0) // message ID received */
 				if(field_index > 0)
@@ -495,6 +500,8 @@ void linkbus_Rx(uint8_t rx_char)
 				{
 					buff->fields[field_index - 1][field_len++] = rx_char;
 				}
+				
+				escapeNext = false;
 			}
 		}
 		else if(rx_char == 0x0D)    /* Carriage return resets any message in progress */
@@ -507,10 +514,13 @@ void linkbus_Rx(uint8_t rx_char)
 			buff = NULL;
 		}
 
-		if(++charIndex >= LINKBUS_MAX_MSG_LENGTH)
+		if(!escapeNext)
 		{
-			receiving_msg = false;
-			charIndex = 0;
+			if(++charIndex >= LINKBUS_MAX_MSG_LENGTH)
+			{
+				receiving_msg = false;
+				charIndex = 0;
+			}
 		}
 	}
 }

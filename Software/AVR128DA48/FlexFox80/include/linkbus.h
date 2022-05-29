@@ -115,6 +115,7 @@ typedef enum
 	LB_MESSAGE_GO = 'G' * 10 + 'O',					/* Start transmitting now without delay */
 
 	/* UTILITY MESSAGES */
+	LB_MESSAGE_KEY = 'K' * 100 + 'E' * 10 + 'Y',		/* Key down/up */
 	LB_MESSAGE_RESET = 'R' * 100 + 'S' * 10 + 'T',		/* Processor reset */
 	LB_MESSAGE_WIFI = 'W' * 10 + 'I',					/* Enable/disable WiFi */
 	LB_INVALID_MESSAGE = MAX_UINT16					/* This value must never overlap a valid message ID */

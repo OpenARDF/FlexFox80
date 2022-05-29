@@ -219,6 +219,9 @@
     <Compile Include="include\ccp.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="include\CircularStringBuff.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="include\clkctrl.h">
       <SubType>compile</SubType>
     </Compile>
@@ -298,6 +301,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\bod.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\CircularStringBuff.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\clkctrl.cpp">
