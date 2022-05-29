@@ -357,7 +357,7 @@ String connectionStatus( int which )
   =============================================================== */
 void handleRoot()
 {
-  g_http_server.send(200, "text/html", "<h2 style=\"font-family:verdana; font-size:30px; color:Black; text-align:left;\">Options</h2><p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Configure events: <a href=\"/events.html\">73.73.73.73/events.html</a></p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Upload a file: <a href=\"/upload.html\">73.73.73.73/upload.html</a></p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Download a file: <a href=\"/download.html\">73.73.73.73/download.html</a></p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Delete a file: <a href=\"/delete.html\">73.73.73.73/delete.html</a> <- Use with caution!</p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Testing support: <a href=\"/test.html\">73.73.73.73/test.html</a></p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Manual Mode: <a href=\"/test.html\">73.73.73.73/manual.html</a></p> <p style=\"font-size:12\">ESP8266 SW Date: 27-May-2022</p> ");
+  g_http_server.send(200, "text/html", "<h2 style=\"font-family:verdana; font-size:30px; color:Black; text-align:left;\">Options</h2><p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Configure events: <a href=\"/events.html\">73.73.73.73/events.html</a></p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Upload a file: <a href=\"/upload.html\">73.73.73.73/upload.html</a></p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Download a file: <a href=\"/download.html\">73.73.73.73/download.html</a></p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Delete a file: <a href=\"/delete.html\">73.73.73.73/delete.html</a> <- Use with caution!</p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Testing support: <a href=\"/test.html\">73.73.73.73/test.html</a></p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Manual Mode: <a href=\"/manual.html\">73.73.73.73/manual.html</a></p> <p style=\"font-size:12\">ESP8266 SW Date: 27-May-2022</p> ");
 }
 
 void handleFS()
@@ -3968,6 +3968,19 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
                 g_LBOutputBuff->put(msgOut);
               }
             }
+          }
+          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_CWSPEED))
+          {
+              String speed;
+              int lastComma = p.lastIndexOf(',');
+              speed = p.substring(lastComma + 1);
+              int spd = speed.toInt();
+              
+              if((spd > 4) && (spd < 21))
+              {
+                String msgOut = String(LB_MESSAGE_CODE_SPEED_SETPAT + speed + ";");
+                g_LBOutputBuff->put(msgOut);
+              }
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_BAND))
           {

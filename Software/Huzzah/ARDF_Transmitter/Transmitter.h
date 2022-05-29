@@ -195,6 +195,8 @@ typedef enum
 #define SOCK_COMMAND_KEYDOWN "KEY_DOWN"
 #define SOCK_COMMAND_KEYUP "KEY_UP"
 
+#define SOCK_COMMAND_CWSPEED "SPEED"
+
 #define SLAVE_FREE "0"
 #define SLAVE_CONFIRMED "1"
 #define SLAVE_CONNECT "C"

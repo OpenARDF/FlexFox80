@@ -1460,7 +1460,8 @@
                 if (g_websock != null) {
                     console.log("Socket not ready. Command delayed.", g_websock, g_websock.readyState);
                 } else {
-                    console.log("Socket null. Command delayed.");
+                    console.log("Socket null. Restarting.");
+                    webSocketStart();
                 }
 
                 setTimeout(function() {
