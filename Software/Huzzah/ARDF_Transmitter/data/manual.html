@@ -196,7 +196,6 @@
         var g_eventRadioBand = "";
         var g_timedOut = false;
 
-        var g_freq1FrequencyHz = "";
         var g_lastFreqTime = 0;
         var g_webSocketTxFreqTimer = 0;
 
@@ -224,7 +223,6 @@
         var g_eventTableData = [{
             power: "Power",
             modulation: "CW Speed",
-            band: "Band",
             freq: "Frequency",
             pattern: "Text",
             callsign: "ID",
@@ -237,20 +235,167 @@
         var g_radioBandType = ["80", "2"];
         var g_morseSpeed = ["5", "8", "12", "15", "18", "20"];
 
-        var g_typeFrequency = [{
-            frequency: 3565000,
-            role: "80m"
-        }, {
-            frequency: 144550000,
-            role: "2m"
-        }]; /* Frequency used by transmitters in that "role" */
-
         var g_selectedEvent = "";
         var g_powerLevel = g_powerLevels_80m[0];
         var g_eventRadioBand = g_radioBandType[0];
-        var g_cwSpeed = g_morseSpeed[5];
+        var g_cwSpeed = "8";
+        var g_freq1FrequencyHz = 3600000;
+        var g_userText1 = "CQ FD CQ FD CQ FD DE";
+        var g_userText2 = "GL FD QRZ?";
+        var g_userText3 = "1A NC";
+        var g_userText4 = "QRZ? DE";
+        var g_userText5 = "NZ0I";
 
         ///////////////////////////////
+
+        function setCookie(exdays, cname, value) {
+            const d = new Date();
+            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+            let expires = "expires=" + d.toUTCString();
+            var tag = cname + "=";
+            value = value.toUpperCase();
+            document.cookie = tag + value + ";" + expires + ";path=/";
+        }
+
+        function getCookies() {
+            let success = false;
+            let power = "power=";
+            let freq = "freq=";
+            let wpm = "wpm=";
+            let ut1 = "ut1=";
+            let ut2 = "ut2=";
+            let ut3 = "ut3=";
+            let ut4 = "ut4=";
+            let ut5 = "ut5=";
+
+            let decodedCookie = decodeURIComponent(document.cookie);
+            let ca = decodedCookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(power) == 0) {
+                    g_powerLevel = c.substring(power.length, c.length);
+                    success = true;
+                }
+            }
+
+            if (!success) {
+                setCookie(2.365, "power", g_powerLevel);
+            }
+            success = false;
+
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(freq) == 0) {
+                    g_freq1FrequencyHz = Number(c.substring(freq.length, c.length));
+                    success = true;
+                }
+            }
+            if (!success) {
+                setCookie(2.365, "freq", g_freq1FrequencyHz);
+            }
+            success = false;
+
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(wpm) == 0) {
+                    g_cwSpeed = c.substring(wpm.length, c.length);
+                    success = true;
+                }
+            }
+
+            if (!success) {
+                setCookie(2.365, "wpm", g_cwSpeed);
+            }
+            success = false;
+
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(ut1) == 0) {
+                    g_userText1 = c.substring(ut1.length, c.length);
+                    success = true;
+                }
+            }
+
+            if (!success) {
+                setCookie(2.365, "ut1", g_userText1);
+            }
+            success = false;
+
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(ut2) == 0) {
+                    g_userText2 = c.substring(ut2.length, c.length);
+                    success = true;
+                }
+            }
+
+            if (!success) {
+                setCookie(2.365, "ut2", g_userText2);
+            }
+            success = false;
+
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(ut3) == 0) {
+                    g_userText3 = c.substring(ut3.length, c.length);
+                    success = true;
+                }
+            }
+
+            if (!success) {
+                setCookie(2.365, "ut3", g_userText3);
+            }
+            success = false;
+
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(ut4) == 0) {
+                    g_userText4 = c.substring(ut4.length, c.length);
+                    success = true;
+                }
+            }
+
+            if (!success) {
+                setCookie(2.365, "ut4", g_userText4);
+            }
+            success = false;
+
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(ut5) == 0) {
+                    g_userText5 = c.substring(ut5.length, c.length);
+                    success = true;
+                }
+            }
+
+            if (!success) {
+                setCookie(2.365, "ut5", g_userText5);
+            }
+        }
 
         function displayEvents(erase) {
             var eventNum = g_eventTableData.length;
@@ -279,6 +424,17 @@
                     }
                 }
             }
+
+            var txt = document.getElementById("user1Text");
+            txt.value = g_userText1;
+            txt = document.getElementById("user2Text");
+            txt.value = g_userText2;
+            txt = document.getElementById("user3Text");
+            txt.value = g_userText3;
+            txt = document.getElementById("user4Text");
+            txt.value = g_userText4;
+            txt = document.getElementById("user5Text");
+            txt.value = g_userText5;
         }
 
         function keyDownAction() {
@@ -326,44 +482,25 @@
                 row.appendChild(cell0);
 
                 cell0 = document.createElement("td");
-                cellText = document.createTextNode(rowData.name);
+                cellText = document.createTextNode("Power (mW)");
                 cell0.setAttribute("border", "1px solid black");
                 cell0.appendChild(cellText);
                 row.appendChild(cell0);
 
                 cell0 = document.createElement("td");
-                cellText = document.createTextNode(rowData.version);
+                cellText = document.createTextNode("WPM");
                 cell0.setAttribute("border", "1px solid black");
                 cell0.appendChild(cellText);
                 row.appendChild(cell0);
 
                 cell0 = document.createElement("td");
-                cellText = document.createTextNode(rowData.start);
+                cellText = document.createTextNode("Frequency");
                 cell0.setAttribute("border", "1px solid black");
                 cell0.appendChild(cellText);
                 row.appendChild(cell0);
 
                 cell0 = document.createElement("td");
-                cellText = document.createTextNode(rowData.finish);
-                cell0.setAttribute("border", "1px solid black");
-                cell0.appendChild(cellText);
-                row.appendChild(cell0);
-
-                cell0 = document.createElement("td");
-                cellText = document.createTextNode(rowData.role);
-                cell0.setAttribute("border", "1px solid black");
-                cell0.appendChild(cellText);
-                row.appendChild(cell0);
-
-                cell0 = document.createElement("td");
-                cellText = document.createTextNode(rowData.sleep);
-                cell0.setAttribute("border", "1px solid black");
-                cell0.appendChild(cellText);
-                row.appendChild(cell0);
-
-                cell0 = document.createElement("td");
-                cellText = document.createTextNode("Send Command");
-                cell0.setAttribute("colspan", "2");
+                cellText = document.createTextNode("Type Here");
                 cell0.setAttribute("border", "1px solid black");
                 cell0.appendChild(cellText);
                 row.appendChild(cell0);
@@ -468,42 +605,13 @@
                 cell0.appendChild(sel);
                 row.appendChild(cell0);
 
-
-                // Radio Band 80m or 2m
-                cell0 = document.createElement("td");
-                cell0.setAttribute("border", "1px solid black");
-
-                sel = document.createElement('select'),
-                    option,
-                    i = 0,
-                    il = g_radioBandType.length;
-
-                sel.setAttribute("onchange", "bandClick()");
-                sel.setAttribute("id", "bandSelect");
-                sel.setAttribute("style", "font-family:verdana; font-size:15px; color:blue; font-weight:bold;");
-
-                for (; i < il; i += 1) {
-                    option = document.createElement('option');
-                    option.setAttribute('value', g_radioBandType[i]);
-                    option.appendChild(document.createTextNode(g_radioBandType[i]));
-                    if (g_radioBandType[i] == g_eventRadioBand) {
-                        option.setAttribute("selected", "true");
-                    }
-
-                    sel.appendChild(option);
-                    console.log("Band:", g_radioBandType[i]);
-                }
-
-                cell0.appendChild(sel);
-                row.appendChild(cell0);
-
                 // Set Frequency
                 cell0 = document.createElement("td");
                 var b = document.createElement('input');
                 b.setAttribute("type", "button");
                 b.setAttribute("id", "frequencyButton");
                 b.setAttribute("class", "incbutton");
-                b.setAttribute("value", freqDotFormat(g_typeFrequency[0].frequency));
+                b.setAttribute("value", freqDotFormat(g_freq1FrequencyHz));
                 b.setAttribute("onclick", "toggleFreqSettings();");
                 cell0.appendChild(b);
 
@@ -521,61 +629,20 @@
                 t.setAttribute("placeholder", "_");
                 t.setAttribute("contenteditable", "true");
                 t.setAttribute("value", "");
+
                 t.onkeyup = (function(entry) {
-                    return function() {
-                        sendCharAction();
+                    return function(entry) {
+                        sendCharAction(entry);
+                    }
+                })(entry);
+
+                t.onkeydown = (function(entry) {
+                    return function(entry) {
+                        clearCharsAction(entry);
                     }
                 })(entry);
 
                 cell0.appendChild(t);
-                row.appendChild(cell0);
-
-                // Master Button
-                btn = document.createElement('input');
-                btn.type = "button";
-                btn.className = "button";
-                btn.id = "masterOnOffButton";
-                btn.value = "Slave";
-                btn.onclick = (function(entry) {
-                    return function() {
-                        masterOnOffAction();
-                    }
-                })(entry);
-
-                cell0 = document.createElement("td");
-                cell0.setAttribute("border", "1px solid black");
-                cell0.appendChild(btn);
-                row.appendChild(cell0);
-
-
-                // Linkbus Command Text
-                cell0 = document.createElement("td");
-                cell0.setAttribute("border", "1px solid black");
-                cell0.setAttribute("id", "patternSet");
-                var t = document.createElement("input");
-                t.setAttribute("type", "text");
-                t.setAttribute("id", "commandText");
-                t.setAttribute("style", "font-family:verdana; font-size:15px; font-weight:bold; text-align:center");
-                t.setAttribute("oninput", "commandEntered();");
-                t.setAttribute("placeholder", "linkbus command");
-                t.setAttribute("contenteditable", "true");
-                cell0.appendChild(t);
-                row.appendChild(cell0);
-
-                btn = document.createElement('input');
-                btn.type = "button";
-                btn.className = "button";
-                btn.id = "sendButton";
-                btn.value = "Send";
-                btn.onclick = (function(entry) {
-                    return function() {
-                        sendAction();
-                    }
-                })(entry);
-
-                cell0 = document.createElement("td");
-                cell0.setAttribute("border", "1px solid black");
-                cell0.appendChild(btn);
                 row.appendChild(cell0);
             }
 
@@ -648,18 +715,26 @@
                     setTimeout(function() {
                         sendSocketAlive();
                     }, 250);
+
                     setTimeout(function() {
                         sendToSocket("SSID");
                     }, 500);
+
                     setTimeout(function() {
                         sendToSocket("MAC");
                     }, 750);
+
                     setTimeout(function() {
                         sendToSocket("SW_VERSIONS");
                     }, 1000);
+
                     setTimeout(function() {
                         sendToSocket("MASTER");
                     }, 1250);
+
+                    setTimeout(function() {
+                        sendCookieValues();
+                    }, 1500);
                 }
 
                 g_websock.onclose = function(evt) {
@@ -972,84 +1047,6 @@
                             }
                             break;
 
-                        case "EVENT_NAME":
-                            {
-                                setOverlay(null);
-                                g_selectedEvent = arr[1];
-                                g_typeTxNames = [];
-                                g_typeFrequency = [];
-                                g_selectedTxType = "";
-                                hideFreqSettings();
-
-                                hideFreqSet1();
-                                updateTextFormatting();
-                                //g_eventTableData = [{
-                                //    name: "Event",
-                                //    version: "Ver",
-                                //    start: "Start",
-                                //    finish: "Finish",
-                                //    role: "Fox"
-                                //}];
-                                displayEvents(true);
-                            }
-                            break;
-
-                        case "REFRESH":
-                            {
-                                console.log("Refresh: " + str);
-                                console.log("Parsed data: " + arr[1] + "; " + arr[2] + "; " + arr[3] + "; " + arr[4] + "; " + arr[5] + "; " + arr[6] + "; " + arr[7] + ";");
-                                if (typeof arr[1] == 'undefined') arr[1] = '?';
-                                if (typeof arr[2] == 'undefined') arr[2] = '?';
-                                if (typeof arr[3] == 'undefined') arr[3] = '0';
-                                if (typeof arr[4] == 'undefined') arr[4] = '0';
-                                if (typeof arr[5] == 'undefined') arr[5] = '?';
-                                if (typeof arr[6] == 'undefined') arr[6] = '?';
-                                if (typeof arr[7] == 'undefined') arr[7] = '?';
-
-                                if (arr[1] == "Done") {
-                                    displayEvents(false);
-                                } else {
-                                    var eventLine = {
-                                        name: arr[1],
-                                        version: arr[2],
-                                        start: 1000 * Number(arr[3]),
-                                        finish: 1000 * Number(arr[4]),
-                                        role: arr[5],
-                                        callsign: arr[6],
-                                        freq: arr[7]
-                                    };
-
-                                    //var theEvent = g_eventTableData.find(g_eventTableData => g_eventTableData.name == g_selectedEvent);
-                                    //theEvent.role = g_selectedTxType;
-                                }
-                            }
-                            break;
-
-                        case "EVENT_DATA":
-                            {
-                                console.log("Data: " + str);
-                                console.log("Parsed data: " + arr[1] + "; " + arr[2] + "; " + arr[3] + "; " + arr[4] + "; " + arr[5] + "; " + arr[6] + "; " + arr[7] + ";" + arr[8] + ";");
-                                if (typeof arr[1] == 'undefined') arr[1] = '?';
-                                if (typeof arr[2] == 'undefined') arr[2] = '?';
-                                if (typeof arr[3] == 'undefined') arr[3] = '0';
-                                if (typeof arr[4] == 'undefined') arr[4] = '0';
-                                if (typeof arr[5] == 'undefined') arr[5] = '?';
-                                if (typeof arr[6] == 'undefined') arr[6] = '?';
-                                if (typeof arr[7] == 'undefined') arr[7] = '?';
-                                if (typeof arr[8] == 'undefined') arr[8] = '?';
-
-                                var eventLine = {
-                                    name: arr[1],
-                                    version: arr[2],
-                                    start: 1000 * Number(arr[3]),
-                                    finish: 1000 * Number(arr[4]),
-                                    role: arr[5],
-                                    callsign: arr[6],
-                                    freq: arr[7]
-                                };
-                                g_eventTableData.push(eventLine);
-                            }
-                            break;
 
                         case "TYPE_NAME":
                             {
@@ -1173,44 +1170,14 @@
                             break;
 
                         case "BAND":
-                            {
-                                var eventBand = arr[1];
-                                if (eventBand.indexOf("80") > 0) {
-                                    g_eventRadioBand = "80m";
-                                } else {
-                                    g_eventRadioBand = "2m";
-                                }
-                            }
-                            break;
-
-                        case "START_TIME":
-                            {
-                                applyNewStartTime(arr[1]);
-                            }
-                            break;
-
-                        case "FINISH_TIME":
-                            {
-                                applyNewFinishTime(arr[1]);
-                            }
+                            {}
                             break;
 
                         case "FREQ":
                             {
-                                var freqStr = {
-                                    frequency: arr[1],
-                                    role: arr[2]
-                                };
-                                g_typeFrequency.push(freqStr);
-                                var freq = Number(arr[1]);
-
-                                if ((freq < Number("4000000")) && (freq > Number("3500000"))) {
-                                    g_eventRadioBand = "80m";
-                                } else if ((freq < Number("148000000")) && (freq > Number("144000000"))) {
-                                    g_eventRadioBand = "2m";
-                                }
-
-                                console.log(g_typeFrequency.length, "Freq: ", freqStr);
+                                g_freq1FrequencyHz = Number(arr[1]);
+                                g_eventRadioBand = "80m";
+                                console.log("Freq: ", arr[1]);
                             }
                             break;
 
@@ -1253,6 +1220,7 @@
         function start() {
             console.log("At start of start() function!");
             g_stillConnected = 200;
+            getCookies();
             webSocketStart();
 
             g_selectedEvent = "A";
@@ -1261,36 +1229,15 @@
             g_selectedTxType = "";
             hideFreqSettings();
 
-            var freq = Number(g_typeFrequency[0].frequency);
 
-            if ((freq < Number("4000000")) && (freq > Number("3500000"))) {
-                g_eventRadioBand = "80m";
-            } else if ((freq < Number("148000000")) && (freq > Number("144000000"))) {
-                g_eventRadioBand = "2m";
-            }
-
-            console.log(g_typeFrequency[0].length, "Freq: ", freq);
+            g_eventRadioBand = "80m";
+            console.log("Freq: ", g_freq1FrequencyHz);
 
             hideFreqSet1();
             updateTextFormatting();
-            g_eventTableData = [{
-                name: "Power (mW)",
-                version: "CW Speed",
-                start: "Band",
-                finish: "Frequency",
-                role: "Type Here",
-                sleep: "Master/Slave"
-            }];
+            g_eventTableData = [{}];
 
-            var eventLine = {
-                name: g_powerLevel,
-                version: "B",
-                start: "C",
-                finish: "D",
-                role: "E",
-                callsign: "F",
-                freq: "G"
-            };
+            var eventLine = {};
             g_eventTableData.push(eventLine);
             displayEvents(true);
 
@@ -1395,11 +1342,6 @@
             }, 100);
         }
 
-        function sendRefresh() {
-            sendToSocket("REFRESH");
-            console.log("Refresh message sent to socket.");
-        }
-
         function sendKeyDown() {
             var btext = "KEY_DOWN";
             console.log(btext);
@@ -1412,76 +1354,33 @@
             sendToSocket(btext);
         }
 
-        function sendCall() {
-            var b = document.getElementById("callText");
-            var btext = "";
-            if (b != null) {
-                btext = b.value;
-                btext = "CALLSIGN," + btext;
-                sendToSocket(btext);
-            }
-
-            console.log(btext);
-        }
-
-        function sendPattern() {
-            var b = document.getElementById("patternText");
-            var btext = "";
-            if (b != null) {
-                btext = b.value;
-                btext = "PATTERN," + btext;
-                sendToSocket(btext);
-            }
-
-            console.log(btext);
-        }
-
-        function masterOnOffAction() {
-            var btn = document.getElementById("masterOnOffButton");
-            var btext;
-
-            if (btn != null) {
-                if (btn.value == "Slave") {
-                    btn.value = "Master";
-                    btn.setAttribute("style", "background-color: #FF0000;");
-                    btext = "MASTER,1";
-                } else {
-                    btn.value = "Slave";
-                    btn.setAttribute("style", "background-color: #00FF00;");
-                    btext = "MASTER,0";
-                }
-                console.log(btext);
-                sendToSocket(btext);
-            }
-        }
-
-        function sendAction() {
-            var x = document.getElementById("errorreport");
-            if (x != null) x.style.display = "none";
-
-            x = document.getElementById("statusreport");
-            if (x != null) x.style.display = "none";
-
-            var text = document.getElementById("commandText").value;
-            var btext = "PASS," + text;
-            console.log(btext);
-            sendToSocket(btext);
-        }
-
-        function sendCharAction() {
+        function sendCharAction(e) {
             var needsEscape = /^[,!?$\\]*$/;
             var d = document.getElementById("patternText");
-            var text = d.value;
+            var text = String(e.key);
 
-            if (text.length > 0) {
-                if (text.match(needsEscape)) {
-                    text = "\\" + text;
+            if (text.length < 2) {
+                if (text.length > 0) {
+                    console.log("up: ");
+                    console.log(e);
+                    if (text.match(needsEscape)) {
+                        text = "\\" + text;
+                    }
+                    var btext = "PASS,$KEY," + text + ";";
+                    console.log(btext);
+                    sendToSocket(btext);
                 }
-                var btext = "PASS,$KEY," + text + ";";
-                d.value = "";
-                console.log(btext);
-                sendToSocket(btext);
             }
+        }
+
+        function clearCharsAction(e) {
+            var d = document.getElementById("patternText");
+            console.log("down: ");
+            console.log(e);
+            if (e.key == 'Enter') {
+                d.value = "";
+            }
+
         }
 
         function sendPower() {
@@ -1493,37 +1392,10 @@
                 sendToSocket(msgText);
                 console.log(msgText);
                 g_powerLevel = power;
+                setCookie(2 * 356, "power", g_powerLevel);
             }
         }
 
-
-        function sendBand() {
-            var b = document.getElementById("bandSelect");
-
-            if (b) {
-                var band = b.value;
-                var msgText = "BAND," + band;
-                sendToSocket(msgText);
-                console.log(msgText);
-            }
-        }
-
-        function sendClear() {
-            sendToSocket("CLEAR");
-            console.log("CLEAR");
-        };
-
-
-        function sendModulation() {
-            var m = document.getElementById("modSelect");
-
-            if (m) {
-                var modulation = m.value;
-                var msgText = "MOD," + modulation;
-                sendToSocket(msgText);
-                console.log(msgText);
-            }
-        }
 
         function sendCodeSpeed() {
             var s = document.getElementById("cwSpeedSelect");
@@ -1533,23 +1405,8 @@
                 var msgText = "SPEED," + speed;
                 sendToSocket(msgText);
                 console.log(msgText);
-            }
-        }
-
-        function sendFrequencyForBand() {
-            var f;
-            var b = document.getElementById("bandSelect");
-
-            if (b) {
-                band = b.value;
-                if (band == "80") {
-                    f = g_typeFrequency[0].frequency;
-                } else {
-                    f = g_typeFrequency[1].frequency;
-                }
-                var msgText = "FREQ,0," + f;
-                sendToSocket(msgText);
-                console.log(msgText);
+                g_cwSpeed = speed;
+                setCookie(2 * 356, "wpm", g_cwSpeed);
             }
         }
 
@@ -1568,12 +1425,8 @@
                 console.log(msgText);
                 sendToSocket(msgText);
                 g_lastFreqTime = now;
-
-                if (document.getElementById("bandSelect").value == "80") {
-                    g_typeFrequency[0].frequency = freq;
-                } else {
-                    g_typeFrequency[1].frequency = freq;
-                }
+                g_freq1FrequencyHz = freq;
+                setCookie(2 * 356, "freq", String(g_freq1FrequencyHz));
             } else {
                 console.log("Freq too fast. Delaying send.");
                 g_webSocketTxFreqTimer = setTimeout(function() {
@@ -1583,117 +1436,7 @@
 
         }
 
-        function callSignEntered() {
-            var x = document.getElementById("callText");
-
-            if (x != null) {
-                var callString = x.value;
-                var isValid = false;
-
-                if (hasNumber(callString) && hasAlpha(callString) && (callString.length > 2)) {
-                    x.style.color = "blue";
-                    isValid = true;
-                } else {
-                    x.style.color = "red";
-                }
-
-                if (isValid == true) {
-                    sendCall();
-                }
-            }
-        }
-
-        function patternEntered() {
-            var x = document.getElementById("patternText");
-
-            if (x != null) {
-                var pattern = x.value.toUpperCase();
-                var isValid = false;
-                var valid = /^[0-9a-zA-Z<| ]+$/;
-
-                if (pattern.length > 20) {
-                    pattern = pattern.substr(0, 20);
-                }
-
-                if (pattern.length > 0) {
-                    x.value = pattern;
-                    if (pattern.match(valid)) {
-                        x.style.color = "blue";
-                        isValid = true;
-                    } else {
-                        x.style.color = "red";
-                    }
-                }
-
-                if (isValid == true) {
-                    sendPattern();
-                }
-            }
-        }
-
-        function commandEntered() {
-            var x = document.getElementById("commandText");
-
-            if (x != null) {
-                var command = x.value.toUpperCase();
-                var isValid = false;
-                var valid = /^[0-9a-zA-Z;,!?$ -]+$/;
-                var lastChar = command.substr(command.length - 1);
-
-                if (command.length > 0) {
-                    x.value = command;
-                    if (command.match(valid) && ((command[0] == '$') || (command[0] == '!')) && ((lastChar == ';') || (lastChar == '?'))) {
-                        x.style.color = "blue";
-                        isValid = true;
-                    } else {
-                        x.style.color = "red";
-                    }
-                }
-            }
-        }
-
-        function bandClick() {
-            var btn = document.getElementById("keyButton");
-
-            if ((btn != null) && btn.value != "Key") {
-                var band = document.getElementById("bandSelect");
-
-                if (g_eventRadioBand == "80m") {
-                    band.value = "80";
-                } else {
-                    band.value = "2";
-                }
-            } else {
-                var x = document.getElementById("errorreport");
-                if (x != null) x.style.display = "none";
-
-                x = document.getElementById("statusreport");
-                if (x != null) x.style.display = "none";
-
-                sendBand();
-                var band = document.getElementById("bandSelect").value;
-                var freqButton = document.getElementById("frequencyButton");
-                var modulationSet = document.getElementById("modSelect");
-
-                hideFreqSet1();
-
-                if (band == "80") {
-                    g_eventRadioBand = "80m"
-                    freqButton.value = freqDotFormat(g_typeFrequency[0].frequency);
-                    modulationSet.value = "CW";
-                    g_powerLevel = g_powerLevels_80m[0];
-                } else {
-                    g_eventRadioBand = "2m";
-                    freqButton.value = freqDotFormat(g_typeFrequency[1].frequency);
-                    modulationSet.value = "AM";
-                    g_powerLevel = g_powerLevels_2m[0];
-                }
-
-                updateFreqButtonText();
-                updatePowerLevels();
-                updateModulationSelection();
-            }
-        }
+        function bandClick() {}
 
         function pwrClick() {
             var x = document.getElementById("errorreport");
@@ -1776,44 +1519,6 @@
             }
         }
 
-        function newStartTime() {
-            var msgText = "";
-            var dtText = document.getElementById("datetimeStart");
-            var dt = dtText.value;
-            var local;
-            if (!validateTimeStructure(dt)) {
-                local = Date();
-            } else {
-                local = forceValueToLocalTime(dt);
-            }
-
-            applyNewStartTime(local);
-            var utc = localTimeToUTC(local);
-            msgText = "START_TIME," + utc;
-
-            console.log(msgText);
-            sendToSocket(msgText);
-        }
-
-        function applyNewStartTime(t) {
-            var dtText = document.getElementById("datetimeStart");
-            var local;
-
-            if (t.indexOf("Z") > 0) {
-                local = utcTimeToLocalTime(t);
-            } else {
-                local = new Date(t);
-            }
-
-            var mon = ("0" + (local.getMonth() + 1)).slice(-2);
-            var day = ("0" + local.getDate()).slice(-2);
-            var hour = ("0" + local.getHours()).slice(-2);
-            var min = ("0" + local.getMinutes()).slice(-2);
-            var time = local.getFullYear() + "-" + mon + "-" + day + "T" + hour + ":" + min;
-
-            dtText.value = time;
-        }
-
         function epochToLocalDateTimeFormat(epoch_ms) {
             var local = new Date(epoch_ms);
 
@@ -1826,41 +1531,6 @@
             return timeStr;
         }
 
-        function newFinishTime() {
-            var msgText = "";
-            var dtText = document.getElementById("datetimeFinish");
-            var dt = dtText.value;
-            var local;
-            if (!validateTimeStructure(dt)) {
-                local = Date();
-            } else {
-                local = forceValueToLocalTime(dt);
-            }
-            applyNewFinishTime(local);
-            var utc = localTimeToUTC(local);
-            msgText = "FINISH_TIME," + utc;
-
-            console.log(msgText);
-            sendToSocket(msgText);
-        }
-
-        function applyNewFinishTime(t) {
-            var dtText = document.getElementById("datetimeFinish");
-            var local;
-
-            if (t.indexOf("Z") > 0) {
-                local = utcTimeToLocalTime(t);
-            } else {
-                local = new Date(t);
-            }
-
-            var mon = ("0" + (local.getMonth() + 1)).slice(-2);
-            var day = ("0" + local.getDate()).slice(-2);
-            var hour = ("0" + local.getHours()).slice(-2);
-            var min = ("0" + local.getMinutes()).slice(-2);
-            var time = local.getFullYear() + "-" + mon + "-" + day + "T" + hour + ":" + min;
-            dtText.value = time;
-        }
 
         function hasNumber(myString) {
             return /\d/.test(myString);
@@ -1873,39 +1543,6 @@
         function hasAlphaNumPunc(myString) {
             return /^[-0-9A-Za-z:;,$]+$/.test(myString);
         }
-
-        function statusMessageText(startTimeEpoch, finishTimeEpoch) {
-            var statusMsg;
-            var s = startTimeEpoch;
-            var n = (new Date).getTime();
-            var f = finishTimeEpoch;
-
-            if (s > 946684800000) s /= 1000;
-            if (n > 946684800000) n /= 1000;
-            if (f > 946684800000) f /= 1000;
-
-            if (n > s) {
-                if (n > f) {
-                    statusMsg = "Finished";
-                } else {
-                    statusMsg = "Ongoing";
-                }
-            } else {
-                statusMsg = "Scheduled";
-
-                var del = (s - n) / 60;
-                del = del.toFixed();
-
-                if (del > 10) {
-                    statusMsg = "In " + del + "m";
-                } else {
-                    statusMsg = "Starting";
-                }
-            }
-
-            return statusMsg;
-        }
-
 
         function updateTextFormatting() {
             var callsignText = document.getElementById("callText");
@@ -1938,19 +1575,10 @@
             var freq1 = document.getElementById("freq1Text");
 
             if (freq1) {
-
-                if (g_eventRadioBand == "2m") {
-                    if ((Number(g_freq1FrequencyHz) < 144500000) || (Number(g_freq1FrequencyHz) > 144900000)) {
-                        freq1.style.color = "red";
-                    } else {
-                        freq1.style.color = "blue";
-                    }
+                if ((g_freq1FrequencyHz < 3510000) || (g_freq1FrequencyHz > 3600000)) {
+                    freq1.style.color = "red";
                 } else {
-                    if ((g_freq1FrequencyHz < 3510000) || (g_freq1FrequencyHz > 3600000)) {
-                        freq1.style.color = "red";
-                    } else {
-                        freq1.style.color = "blue";
-                    }
+                    freq1.style.color = "blue";
                 }
             }
 
@@ -1973,11 +1601,7 @@
         function updateFreqButtonText() {
             var freqButton = document.getElementById("frequencyButton");
 
-            if (g_eventRadioBand == "80m") {
-                freqButton.value = freqDotFormat(g_typeFrequency[0].frequency);
-            } else {
-                freqButton.value = freqDotFormat(g_typeFrequency[1].frequency);
-            }
+            freqButton.value = freqDotFormat(g_freq1FrequencyHz);
         }
 
         function updatePowerLevels() {
@@ -2018,32 +1642,6 @@
             }
         }
 
-        function updateModulationSelection() {
-            var modSelect = document.getElementById("modSelect");
-
-            if (modSelect != null) {
-                modSelect.options.length = 0;
-                if (g_eventRadioBand == "80m") {
-                    option = document.createElement('option');
-                    option.setAttribute('value', "CW");
-                    option.appendChild(document.createTextNode("CW"));
-                    modSelect.appendChild(option);
-                } else {
-                    option = document.createElement('option');
-                    option.setAttribute('value', "CW");
-                    option.appendChild(document.createTextNode("CW"));
-                    modSelect.appendChild(option);
-                    option = document.createElement('option');
-                    option.setAttribute('value', "AM");
-                    option.appendChild(document.createTextNode("AM"));
-                    modSelect.appendChild(option);
-                    option.setAttribute("selected", "true");
-                    modSelect.appendChild(option);
-                }
-            }
-        }
-
-
         function freq1Change() {
             var freq = document.querySelector("#freq1");
             var count = document.querySelector(".freq1val");
@@ -2074,20 +1672,9 @@
         ////////////////////////////////////////////////////////////
 
         function incFreq1Click() {
-            var val;
+            var val = g_freq1FrequencyHz + 100;
 
-            if (g_eventRadioBand == "2m") {
-                val = Number(g_freq1FrequencyHz) + 5000;
-
-                g_freq1FrequencyHz = clamp(Number("144000000"), val, Number("148000000"));
-                g_typeFrequency[1].frequency = val;
-            } else {
-                val = Number(g_freq1FrequencyHz) + 100;
-
-                g_freq1FrequencyHz = clamp(Number("3500000"), val, Number("4000000"));
-                g_typeFrequency[0].frequency = val;
-            }
-
+            g_freq1FrequencyHz = clamp(Number("3500000"), val, Number("4000000"));
             updateFreqButtonText();
             freq1String(val)
             sendFreq(val);
@@ -2096,20 +1683,9 @@
         ////////////////////////////////////////////////////////////
 
         function decFreq1Click() {
-            var val;
+            var val = Number(g_freq1FrequencyHz) - 100;
 
-            if (g_eventRadioBand == "2m") {
-                val = Number(g_freq1FrequencyHz) - 5000;
-
-                g_freq1FrequencyHz = clamp(Number("144000000"), val, Number("148000000"));
-                g_typeFrequency[1].frequency = val;
-            } else {
-                val = Number(g_freq1FrequencyHz) - 100;
-
-                g_freq1FrequencyHz = clamp(Number("3500000"), val, Number("4000000"));
-                g_typeFrequency[0].frequency = val;
-            }
-
+            g_freq1FrequencyHz = clamp(Number("3500000"), val, Number("4000000"));
             updateFreqButtonText();
             freq1String(val)
             sendFreq(val);
@@ -2124,26 +1700,13 @@
             var val;
 
             if (f != 0) {
-                if (g_eventRadioBand == "2m") {
-                    if (f < 0) {
-                        val = Number(g_freq1FrequencyHz) - 5000;
-                    } else {
-                        val = Number(g_freq1FrequencyHz) + 5000;
-                    }
-
-                    val = clamp(Number("144000000"), val, Number("148000000"));
-                    g_typeFrequency[1].frequency = val;
+                if (f < 0) {
+                    val = g_freq1FrequencyHz - 100;
                 } else {
-                    if (f < 0) {
-                        val = Number(g_freq1FrequencyHz) - 100;
-                    } else {
-                        val = Number(g_freq1FrequencyHz) + 100;
-                    }
-
-                    val = clamp(Number("3500000"), val, Number("4000000"));
-                    g_typeFrequency[0].frequency = val;
+                    val = g_freq1FrequencyHz + 100;
                 }
 
+                val = clamp(Number("3500000"), val, Number("4000000"));
                 updateFreqButtonText();
                 freq1String(val);
             } else {
@@ -2167,7 +1730,7 @@
 
         function freq1String(myString) {
             var f = document.getElementById("freq1Text");
-            g_freq1FrequencyHz = myString;
+            g_freq1FrequencyHz = Number(myString);
             if (f) f.value = freqDotFormat(myString);
         }
 
@@ -2193,15 +1756,9 @@
 
             showFreqSet1();
 
-            if (g_eventRadioBand == "2m") {
-                freqStr = g_typeFrequency[1].frequency;
-                freq1String(freqStr);
-                document.getElementById("freqSet1Heading").innerHTML = g_typeFrequency[1].role + " Frequency";
-            } else {
-                freqStr = g_typeFrequency[0].frequency;
-                freq1String(freqStr);
-                document.getElementById("freqSet1Heading").innerHTML = g_typeFrequency[0].role + " Frequency";
-            }
+            freqStr = String(g_freq1FrequencyHz);
+            freq1String(freqStr);
+            document.getElementById("freqSet1Heading").innerHTML = freqStr + " Frequency";
         }
 
         function hideFreqSettings() {
@@ -2243,6 +1800,65 @@
 
         ////////////////////////////////////////////////////////////
 
+        function escapeString(str) {
+            var needsEscape = /^[,!?$\\]*$/;
+            var len = str.length;
+            var newString = "";
+
+            for (let i = 0; i < len; i++) {
+                if (str[i].match(needsEscape)) {
+                    newString = newString + '\\' + str[i];
+                } else {
+                    newString = newString + str[i];
+                }
+            }
+            return newString;
+        }
+
+        function sendCookieValues() {
+            sendPower();
+            sendCodeSpeed();
+            var msgText = "FREQ,0," + String(g_freq1FrequencyHz);
+            console.log(msgText);
+            sendToSocket(msgText);
+
+        }
+
+        function sendString1Click() {
+            var text = document.getElementById("user1Text").value;
+            var btext = "PASS,$KEY," + escapeString(text) + ";";
+            console.log(btext);
+            sendToSocket(btext);
+        }
+
+        function sendString2Click() {
+            var text = document.getElementById("user2Text").value;
+            var btext = "PASS,$KEY," + escapeString(text) + ";";
+            console.log(btext);
+            sendToSocket(btext);
+        }
+
+        function sendString3Click() {
+            var text = document.getElementById("user3Text").value;
+            var btext = "PASS,$KEY," + escapeString(text) + ";";
+            console.log(btext);
+            sendToSocket(btext);
+        }
+
+        function sendString4Click() {
+            var text = document.getElementById("user4Text").value;
+            var btext = "PASS,$KEY," + escapeString(text) + ";";
+            console.log(btext);
+            sendToSocket(btext);
+        }
+
+        function sendString5Click() {
+            var text = document.getElementById("user5Text").value;
+            var btext = "PASS,$KEY," + escapeString(text) + ";";
+            console.log(btext);
+            sendToSocket(btext);
+        }
+
     </script>
 
 
@@ -2255,7 +1871,7 @@
         <h1 id="mainHeading" style="font-family:verdana; font-size:30px; color:Black; text-align:center;">Transmitter Test</h1>
         <p id="wifiVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
         <p id="ATMEGAVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
-        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">test.html Version: 0.81 - 27 May 2022</p>
+        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">test.html Version: 0.81 - 30 May 2022</p>
 
         <div>
             <table>
@@ -2311,40 +1927,91 @@
 
             <table border="1" id="eventTable"></table>
 
-
-        </div>
-
-        <div id="freqSet1" style="display:none;">
-            <h4 id="freqSet1Heading" style="font-family:verdana; font-size:20px; font-weight:bold; text-align:center">Fox Frequency</h4>
-
+            <h4 id="userStringsHeading" style="font-family:verdana; font-size:18px; font-weight:bold; text-align:center">User Defined Strings</h4>
             <table>
-                <tr>
-                    <td>
-                        <button id="FreqDownButton" class="decbutton" onclick="decFreq1Click();">DEC</button>
-                    </td>
-
-                    <td>
-                        <input type="text" style="font-family:verdana; font-size:20px; font-weight:bold; text-align:center" id="freq1Text" name="freq1Text" value="" readonly="readonly" />
-                    </td>
-
-                    <td style="width:14.4px; text-align: left">
-                        <button id="FreqUpButton" class="incbutton" onclick="incFreq1Click();">INC</button>
-                    </td>
-                </tr>
-            </table>
-
-            <div>
-                <span class="freq1val" style="text-align:center; color:black"></span>
-
                 <table>
                     <tr>
-                        <td></td>
+                        <td>
+                            <input type="text" style="font-family:verdana; font-size:20px; font-weight:bold; text-align:center" id="user1Text" name="user1Text" value=" " onchange="setCookie(2 * 365, 'ut1', value);" />
+                        </td>
 
-                        <td style="width:400px; text-align:center">
-                            <input style="font-family:verdana; font-size:20px; width:400px; text-align:center; color:black; font-weight:bold;" type="range" name="freq1" id="freq1" min="-100" max="100" step="1" value="0" oninput="freq1Change();" />
+                        <td style="width:14.4px; text-align: left">
+                            <button id="sendUserText1" class="button" onclick="sendString1Click();">SEND</button>
+                        </td>
+
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="text" style="font-family:verdana; font-size:20px; font-weight:bold; text-align:center" id="user2Text" name="user2Text" value=" " onchange="setCookie(2 * 365, 'ut2', value);" />
+                        </td>
+
+                        <td style="width:14.4px; text-align: left">
+                            <button id="sendUserText2" class="button" onclick="sendString2Click();">SEND</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="text" style="font-family:verdana; font-size:20px; font-weight:bold; text-align:center" id="user3Text" name="user3Text" value=" " onchange="setCookie(2 * 365, 'ut3', value);" />
+                        </td>
+
+                        <td style="width:14.4px; text-align: left">
+                            <button id="sendUserText3" class="button" onclick="sendString3Click();">SEND</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="text" style="font-family:verdana; font-size:20px; font-weight:bold; text-align:center" id="user4Text" name="user4Text" value=" " onchange="setCookie(2 * 365, 'ut4', value);" />
+                        </td>
+
+                        <td style="width:14.4px; text-align: left">
+                            <button id="sendUserText4" class="button" onclick="sendString4Click();">SEND</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="text" style="font-family:verdana; font-size:20px; font-weight:bold; text-align:center" id="user5Text" name="user5Text" value=" " onchange="setCookie(2 * 365, 'ut5', value);" />
+                        </td>
+
+                        <td style="width:14.4px; text-align: left">
+                            <button id="sendUserText5" class="button" onclick="sendString5Click();">SEND</button>
                         </td>
                     </tr>
                 </table>
+            </table>
+
+            <div id="freqSet1" style="display:none;">
+                <h4 id="freqSet1Heading" style="font-family:verdana; font-size:20px; font-weight:bold; text-align:center">Fox Frequency</h4>
+
+                <table>
+                    <tr>
+                        <td>
+                            <button id="FreqDownButton" class="decbutton" onclick="decFreq1Click();">DEC</button>
+                        </td>
+
+                        <td>
+                            <input type="text" style="font-family:verdana; font-size:20px; font-weight:bold; text-align:center" id="freq1Text" name="freq1Text" value="" readonly="readonly" />
+                        </td>
+
+                        <td style="width:14.4px; text-align: left">
+                            <button id="FreqUpButton" class="incbutton" onclick="incFreq1Click();">INC</button>
+                        </td>
+                    </tr>
+                </table>
+
+                <div>
+                    <span class="freq1val" style="text-align:center; color:black"></span>
+
+                    <table>
+                        <tr>
+                            <td></td>
+
+                            <td style="width:400px; text-align:center">
+                                <input style="font-family:verdana; font-size:20px; width:400px; text-align:center; color:black; font-weight:bold;" type="range" name="freq1" id="freq1" min="-100" max="100" step="1" value="0" oninput="freq1Change();" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
             </div>
         </div>
 
