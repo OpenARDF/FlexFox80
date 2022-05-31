@@ -133,7 +133,7 @@ volatile uint16_t g_switch_closed_count = 0;
 volatile bool g_long_button_press = false;
 
 leds LEDS = leds();
-#define TEXT_BUFF_SIZE 20
+#define TEXT_BUFF_SIZE 50
 CircularStringBuff g_text_buff = CircularStringBuff(TEXT_BUFF_SIZE);
 
 EepromManager g_ee_mgr;
@@ -142,6 +142,8 @@ Fox_t g_fox = FOX_1;
 int8_t g_utc_offset;
 uint8_t g_unlockCode[8];
 bool g_use_rtc_for_startstop = false;
+
+volatile bool g_enable_manual_transmissions = true;
 
 /***********************************************************************
  * Private Function Prototypes
@@ -509,7 +511,7 @@ ISR(TCB0_INT_vect)
 				}
 			}
 		}
-		else /* Handle single-character transmissions */
+		else if(g_enable_manual_transmissions) /* Handle single-character transmissions */
 		{
 			static bool charFinished = true;
 			static bool idle = true;
@@ -1463,16 +1465,26 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 				
 				if(lb_buff->fields[LB_MSG_FIELD1][0])
 				{
-					int lenstr = strlen(lb_buff->fields[LB_MSG_FIELD1]);
+					char* str = lb_buff->fields[LB_MSG_FIELD1];
+					int lenstr = strlen(str);
+					bool hold = g_enable_manual_transmissions;
 					
-					if(lenstr > 1)
+					if((lenstr == 2) && (str[0] == '\\') && (str[1] == 'B')) /* backspace */
+					{
+						g_enable_manual_transmissions = false; /* simple thread collision avoidance */
+						g_text_buff.pop();
+						g_enable_manual_transmissions = hold;
+					}
+					else if(lenstr > 1)
 					{
 						int i = 0;
 						
+						g_enable_manual_transmissions = false; /* simple thread collision avoidance */
 						while(!g_text_buff.full() && i<lenstr && i<LINKBUS_MAX_MSG_FIELD_LENGTH)
 						{
 							g_text_buff.put(lb_buff->fields[LB_MSG_FIELD1][i++]);
 						}
+						g_enable_manual_transmissions = hold;
 					}
 					else
 					{
@@ -1492,7 +1504,9 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 						}
 						else
 						{
+							g_enable_manual_transmissions = false; /* simple thread collision avoidance */
 							g_text_buff.put(c);
+							g_enable_manual_transmissions = hold;
 						}
 					}
 				}

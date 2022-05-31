@@ -33,6 +33,7 @@ class CircularStringBuff {
     bool full(void) const;
     size_t capacity(void) const;
     size_t size(void) const;
+	char pop(void);
 
   private:
 	int head_;

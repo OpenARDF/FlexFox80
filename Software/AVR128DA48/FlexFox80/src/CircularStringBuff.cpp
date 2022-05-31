@@ -78,6 +78,9 @@ size_t CircularStringBuff::size() const
   return (size);
 }
 
+/** 
+ * Place another item in the buffer
+ */
 void CircularStringBuff::put(char item)
 {
   buf_[head_] = item;
@@ -92,6 +95,35 @@ void CircularStringBuff::put(char item)
   full_ = head_ == tail_;
 }
 
+/** 
+ * Return the last put item and remove it from the buffer
+ */
+char CircularStringBuff::pop()
+{
+  if (empty())
+  {
+	  return ('\0');
+  }
+
+  /*Read data and decrement the head (we now have one more free space) */
+  char val = buf_[head_];
+  if(head_) 
+  {
+	  head_--;
+  }
+  else
+  {
+	  head_ = (max_size_-1);
+  }
+  
+  full_ = false;
+
+  return (val);
+}
+
+/** 
+ * Return the FIFO entry and delete it from the buffer
+ */
 char CircularStringBuff::get()
 {
   if (empty())
