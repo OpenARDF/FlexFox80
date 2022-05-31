@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <head>
     <title>Radio Mode</title>
@@ -210,7 +211,7 @@
         var g_timesync_rcvd = 0;
         var g_webSocketAliveTimer = 0;
 
-        var g_eventIsRunning = false;
+        var g_radio_initialized = false;
 
         ///////////////////////////////
         // Settings
@@ -240,11 +241,11 @@
         var g_eventRadioBand = g_radioBandType[0];
         var g_cwSpeed = "8";
         var g_freq1FrequencyHz = 3600000;
-        var g_userText1 = "CQ FD CQ FD CQ FD DE";
-        var g_userText2 = "GL FD QRZ?";
-        var g_userText3 = "1A NC";
-        var g_userText4 = "QRZ? DE";
-        var g_userText5 = "NZ0I";
+        var g_userText1 = "73";
+        var g_userText2 = "73";
+        var g_userText3 = "73";
+        var g_userText4 = "73";
+        var g_userText5 = "73";
 
         ///////////////////////////////
 
@@ -253,7 +254,9 @@
             d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
             let expires = "expires=" + d.toUTCString();
             var tag = cname + "=";
-            value = value.toUpperCase();
+            if (typeof value === 'string' || value instanceof String) {
+                value = value.toUpperCase();
+            }
             document.cookie = tag + value + ";" + expires + ";path=/";
         }
 
@@ -728,13 +731,12 @@
                         sendToSocket("SW_VERSIONS");
                     }, 1000);
 
-                    setTimeout(function() {
-                        sendToSocket("MASTER");
-                    }, 1250);
-
-                    setTimeout(function() {
-                        sendCookieValues();
-                    }, 1500);
+                    if (!g_radio_initialized) {
+                        g_radio_initialized = true;
+                        setTimeout(function() {
+                            sendCookieValuesToRadio();
+                        }, 1250);
+                    }
                 }
 
                 g_websock.onclose = function(evt) {
@@ -1115,7 +1117,7 @@
                             {
                                 var t = "MAC: " + arr[1];
                                 document.getElementById("macAddress").innerHTML = t;
-                                console.log(t);
+                                //                                console.log(t);
                             }
                             break;
 
@@ -1123,7 +1125,7 @@
                             {
                                 var t = "Battery: " + arr[1];
                                 document.getElementById("batteryLevel").innerHTML = t;
-                                //              console.log(t);
+                                console.log(t);
                             }
                             break;
 
@@ -1137,7 +1139,7 @@
 
                         case "SSID":
                             {
-                                var t = arr[1] + ": Transmitter";
+                                var t = arr[1] + ": QRP Transmitter";
                                 document.getElementById("mainHeading").innerHTML = t;
                                 console.log(t);
                             }
@@ -1254,7 +1256,6 @@
                 g_webSocketTxTimer = 0;
             }
 
-            //            console.log("Alive.");
             sendToSocket("!&");
 
             g_webSocketAliveTimer = setTimeout(function() {
@@ -1370,6 +1371,10 @@
                     console.log(btext);
                     sendToSocket(btext);
                 }
+            } else if (text == 'Backspace') {
+                var btext = "PASS,$KEY,\\\\b;";
+                console.log(btext);
+                sendToSocket(btext);
             }
         }
 
@@ -1815,13 +1820,19 @@
             return newString;
         }
 
-        function sendCookieValues() {
-            sendPower();
-            sendCodeSpeed();
-            var msgText = "FREQ,0," + String(g_freq1FrequencyHz);
-            console.log(msgText);
-            sendToSocket(msgText);
+        function sendCookieValuesToRadio() {
+            setTimeout(function() {
+                sendPower();
+            }, 250);
 
+            setTimeout(function() {
+                sendCodeSpeed();
+            }, 500);
+
+            setTimeout(function() {
+                var msgText = "FREQ,0," + String(g_freq1FrequencyHz);
+                sendToSocket(msgText);
+            }, 750);
         }
 
         function sendString1Click() {
