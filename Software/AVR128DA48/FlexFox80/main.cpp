@@ -512,29 +512,38 @@ ISR(TCB0_INT_vect)
 		else /* Handle single-character transmissions */
 		{
 			static bool charFinished = true;
+			static bool idle = true;
 			bool sendBuffEmpty = g_text_buff.empty();
+			repeat = false;
 			
-			if(charFinished && sendBuffEmpty)
+			if(sendBuffEmpty && charFinished)
 			{
-				if(key)
+				if(!idle)
 				{
-					key = OFF;
-					keyTransmitter(OFF);
-					LEDS.setRed(OFF);
-					powerToTransmitter(OFF);
-				}
+					if(key)
+					{
+						key = OFF;
+						keyTransmitter(OFF);
+						LEDS.setRed(OFF);
+						powerToTransmitter(OFF);
+					}
 				
-				codeInc = g_code_throttle;
+					codeInc = g_code_throttle;
+					makeMorse((char*)"\0", &repeat, null); /* reset makeMorse */
+					idle = true;
+				}
 			}
 			else 
 			{
+				idle = false;
+				
 				if(codeInc)
 				{
 					codeInc--;
 
 					if(!codeInc)
 					{
-						key = makeMorse(null, null, &charFinished);
+						key = makeMorse(null, &repeat, &charFinished);
 
 						if(charFinished) /* Completed, send next char */
 						{
@@ -547,7 +556,6 @@ ISR(TCB0_INT_vect)
 								static char cc[2]; /* Must be static because makeMorse saves only a pointer to the character array */
 								g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
 								g_code_throttle = throttleValue(g_pattern_codespeed);
-								repeat = false;
 								cc[0] = g_text_buff.get();
 								cc[1] = '\0';
 								makeMorse(cc, &repeat, null);
@@ -1451,21 +1459,41 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 			
 			case LB_MESSAGE_KEY:
 			{
+				g_event_enabled = false; /* Ensure an ongoing event is interrupted */
+				
 				if(lb_buff->fields[LB_MSG_FIELD1][0])
 				{
-					char c = lb_buff->fields[LB_MSG_FIELD1][0];
+					int lenstr = strlen(lb_buff->fields[LB_MSG_FIELD1]);
 					
-					if(c == '[')
+					if(lenstr > 1)
 					{
-						txKeyDown(ON);
-					}
-					else if(c == ']')
-					{
-						txKeyDown(OFF);
+						int i = 0;
+						
+						while(!g_text_buff.full() && i<lenstr && i<LINKBUS_MAX_MSG_FIELD_LENGTH)
+						{
+							g_text_buff.put(lb_buff->fields[LB_MSG_FIELD1][i++]);
+						}
 					}
 					else
 					{
-						g_text_buff.put(c);
+						char c = lb_buff->fields[LB_MSG_FIELD1][0];
+					
+						if(c == '[')
+						{
+							powerToTransmitter(ON);
+							LEDS.blink(LEDS_RED_ON_CONSTANT);
+							txKeyDown(ON);
+						}
+						else if(c == ']')
+						{
+							txKeyDown(OFF);
+							powerToTransmitter(OFF);
+							LEDS.blink(LEDS_RED_OFF);
+						}
+						else
+						{
+							g_text_buff.put(c);
+						}
 					}
 				}
 			}
@@ -2307,6 +2335,8 @@ void suspendEvent()
 	g_event_commenced = false;  /* get things stopped immediately */
 	keyTransmitter(OFF);
 	powerToTransmitter(OFF);
+	bool repeat = false;
+	makeMorse((char*)"\0", &repeat, null);  /* reset makeMorse */
 }
 
 
