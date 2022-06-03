@@ -70,6 +70,10 @@ typedef int16_t Attenuation;
 	
 /**
  */
+ void restart_transmitter(void);
+	
+/**
+ */
  EC init_transmitter(void);
 
 /**

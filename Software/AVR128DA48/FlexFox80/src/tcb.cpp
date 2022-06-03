@@ -25,6 +25,8 @@
 #include <tcb.h>
 
 static uint32_t g_ms_counter = 0;
+extern volatile uint16_t g_i2c0_timeout_ticks;
+extern volatile uint16_t g_i2c1_timeout_ticks;
 
 /**
  * \brief Initialize tcb interface
@@ -62,6 +64,25 @@ TCB1.CTRLA = TCB_CLKSEL_DIV1_gc     /* CLK_PER */
 | 0 << TCB_CASCADE_bp; /* Cascade Two Timer/Counters: disabled */
 
 TCB1.INTFLAGS = TCB_CAPT_bm; /* Clear flag */
+
+
+/********************************************************************************/
+
+CPUINT.LVL1VEC = 30; /* Set to level 1 - highest priority interrupt */
+TCB2.INTCTRL = 1 << TCB_CAPT_bp   /* Capture or Timeout: enabled */
+| 0 << TCB_OVF_bp; /* OverFlow Interrupt: disabled */
+
+// Set TOP
+TCB2.CCMP = 0xFFFF;
+
+TCB2.CTRLA = TCB_CLKSEL_DIV2_gc     /* CLK_PER */
+| 1 << TCB_ENABLE_bp   /* Enable: enabled */
+| 0 << TCB_RUNSTDBY_bp /* Run Standby: disabled */
+| 0 << TCB_SYNCUPD_bp  /* Synchronize Update: disabled */
+| 0 << TCB_CASCADE_bp; /* Cascade Two Timer/Counters: disabled */
+
+TCB2.INTFLAGS = TCB_CAPT_bm; /* Clear flag */
+CPUINT.LVL1VEC = 30; /* Set to level 1 - highest priority interrupt */
 
 
 /********************************************************************************/
@@ -134,6 +155,18 @@ bool util_delay_ms(uint32_t delayValue)
 	
 	return(true);
 }
+
+ISR(TCB2_INT_vect)
+{
+	if(TCB2.INTFLAGS & TCB_CAPT_bm)
+	{
+		if(g_i2c1_timeout_ticks) g_i2c1_timeout_ticks--;
+		if(g_i2c0_timeout_ticks) g_i2c0_timeout_ticks--;
+		TCB2.INTFLAGS = TCB_CAPT_bm; /* Clear flag */
+	}
+}
+
+
 
 /**
 One millisecond utility counter based on CPU clock.

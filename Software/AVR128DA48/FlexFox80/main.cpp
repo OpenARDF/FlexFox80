@@ -101,8 +101,6 @@ volatile bool g_check_for_next_event = false;
 volatile bool g_waiting_for_next_event = false;
 volatile uint16_t g_battery_empty_mV = EEPROM_BATTERY_EMPTY_MV;
 
-extern volatile uint16_t g_i2c0_timeout_ticks;
-extern volatile uint16_t g_i2c1_timeout_ticks;
 static volatile bool g_sufficient_power_detected = false;
 static volatile bool g_enableHardwareWDResets = false;
 extern volatile bool g_tx_power_is_zero;
@@ -436,16 +434,6 @@ ISR(TCB0_INT_vect)
 		static uint16_t codeInc = 0;
 		bool repeat, finished;
 		
-		if(g_i2c0_timeout_ticks)
-		{
-			g_i2c0_timeout_ticks--;
-		}
-
-		if(g_i2c1_timeout_ticks)
-		{
-			g_i2c1_timeout_ticks--;
-		}
-
 		if(g_util_tick_countdown)
 		{
 			g_util_tick_countdown--;
@@ -549,20 +537,14 @@ ISR(TCB0_INT_vect)
 
 						if(charFinished) /* Completed, send next char */
 						{
-							if(g_text_buff.empty())
-							{
-								g_last_status_code = STATUS_CODE_REPORT_IDLE;
-							}
-							else
+							if(!g_text_buff.empty())
 							{
 								static char cc[2]; /* Must be static because makeMorse saves only a pointer to the character array */
-								g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
 								g_code_throttle = throttleValue(g_pattern_codespeed);
 								cc[0] = g_text_buff.get();
 								cc[1] = '\0';
 								makeMorse(cc, &repeat, null);
 								key = makeMorse(null, &repeat, &charFinished);
-								g_last_status_code = STATUS_CODE_REPORT_IDLE;
 							}
 						}
 
@@ -1501,6 +1483,12 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 							txKeyDown(OFF);
 							powerToTransmitter(OFF);
 							LEDS.blink(LEDS_RED_OFF);
+						}
+						else if(c == '^') /* Prevent sleep shutdown */
+						{
+							suspendEvent();
+							g_WiFi_shutdown_seconds = 0;    /* disable sleep */
+							g_sleepType = DO_NOT_SLEEP;
 						}
 						else
 						{

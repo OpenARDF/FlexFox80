@@ -153,11 +153,19 @@ void final_drain_voltage(bool state);
 	{
 		if(g_tx_initialized)
 		{			
+			int tries = 5;
+			
 			if(on)
 			{
 				if(!g_transmitter_keyed)
 				{
-					if(si5351_clock_enable(TX_CLOCK_HF_0, SI5351_CLK_ENABLED) == ERROR_CODE_NO_ERROR)
+					while(tries-- && (si5351_clock_enable(TX_CLOCK_HF_0, SI5351_CLK_ENABLED) != ERROR_CODE_NO_ERROR))
+					{
+						shutdown_transmitter();
+						restart_transmitter();
+					}
+					
+					if(tries)
 					{
 						g_transmitter_keyed = true;
 					}
@@ -165,7 +173,13 @@ void final_drain_voltage(bool state);
 			}
 			else
 			{
-				if(si5351_clock_enable(TX_CLOCK_HF_0, SI5351_CLK_DISABLED) == ERROR_CODE_NO_ERROR)
+				while(tries-- && (si5351_clock_enable(TX_CLOCK_HF_0, SI5351_CLK_DISABLED) != ERROR_CODE_NO_ERROR))
+				{
+					shutdown_transmitter();
+					restart_transmitter();
+				}
+					
+				if(tries)
 				{
 					g_transmitter_keyed = false;
 				}
@@ -240,7 +254,12 @@ void final_drain_voltage(bool state);
 
 	void shutdown_transmitter(void)
 	{
-		si5351_shutdown();	
+		si5351_shutdown_comms();	
+	}
+	
+	void restart_transmitter(void)
+	{
+		si5351_start_comms();
 	}
 
 	EC init_transmitter(void)

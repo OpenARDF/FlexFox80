@@ -217,9 +217,14 @@ bool g_si5351_initialized = false;
 /* Public functions */
 /*///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// */
 
-	void si5351_shutdown(void)
+	void si5351_shutdown_comms(void)
 	{
 		I2C_1_Shutdown();
+	}
+
+	void si5351_start_comms(void)
+	{
+		I2C_1_Init();
 	}
 
 /*
@@ -1249,7 +1254,7 @@ bool g_si5351_initialized = false;
 
 	bool si5351_write_bulk(uint8_t regAddr, uint8_t *data, uint8_t bytes)
 	{
-		uint8_t tries = 10;
+		uint8_t tries = 5;
 		bool fail;
 		while(tries-- && (fail = I2C_1_SendData(SI5351_I2C_SLAVE_ADDR, regAddr, data, bytes) != bytes));
 		return(fail);
@@ -1257,7 +1262,7 @@ bool g_si5351_initialized = false;
 
 	bool si5351_read_bulk(uint8_t regAddr, uint8_t *data, uint8_t bytes)
 	{
-		uint8_t tries = 10;
+		uint8_t tries = 5;
 		bool fail;
 		while(tries-- && (fail = I2C_1_GetData(SI5351_I2C_SLAVE_ADDR, regAddr, data, bytes) != bytes));
 		return(fail);

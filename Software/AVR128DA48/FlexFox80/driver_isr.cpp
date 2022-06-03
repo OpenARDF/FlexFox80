@@ -50,14 +50,6 @@ void linkbus_Tx(uint8_t rx_char);
 extern USART_Number_t g_serialbus_usart_number;
 extern USART_Number_t g_linkbus_usart_number;
 
-ISR(TCB2_INT_vect)
-{
-	if(TCB2.INTFLAGS & TCB_CAPT_bm)
-    {
-        TCB2.INTFLAGS = TCB_CAPT_bm;
-    }
-}
-
 ISR(USART0_RXC_vect)
 {
 	uint8_t rx_char = USART0_get_data();
