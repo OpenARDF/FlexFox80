@@ -1,5 +1,5 @@
 /**********************************************************************************************
-    Copyright © 2019 Digital Confections LLC
+    Copyright © 2022 Digital Confections LLC
 
     Permission is hereby granted, free of charge, to any person obtaining a copy of
     this software and associated documentation files (the "Software"), to deal in the
@@ -30,7 +30,7 @@
 #ifndef ESP8266_H_
 #define ESP8266_H_
 
-#define WIFI_SW_VERSION ("0.9")
+#define WIFI_SW_VERSION ("1.0")
 #define USE_UDP_FOR_TIME_RETRIEVAL
 #define MULTI_ACCESS_POINT_SUPPORT
 #define SERIAL_BAUD_RATE 9600

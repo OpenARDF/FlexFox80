@@ -1,5 +1,5 @@
 /**********************************************************************************************
-    Copyright © 2019 Digital Confections LLC
+    Copyright © 2022 Digital Confections LLC
 
     Permission is hereby granted, free of charge, to any person obtaining a copy of
     this software and associated documentation files (the "Software"), to deal in the
@@ -706,7 +706,7 @@ bool setupWiFiAPConnection()
   {
     linkbusLoop();
 
-    if (abs(millis() - holdMillis) > 250)
+    if ((unsigned long)(millis() - holdMillis) > 250)
     {
       holdMillis = millis();
       if (lights->blinkLEDs(100, RED_BLUE_TOGETHER, true))
@@ -1023,7 +1023,7 @@ void loop()
     {
       linkbusLoop();
       yield();
-      if (abs(millis() - last) > 5000)
+      if ((unsigned long)(millis() - last) > 5000)
       {
         last = millis();
         String msgOut = String(LB_MESSAGE_ESP_SHUTDOWN); /* Tell ATMEGA to shut down WiFi */
@@ -1060,7 +1060,7 @@ void shutdownSlave()
         {
           if (times2try)
           {
-            if (abs(millis() - last) > 1000)
+            if ((unsigned long)(millis() - last) > 1000)
             {
               last = millis();
               times2try--;
@@ -1080,7 +1080,7 @@ void shutdownSlave()
         {
           if (times2try)
           {
-            if (abs(millis() - last) > 1000)
+            if ((unsigned long)(millis() - last) > 1000)
             {
               last = millis();
               times2try--;
@@ -1158,7 +1158,7 @@ bool waitForTimeLoop()
     }
     else if (times2try)
     {
-      if (abs(millis() - last) > 1000)
+      if ((unsigned long)(millis() - last) > 1000)
       {
         last = millis();
         times2try--;
@@ -1209,7 +1209,7 @@ bool clientConnectLoop()
         {
           if (g_slave_released && times2try)
           {
-            if (abs(millis() - last) > 2000)
+            if ((unsigned long)(millis() - last) > 2000)
             {
               msg = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_CONNECT;
               g_webSocketLocalClient.sendTXT(stringObjToConstCharString(&msg)); /* Connect to Master */
@@ -1297,7 +1297,7 @@ bool clientConnectLoop()
           {
             if (times2try)
             {
-              if (abs(millis() - last) > 1000)
+              if ((unsigned long)(millis() - last) > 1000)
               {
                 last = millis();
                 times2try--;
@@ -1348,7 +1348,7 @@ bool clientConnectLoop()
 
           if (times2try)
           {
-            if (abs(millis() - last) > 1000)
+            if ((unsigned long)(millis() - last) > 1000)
             {
               last = millis();
               times2try--;
@@ -1375,7 +1375,7 @@ bool clientConnectLoop()
         {
           if (times2try)
           {
-            if (abs(millis() - last) > 1000)
+            if ((unsigned long)(millis() - last) > 1000)
             {
               last = millis();
               times2try--;
@@ -1576,7 +1576,7 @@ bool loadActiveEventFile(String updatedFileName)
 
             if (times2try)
             {
-              if (abs(millis() - last) > 1000)
+              if ((unsigned long)(millis() - last) > 1000)
               {
                 last = millis();
                 times2try--;
@@ -1622,7 +1622,7 @@ bool loadActiveEventFile(String updatedFileName)
         {
           if (times2try)
           {
-            if (abs(millis() - last) > 1000)
+            if ((unsigned long)(millis() - last) > 1000)
             {
               last = millis();
               times2try--;
@@ -1697,7 +1697,7 @@ bool clientUpdateEventFilesLoop()
           {
             if (times2try)
             {
-              if (abs(millis() - last) > 2000)
+              if ((unsigned long)(millis() - last) > 2000)
               {
                 msg = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_WAITING_FOR_FILES;
                 g_webSocketLocalClient.sendTXT(stringObjToConstCharString(&msg));
@@ -1796,7 +1796,7 @@ bool clientUpdateEventFilesLoop()
               {
                 if (times2try)
                 {
-                  if (abs(millis() - last) > 1000)
+                  if ((unsigned long)(millis() - last) > 1000)
                   {
                     last = millis();
                     times2try--;
@@ -1945,7 +1945,7 @@ bool clientUpdateEventFilesLoop()
 
           if (times2try)
           {
-            if (abs(millis() - last) > 1000)
+            if ((unsigned long)(millis() - last) > 1000)
             {
               last = millis();
               times2try--;
@@ -1977,7 +1977,7 @@ bool clientUpdateEventFilesLoop()
         {
           if (times2try)
           {
-            if (abs(millis() - last) > 1000)
+            if ((unsigned long)(millis() - last) > 1000)
             {
               last = millis();
               times2try--;
@@ -2239,7 +2239,7 @@ void httpWebServerLoop(int blinkRate)
           if (g_activeEvent)
           {
             g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
-            g_socket_timeout = 10;  /* allow extra time before declaring socket dead */
+            g_socket_timeout = 20;  /* allow extra time before declaring socket dead */
 
             g_activeEvent->writeEventFile();
 
@@ -3010,7 +3010,7 @@ void httpWebServerLoop(int blinkRate)
             
           while(secs2try)
           {
-            if (abs(millis() - last) > 1000)
+            if ((unsigned long)(millis() - last) > 1000)
             {
                 last = millis();
                 g_LBOutputBuff->put(LB_MESSAGE_ESP_SHUTDOWN);
@@ -3035,7 +3035,7 @@ void httpWebServerLoop(int blinkRate)
               static unsigned long last = 0;
               if (secs2try)
               {
-                if (abs(millis() - last) > 1000)
+                if ((unsigned long)(millis() - last) > 1000)
                 {
                     last = millis();
                     secs2try--;
@@ -3501,6 +3501,7 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
 
     case WStype_TEXT:
       {
+        g_socket_timeout = 10;
         if (!payload)
         {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -3530,7 +3531,7 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
 
           if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_ALIVE))
           {
-            g_socket_timeout = 5;
+            g_socket_timeout = 10;
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_SLAVE))
           {
@@ -5415,7 +5416,7 @@ bool sendEventToATMEGA(String * errorTxt)
             else
             {
               serialIndex--;
-              if (abs(millis() - last) > 1000)
+              if ((unsigned long)(millis() - last) > 1000)
               {
                 last = millis();
                 times2try--;

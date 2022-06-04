@@ -1,5 +1,5 @@
 /**********************************************************************************************
-    Copyright © 2019 Digital Confections LLC
+    Copyright © 2022 Digital Confections LLC
 
     Permission is hereby granted, free of charge, to any person obtaining a copy of
     this software and associated documentation files (the "Software"), to deal in the
@@ -25,6 +25,7 @@
 
 #include <ESP8266WiFi.h>
 
+
 #ifndef SecondsFromHours
 #define SecondsFromHours(hours) ((hours) * 3600)
 #endif
@@ -41,13 +42,13 @@
 #define MinutesFromSeconds(seconds) ((seconds) / 60)
 #endif
 
-#ifndef min
-#define min(x, y)  ((x) < (y) ? (x) : (y))
-#endif
+//#ifndef min
+//#define min(x, y)  ((x) < (y) ? (x) : (y))
+//#endif
 
-#ifndef max
-#define max(x, y)  ((x) > (y) ? (x) : (y))
-#endif
+//#ifndef max
+//#define max(x, y)  ((x) > (y) ? (x) : (y))
+//#endif
 
 #define CLAMP(low, x, high) ({\
     __typeof__(x) __x = (x); \
