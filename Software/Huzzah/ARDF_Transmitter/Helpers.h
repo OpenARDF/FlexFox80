@@ -25,7 +25,6 @@
 
 #include <ESP8266WiFi.h>
 
-
 #ifndef SecondsFromHours
 #define SecondsFromHours(hours) ((hours) * 3600)
 #endif

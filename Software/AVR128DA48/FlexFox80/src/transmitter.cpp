@@ -140,12 +140,12 @@ void final_drain_voltage(bool state);
 		if(inhibit)
 		{
 			PORTB_set_pin_level(TX_FINAL_VOLTAGE_ENABLE, LOW);
-			PORTA_set_pin_level(FET_DRIVER_ENABLE, LOW);
+//			PORTA_set_pin_level(FET_DRIVER_ENABLE, LOW);
 		}
 		else
 		{
 			final_drain_voltage(g_drain_voltage_enabled);
-			fet_driver(g_fet_driver_enabled);
+//			fet_driver(g_fet_driver_enabled);
 		}
 	}
 

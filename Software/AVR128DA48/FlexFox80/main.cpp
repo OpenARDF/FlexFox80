@@ -871,7 +871,7 @@ int main(void)
 			{
 				inhibitRFOutput(true);
 			}
-			else if(g_event_enabled)
+			else
 			{
 				inhibitRFOutput(false);
 			}
