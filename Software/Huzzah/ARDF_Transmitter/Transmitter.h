@@ -215,6 +215,7 @@ typedef enum
 #define LB_MESSAGE_VER_REQUEST "$VER?"              /* Request ATMEGA SW version */
 #define LB_MESSAGE_OSC_CAL "OSC"                    /* ATMEGA oscillator calibration message */
 #define LB_MESSAGE_ESP_WAKEUP "$ESP,0;"             /* Wake up from reset */
+#define LB_MESSAGE_ESP_IDLE "$ESP,2;"               /* ESP is idle */
 #define LB_MESSAGE_ESP_SHUTDOWN "$ESP,3;"           /* Shut down in 3 seconds */
 #define LB_MESSAGE_ESP_KEEPALIVE "$ESP,Z;"          /* Keep alive for 2 minutes */
 #define LB_MESSAGE_TIME "TIM"
@@ -247,11 +248,11 @@ typedef enum
 #define LB_MESSAGE_TIME_INTERVAL_SET1 "$T,1,"       /* Prefix for sending time interval (sec) for on-air time to ATMEGA */
 #define LB_MESSAGE_TIME_INTERVAL_SETD "$T,D,"       /* Prefix for sending time interval (sec) for time-slot delay to ATMEGA */
 #define LB_MESSAGE_TIME_INTERVAL_SETID "$T,I,"      /* Prefix for sending time interval (sec) for station identification to ATMEGA */
-#define LB_MESSAGE_WIFI_COMS_OFF "$WI,2;"           /* Tell ATMEGA to disable linkbus to support ESP8266 programming (no exit without power cycle) */
 #define LB_MESSAGE_XMIT_NOW "$GO,1;"                /* Tell ATMEGA to immediately commence transmissions */
 #define LB_MESSAGE_ACTIVATE_EVENT "$GO,2;"          /* Tell ATMEGA to execute the event as it has been configured */
 #define LB_MESSAGE_PREP4DATA "$GO,0;"               /* Tell ATMEGA to prepare to receive event data */
 #define LB_MESSAGE_WIFI_OFF "$WI,0;"                /* Tell ATMEGA to power off WiFi */
+#define LB_MESSAGE_WIFI_COMS_OFF "$WI,2;"           /* Tell ATMEGA to disable linkbus to support ESP8266 programming (no exit without power cycle) */
 
 #define LB_MESSAGE_KEYDOWN "$KEY,[;"                /* Tell ATMEGA to key transmitter continuously */
 #define LB_MESSAGE_KEYUP "$KEY,];"                  /* Tell ATMEGA to key transmitter continuously */

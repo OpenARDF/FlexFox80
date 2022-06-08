@@ -2088,7 +2088,10 @@ void httpWebServerLoop(int blinkRate)
 
       if (g_numberOfWebClients == 0)
       {
-        g_webSocketServer.disconnect(); /* ensure all web socket clients are disconnected - this might not happen if WiFi connection was broken */
+        g_webSocketServer.close(); /* ensure all web socket clients are disconnected - this might not happen if WiFi connection was broken */
+        g_numberOfSocketClients = 0;
+        holdWebSocketClients = 0;
+        g_LBOutputBuff->put(LB_MESSAGE_ESP_IDLE);
       }
     }
       
@@ -2491,7 +2494,7 @@ void httpWebServerLoop(int blinkRate)
                         Serial.println("case TX_SEND_NEXT_EVENT_TO_ATMEGA");
                   }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-           g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
+            g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
             g_numberOfScheduledEvents = numberOfEventsScheduled(g_timeOfDayFromTx);
 
             if (g_numberOfScheduledEvents)
