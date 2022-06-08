@@ -321,7 +321,7 @@ ISR(PORTA_PORT_vect)
 				}
 				else if(g_event_start_epoch > 0) /* off the air - waiting for the start time to arrive */
 				{
-					time(&temp_time);
+					temp_time = time(null);
 
 					if(temp_time >= g_event_start_epoch) /* Time for the event to start */
 					{
@@ -837,7 +837,7 @@ int main(void)
 		if(g_report_seconds)
 		{
 			g_report_seconds = false;
-			sprintf(g_tempStr, "%lu", time(NULL));
+			sprintf(g_tempStr, "%lu", time(null));
 			lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_CLOCK_LABEL, g_tempStr);
 		}
 
