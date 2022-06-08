@@ -108,7 +108,7 @@ extern volatile bool g_tx_power_is_zero;
 static volatile bool g_go_to_sleep_now = false;
 static volatile bool g_sleeping = false;
 static volatile time_t g_seconds_left_to_sleep = 0;
-static volatile time_t g_seconds_to_sleep = MAX_TIME;
+static volatile time_t g_time_to_wake_up = 0;
 static volatile Awakened_t g_awakenedBy = AWAKENED_BY_POWERUP;
 
 // #define NUMBER_OF_POLLED_ADC_CHANNELS 4
@@ -197,7 +197,7 @@ ISR(PORTA_PORT_vect)
 				g_seconds_left_to_sleep--;
 			}
 
-			if(!g_seconds_left_to_sleep)
+			if(g_time_to_wake_up == time(null))
 			{
 				g_go_to_sleep_now = false;
 				g_sleeping = false;
@@ -277,7 +277,7 @@ ISR(PORTA_PORT_vect)
 
 									/* Enable sleep during off-the-air periods */
 									int32_t timeRemaining = 0;
-									time(&temp_time);
+									temp_time = time(null);
 									if(temp_time < g_event_finish_epoch)
 									{
 										timeRemaining = timeDif(g_event_finish_epoch, temp_time);
@@ -289,10 +289,11 @@ ISR(PORTA_PORT_vect)
 									{
 										if((g_off_air_seconds > 15) && !g_WiFi_shutdown_seconds)
 										{
-											g_seconds_to_sleep = (time_t)(g_off_air_seconds - 10);
+											time_t seconds_to_sleep = (time_t)(g_off_air_seconds - 10);
+											g_time_to_wake_up = temp_time + seconds_to_sleep;
 											g_sleepType = SLEEP_UNTIL_NEXT_XMSN;
 											g_go_to_sleep_now = true;
-											g_sendID_seconds_countdown = MAX(0, g_sendID_seconds_countdown - (int)g_seconds_to_sleep);
+											g_sendID_seconds_countdown = MAX(0, g_sendID_seconds_countdown - (int)seconds_to_sleep);
 										}
 									}
 								}
@@ -341,7 +342,7 @@ ISR(PORTA_PORT_vect)
 						}
 
 						g_event_commenced = true;
-						LEDS.blink(LEDS_GREEN_BLINK_FAST);
+//						LEDS.blink(LEDS_GREEN_BLINK_FAST);
 						LEDS.blink(LEDS_RED_OFF);
 					}
 				}
@@ -730,7 +731,7 @@ int main(void)
 	else
 	{
 		EC result;
-		 time_t current_epoch = ds3231_get_epoch(&result);
+		time_t current_epoch = ds3231_get_epoch(&result);
 		if(result == ERROR_CODE_NO_ERROR)
 		{
 			set_system_time(current_epoch);
@@ -895,7 +896,6 @@ int main(void)
 
 			SLPCTRL_set_sleep_mode(SLPCTRL_SMODE_STDBY_gc);		
 			g_sleeping = true;
- 			g_seconds_left_to_sleep = g_seconds_to_sleep;
 			
  			while(g_go_to_sleep_now)
  			{
@@ -910,19 +910,17 @@ int main(void)
 			atmel_start_init();
 			powerUp3V3();
  			g_perform_3V3_init = true;
- 			linkbus_enable();
 			
 // 			wdt_init(WD_HW_RESETS);         /* enable hardware WD interrupts */
 // 			wdt_reset();                    /* HW watchdog */
 // 
-			g_wifi_enable_delay = 2; /* Ensure WiFi is enabled and countdown is reset */
 
 //  			if(g_sleepType == SLEEP_FOREVER)
 //  			{
 // 				g_check_for_next_event = true;
 //  			}
 			
-			if(g_awakenedBy == AWAKENED_BY_BUTTONPRESS)
+			if((g_awakenedBy == AWAKENED_BY_BUTTONPRESS) || (g_awakenedBy == AWAKENED_BY_ANTENNA) || (g_awakenedBy == AWAKENED_BY_POWERUP))
 			{	
 				if(g_event_enabled)
 				{
@@ -934,6 +932,9 @@ int main(void)
 					LEDS.blink(LEDS_GREEN_ON_CONSTANT);
 					LEDS.blink(LEDS_RED_OFF);
 				}
+				
+ 				linkbus_enable();
+				g_wifi_enable_delay = 2; /* Ensure WiFi is enabled and countdown is reset */
 			}
 
  			g_last_status_code = STATUS_CODE_RETURNED_FROM_SLEEP;
@@ -1537,6 +1538,11 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 							lb_send_msg(LINKBUS_MSG_REPLY, (char *)LB_MESSAGE_ESP_LABEL, (char *)"1"); /* Request next scheduled event */
 						}
 					}
+					else if(f1 == '2') /* ESP has no web clients and no other business to conduct (e.g., At end of live radio session) */
+					{
+						g_wifi_enable_delay = 1; /* Start countdown to WiFi power off */
+						if(!g_event_enabled) g_start_event = true; /* Attempt to launch any event that is already set */
+					}
 					else if(f1 == '3')                      /* ESP is ready for power off" */
 					{			
 						g_wifi_enable_delay = 0;
@@ -1656,8 +1662,10 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 									g_last_error_code = launchEvent(&status);
 									g_wifi_enable_delay = 2; /* Ensure WiFi is enabled and countdown is reset */
 								}
-
-								g_WiFi_shutdown_seconds = 60;
+								else
+								{
+									g_WiFi_shutdown_seconds = 60;
+								}
 							
 								new_event_parameter_count = 0;
 								event_parameter_commands_rcvd_count = 0;
@@ -2083,36 +2091,33 @@ bool __attribute__((optimize("O0"))) eventEnabled()
 {
 	time_t now;
 	int32_t dif;
-	bool runsFinite;
 
 	dif = timeDif(g_event_finish_epoch, g_event_start_epoch);
-	runsFinite = (dif > 0);
 
 	now = time(null);
 	dif = timeDif(now, g_event_finish_epoch);
 	g_go_to_sleep_now = false;
 
-	if((dif >= 0) && runsFinite) /* Event has already finished */
+	if(dif >= 0) /* Event has already finished */
 	{
 		g_sleepType = SLEEP_FOREVER;
-		g_seconds_to_sleep = MAX_TIME;
+		g_time_to_wake_up = MAX_TIME;
 		g_wifi_enable_delay = 2;
-		return( false); /* completed events are never enabled */
+		return(false); /* completed events are never enabled */
 	}
 
 	dif = timeDif(now, g_event_start_epoch);
 
-	if(dif >= -15)  /* Don't sleep if the next transmission starts in 15 seconds or less */
+	if(dif >= -30)  /* Don't sleep if the event starts in 30 seconds or less, or has already started */
 	{
 		g_sleepType = DO_NOT_SLEEP;
-		g_seconds_to_sleep = 0;
-
+		g_time_to_wake_up = 0;
 		return( true);
 	}
 
-	/* If we reach here, we have an event that has not yet started but needs to be enabled, and a sleep time needs to be calculated
+	/* If we reach here, we have an event that will not start for at least 30 seconds. It needs to be enabled, and a sleep time needs to be calculated
 	 * while allowing time for power-up (coming out of sleep) prior to the event start */
-	g_seconds_to_sleep = (-dif) - 5;   /* sleep until 5 seconds before the start time */
+	g_time_to_wake_up = g_event_start_epoch - 5;
 	g_sleepType = SLEEP_UNTIL_START_TIME;
 
 	return( true);
@@ -2134,6 +2139,7 @@ uint16_t throttleValue(uint8_t speed)
 
 EC __attribute__((optimize("O0"))) launchEvent(SC* statusCode)
 {
+	set_system_time(ds3231_get_epoch(null));
 	EC ec = activateEventUsingCurrentSettings(statusCode);
 
 	if(*statusCode)
@@ -2220,7 +2226,7 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 			int secondsIntoCycle = dif % cyclePeriod;
 			int timeTillTransmit = g_intra_cycle_delay_time - secondsIntoCycle;
 
-			if(timeTillTransmit <= 0)                       /* we should have started transmitting already */
+			if(timeTillTransmit <= 0)                       /* we should have started transmitting already in this cycle */
 			{
 				if(g_on_air_seconds <= -timeTillTransmit)   /* we should have finished transmitting in this cycle */
 				{
