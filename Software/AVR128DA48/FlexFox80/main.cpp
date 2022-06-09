@@ -62,8 +62,6 @@ static volatile EC g_last_error_code = ERROR_CODE_NO_ERROR;
 static volatile SC g_last_status_code = STATUS_CODE_IDLE;
 
 static volatile bool g_powering_off = false;
-static bool g_powerUp_initialization_complete = false;
-static bool g_perform_3V3_init = false;
 
 static volatile uint16_t g_util_tick_countdown = 0;
 static volatile bool g_battery_measurements_active = false;
@@ -704,7 +702,6 @@ void powerDown3V3(void)
 {
 	PORTA_set_pin_level(V3V3_PWR_ENABLE, LOW);	
 	PORTB_set_pin_level(MAIN_PWR_ENABLE, LOW);
-	g_powerUp_initialization_complete = false;
 }
 
 void powerUp3V3(void)
@@ -712,13 +709,13 @@ void powerUp3V3(void)
 	powerToTransmitter(OFF); /* Turn off power to FET driver */
 	PORTB_set_pin_level(MAIN_PWR_ENABLE, HIGH);  /* Turn on 12V booster circuit */
 	PORTA_set_pin_level(V3V3_PWR_ENABLE, HIGH);  /* Enable 3V3 power regulator */
-	g_perform_3V3_init = true;
 }
 
 #include "dac0.h"
 
 int main(void)
 {
+	bool initialize = true;
 	atmel_start_init();
 	LEDS.blink(LEDS_OFF);
 	PORTB_set_pin_level(MAIN_PWR_ENABLE, ON);	
@@ -770,32 +767,28 @@ int main(void)
 		powerDown3V3();
 		LEDS.blink(LEDS_RED_AND_GREEN_BLINK_FAST_OVERRIDE_ALL); /* LEDs blink an error signal */
 		
-		while(g_hardware_error)
+		while(g_hardware_error) /* A For test purposes, a keypress will allow program flow to continue */
 		{
 		}
 		
 		LEDS.reset();
+		g_hardware_error = true;
 	}
 	
+	g_start_event = eventEnabled(); /* Start any event stored in EEPROM */
+	if(!g_start_event)
+	{
+		LEDS.blink(LEDS_RED_OFF);
+		LEDS.blink(LEDS_GREEN_ON_CONSTANT);
+	}
+
 	while (1) {
 		handleLinkBusMsgs();
 		handleSerialBusMsgs();
 		
-		if(g_perform_3V3_init)
-		{			
-			g_perform_3V3_init = false;
-			g_powerUp_initialization_complete = true;
-		}
-		
-		if(g_powerUp_initialization_complete)
+		if(initialize) /* Do whatever needs to be done once at power-up inside the infinite loop */
 		{
-			g_powerUp_initialization_complete = false;
-			g_start_event = eventEnabled(); /* Start any event loaded from EEPROM */
-			if(!g_start_event)
-			{
-				LEDS.blink(LEDS_RED_OFF);
-				LEDS.blink(LEDS_GREEN_ON_CONSTANT);
-			}
+			initialize = false;
 		}
 		
 		if(g_switch_closed_count >= 1000)
@@ -900,8 +893,6 @@ int main(void)
 		 ******************************/
 		if(g_go_to_sleep_now)
 		{
-// 			g_sufficient_power_detected = false;    /* init hardware on return from sleep */
-
 			LEDS.blink(LEDS_OFF);
  			linkbus_disable();	
 			shutdown_transmitter();	
@@ -926,16 +917,6 @@ int main(void)
 			g_sleeping = false;
 			atmel_start_init();
 			powerUp3V3();
- 			g_perform_3V3_init = true;
-			
-// 			wdt_init(WD_HW_RESETS);         /* enable hardware WD interrupts */
-// 			wdt_reset();                    /* HW watchdog */
-// 
-
-//  			if(g_sleepType == SLEEP_FOREVER)
-//  			{
-// 				g_check_for_next_event = true;
-//  			}
 			
 			if((g_awakenedBy == AWAKENED_BY_BUTTONPRESS) || (g_awakenedBy == AWAKENED_BY_ANTENNA) || (g_awakenedBy == AWAKENED_BY_POWERUP))
 			{	
