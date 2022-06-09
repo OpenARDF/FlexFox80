@@ -23,6 +23,7 @@ typedef enum {
 	LEDS_RED_AND_GREEN_BLINK_SLOW,
 	LEDS_RED_THEN_GREEN_BLINK_FAST,
 	LEDS_RED_THEN_GREEN_BLINK_SLOW,
+	LEDS_RED_AND_GREEN_BLINK_FAST_OVERRIDE_ALL,
 	LEDS_NUMBER_OF_SETTINGS
 	}Blink_t;
 
@@ -38,6 +39,7 @@ public:
 	leds();
 	~leds();
 	
+	void reset(void);
 	void blink(Blink_t blinkMode);
 	bool active(void);
 	void setRed(bool on);

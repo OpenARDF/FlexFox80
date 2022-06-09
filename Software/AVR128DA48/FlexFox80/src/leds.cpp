@@ -27,6 +27,7 @@ static volatile int16_t red_blink_count = 0;
 static volatile int16_t green_blink_count = 0;
 static volatile bool red_led_configured = false;
 static volatile bool green_led_configured = false;
+static volatile bool g_override = false;
 
 // default constructor
 leds::leds()
@@ -41,7 +42,7 @@ leds::~leds()
 /* LED enunciation timer interrupt */
 ISR(TCB3_INT_vect)
 {
-	if(led_timeout_count)
+	if(led_timeout_count || g_override)
 	{
 		led_timeout_count--;
 		
@@ -129,6 +130,13 @@ ISR(TCB3_INT_vect)
 	TCB3.INTFLAGS |= TCB_CAPT_bm; /* clear interrupt flag */
 }
 
+void leds::reset(void)
+{
+	g_override = false;
+	blink(LEDS_OFF);
+}
+
+
 bool leds::active(void)
 {
 	return(led_timeout_count && (TCB3.INTCTRL & (1 << TCB_CAPT_bp)));
@@ -136,6 +144,8 @@ bool leds::active(void)
 
 void leds::setRed(bool on)
 {
+	if(g_override) return;
+
 	if(on)
 	{
 		if(led_timeout_count)
@@ -151,6 +161,8 @@ void leds::setRed(bool on)
 
 void leds::setGreen(bool on)
 {
+	if(g_override) return;
+
 	if(on)
 	{
 		if(led_timeout_count)
@@ -175,6 +187,8 @@ void leds::resume(void)
 
 void leds::blink(Blink_t blinkMode)
 {
+	if(g_override) return;
+	
 	led_timeout_count = LED_TIMEOUT;
 	
 	if(blinkMode != lastBlinkSetting)
@@ -285,6 +299,11 @@ void leds::blink(Blink_t blinkMode)
 			}
 			break;
 			
+			case LEDS_RED_AND_GREEN_BLINK_FAST_OVERRIDE_ALL:
+			{
+				g_override = true;
+			}
+			/* Intentional fall-thru */
 			case LEDS_RED_AND_GREEN_BLINK_FAST:
 			{
 				green_blink_on_period = FAST_ON;

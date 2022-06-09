@@ -84,6 +84,7 @@ static volatile bool g_wifi_active = true;
 static volatile uint8_t g_wifi_enable_delay = 0;
 static volatile bool g_shutting_down_wifi = false;
 static volatile SleepType g_sleepType = DO_NOT_SLEEP;
+static volatile bool g_hardware_error = false;
 
 char g_messages_text[2][MAX_PATTERN_TEXT_LENGTH + 1] = { "\0", "\0" };
 volatile uint8_t g_id_codespeed = EEPROM_ID_CODE_SPEED_DEFAULT;
@@ -671,6 +672,8 @@ ISR(PORTC_PORT_vect)
 		}
 		else if(g_switch_closed_count > 10) /* debounce */
 		{
+			g_hardware_error = false;
+			
 			if(!LEDS.active())
 			{
 				LEDS.resume();
@@ -726,7 +729,7 @@ int main(void)
 					
 	if(rtc_init() == ERROR_CODE_RTC_NONRESPONSIVE)
 	{
-		LEDS.blink(LEDS_RED_AND_GREEN_BLINK_FAST); /* LEDs blink an error signal */
+		g_hardware_error = true;
 	}
 	else
 	{
@@ -753,7 +756,25 @@ int main(void)
 		wifi_reset(ON);
 		g_wifi_enable_delay = 0;
 		g_WiFi_shutdown_seconds = 0;
-		LEDS.blink(LEDS_RED_AND_GREEN_BLINK_SLOW); /* LEDs blink an error signal */
+		g_hardware_error = true;
+	}
+	
+	if(init_transmitter() != ERROR_CODE_NO_ERROR)
+	{
+		g_hardware_error = true;
+	}
+
+	
+	if(g_hardware_error)
+	{
+		powerDown3V3();
+		LEDS.blink(LEDS_RED_AND_GREEN_BLINK_FAST_OVERRIDE_ALL); /* LEDs blink an error signal */
+		
+		while(g_hardware_error)
+		{
+		}
+		
+		LEDS.reset();
 	}
 	
 	while (1) {
@@ -763,11 +784,7 @@ int main(void)
 		if(g_perform_3V3_init)
 		{			
 			g_perform_3V3_init = false;
-			
-			if(init_transmitter() != ERROR_CODE_RF_OSCILLATOR_ERROR)
-			{
-				g_powerUp_initialization_complete = true;
-			}
+			g_powerUp_initialization_complete = true;
 		}
 		
 		if(g_powerUp_initialization_complete)
