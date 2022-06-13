@@ -194,7 +194,6 @@
         var g_timer = 0;
         var g_timeUpdateTimer = 0;
         var g_homeTimer = 0;
-        var g_eventRadioBand = "";
         var g_timedOut = false;
 
         var g_lastFreqTime = 0;
@@ -215,10 +214,6 @@
 
         ///////////////////////////////
         // Settings
-        var g_typeTxNames = [{
-            name: "Name",
-            indices: "0:0"
-        }]; /* Human readable "role" name: "Home", and indices: "0:1" */
         var g_selectedTxType;
 
         var g_eventTableData = [{
@@ -232,13 +227,9 @@
         }]; /* Event data to display in a table header */
 
         var g_powerLevels_80m = ["0", "10", "100", "200", "300", "400", "500", "600", "800", "1000", "1500", "2000", "2500", "3000", "4000", "5000"];
-        var g_powerLevels_2m = ["0", "10", "100", "200", "300", "400", "500", "600", "800", "1000"];
-        var g_radioBandType = ["80", "2"];
         var g_morseSpeed = ["5", "8", "12", "15", "18", "20"];
 
-        var g_selectedEvent = "";
         var g_powerLevel = g_powerLevels_80m[0];
-        var g_eventRadioBand = g_radioBandType[0];
         var g_cwSpeed = "8";
         var g_freq1FrequencyHz = 3600000;
         var g_userText1 = "73";
@@ -521,6 +512,11 @@
                         keyUpAction();
                     }
                 })(entry);
+                btn.onmouseout = (function(entry) {
+                    return function() {
+                        keyUpAction();
+                    }
+                })(entry);
                 btn.onmousedown = (function(entry) {
                     return function() {
                         keyDownAction();
@@ -538,17 +534,10 @@
                 cell0.setAttribute("border", "1px solid black");
 
                 var sel, option, i, il;
-                if (g_eventRadioBand == "80m") {
-                    sel = document.createElement('select'),
-                        option,
-                        i = 0,
-                        il = g_powerLevels_80m.length;
-                } else {
-                    sel = document.createElement('select'),
-                        option,
-                        i = 0,
-                        il = g_powerLevels_2m.length;
-                }
+                sel = document.createElement('select'),
+                    option,
+                    i = 0,
+                    il = g_powerLevels_80m.length;
 
                 sel.setAttribute("onchange", "pwrClick()");
                 sel.setAttribute("id", "pwrSelect");
@@ -556,21 +545,12 @@
 
                 for (; i < il; i += 1) {
                     option = document.createElement('option');
-                    if (g_eventRadioBand == "80m") {
-                        option.setAttribute('value', g_powerLevels_80m[i]);
-                        option.appendChild(document.createTextNode(g_powerLevels_80m[i]));
-                        if (g_powerLevels_80m[i] == g_powerLevel) {
-                            option.setAttribute("selected", "true");
-                        }
-                        console.log("Power option:", g_powerLevels_80m[i]);
-                    } else {
-                        option.setAttribute('value', g_powerLevels_2m[i]);
-                        option.appendChild(document.createTextNode(g_powerLevels_2m[i]));
-                        if (g_powerLevels_2m[i] == g_powerLevel) {
-                            option.setAttribute("selected", "true");
-                        }
-                        console.log("Power option:", g_powerLevels_2m[i]);
+                    option.setAttribute('value', g_powerLevels_80m[i]);
+                    option.appendChild(document.createTextNode(g_powerLevels_80m[i]));
+                    if (g_powerLevels_80m[i] == g_powerLevel) {
+                        option.setAttribute("selected", "true");
                     }
+                    console.log("Power option:", g_powerLevels_80m[i]);
 
                     sel.appendChild(option);
                 }
@@ -720,22 +700,26 @@
                     }, 250);
 
                     setTimeout(function() {
-                        sendToSocket("SSID");
+                        sendToSocket("CLEAR");
                     }, 500);
 
                     setTimeout(function() {
-                        sendToSocket("MAC");
+                        sendToSocket("SSID");
                     }, 750);
 
                     setTimeout(function() {
-                        sendToSocket("SW_VERSIONS");
+                        sendToSocket("MAC");
                     }, 1000);
+
+                    setTimeout(function() {
+                        sendToSocket("SW_VERSIONS");
+                    }, 1250);
 
                     if (!g_radio_initialized) {
                         g_radio_initialized = true;
                         setTimeout(function() {
                             sendCookieValuesToRadio();
-                        }, 1250);
+                        }, 1500);
                     }
                 }
 
@@ -1050,21 +1034,6 @@
                             break;
 
 
-                        case "TYPE_NAME":
-                            {
-                                if ((arr[1] == "Done") && (arr[2] == "Done")) {
-                                    displayEvents(true);
-                                } else {
-                                    var tn = {
-                                        name: arr[1],
-                                        indices: arr[2]
-                                    };
-                                    g_typeTxNames.push(tn);
-                                    console.log("TypeName = ", tn);
-                                }
-                            }
-                            break;
-
                         case "FILE_VERSION":
                             {
                                 //                    document.getElementById("eventFileVers").innerHTML = arr[1];
@@ -1145,23 +1114,6 @@
                             }
                             break;
 
-                        case "MASTER":
-                            {
-                                var btn = document.getElementById("masterOnOffButton");
-
-                                if (btn != null) {
-                                    var t = arr[1];
-
-                                    if (t == "1") {
-                                        btn.value = "Master";
-                                        btn.setAttribute("style", "background-color: #FF0000;");
-                                    } else {
-                                        btn.value = "Slave";
-                                        btn.setAttribute("style", "background-color: #4CAF50;");
-                                    }
-                                }
-                            }
-
                         case "CALLSIGN":
                             {
                                 var c = document.getElementById("callText");
@@ -1171,30 +1123,10 @@
                             }
                             break;
 
-                        case "BAND":
-                            {}
-                            break;
-
                         case "FREQ":
                             {
                                 g_freq1FrequencyHz = Number(arr[1]);
-                                g_eventRadioBand = "80m";
                                 console.log("Freq: ", arr[1]);
-                            }
-                            break;
-
-                        case "TX_ROLE":
-                            {
-                                var text = arr[1];
-
-                                if (text.includes(":")) {
-                                    var colon = text.indexOf(":");
-                                    var newTypeIndex = parseInt(text.substring(0, colon), 10);
-                                    var newSubIndex = parseInt(text.substring(colon + 1), 10);
-                                    console.log("role code: ", arr[1]);
-                                } else {
-                                    console.log("role name: ", arr[1]);
-                                }
                             }
                             break;
 
@@ -1233,14 +1165,9 @@
             getCookies();
             webSocketStart();
 
-            g_selectedEvent = "A";
-            g_typeTxNames = [];
-
             g_selectedTxType = "";
             hideFreqSettings();
 
-
-            g_eventRadioBand = "80m";
             console.log("Freq: ", g_freq1FrequencyHz);
 
             hideFreqSet1();
@@ -1265,6 +1192,7 @@
             }
 
             sendToSocket("!&");
+            console.log("!&");
 
             g_webSocketAliveTimer = setTimeout(function() {
                 sendSocketAlive();
@@ -1610,34 +1538,18 @@
             if (powerSelect != null) {
                 powerSelect.options.length = 0;
                 var option, i, il;
-                if (g_eventRadioBand == "80m") {
-                    i = 0;
-                    il = g_powerLevels_80m.length;
+                i = 0;
+                il = g_powerLevels_80m.length;
 
-                    for (i = 0; i < il; i += 1) {
-                        option = document.createElement('option');
-                        option.setAttribute('value', g_powerLevels_80m[i]);
-                        option.appendChild(document.createTextNode(g_powerLevels_80m[i]));
-                        if (g_powerLevels_80m[i] == g_powerLevel) {
-                            option.setAttribute("selected", "true");
-                        }
-
-                        powerSelect.appendChild(option);
+                for (i = 0; i < il; i += 1) {
+                    option = document.createElement('option');
+                    option.setAttribute('value', g_powerLevels_80m[i]);
+                    option.appendChild(document.createTextNode(g_powerLevels_80m[i]));
+                    if (g_powerLevels_80m[i] == g_powerLevel) {
+                        option.setAttribute("selected", "true");
                     }
-                } else {
-                    i = 0;
-                    il = g_powerLevels_2m.length;
 
-                    for (i = 0; i < il; i += 1) {
-                        option = document.createElement('option');
-                        option.setAttribute('value', g_powerLevels_2m[i]);
-                        option.appendChild(document.createTextNode(g_powerLevels_2m[i]));
-                        if (g_powerLevels_2m[i] == g_powerLevel) {
-                            option.setAttribute("selected", "true");
-                        }
-
-                        powerSelect.appendChild(option);
-                    }
+                    powerSelect.appendChild(option);
                 }
             }
         }
@@ -1816,19 +1728,19 @@
         }
 
         function sendCookieValuesToRadio() {
-            setTimeout(sendPower(), 250);
-
-            setTimeout(sendCodeSpeed(), 500);
-
             setTimeout(function() {
                 let msgText = "PASS,$KEY,^;";
                 sendToSocket(msgText);
-            }, 1500);
+            }, 500);
+
+            setTimeout(sendPower(), 750);
+
+            setTimeout(sendCodeSpeed(), 1000);
 
             setTimeout(function() {
                 let msgText = "FREQ,0," + String(g_freq1FrequencyHz);
                 sendToSocket(msgText);
-            }, 1000);
+            }, 1250);
         }
 
         function sendString1Click() {

@@ -172,7 +172,6 @@ CircularStringBuff *g_LBOutputBuff = NULL;
 CircularStringBuff *g_fileDataBuff = NULL;
 int g_linkBusAckPending = 0;
 int g_linkBusNacksReceived = 0;
-int g_linkBusAckTimeoutCountdown = 10;
 bool g_linkBusAckTimoutOccurred = false;
 
 Blinkies *lights;
@@ -871,7 +870,7 @@ void loop()
     g_numberOfScheduledEvents = numberOfEventsScheduled(g_timeOfDayFromTx);
     g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
     linkbusLoop();
-    
+
     if (g_numberOfScheduledEvents)
     {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -893,7 +892,7 @@ void loop()
 
       g_activeEvent->readEventFile(g_eventList[0].path);
       g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
-        
+
       if (!loadActiveEventFile(g_eventList[0].path))
       {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -946,7 +945,7 @@ void loop()
       if (!clientConnectLoop())
       {
         Serial.println(LB_MESSAGE_ESP_KEEPALIVE);
-          
+
         if (!clientUpdateEventFilesLoop())
         {
           g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
@@ -969,7 +968,7 @@ void loop()
             {
               blinkPeriodMillis = 100;
             }
-              
+
             shutdownSlave();
           }
           else
@@ -979,19 +978,19 @@ void loop()
             g_webSocketLocalClient.sendTXT(stringObjToConstCharString(&msg)); /* Send to Master */
             blinkPeriodMillis = 100;
             shutdownSlave();
-         }
+          }
 
           g_webSocketServer.loop();
         }
         else
         {
-            blinkPeriodMillis = 100;
-            shutdownSlave();
+          blinkPeriodMillis = 100;
+          shutdownSlave();
         }
       }
       else
       {
-          blinkPeriodMillis = 100;
+        blinkPeriodMillis = 100;
       }
     }
     else
@@ -1108,16 +1107,32 @@ void shutdownSlave()
 
   return;
 }
-               
+
 
 bool waitForTimeLoop()
 {
   bool failure = true;
-  int times2try = 60; /* Allow time for baud calibration */
+  int times2try = 5; /* Allow time for baud calibration */
   bool ready = false;
   unsigned long last = millis();
   bool baudSet = false;
   bool sentComsOFF = false;
+
+//  while (times2try)
+//  {
+//    g_webSocketLocalClient.loop();
+//    linkbusLoop();
+//    yield();
+//
+//    if ((unsigned long)(millis() - last) > 1000)
+//    {
+//      last = millis();
+//      times2try--;
+//      Serial.write(0);
+//      Serial.write(85);
+//      Serial.flush();
+//    }
+//  }
 
   /* Inform the ATMEGA that WiFi power up is complete */
   g_LBOutputBuff->put(LB_MESSAGE_ESP_WAKEUP);
@@ -1127,7 +1142,7 @@ bool waitForTimeLoop()
     g_webSocketLocalClient.loop();
     linkbusLoop();
     yield();
-    if(lights->blinkLEDs(500, RED_BLUE_TOGETHER, true))
+    if (lights->blinkLEDs(500, RED_BLUE_TOGETHER, true))
     {
       if (!sentComsOFF)
       {
@@ -1136,11 +1151,11 @@ bool waitForTimeLoop()
         sentComsOFF = true;
       }
     }
-     
-    if(!baudSet && g_baud_sync_success)
+
+    if (!baudSet && g_baud_sync_success)
     {
-        baudSet = true;
-        times2try = 10;
+      baudSet = true;
+      times2try = 10;
     }
 
     if (g_timeOfDayFromTx)
@@ -1162,6 +1177,7 @@ bool waitForTimeLoop()
       {
         last = millis();
         times2try--;
+        g_LBOutputBuff->put(LB_MESSAGE_ESP_WAKEUP);
       }
     }
     else
@@ -2094,9 +2110,9 @@ void httpWebServerLoop(int blinkRate)
         g_LBOutputBuff->put(LB_MESSAGE_ESP_IDLE);
       }
     }
-      
+
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-    if(linkbusLoop())
+    if (linkbusLoop())
     {
       if (g_debug_prints_enabled)
       {
@@ -2104,7 +2120,7 @@ void httpWebServerLoop(int blinkRate)
       }
     }
 #else
-      linkbusLoop();
+    linkbusLoop();
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
     relativeTimeSeconds = millis() / 1000;
@@ -2197,7 +2213,7 @@ void httpWebServerLoop(int blinkRate)
         sentComsOFF = true;
       }
     }
-      
+
     switch (g_ESP_Comm_State)
     {
       case TX_WAKE_UP:
@@ -2210,9 +2226,7 @@ void httpWebServerLoop(int blinkRate)
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
           g_ESP_Comm_State = TX_WAITING_FOR_INSTRUCTIONS;
-
           g_LBOutputBuff->put(LB_MESSAGE_VER_REQUEST);
-          g_linkBusAckTimeoutCountdown = 10;
         }
         break;
 
@@ -2308,10 +2322,10 @@ void httpWebServerLoop(int blinkRate)
           if (firstPageLoad)
           {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-              if (g_debug_prints_enabled)
-              {
-                Serial.println("firstPageLoad = true");
-              }
+            if (g_debug_prints_enabled)
+            {
+              Serial.println("firstPageLoad = true");
+            }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
             if (g_numberOfEventFilesFound)
             {
@@ -2337,74 +2351,74 @@ void httpWebServerLoop(int blinkRate)
 
             if (g_numberOfEventFilesFound)
             {
-              if(g_numberOfEventFilesFound > 1)
+              if (g_numberOfEventFilesFound > 1)
               {
-                  if ((g_selectedEventName.length() > 0) && (g_activeEvent != NULL))
+                if ((g_selectedEventName.length() > 0) && (g_activeEvent != NULL))
+                {
+                  bool found = false;
+
+                  for (int i = 0; i < g_numberOfEventFilesFound; i++)
                   {
-                    bool found = false;
-
-                    for (int i = 0; i < g_numberOfEventFilesFound; i++)
+                    if (g_selectedEventName.equals(g_eventList[i].ename))
                     {
-                      if (g_selectedEventName.equals(g_eventList[i].ename))
-                      {
-                        g_activeEventIndex = i;
-                        found = true;
-                        break;
-                      }
+                      g_activeEventIndex = i;
+                      found = true;
+                      break;
                     }
+                  }
 
-                    if (!found)
-                    {
-                      g_activeEventIndex = (g_activeEventIndex + 1) % g_numberOfEventFilesFound;
-                    }
-    #if TRANSMITTER_COMPILE_DEBUG_PRINTS
+                  if (!found)
+                  {
+                    g_activeEventIndex = (g_activeEventIndex + 1) % g_numberOfEventFilesFound;
+                  }
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
+                  if (g_debug_prints_enabled)
+                  {
+                    Serial.println("g_selectedEventName");
+                  }
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+
+                  g_activeEvent->readEventFile(g_eventList[g_activeEventIndex].path);
+                }
+                else
+                {
+                  if (g_activeEvent == NULL)
+                  {
+                    g_activeEventIndex = 0;
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
+                    g_activeEvent = new Event(g_debug_prints_enabled);
+#else
+                    g_activeEvent = new Event(false);
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
                     if (g_debug_prints_enabled)
                     {
-                        Serial.println("g_selectedEventName");
+                      Serial.println("(2) g_activeEvent == NULL");
                     }
-    #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
+                    g_activeEvent->readEventFile(g_eventList[0].path);
+                    g_selectedEventName = g_activeEvent->getEventName();
+                  }
+                  else if (!firstPageLoad)
+                  {
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
+                    if (g_debug_prints_enabled)
+                    {
+                      Serial.println("!firstPageLoad");
+                    }
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+                    g_activeEventIndex = (g_activeEventIndex + 1) % g_numberOfEventFilesFound;
                     g_activeEvent->readEventFile(g_eventList[g_activeEventIndex].path);
+                    g_selectedEventName = g_activeEvent->getEventName();
                   }
                   else
                   {
-                    if (g_activeEvent == NULL)
-                    {
-                      g_activeEventIndex = 0;
-    #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                      g_activeEvent = new Event(g_debug_prints_enabled);
-    #else
-                      g_activeEvent = new Event(false);
-    #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-    #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                      if (g_debug_prints_enabled)
-                      {
-                            Serial.println("(2) g_activeEvent == NULL");
-                      }
-    #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-
-                      g_activeEvent->readEventFile(g_eventList[0].path);
-                      g_selectedEventName = g_activeEvent->getEventName();
-                    }
-                    else if (!firstPageLoad)
-                    {
-    #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                      if (g_debug_prints_enabled)
-                      {
-                            Serial.println("!firstPageLoad");
-                      }
-    #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-                      g_activeEventIndex = (g_activeEventIndex + 1) % g_numberOfEventFilesFound;
-                      g_activeEvent->readEventFile(g_eventList[g_activeEventIndex].path);
-                      g_selectedEventName = g_activeEvent->getEventName();
-                    }
-                    else
-                    {
-                      firstPageLoad = false;
-                    }
+                    firstPageLoad = false;
                   }
+                }
               }
-                
+
               String msg = String(String(SOCK_COMMAND_EVENT_NAME) + "," + g_activeEvent->getEventName() );
               g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
 
@@ -2484,73 +2498,73 @@ void httpWebServerLoop(int blinkRate)
           g_ESP_Comm_State = TX_WAITING_FOR_INSTRUCTIONS;
         }
         break;
-            
-            
+
+
       case TX_SEND_NEXT_EVENT_TO_ATMEGA:
         {
- #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                  if (g_debug_prints_enabled)
-                  {
-                        Serial.println("case TX_SEND_NEXT_EVENT_TO_ATMEGA");
-                  }
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
+          if (g_debug_prints_enabled)
+          {
+            Serial.println("case TX_SEND_NEXT_EVENT_TO_ATMEGA");
+          }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-            g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
-            g_numberOfScheduledEvents = numberOfEventsScheduled(g_timeOfDayFromTx);
+          g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
+          g_numberOfScheduledEvents = numberOfEventsScheduled(g_timeOfDayFromTx);
 
-            if (g_numberOfScheduledEvents)
+          if (g_numberOfScheduledEvents)
+          {
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
+            if (g_debug_prints_enabled)
             {
-        #if TRANSMITTER_COMPILE_DEBUG_PRINTS
+              String msg = String("Scheduled event(s): ") + g_numberOfScheduledEvents;
+              Serial.println(msg);
+            }
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+
+            if (!g_activeEvent)
+            {
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
+              g_activeEvent = new Event(g_debug_prints_enabled);
+#else
+              g_activeEvent = new Event(false);
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+            }
+
+            g_activeEvent->readEventFile(g_eventList[0].path);
+
+            if (!loadActiveEventFile(g_eventList[0].path))
+            {
+              blinkPeriodMillis = 500;
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
               if (g_debug_prints_enabled)
               {
-                String msg = String("Scheduled event(s): ") + g_numberOfScheduledEvents;
+                String msg = String("Scheduled event loaded: ");
+                msg = msg + g_activeEvent->getEventName();
                 Serial.println(msg);
               }
-        #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-
-              if (!g_activeEvent)
-              {
-        #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                g_activeEvent = new Event(g_debug_prints_enabled);
-        #else
-                g_activeEvent = new Event(false);
-        #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-              }
-
-              g_activeEvent->readEventFile(g_eventList[0].path);
-
-              if (!loadActiveEventFile(g_eventList[0].path))
-              {
-                blinkPeriodMillis = 500;
-        #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                if (g_debug_prints_enabled)
-                {
-                  String msg = String("Scheduled event loaded: ");
-                  msg = msg + g_activeEvent->getEventName();
-                  Serial.println(msg);
-                }
-        #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-              }
-              else
-              {
-                blinkPeriodMillis = 100;
-        #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                if (g_debug_prints_enabled)
-                {
-                  Serial.println("Scheduled event load failed.");
-                }
-        #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-              }
-            
-              g_ESP_Comm_State = TX_WAITING_FOR_INSTRUCTIONS;
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
             }
             else
             {
-              g_ESP_Comm_State = TX_POWER_DOWN_NOW;
+              blinkPeriodMillis = 100;
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
+              if (g_debug_prints_enabled)
+              {
+                Serial.println("Scheduled event load failed.");
+              }
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
             }
+
+            g_ESP_Comm_State = TX_WAITING_FOR_INSTRUCTIONS;
+          }
+          else
+          {
+            g_ESP_Comm_State = TX_POWER_DOWN_NOW;
+          }
         }
         break;
-            
-            
+
+
       case TX_RECD_START_EVENT_REQUEST:
         {
           g_http_server.handleClient();
@@ -2782,7 +2796,7 @@ void httpWebServerLoop(int blinkRate)
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
                   blinkPeriodMillis = 500;
                 }
-                  
+
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
                 if (g_debug_prints_enabled)
                 {
@@ -2998,30 +3012,30 @@ void httpWebServerLoop(int blinkRate)
 
       case TX_POWER_DOWN_NOW:
         {
-          if(g_webSocketServer.connectedClients(false))
+          if (g_webSocketServer.connectedClients(false))
           {
             g_webSocketServer.disconnect();
           }
-            
-          if(activeFile) activeFile.close();
-            
+
+          if (activeFile) activeFile.close();
+
           g_http_server.stop();
           g_http_server.close();
-                  
+
           int secs2try = 5;
           unsigned long last = 0;
-            
-          while(secs2try)
+
+          while (secs2try)
           {
             if ((unsigned long)(millis() - last) > 1000)
             {
-                last = millis();
-                g_LBOutputBuff->put(LB_MESSAGE_ESP_SHUTDOWN);
-                linkbusLoop();
-                secs2try--;
+              last = millis();
+              g_LBOutputBuff->put(LB_MESSAGE_ESP_SHUTDOWN);
+              linkbusLoop();
+              secs2try--;
             }
           }
-            
+
           blinkPeriodMillis = 100;
         }
         break;
@@ -3031,28 +3045,28 @@ void httpWebServerLoop(int blinkRate)
       case TX_WAITING_FOR_INSTRUCTIONS:
         {
           serialIndex = 0;
- #if TRANSMITTER_COMPILE_DEBUG_PRINTS
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
           if (g_debug_prints_enabled)
           {
-              static int secs2try = 3;
-              static unsigned long last = 0;
-              if (secs2try)
+            static int secs2try = 3;
+            static unsigned long last = 0;
+            if (secs2try)
+            {
+              if ((unsigned long)(millis() - last) > 1000)
               {
-                if ((unsigned long)(millis() - last) > 1000)
+                last = millis();
+                secs2try--;
+
+                if (!secs2try)
                 {
-                    last = millis();
-                    secs2try--;
-                    
-                    if(!secs2try)
-                    {
-                        Serial.println("Waiting");
-                        secs2try = 3;
-                    }
+                  Serial.println("Waiting");
+                  secs2try = 3;
                 }
               }
+            }
           }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-       }
+        }
         break;
     }
   }
@@ -3060,57 +3074,75 @@ void httpWebServerLoop(int blinkRate)
 
 bool linkbusLoop()
 {
-  size_t bytesAvail, bytesIn;
+  static int linkBusAckTimeoutCountdown = 3;
   static int messageLength = 0;
   static String lb_message = "";
   static char buf[1024];
+  static unsigned long holdSentTime = 0;
+  static String msg = "";
+  static int linkBusTimeoutCount = 0;
+  size_t bytesAvail, bytesIn;
   uint8_t j;
   int timeout = 1000;
   unsigned long lbSendTimeSeconds;
-  static unsigned long holdSentTime = 0;
   bool sendMessages = false;
 
   if (!g_linkBusAckPending)
   {
-    g_linkBusAckTimeoutCountdown = 0;
+    linkBusAckTimeoutCountdown = 10;
 
     sendMessages = !g_LBOutputBuff->empty();
 
     if (sendMessages)
     {
-      String msg = g_LBOutputBuff->get();
+      msg = g_LBOutputBuff->get();
       Serial.println(stringObjToConstCharString(&msg));
       g_linkBusAckPending++;
-      g_linkBusAckTimeoutCountdown = 10;
+      holdSentTime = millis() / 1000;
+      linkBusAckTimeoutCountdown = 3;
+      linkBusTimeoutCount = 0;
     }
   }
-
-  lbSendTimeSeconds = millis() / 1000;
-
-  if (holdSentTime != lbSendTimeSeconds)
+  else
   {
-    holdSentTime = lbSendTimeSeconds;
+    lbSendTimeSeconds = millis() / 1000;
 
-    if (g_linkBusAckTimeoutCountdown)
+    if (holdSentTime != lbSendTimeSeconds)
     {
-      g_linkBusAckTimeoutCountdown--;
+      holdSentTime = lbSendTimeSeconds;
 
-      if (!g_linkBusAckTimeoutCountdown)
+      if (linkBusAckTimeoutCountdown)
       {
-        g_linkBusAckPending = 0;
-        g_linkBusAckTimoutOccurred = true;
+        linkBusAckTimeoutCountdown--;
+
+        if (!linkBusAckTimeoutCountdown) /* Ack timeout occurred */
+        {
+          linkBusTimeoutCount++;
+
+          if (linkBusTimeoutCount < 3) /* Try sending the last message again */
+          {
+            g_linkBusAckTimoutOccurred = true;
+            linkBusAckTimeoutCountdown = 3;
+            holdSentTime = millis() / 1000;
+            Serial.println(stringObjToConstCharString(&msg));
+          }
+          else
+          {
+            g_linkBusAckPending = 0;
+            g_linkBusNacksReceived = 0;
+          }
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-        if (g_debug_prints_enabled)
-        {
-          Serial.println("ACK Timeout");
-          if(g_linkBusNacksReceived)
+          if (g_debug_prints_enabled)
           {
+            Serial.println("ACK Timeout");
+            if (g_linkBusNacksReceived)
+            {
               Serial.println("NACKs Received");
+            }
           }
-        }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-          g_linkBusNacksReceived = 0;
+        }
       }
     }
   }
@@ -3561,7 +3593,7 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
             else if (p.equals(SLAVE_FREE))
             {
               g_master_has_connected_slave = false;
-              if(g_numberOfSocketClients == 1)
+              if (g_numberOfSocketClients == 1)
               {
                 g_webSocketServer.close();
               }
@@ -3578,26 +3610,26 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
               /* Check if event files need to be sent */
               if (g_numberOfEventFilesFound > g_files_sent_to_slave)
               {
-                  if(g_ESP_Comm_State == TX_WAITING_FOR_INSTRUCTIONS)
-                  {
+                if (g_ESP_Comm_State == TX_WAITING_FOR_INSTRUCTIONS)
+                {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                    if (g_debug_prints_enabled)
-                    {
-                      Serial.println(String("WSs: sending file #") + (g_files_sent_to_slave + 1) + " of " + g_numberOfEventFilesFound);
-                    }
+                  if (g_debug_prints_enabled)
+                  {
+                    Serial.println(String("WSs: sending file #") + (g_files_sent_to_slave + 1) + " of " + g_numberOfEventFilesFound);
+                  }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
-                    msg = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_WAITING_FOR_FILES;
-                    g_ESP_Comm_State = TX_MASTER_SEND_EVENT_FILES;
-                  }
+                  msg = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_WAITING_FOR_FILES;
+                  g_ESP_Comm_State = TX_MASTER_SEND_EVENT_FILES;
+                }
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                  else
+                else
+                {
+                  if (g_debug_prints_enabled)
                   {
-                    if (g_debug_prints_enabled)
-                    {
-                      Serial.println("In wrong state for sending files.");
-                    }
+                    Serial.println("In wrong state for sending files.");
                   }
+                }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
               }
               else /* No more files to send */
@@ -3655,17 +3687,17 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_SLAVE_UPDATE_ERROR))
           {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-             if (g_debug_prints_enabled)
-             {
-               Serial.println("Error during slave file-update.");
-             }
+            if (g_debug_prints_enabled)
+            {
+              Serial.println("Error during slave file-update.");
+            }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-             if(g_ESP_Comm_State == TX_WAITING_FOR_INSTRUCTIONS)
-             {
-                 g_ESP_Comm_State = TX_SET_ENUNCIATORS_FAILURE;
-             }
-              
-             g_webSocketServer.broadcastTXT(stringObjToConstCharString(&p), p.length());
+            if (g_ESP_Comm_State == TX_WAITING_FOR_INSTRUCTIONS)
+            {
+              g_ESP_Comm_State = TX_SET_ENUNCIATORS_FAILURE;
+            }
+
+            g_webSocketServer.broadcastTXT(stringObjToConstCharString(&p), p.length());
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_SYNC_TIME)) /* From connected browser */
           {
@@ -3975,16 +4007,16 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_CWSPEED))
           {
-              String speed;
-              int lastComma = p.lastIndexOf(',');
-              speed = p.substring(lastComma + 1);
-              int spd = speed.toInt();
-              
-              if((spd > 4) && (spd < 21))
-              {
-                String msgOut = String(LB_MESSAGE_CODE_SPEED_SETPAT + speed + ";");
-                g_LBOutputBuff->put(msgOut);
-              }
+            String speed;
+            int lastComma = p.lastIndexOf(',');
+            speed = p.substring(lastComma + 1);
+            int spd = speed.toInt();
+
+            if ((spd > 4) && (spd < 21))
+            {
+              String msgOut = String(LB_MESSAGE_CODE_SPEED_SETPAT + speed + ";");
+              g_LBOutputBuff->put(msgOut);
+            }
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_BAND))
           {
@@ -5030,7 +5062,7 @@ void handleLBMessage(String message)
     {
       g_linkBusAckPending--;
     }
-      
+
     g_linkBusNacksReceived++;
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -5060,15 +5092,15 @@ void handleLBMessage(String message)
         g_onlyUpdateEvent = true;
       }
     }
-    else if(payload.equals("X")) /* Atmega is asking ESP to shut down now */
+    else if (payload.equals("X")) /* Atmega is asking ESP to shut down now */
     {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-        if (g_debug_prints_enabled)
-        {
-          Serial.println(String("Rcvd ESP shutdown: ") + payload);
-    }
+      if (g_debug_prints_enabled)
+      {
+        Serial.println(String("Rcvd ESP shutdown: ") + payload);
+      }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-        g_ESP_Comm_State = TX_POWER_DOWN_NOW;
+      g_ESP_Comm_State = TX_POWER_DOWN_NOW;
     }
   }
   else if (type.equals(LB_MESSAGE_TIME))
@@ -5192,7 +5224,7 @@ void handleLBMessage(String message)
       int v = temp / 10;
       int f = temp % 10;
       msg = String(String(SOCK_COMMAND_BATTERY) + "," + v + "." + f + "V");
- 
+
       g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
     }
   }
@@ -5240,15 +5272,7 @@ bool sendEventToATMEGA(String * errorTxt)
     *errorTxt = String("");
   }
 
-  if (g_LBOutputBuff->full())
-  {
-    if (errorTxt)
-    {
-      *errorTxt = String("Error: LB buffer full!");
-    }
-
-    return (true);
-  }
+  g_linkBusAckTimoutOccurred = false;
 
   /*
        Configure the ATMEGA appropriately for its role in the scheduled event.
@@ -5264,28 +5288,37 @@ bool sendEventToATMEGA(String * errorTxt)
     {
       case 0: /* Prepare ATMEGA to receive event data */
         {
-          g_LBOutputBuff->put(LB_MESSAGE_PREP4DATA);
+          if (!g_LBOutputBuff->full())
+          {
+            g_LBOutputBuff->put(LB_MESSAGE_PREP4DATA);
+            serialIndex++;
+          }
         }
         break;
 
       case 1: /* send finish time */
         {
-          tx = g_activeEvent->getTxSlotIndex();
-          role = g_activeEvent->getTxRoleIndex();
-
-          if ((tx >= 0) && (role >= 0))
+          if (!g_LBOutputBuff->full())
           {
-            txData = g_activeEvent->getTxData(role, tx);
+            tx = g_activeEvent->getTxSlotIndex();
+            role = g_activeEvent->getTxRoleIndex();
 
-            /* Finish time should be sent first */
-            msgOut = String(LB_MESSAGE_STARTFINISH_SET_FINISH + String(convertTimeStringToEpoch(g_activeEvent->getEventFinishDateTime())) + ";");
-            g_LBOutputBuff->put(msgOut);
-          }
-          else
-          {
-            if (errorTxt)
+            if ((tx >= 0) && (role >= 0))
             {
-              *errorTxt = String("Bad role settings");
+              txData = g_activeEvent->getTxData(role, tx);
+
+              /* Finish time should be sent first */
+              msgOut = String(LB_MESSAGE_STARTFINISH_SET_FINISH + String(convertTimeStringToEpoch(g_activeEvent->getEventFinishDateTime())) + ";");
+              g_LBOutputBuff->put(msgOut);
+              serialIndex++;
+            }
+            else
+            {
+              if (errorTxt)
+              {
+                *errorTxt = String("Bad role settings");
+              }
+                
               done = true;
             }
           }
@@ -5294,117 +5327,177 @@ bool sendEventToATMEGA(String * errorTxt)
 
       case 2: /* Message pattern */
         {
-          msgOut = String(LB_MESSAGE_PATTERN_SET + txData->pattern + ";");
-          g_LBOutputBuff->put(msgOut);
+          if (!g_LBOutputBuff->full())
+          {
+            msgOut = String(LB_MESSAGE_PATTERN_SET + txData->pattern + ";");
+            g_LBOutputBuff->put(msgOut);
+            serialIndex++;
+          }
         }
         break;
 
       case 3: /* Off time */
         {
-          msgOut = String(LB_MESSAGE_TIME_INTERVAL_SET0 + String(txData->offTime) + ";");
-          g_LBOutputBuff->put(msgOut);
+          if (!g_LBOutputBuff->full())
+          {
+            msgOut = String(LB_MESSAGE_TIME_INTERVAL_SET0 + String(txData->offTime) + ";");
+            g_LBOutputBuff->put(msgOut);
+            serialIndex++;
+          }
         }
         break;
 
       case 4: /* On time */
         {
-          msgOut = String(LB_MESSAGE_TIME_INTERVAL_SET1 + String(txData->onTime) + ";");
-          g_LBOutputBuff->put(msgOut);
+          if (!g_LBOutputBuff->full())
+          {
+            msgOut = String(LB_MESSAGE_TIME_INTERVAL_SET1 + String(txData->onTime) + ";");
+            g_LBOutputBuff->put(msgOut);
+            serialIndex++;
+          }
         }
         break;
 
       case 5: /* Offset time */
         {
-          msgOut = String(LB_MESSAGE_TIME_INTERVAL_SETD + String(txData->delayTime) + ";");
-          g_LBOutputBuff->put(msgOut);
+          if (!g_LBOutputBuff->full())
+          {
+            msgOut = String(LB_MESSAGE_TIME_INTERVAL_SETD + String(txData->delayTime) + ";");
+            g_LBOutputBuff->put(msgOut);
+            serialIndex++;
+          }
         }
         break;
 
       case 6: /* Station ID transmit interval */
         {
-          msgOut = String(LB_MESSAGE_TIME_INTERVAL_SETID + String(g_activeEvent->getIDIntervalForRole(role)) + ";");
-          g_LBOutputBuff->put(msgOut);
+          if (!g_LBOutputBuff->full())
+          {
+            msgOut = String(LB_MESSAGE_TIME_INTERVAL_SETID + String(g_activeEvent->getIDIntervalForRole(role)) + ";");
+            g_LBOutputBuff->put(msgOut);
+            serialIndex++;
+          }
         }
         break;
 
       case 7: /* Event band */
         {
-          String b;
-
-          if (g_activeEvent->getFrequencyForRole(role) <= 4000000L)
+          if (!g_LBOutputBuff->full())
           {
-            b = "80";
-          }
-          else
-          {
-            b = "2";
-          }
+            String b;
 
-          msgOut = String(LB_MESSAGE_TX_BAND_SET + b + ";");
-          g_LBOutputBuff->put(msgOut);
+            if (g_activeEvent->getFrequencyForRole(role) <= 4000000L)
+            {
+              b = "80";
+            }
+            else
+            {
+              b = "2";
+            }
+
+            msgOut = String(LB_MESSAGE_TX_BAND_SET + b + ";");
+            g_LBOutputBuff->put(msgOut);
+            serialIndex++;
+          }
         }
         break;
 
       case 8: /* Transmit power for role */
         {
-          msgOut = String(LB_MESSAGE_TX_POWER_SET + String(g_activeEvent->getPowerlevelForRole(role)) + ";");
-          g_LBOutputBuff->put(msgOut);
+          if (!g_LBOutputBuff->full())
+          {
+            msgOut = String(LB_MESSAGE_TX_POWER_SET + String(g_activeEvent->getPowerlevelForRole(role)) + ";");
+            g_LBOutputBuff->put(msgOut);
+            serialIndex++;
+          }
         }
         break;
 
       case 9: /* Modulation format */
         {
-          msgOut = String(LB_MESSAGE_TX_MOD_SET + String(g_activeEvent->getEventModulation()) + ";");
-          g_LBOutputBuff->put(msgOut);
+          if (!g_LBOutputBuff->full())
+          {
+            msgOut = String(LB_MESSAGE_TX_MOD_SET + String(g_activeEvent->getEventModulation()) + ";");
+            g_LBOutputBuff->put(msgOut);
+            serialIndex++;
+          }
         }
         break;
 
       case 10:    /* Frequency for role */
         {
-          msgOut = String(LB_MESSAGE_TX_FREQ_SET + String(g_activeEvent->getFrequencyForRole(role)) + ";");
-          g_LBOutputBuff->put(msgOut);
+          if (!g_LBOutputBuff->full())
+          {
+            msgOut = String(LB_MESSAGE_TX_FREQ_SET + String(g_activeEvent->getFrequencyForRole(role)) + ";");
+            g_LBOutputBuff->put(msgOut);
+            serialIndex++;
+          }
         }
         break;
 
       case 11:    /* Station ID */
         {
-          msgOut = String(LB_MESSAGE_CALLSIGN_SET + g_activeEvent->getCallsign() + ";");
-          g_LBOutputBuff->put(msgOut);
+          if (!g_LBOutputBuff->full())
+          {
+            msgOut = String(LB_MESSAGE_CALLSIGN_SET + g_activeEvent->getCallsign() + ";");
+            g_LBOutputBuff->put(msgOut);
+            serialIndex++;
+          }
         }
         break;
 
       case 12:    /* Message code speed */
         {
-          msgOut = String(LB_MESSAGE_CODE_SPEED_SETPAT + String(g_activeEvent->getCodeSpeedForRole(role)) + ";");
-          g_LBOutputBuff->put(msgOut);
+          if (!g_LBOutputBuff->full())
+          {
+            msgOut = String(LB_MESSAGE_CODE_SPEED_SETPAT + String(g_activeEvent->getCodeSpeedForRole(role)) + ";");
+            g_LBOutputBuff->put(msgOut);
+            serialIndex++;
+          }
         }
         break;
 
       case 13:    /* ID code speed */
         {
-          msgOut = String(LB_MESSAGE_CODE_SPEED_SETID + g_activeEvent->getCallsignSpeed() + ";");
-          g_LBOutputBuff->put(msgOut);
+          if (!g_LBOutputBuff->full())
+          {
+            msgOut = String(LB_MESSAGE_CODE_SPEED_SETID + g_activeEvent->getCallsignSpeed() + ";");
+            g_LBOutputBuff->put(msgOut);
+            serialIndex++;
+          }
         }
         break;
 
       case 14:    /* Start time */
         {
-          /* Start time is sent last */
-          msgOut = String(LB_MESSAGE_STARTFINISH_SET_START + String(convertTimeStringToEpoch(g_activeEvent->getEventStartDateTime())) + ";");
-          g_LBOutputBuff->put(msgOut);
+          if (!g_LBOutputBuff->full())
+          {
+            /* Start time is sent last */
+            msgOut = String(LB_MESSAGE_STARTFINISH_SET_START + String(convertTimeStringToEpoch(g_activeEvent->getEventStartDateTime())) + ";");
+            g_LBOutputBuff->put(msgOut);
+            serialIndex++;
+          }
         }
         break;
 
       case 15:    /* Perm - Have ATMega save everything in EEPROM */
         {
-          g_LBOutputBuff->put(LB_MESSAGE_PERM);
+          if (!g_LBOutputBuff->full())
+          {
+            g_LBOutputBuff->put(LB_MESSAGE_PERM);
+            serialIndex++;
+          }
         }
         break;
 
       case 16:
         {
-          g_LBOutputBuff->put(LB_MESSAGE_ACTIVATE_EVENT);
-          times2try = 10;
+          if (!g_LBOutputBuff->full())
+          {
+            g_LBOutputBuff->put(LB_MESSAGE_ACTIVATE_EVENT);
+            serialIndex++;
+            times2try = 10;
+          }
         }
         break;
 
@@ -5415,10 +5508,10 @@ bool sendEventToATMEGA(String * errorTxt)
             if (g_LBOutputBuff->empty() && !g_linkBusAckPending && !g_linkBusAckTimoutOccurred)
             {
               failure = false;
+              done = true;
             }
             else
             {
-              serialIndex--;
               if ((unsigned long)(millis() - last) > 1000)
               {
                 last = millis();
@@ -5431,14 +5524,14 @@ bool sendEventToATMEGA(String * errorTxt)
             if (errorTxt)
             {
               *errorTxt = String("Processor not responding");
-              done = true;
             }
 
+            done = true;
             failure = true;
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
             if (g_debug_prints_enabled)
             {
-              Serial.println("Timeout of LB buffer");
+              Serial.println("LB Buffer Timeout");
             }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
           }
@@ -5450,16 +5543,23 @@ bool sendEventToATMEGA(String * errorTxt)
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
           if (g_debug_prints_enabled)
           {
-            Serial.println("All event data ack'd by ATMEGA");
+            Serial.println("Bad state in event sender");
           }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+          if (g_LBOutputBuff->full())
+          {
+            if (errorTxt)
+            {
+              *errorTxt = String("Error: LB buffer full!");
+            }
+
+            return (true);
+          }
 
           done = true;
         }
         break;
     }
-
-    serialIndex++;
   }
 
   return (failure);
