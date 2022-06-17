@@ -1364,8 +1364,6 @@
 
         }
 
-        function bandClick() {}
-
         function pwrClick() {
             var x = document.getElementById("errorreport");
             if (x != null) x.style.display = "none";
@@ -1731,16 +1729,16 @@
             setTimeout(function() {
                 let msgText = "PASS,$KEY,^;";
                 sendToSocket(msgText);
-            }, 500);
+            }, 6000);
 
-            setTimeout(sendPower(), 750);
+            setTimeout(sendPower, 4000);
 
-            setTimeout(sendCodeSpeed(), 1000);
+            setTimeout(sendCodeSpeed, 4250);
 
             setTimeout(function() {
                 let msgText = "FREQ,0," + String(g_freq1FrequencyHz);
                 sendToSocket(msgText);
-            }, 1250);
+            }, 4500);
         }
 
         function sendString1Click() {

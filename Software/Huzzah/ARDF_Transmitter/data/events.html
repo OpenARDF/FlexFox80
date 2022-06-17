@@ -1471,7 +1471,7 @@
             } else {
                 if (dif > 200) {
                     if (g_delayedPackets) g_delayedPackets--;
-                    console.log("Sending now:", now, g_lastPacketTime, dif, g_delayedPackets, msg);
+                    console.log("=>", msg);
                     g_websock.send(msg);
                     g_lastPacketTime = now;
                     g_lastSocketTxMessage = msg;
@@ -1538,8 +1538,6 @@
                 sendToSocket(btext);
                 g_event_changes_saved = false;
             }
-
-            console.log(btext);
         }
 
         function sendPower() {
@@ -1575,7 +1573,7 @@
                 var callString = x.value;
                 var isValid = false;
 
-                if (hasNumber(callString) && hasAlpha(callString) && (callString.length > 2)) {
+                if ((hasNumber(callString) && hasAlpha(callString) && (callString.length > 2)) || (callString == "")) {
                     x.style.color = "blue";
                     isValid = true;
                 } else {
