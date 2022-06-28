@@ -37,7 +37,7 @@
 #define LINKBUS_MIN_MSG_LENGTH 3    /* shortest message: $TTY; */
 #define LINKBUS_MAX_MSG_FIELD_LENGTH 21
 #define LINKBUS_MAX_MSG_NUMBER_OF_FIELDS 3
-#define LINKBUS_NUMBER_OF_RX_MSG_BUFFERS 2
+#define LINKBUS_NUMBER_OF_RX_MSG_BUFFERS 3
 #define LINKBUS_NUMBER_OF_TX_MSG_BUFFERS 4
 
 #define LINKBUS_POWERUP_DELAY_SECONDS 6
@@ -45,7 +45,23 @@
 #define LINKBUS_MIN_TX_INTERVAL_MS 100
 
 #define FOSC 8000000    /* Clock Speed */
-#define LB_BAUD 9600 
+#define LB_BAUD 9600
+ 
+
+#define FINISH_TIME_RECEIVED_B			(1 << 0)
+#define MESSAGE_PATTERN_RECEIVED_B		(1 << 1)
+#define OFF_TIME_RECEIVED_B				(1 << 2)
+#define ON_TIME_RECEIVED_B				(1 << 3)
+#define OFFSET_TIME_RECEIVED_B			(1 << 4)
+#define ID_INTERVAL_RECEIVED_B			(1 << 5)
+#define TX_POWER_RECEIVED_B				(1 << 6)
+#define FREQUENCY_RECEIVED_B			(1 << 7)
+#define STATION_ID_RECEIVED_B			(1 << 8)
+#define ID_CODE_SPEED_RECEIVED_B		(1 << 9)
+#define PATTERN_CODE_SPEED_RECEIVED_B	(1 << 10)
+#define START_TIME_RECEIVED_B			(1 << 11)
+#define FULLY_CONFIGURED_EVENT			(FINISH_TIME_RECEIVED_B | MESSAGE_PATTERN_RECEIVED_B | OFF_TIME_RECEIVED_B | ON_TIME_RECEIVED_B | OFFSET_TIME_RECEIVED_B | ID_INTERVAL_RECEIVED_B | TX_POWER_RECEIVED_B | FREQUENCY_RECEIVED_B | STATION_ID_RECEIVED_B | PATTERN_CODE_SPEED_RECEIVED_B | ID_CODE_SPEED_RECEIVED_B | START_TIME_RECEIVED_B)
+
 
 //#define MYUBRR(b) (FOSC / 16 / (b) - 1)
 
@@ -90,8 +106,6 @@ typedef enum
 	/* LEGACY MESSAGES */
 	LB_MESSAGE_BAND = 'B' * 100 + 'N' * 10 + 'D',      /* $BND,; / $BND? / !BND,; // Set band; field1 = RadioBand */
 	LB_MESSAGE_TX_MOD = 'M' * 100 + 'O' * 10 + 'D',    /* Sets 2m modulation format to AM or CW */
-// 	LB_MESSAGE_OSC = 'O' * 100 + 'S' * 10 + 'C',		/* Calibrate oscillator for best baud rate */
-// 	LB_MESSAGE_BIAS = 'B',
 	
 	/* INFORMATIONAL MESSAGES */
 	LB_MESSAGE_VER = 'V' * 100 + 'E' * 10 + 'R',		/* Request current software version number */

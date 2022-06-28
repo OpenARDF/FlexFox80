@@ -39,7 +39,6 @@ volatile Frequency_Hz g_80m_frequency = EEPROM_TX_80M_FREQUENCY_DEFAULT;
 volatile uint16_t g_80m_power_level_mW = EEPROM_TX_80M_POWER_MW_DEFAULT;
 volatile Frequency_Hz g_rtty_offset = EEPROM_RTTY_OFFSET_FREQUENCY_DEFAULT;
 
-static volatile bool g_transmitter_keyed = false;
 volatile bool g_tx_power_is_zero = true;
 
 static volatile bool g_drain_voltage_enabled = false;
@@ -94,7 +93,8 @@ void final_drain_voltage(bool state);
 	{
 		if(g_tx_initialized)
 		{
-			keyTransmitter(key);
+			int tries = 10;
+			while(tries-- && (key != keyTransmitter(key)));
 		}
 	}
 	
@@ -149,15 +149,17 @@ void final_drain_voltage(bool state);
 		}
 	}
 
-	void keyTransmitter(bool on)
+	bool keyTransmitter(bool on)
 	{
+		static volatile bool transmitter_keyed = false;
+		
 		if(g_tx_initialized)
 		{			
 			int tries = 5;
 			
 			if(on)
 			{
-				if(!g_transmitter_keyed)
+				if(!transmitter_keyed)
 				{
 					while(tries-- && (si5351_clock_enable(TX_CLOCK_HF_0, SI5351_CLK_ENABLED) != ERROR_CODE_NO_ERROR))
 					{
@@ -167,7 +169,7 @@ void final_drain_voltage(bool state);
 					
 					if(tries)
 					{
-						g_transmitter_keyed = true;
+						transmitter_keyed = true;
 					}
 				}
 			}
@@ -181,15 +183,22 @@ void final_drain_voltage(bool state);
 					
 				if(tries)
 				{
-					g_transmitter_keyed = false;
+					transmitter_keyed = false;
 				}
 			}
 		}
+		
+		return(transmitter_keyed);
 	}
 
 	uint16_t txGetPowerMw(void)
 	{
 		return( g_80m_power_level_mW);
+	}
+	
+	bool txIsInitialized(void)
+	{
+		return g_tx_initialized;
 	}
 
 	EC __attribute__((optimize("O0"))) txSetParameters(uint16_t* power_mW, bool* setEnabled)

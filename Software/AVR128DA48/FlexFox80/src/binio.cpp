@@ -156,7 +156,7 @@ void BINIO_init(void)
 	PORTF_set_pin_dir(3, PORT_DIR_OFF); /* Unused */
 	PORTF_set_pin_dir(4, PORT_DIR_OFF); /* Unused */
 	PORTF_set_pin_dir(5, PORT_DIR_OFF); /* Unused */
-	/* PORTF.PIN6 = Reset */
+	PORTF_set_pin_dir(6, PORT_DIR_OFF); /* Reset */
 	
 	/* PORT Pin Interrupts */
 	PORTA.PIN2CTRL = 0x0A; /* Enable RTC SQW 1-sec interrupts */

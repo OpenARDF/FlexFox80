@@ -178,7 +178,7 @@ void leds::setGreen(bool on)
 
 void leds::resume(void)
 {
-	if(!led_timeout_count)
+	if(!active())
 	{
 		led_timeout_count = LED_TIMEOUT;
 		TCB3.INTCTRL |= TCB_CAPT_bm;   /* Capture or Timeout: enabled */

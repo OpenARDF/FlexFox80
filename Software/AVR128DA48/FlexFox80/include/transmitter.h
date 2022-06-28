@@ -75,6 +75,10 @@ typedef int16_t Attenuation;
 /**
  */
  EC init_transmitter(void);
+ 
+/** 
+ */
+ bool txIsInitialized(void);
 
 /**
  */
@@ -94,7 +98,7 @@ typedef int16_t Attenuation;
 
 /**
  */
-void keyTransmitter(bool on);
+bool keyTransmitter(bool on);
 
 /**
  */

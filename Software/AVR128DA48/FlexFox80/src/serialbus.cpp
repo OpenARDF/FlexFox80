@@ -265,7 +265,7 @@ void USART1_initialization(uint32_t baud)
 	PC0_set_dir(PORT_DIR_OUT);
 	PC0_set_level(HIGH);
 
-	USART1_init(baud);
+	USART1_init(baud, false);
 }
 
 
@@ -281,7 +281,7 @@ void USART4_initialization(uint32_t baud)
 	PE0_set_dir(PORT_DIR_OUT);
 	PE0_set_level(HIGH);
 
-	USART4_init(baud);
+	USART4_init(baud, false);
 }
 
 
