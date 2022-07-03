@@ -119,16 +119,16 @@ void final_drain_voltage(bool state);
 	{
 		g_drain_voltage_enabled = state;
 
-		if(!g_rf_output_inhibited)
+		if(state == ON)
 		{
-			if(state == ON)
+			if(!g_rf_output_inhibited)
 			{
 				PORTB_set_pin_level(TX_FINAL_VOLTAGE_ENABLE, HIGH);
 			}
-			else
-			{
-				PORTB_set_pin_level(TX_FINAL_VOLTAGE_ENABLE, LOW);
-			}
+		}
+		else
+		{
+			PORTB_set_pin_level(TX_FINAL_VOLTAGE_ENABLE, LOW);
 		}
 	}
 
@@ -140,12 +140,11 @@ void final_drain_voltage(bool state);
 		if(inhibit)
 		{
 			PORTB_set_pin_level(TX_FINAL_VOLTAGE_ENABLE, LOW);
-//			PORTA_set_pin_level(FET_DRIVER_ENABLE, LOW);
 		}
 		else
 		{
-			final_drain_voltage(g_drain_voltage_enabled);
-//			fet_driver(g_fet_driver_enabled);
+			uint16_t pwr_mW = g_80m_power_level_mW;
+			txSetParameters(&pwr_mW, NULL);
 		}
 	}
 
@@ -223,21 +222,21 @@ void final_drain_voltage(bool state);
 				if(!err)
 				{
 					g_80m_power_level_mW = power;
-
-					if(g_antenna_connect_state == ANT_CONNECTED)
+					
+					if(g_antenna_connect_state != ANT_CONNECTED)
 					{
-						DAC0_setVal(drainVoltageDAC);
-					}
-					else
-					{
+						inhibitRFOutput(true);
 						g_tx_power_is_zero = true;
 						err = true;
 						code = ERROR_CODE_NO_ANTENNA_PREVENTS_POWER_SETTING;
 					}
 
+					DAC0_setVal(drainVoltageDAC);
+
 					if(g_tx_power_is_zero || (drainVoltageDAC == 0))
 					{
-						powerToTransmitter(OFF); /* Turn off FET driver and drain voltage */
+						final_drain_voltage(OFF);
+						fet_driver(ON);
 					}
 				}
 
@@ -283,11 +282,6 @@ void final_drain_voltage(bool state);
 		{
 			return(ERROR_CODE_RF_OSCILLATOR_ERROR);
 		}
-
-// 		if((code = txSetParameters(NULL, NULL)))
-// 		{
-// 			return( code);
-// 		}
 
 		if((code = si5351_drive_strength(TX_CLOCK_HF_0, SI5351_DRIVE_8MA)))
 		{
