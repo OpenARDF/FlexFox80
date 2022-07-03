@@ -767,7 +767,7 @@ int main(void)
 		powerDown3V3();
 		LEDS.blink(LEDS_RED_AND_GREEN_BLINK_FAST_OVERRIDE_ALL); /* LEDs blink an error signal */
 		
-		while(g_hardware_error) /* For test purposes, a keypress will allow program flow to continue */
+		while(g_hardware_error) /* For test purposes, a button press will allow program flow to continue */
 		{
 		}
 		
@@ -1683,9 +1683,9 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 						}
 					}
 				}
-				else if(f1 == '0')  /* Stop continuous transmit (if enabled) and prepare to receive new event data */
+				else if(f1 == '0')  /* Prepare to receive new event data */
 				{
-					suspendEvent();
+//					suspendEvent();
 					new_event_parameter_count = 0;
 					g_Event_Configuration_Check = 0;
 					g_last_status_code = STATUS_CODE_RECEIVING_EVENT_DATA;
