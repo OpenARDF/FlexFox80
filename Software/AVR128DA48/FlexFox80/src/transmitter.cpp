@@ -42,7 +42,7 @@ volatile Frequency_Hz g_rtty_offset = EEPROM_RTTY_OFFSET_FREQUENCY_DEFAULT;
 volatile bool g_tx_power_is_zero = true;
 
 static volatile bool g_drain_voltage_enabled = false;
-static volatile bool g_fet_driver_enabled = false;
+static volatile bool g_final_output_setting = OFF;
 static volatile bool g_rf_output_inhibited = false;		
 
 uint16_t g_80m_power_table[16] = DEFAULT_80M_POWER_TABLE;
@@ -82,10 +82,19 @@ void final_drain_voltage(bool state);
 		return( g_80m_frequency);
 	}
 
-	EC powerToTransmitter(bool on)
+	EC powerToTransmitter(bool state)
 	{
-		final_drain_voltage(on);
-		fet_driver(on);
+		g_final_output_setting = state;
+		
+		if(g_rf_output_inhibited)
+		{
+			final_drain_voltage(OFF);
+		}
+		else
+		{
+			final_drain_voltage(state);
+		}
+
 		return(ERROR_CODE_NO_ERROR);
 	}
 	
@@ -100,18 +109,13 @@ void final_drain_voltage(bool state);
 	
 	void fet_driver(bool state)
 	{
-		g_fet_driver_enabled = state;
-		
-		if(!g_rf_output_inhibited)
+		if(state == ON)
 		{
-			if(state == ON)
-			{
-				PORTA_set_pin_level(FET_DRIVER_ENABLE, HIGH);
-			}
-			else
-			{
-				PORTA_set_pin_level(FET_DRIVER_ENABLE, LOW);
-			}
+			PORTA_set_pin_level(FET_DRIVER_ENABLE, HIGH);
+		}
+		else
+		{
+			PORTA_set_pin_level(FET_DRIVER_ENABLE, LOW);
 		}
 	}
 
@@ -145,6 +149,7 @@ void final_drain_voltage(bool state);
 		{
 			uint16_t pwr_mW = g_80m_power_level_mW;
 			txSetParameters(&pwr_mW, NULL);
+			PORTB_set_pin_level(TX_FINAL_VOLTAGE_ENABLE, g_final_output_setting);
 		}
 	}
 
@@ -304,6 +309,8 @@ void final_drain_voltage(bool state);
 				g_tx_initialized = true;
 			}
 		}
+		
+		fet_driver(ON);
 
 		return( code);
 	}

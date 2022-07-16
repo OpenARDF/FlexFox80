@@ -193,17 +193,34 @@ ISR(PORTA_PORT_vect)
 
 		if(g_sleeping)
 		{
-			if(g_time_to_wake_up <= time(null))
+			if(g_sleepType == SLEEP_UNTIL_NEXT_XMSN)
 			{
-				g_go_to_sleep_now = false;
-				g_sleeping = false;
-				g_awakenedBy = AWAKENED_BY_CLOCK;
+				if(g_on_the_air < 0) 
+				{
+					g_on_the_air++;
+				}
+				
+				if((g_on_the_air > -6) || (g_time_to_wake_up <= time(null))) /* Always wake up at least 5 seconds before showtime */
+				{
+					g_go_to_sleep_now = false;
+					g_sleeping = false;
+					g_awakenedBy = AWAKENED_BY_CLOCK;
+				}
 			}
-			else if(g_antenna_connection_changed)
+			else
 			{
-				g_go_to_sleep_now = false;
-				g_sleeping = false;
-				g_awakenedBy = AWAKENED_BY_ANTENNA;
+				if(g_time_to_wake_up <= time(null))
+				{
+					g_go_to_sleep_now = false;
+					g_sleeping = false;
+					g_awakenedBy = AWAKENED_BY_CLOCK;
+				}
+				else if(g_antenna_connection_changed)
+				{
+					g_go_to_sleep_now = false;
+					g_sleeping = false;
+					g_awakenedBy = AWAKENED_BY_ANTENNA;
+				}
 			}
 		}
 		else
@@ -226,6 +243,7 @@ ISR(PORTA_PORT_vect)
 						g_check_for_next_event = true;
 						g_wifi_enable_delay = 2;
 						LEDS.setRed(OFF);
+						g_sleepType = SLEEP_FOREVER;
 					}
 				}
 			}
@@ -698,13 +716,14 @@ ISR(PORTC_PORT_vect)
 
 void powerDown3V3(void)
 {
+	powerToTransmitter(OFF); /* Turn off power to final FET */
 	PORTA_set_pin_level(V3V3_PWR_ENABLE, LOW);	
 	PORTB_set_pin_level(MAIN_PWR_ENABLE, LOW);
 }
 
 void powerUp3V3(void)
 {
-	powerToTransmitter(OFF); /* Turn off power to FET driver */
+	powerToTransmitter(OFF); /* Turn off power to final FET */
 	PORTB_set_pin_level(MAIN_PWR_ENABLE, HIGH);  /* Turn on 12V booster circuit */
 	PORTA_set_pin_level(V3V3_PWR_ENABLE, HIGH);  /* Enable 3V3 power regulator */
 }
@@ -715,7 +734,6 @@ int main(void)
 {
 	atmel_start_init();
 	LEDS.blink(LEDS_OFF);
-	PORTB_set_pin_level(MAIN_PWR_ENABLE, ON);	
 	powerUp3V3();
 	
 	g_ee_mgr.initializeEEPROMVars();
@@ -920,6 +938,7 @@ int main(void)
 			g_sleeping = false;
 			atmel_start_init();
 			powerUp3V3();
+			init_transmitter();
 			
 			if((g_awakenedBy == AWAKENED_BY_BUTTONPRESS) || (g_awakenedBy == AWAKENED_BY_ANTENNA) || (g_awakenedBy == AWAKENED_BY_POWERUP))
 			{	
@@ -937,6 +956,19 @@ int main(void)
 				LEDS.blink(LEDS_RED_OFF);
  				linkbus_enable();
 				g_wifi_enable_delay = 2; /* Ensure WiFi is enabled and countdown is reset */
+			}
+			else if(g_awakenedBy == AWAKENED_BY_CLOCK)
+			{
+				if(!g_event_enabled)
+				{
+					g_start_event = eventEnabled(); /* Start any event stored in EEPROM */
+				
+					if(!g_start_event)
+					{
+ 						linkbus_enable();
+						g_wifi_enable_delay = 2; /* Ensure WiFi is enabled and countdown is reset */
+					}
+				}
 			}
 
  			g_last_status_code = STATUS_CODE_RETURNED_FROM_SLEEP;
@@ -2109,10 +2141,10 @@ bool __attribute__((optimize("O0"))) eventEnabled()
 	now = time(null);
 	dif = timeDif(now, g_event_finish_epoch);
 	g_go_to_sleep_now = false;
-	g_sleepType = SLEEP_FOREVER;
 
 	if(dif >= 0) /* Event has already finished */
 	{
+		g_sleepType = SLEEP_FOREVER;
 		g_time_to_wake_up = MAX_TIME;
 		g_wifi_enable_delay = 2;
 		return(false); /* completed events are never enabled */
@@ -2122,6 +2154,7 @@ bool __attribute__((optimize("O0"))) eventEnabled()
 
 	if(dif >= -30)  /* Don't sleep if the event starts in 30 seconds or less, or has already started */
 	{
+		g_sleepType = DO_NOT_SLEEP;
 		g_time_to_wake_up = g_event_start_epoch - 5;
 		return( true);
 	}
