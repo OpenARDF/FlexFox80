@@ -76,6 +76,7 @@ const uint8_t wd(int year, int month, int day)
 
 time_t epoch_from_ltm(tm *ltm);
 
+/* Returns false if successful */
 bool ds3231_init()
 {
 	I2C_0_Init();
@@ -463,7 +464,7 @@ void ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-2
 	bool ds3231_responding()
 	{
 		bool responseReceived = false;
-		uint8_t tries = 10;
+		uint8_t tries = 100;
 		int8_t data[1];		
 		while(tries-- && !(responseReceived = (I2C_0_GetData(DS3231_I2C_SLAVE_ADDR, RTC_AGING, (uint8_t *)data, 1) == 1)));
 		return(responseReceived);

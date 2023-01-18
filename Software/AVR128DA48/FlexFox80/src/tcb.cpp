@@ -26,6 +26,7 @@
 
 static uint32_t g_ms_counter = 0;
 extern volatile uint16_t g_i2c0_timeout_ticks;
+extern volatile uint16_t g_serial_timeout_ticks;
 extern volatile uint16_t g_i2c1_timeout_ticks;
 
 /**
@@ -47,7 +48,7 @@ TCB0.CTRLA = TCB_CLKSEL_DIV2_gc     /* CLK_PER */
 | 0 << TCB_SYNCUPD_bp  /* Synchronize Update: disabled */
 | 0 << TCB_CASCADE_bp; /* Cascade Two Timer/Counters: disabled */
 
-TCB0.INTFLAGS = TCB_CAPT_bm; /* Clear flag */
+TCB0.INTFLAGS = (TCB_CAPT_bm | TCB_OVF_bm); /* Clear flag */
 
 /********************************************************************************/
 
@@ -162,8 +163,9 @@ ISR(TCB2_INT_vect)
 	{
 		if(g_i2c1_timeout_ticks) g_i2c1_timeout_ticks--;
 		if(g_i2c0_timeout_ticks) g_i2c0_timeout_ticks--;
-		TCB2.INTFLAGS = TCB_CAPT_bm; /* Clear flag */
+		if(g_serial_timeout_ticks) g_serial_timeout_ticks--;
 	}
+	TCB2.INTFLAGS = TCB_CAPT_bm | TCB_OVF_bm; /* Clear flags */
 }
 
 
@@ -184,9 +186,9 @@ ISR(TCB1_INT_vect)
 			TCB1.INTCTRL = 0 << TCB_CAPT_bp   /* Capture or Timeout: disabled */
 			| 0 << TCB_OVF_bp; /* OverFlow Interrupt: disabled */
 		}
-
-        TCB1.INTFLAGS = TCB_CAPT_bm; /* clear interrupt flag */
     }
+
+    TCB1.INTFLAGS = TCB_CAPT_bm | TCB_OVF_bm; /* clear interrupt flags */
 }
 
 int8_t TIMERB_sleep()

@@ -43,6 +43,7 @@
 #endif  /* ATMEL_STUDIO_7 */
 
 /* Global Variables */
+volatile uint16_t g_serial_timeout_ticks = 200;
 USART_Number_t g_serialbus_usart_number = USART_NOT_SET;
 static volatile bool g_bus_disabled = true;
 static const char crlf[] = "\n";
@@ -54,7 +55,6 @@ static char g_tempMsgBuff[SERIALBUS_MAX_MSG_LENGTH];
 /* Local function prototypes */
 bool serialbus_start_tx(void);
 bool serialbus_send_text(char* text);
-// static void USART0_initialization(uint32_t baud);
 static void USART1_initialization(uint32_t baud);
 static void USART4_initialization(uint32_t baud);
 
@@ -226,33 +226,6 @@ void serialbus_end_tx(void)
 	}
 }
 
-// void serialbus_reset_rx(void)
-// {
-// 	if(UCSR0B & (1 << RXEN0))   /* perform only if rx is currently enabled */
-// 	{
-// 		UCSR0B &= ~(1 << RXEN0);
-// 		memset(rx_buffer, 0, sizeof(rx_buffer));
-// 		UCSR0B |= (1 << RXEN0);
-// 	}
-// }
-
-
-/* configure the pins and initialize the registers */
-// void USART0_initialization(uint32_t baud)
-// {
-// 
-// 	// Set Rx pin direction to input
-// 	PA1_set_dir(PORT_DIR_IN);
-// 	PA1_set_pull_mode(PORT_PULL_OFF);
-// 
-// 	// Set Tx pin direction to output
-// 	PA0_set_dir(PORT_DIR_OUT);
-// 	PA0_set_level(HIGH);
-// 
-// 	USART0_init(baud);
-// }
-
-
 /* configure the pins and initialize the registers */
 void USART1_initialization(uint32_t baud)
 {
@@ -272,7 +245,6 @@ void USART1_initialization(uint32_t baud)
 /* configure the pins and initialize the registers */
 void USART4_initialization(uint32_t baud)
 {
-
 	// Set Rx pin direction to input
 	PE1_set_dir(PORT_DIR_IN);
 	PE1_set_pull_mode(PORT_PULL_OFF);
@@ -288,6 +260,7 @@ void USART4_initialization(uint32_t baud)
 void serialbus_init(uint32_t baud, USART_Number_t usart)
 {
 	memset((SerialbusRxBuffer*)rx_buffer, 0, sizeof(*(SerialbusRxBuffer*)rx_buffer));
+	serialbus_end_tx();
 
 	for(int bufferIndex=0; bufferIndex<SERIALBUS_NUMBER_OF_TX_MSG_BUFFERS; bufferIndex++)
 	{
@@ -339,33 +312,28 @@ void serialbus_disable(void)
 bool serialbus_send_text(char* text)
 {
 	bool err = true;
-	uint16_t tries = 200;
 
 	if(g_bus_disabled)
 	{
 		return( err);
 	}
 
+	uint16_t tries;
 	if(text)
 	{
 		SerialbusTxBuffer* buff = nextEmptySBTxBuffer();
-
-		while(!buff && tries)
+		tries = 200;
+		
+		while(!buff && tries--)
 		{
-			while(serialbusTxInProgress() && tries)
-			{
-				if(tries)
-				{
-					tries--;    /* wait until transmit finishes */
-				}
-			}
+			uint16_t spin = 500;
+			while(serialbusTxInProgress() && spin--); /* Wait for previous transmission to complete */
 			buff = nextEmptySBTxBuffer();
 		}
 
 		if(buff)
 		{
 			sprintf(*buff, text);
-
 			serialbus_start_tx();
 			err = false;
 		}
@@ -444,12 +412,15 @@ bool sb_send_string(char* str)
 		buf[lengthToSend] = '\0';
 		err = serialbus_send_text(buf);
 		
+		g_serial_timeout_ticks = 200;
 		if(!err)
 		{
-			while(serialbusTxInProgress())
+			while(serialbusTxInProgress() && g_serial_timeout_ticks)
 			{
 				;
 			}
+			
+			if(!g_serial_timeout_ticks) err = true;
 		}
 
 		lengthSent += lengthToSend;
@@ -473,7 +444,9 @@ void sb_send_value(uint16_t value, char* label)
 	{
 		;
 	}
-	while(!err && serialbusTxInProgress())
+	
+	g_serial_timeout_ticks = 200;
+	while(!err && serialbusTxInProgress() && g_serial_timeout_ticks)
 	{
 		;
 	}

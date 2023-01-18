@@ -60,14 +60,14 @@ void system_init()
 	BOD_init();
 }
 
-void system_sleep()
+void system_sleep_settings()
 {
 	mcu_init();
 
 //	CLKCTRL_init(); /* Set CPU clock speed appropriately */
 	TIMERB_sleep(); /* Timers must be initialized before utility_delay functions will work */
 //	CPUINT_init(); /* Interrupts must also be enabled before timer interrupts will function */
-//	BINIO_init();
+	BINIO_sleep();
 
 	LED_set_RED_dir(PORT_DIR_OUT);
 	LED_set_RED_level(OFF);

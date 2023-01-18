@@ -14,6 +14,8 @@ src\binio.cpp
 
 src\bod.cpp
 
+src\CircularStringBuff.cpp
+
 src\clkctrl.cpp
 
 src\cpuint.cpp

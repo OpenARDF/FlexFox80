@@ -73,7 +73,6 @@ void I2C_0_Shutdown(void)
 
 void I2C_0_Init(void)
 {
-	/* Select I2C pins PC2/PC3 */
 	PORTMUX.TWIROUTEA &= 0x0A;
 	PORTMUX.TWIROUTEA |= 0x02;
 	
@@ -93,9 +92,6 @@ void I2C_0_Init(void)
 	/* Set bus state idle */
 	TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;
 	/* Select I2C pins PC2/PC3 */
-	
-	PORTC_set_pin_pull_mode(2, PORT_PULL_UP);
-	PORTC_set_pin_pull_mode(3, PORT_PULL_UP);
 }
 
 static uint8_t i2c_0_WaitW(void)

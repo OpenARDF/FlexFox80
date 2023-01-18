@@ -39,6 +39,6 @@ void ADC0_setADCChannel(ADC_Active_Channel_t chan);
 void ADC0_startConversion(void);
 bool ADC0_conversionDone(void);
 int ADC0_read(void);
-float temperatureC(void);
+int16_t temperatureC(void);
 
 #endif /* ADC_H_ */

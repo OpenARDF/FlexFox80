@@ -43,11 +43,22 @@ typedef enum
 
 typedef enum
 {
-	AWAKENED_BY_POWERUP,
+	POWER_UP_START,
 	AWAKENED_BY_CLOCK,
 	AWAKENED_BY_ANTENNA,
 	AWAKENED_BY_BUTTONPRESS
 } Awakened_t;
+
+typedef enum
+{
+	HARDWARE_OK,
+	HARDWARE_NO_RTC = 0x01,
+	HARDWARE_NO_SI5351 = 0x02,
+	HARDWARE_NO_WIFI = 0x04,
+	HARDWARE_NO_12V = 0x08,
+	HARDWARE_NO_FET_BIAS = 0x10
+} HardwareError_t;
+
 
 
 /***********************************************************************
@@ -82,9 +93,10 @@ static volatile bool g_wifi_active = true;
 static volatile uint8_t g_wifi_enable_delay = 0;
 static volatile bool g_shutting_down_wifi = false;
 static volatile bool g_wifi_ready = false;
-static volatile bool g_hardware_error = false;
+static volatile int g_hardware_error = (int)HARDWARE_OK;
 
-char g_messages_text[2][MAX_PATTERN_TEXT_LENGTH + 1] = { "\0", "\0" };
+extern Frequency_Hz g_80m_frequency;
+char g_messages_text[STATION_ID+1][MAX_PATTERN_TEXT_LENGTH + 1];
 volatile uint8_t g_id_codespeed = EEPROM_ID_CODE_SPEED_DEFAULT;
 volatile uint8_t g_pattern_codespeed = EEPROM_PATTERN_CODE_SPEED_DEFAULT;
 volatile uint16_t g_time_needed_for_ID = 0;
@@ -95,10 +107,13 @@ volatile int16_t g_ID_period_seconds = EEPROM_ID_TIME_INTERVAL_DEFAULT;         
 volatile time_t g_event_start_epoch = EEPROM_START_TIME_DEFAULT;
 volatile time_t g_event_finish_epoch = EEPROM_FINISH_TIME_DEFAULT;
 volatile bool g_event_enabled = EEPROM_EVENT_ENABLED_DEFAULT;                        /* indicates that the conditions for executing the event are set */
+volatile bool g_event_scheduled = false;											 /* Indicates that an event that starts in the future is scheduled */
 volatile bool g_event_commenced = false;
 volatile bool g_check_for_next_event = false;
 volatile bool g_waiting_for_next_event = false;
-volatile uint16_t g_battery_empty_mV = EEPROM_BATTERY_EMPTY_MV;
+
+volatile bool g_sending_station_ID = false;											/* Allows a small extension of transmissions to ensure the ID is fully sent */
+volatile bool g_muteAfterID = false;												/* Inhibit any transmissions after the ID has been sent */
 
 static volatile bool g_sufficient_power_detected = false;
 static volatile bool g_enableHardwareWDResets = false;
@@ -107,7 +122,7 @@ extern volatile bool g_tx_power_is_zero;
 static volatile bool g_go_to_sleep_now = false;
 static volatile bool g_sleeping = false;
 static volatile time_t g_time_to_wake_up = 0;
-static volatile Awakened_t g_awakenedBy = AWAKENED_BY_POWERUP;
+static volatile Awakened_t g_awakenedBy = POWER_UP_START;
 static volatile SleepType g_sleepType = SLEEP_FOREVER;
 
 // #define NUMBER_OF_POLLED_ADC_CHANNELS 4
@@ -127,28 +142,39 @@ static volatile uint16_t g_lastConversionResult[NUMBER_OF_POLLED_ADC_CHANNELS];
 
 extern Goertzel g_goertzel;
 volatile uint16_t g_switch_closed_count = 0;
+volatile uint16_t g_handle_counted_presses = 0;
+volatile uint16_t g_switch_presses_count = 0;
 volatile bool g_long_button_press = false;
+volatile uint16_t g_check_temperature = 0;
+
+Enunciation_t g_enunciator = LED_ONLY;
 
 uint16_t g_Event_Configuration_Check = 0;
 
 leds LEDS = leds();
-#define TEXT_BUFF_SIZE 50
 CircularStringBuff g_text_buff = CircularStringBuff(TEXT_BUFF_SIZE);
 
 EepromManager g_ee_mgr;
 
 Fox_t g_fox = FOX_1;
+extern Event_t g_event;
+extern Fox_t g_foxoring_fox;
+extern Frequency_Hz g_foxoring_frequencyA;
+extern Frequency_Hz g_foxoring_frequencyB;
+extern Frequency_Hz g_foxoring_frequencyC;
 int8_t g_utc_offset;
-uint8_t g_unlockCode[8];
+uint8_t g_unlockCode[UNLOCK_CODE_SIZE + 1];
 bool g_use_rtc_for_startstop = false;
 
 volatile bool g_enable_manual_transmissions = false;
+volatile bool g_enable_LED_enunciations = true;
 
 /***********************************************************************
  * Private Function Prototypes
  *
  * These functions are available only within this file
  ************************************************************************/
+void handle_1sec_tasks(void);
 bool eventEnabled(void);
 void handleLinkBusMsgs(void);
 void handleSerialBusMsgs(void);
@@ -162,7 +188,14 @@ bool antennaIsConnected(void);
 void updateAntennaStatus(void);
 void powerDown3V3(void);
 void powerUp3V3(void);
+void setFan(bool on);
+bool fanIsOn(void);
 
+uint16_t timeNeededForID(void);
+Frequency_Hz getFrequencySetting(void);
+char* getPatternText(void);
+Fox_t getFoxSetting(void);
+bool eventScheduled(void);
 
 /*******************************/
 /* Hardcoded event support     */
@@ -172,8 +205,8 @@ void suspendEvent(void);
 void stopEventNow(EventActionSource_t activationSource);
 void startEventNow(EventActionSource_t activationSource);
 void startEventUsingRTC(void);
-void setupForFox(Fox_t* fox, EventAction_t action);
-time_t validateTimeString(char* str, time_t* epochVar, int8_t offsetHours);
+void setupForFox(Fox_t fox, EventAction_t action);
+time_t validateTimeString(char* str, time_t* epochVar);
 bool reportTimeTill(time_t from, time_t until, const char* prefix, const char* failMsg);
 ConfigurationState_t clockConfigurationCheck(void);
 void reportConfigErrors(void);
@@ -187,7 +220,9 @@ One-second counter based on RTC 1-second square wave output.
 */
 ISR(PORTA_PORT_vect)
 {
-    if(PORTA.INTFLAGS & (1 << RTC_SQW)) /* Handle 1-second interrupt */
+	uint8_t x = VPORTA.INTFLAGS;
+	
+    if(x & (1 << RTC_SQW)) /* Handle 1-second interrupt */
     {
 		system_tick();
 
@@ -225,191 +260,225 @@ ISR(PORTA_PORT_vect)
 		}
 		else
 		{
-			time_t temp_time = 0;
+			handle_1sec_tasks();
+		}
+	}
 
-			if(g_event_commenced)
+    VPORTA.INTFLAGS = 0xFF; /* Clear all PORTA interrupt flags */
+}
+
+
+/**
+1-Second Interrupts:
+One-second counter based on RTC.
+*/
+void handle_1sec_tasks(void)
+{
+	static uint16_t extendedOnAirTime = 0;
+	time_t temp_time = 0;
+
+	if(g_check_temperature) g_check_temperature--;
+	
+	if(g_event_commenced)
+	{
+		if(g_event_finish_epoch && !g_check_for_next_event && !g_shutting_down_wifi)
+		{
+			temp_time = time(null);
+
+			if(temp_time >= g_event_finish_epoch)
 			{
-				if(g_event_finish_epoch && !g_check_for_next_event && !g_shutting_down_wifi)
+				g_last_status_code = STATUS_CODE_EVENT_FINISHED;
+				g_on_the_air = 0;
+				keyTransmitter(OFF);
+				g_event_enabled = false;
+				g_event_commenced = false;
+				g_check_for_next_event = true;
+				g_wifi_enable_delay = 2;
+				antennaIsConnected(); /* Set green LED appropriately */
+				g_sleepType = SLEEP_FOREVER;
+					
+				if(g_hardware_error & (int)HARDWARE_NO_WIFI)
 				{
-					temp_time = time(null);
-
-					if(temp_time >= g_event_finish_epoch)
-					{
-						g_last_status_code = STATUS_CODE_EVENT_FINISHED;
-						g_on_the_air = 0;
-						keyTransmitter(OFF);
-						g_event_enabled = false;
-						g_event_commenced = false;
-						g_check_for_next_event = true;
-						g_wifi_enable_delay = 2;
-						LEDS.setRed(OFF);
-						g_sleepType = SLEEP_FOREVER;
-					}
-				}
-			}
-
-			if(g_event_enabled)
-			{
-				if(g_event_commenced)
-				{
-					bool repeat;
-
-					if(g_sendID_seconds_countdown)
-					{
-						g_sendID_seconds_countdown--;
-					}
-
-					if(g_on_the_air)
-					{
-						if(g_on_the_air > 0)    /* on the air */
-						{
-							g_on_the_air--;
-
-							if(!g_sendID_seconds_countdown && g_time_needed_for_ID)
-							{
-								if(g_on_the_air == g_time_needed_for_ID)    /* wait until the end of a transmission */
-								{
-									g_last_status_code = STATUS_CODE_SENDING_ID;
-									g_sendID_seconds_countdown = g_ID_period_seconds;
-									g_code_throttle = throttleValue(g_id_codespeed);
-									repeat = false;
-									makeMorse(g_messages_text[STATION_ID], &repeat, NULL);  /* Send only once */
-								}
-							}
-
-
-							if(!g_on_the_air) /* On-the-air time has just expired */
-							{
-								if(g_off_air_seconds) /* If there will be a pause in transmissions before resuming */
-								{
-									keyTransmitter(OFF);
-									g_on_the_air -= g_off_air_seconds;
-									repeat = true;
-									makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);    /* Reset pattern to start */
-									g_last_status_code = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
-									LEDS.setRed(OFF);
-
-									/* Enable sleep during off-the-air periods */
-									int32_t timeRemaining = 0;
-									temp_time = time(null);
-									if(temp_time < g_event_finish_epoch)
-									{
-										timeRemaining = timeDif(g_event_finish_epoch, temp_time);
-									}
-
-									/* Don't sleep for the last cycle to ensure that the event doesn't end while
-										* the transmitter is sleeping - which can cause problems with loading the next event */
-									if(timeRemaining > (g_off_air_seconds + g_on_air_seconds + 15))
-									{
-										if((g_off_air_seconds > 15) && !g_WiFi_shutdown_seconds)
-										{
-											time_t seconds_to_sleep = (time_t)(g_off_air_seconds - 10);
-											g_time_to_wake_up = temp_time + seconds_to_sleep;
-											g_sleepType = SLEEP_UNTIL_NEXT_XMSN;
-											g_go_to_sleep_now = true;
-											g_sendID_seconds_countdown = MAX(0, g_sendID_seconds_countdown - (int)seconds_to_sleep);
-										}
-									}
-								}
-								else /* Transmissions are continuous */
-								{
-									g_on_the_air = g_on_air_seconds;
-									g_code_throttle = throttleValue(g_pattern_codespeed);
-								}
-							}
-						}
-						else if(g_on_the_air < 0)   /* off the air - g_on_the_air = 0 means all transmissions are disabled */
-						{
-							g_on_the_air++;
-
-							if(!g_on_the_air)       /* off-the-air time has expired */
-							{
-								g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
-								g_on_the_air = g_on_air_seconds;
-								g_code_throttle = throttleValue(g_pattern_codespeed);
-								bool repeat = true;
-								makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
-							}
-						}
-					}
-				}
-				else if(g_event_start_epoch > 0) /* off the air - waiting for the start time to arrive */
-				{
-					temp_time = time(null);
-
-					if(temp_time >= g_event_start_epoch) /* Time for the event to start */
-					{
-						if(g_intra_cycle_delay_time)
-						{
-							g_last_status_code = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
-							g_on_the_air = -g_intra_cycle_delay_time;
-							g_sendID_seconds_countdown = g_intra_cycle_delay_time + g_on_air_seconds - g_time_needed_for_ID;
-						}
-						else
-						{
-							g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
-							g_on_the_air = g_on_air_seconds;
-							g_sendID_seconds_countdown = g_on_air_seconds - g_time_needed_for_ID;
-							g_code_throttle = throttleValue(g_pattern_codespeed);
-							bool repeat = true;
-							makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
-						}
-
-						g_event_commenced = true;
-//						LEDS.blink(LEDS_GREEN_BLINK_FAST);
-						LEDS.blink(LEDS_RED_OFF);
-					}
-				}
-			}
-
-
-			/**************************************
-			* Delay before re-enabling linkbus receive
-			***************************************/
-			if(g_wifi_enable_delay)
-			{
-				g_wifi_enable_delay--;
-
-				if(!g_wifi_enable_delay)
-				{
-					wifi_power(ON);     /* power on WiFi */
-					wifi_reset(OFF);    /* bring WiFi out of reset */
-					g_WiFi_shutdown_seconds = 120;
-				}
-			}
-			else
-			{
-				if(g_shutting_down_wifi || (!g_check_for_next_event && !g_waiting_for_next_event))
-				{
-					if(g_WiFi_shutdown_seconds)
-					{
-						g_WiFi_shutdown_seconds--;
-
-						if(!g_WiFi_shutdown_seconds && !g_enable_manual_transmissions)
-						{
-							g_wifi_ready = false;
-							wifi_reset(ON);     /* put WiFi into reset */
-							wifi_power(OFF);    /* power off WiFi */
-							g_shutting_down_wifi = false;
-							g_wifi_active = false;
-							
-							if(g_sleepType != DO_NOT_SLEEP)
-							{
-								g_go_to_sleep_now = true;								
-							}
-						}
-					}
-				}
-
-				if(g_wifi_active)
-				{
-					g_report_seconds = true;
+					g_check_for_next_event = false;
+					g_go_to_sleep_now = true;
 				}
 			}
 		}
-    }
+	}
 
-    PORTA.INTFLAGS = 0xFF; /* Clear all PORTA interrupt flags */
+	if(g_event_enabled)
+	{
+		if(g_event_commenced)
+		{
+			bool repeat;
+
+			if(g_sendID_seconds_countdown)
+			{
+				g_sendID_seconds_countdown--;
+			}
+
+			if(g_on_the_air)
+			{
+				if(g_on_the_air > 0)    /* on the air */
+				{
+					g_on_the_air--;
+
+					if(!g_sendID_seconds_countdown && g_time_needed_for_ID)
+					{
+						if(g_on_the_air == g_time_needed_for_ID)    /* wait until the end of a transmission */
+						{
+							g_last_status_code = STATUS_CODE_SENDING_ID;
+							g_sendID_seconds_countdown = g_ID_period_seconds;
+							g_code_throttle = throttleValue(g_id_codespeed);
+							repeat = false;
+							makeMorse(g_messages_text[STATION_ID], &repeat, NULL);  /* Send only once */
+							g_sending_station_ID = true;
+							extendedOnAirTime=0;
+						}
+					}
+
+
+					if(!g_on_the_air) /* On-the-air time has just expired */
+					{
+						if(g_sending_station_ID)
+						{
+							g_on_the_air++; /* Continue sending ID */
+							extendedOnAirTime++; /* Remove this time from the off-the-air period */
+						}
+						else
+						{
+							if(g_off_air_seconds) /* If there will be a pause in transmissions before resuming */
+							{
+								keyTransmitter(OFF);
+								g_on_the_air -= g_off_air_seconds;
+								g_on_the_air += extendedOnAirTime;
+								extendedOnAirTime = 0;
+							
+								repeat = true;
+								makeMorse(getPatternText(), &repeat, NULL);    /* Reset pattern to start */
+								g_last_status_code = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
+								LEDS.setRed(OFF);
+
+								/* Enable sleep during off-the-air periods */
+								int32_t timeRemaining = 0;
+								temp_time = time(null);
+								if(temp_time < g_event_finish_epoch)
+								{
+									timeRemaining = timeDif(g_event_finish_epoch, temp_time);
+								}
+
+								/* Don't sleep for the last cycle to ensure that the event doesn't end while
+									* the transmitter is sleeping - which can cause problems with loading the next event */
+								if(timeRemaining > (g_off_air_seconds + g_on_air_seconds + 15))
+								{
+									if((g_off_air_seconds > 15) && !g_WiFi_shutdown_seconds)
+									{
+										time_t seconds_to_sleep = (time_t)(g_off_air_seconds - 10);
+										g_time_to_wake_up = temp_time + seconds_to_sleep;
+										g_sleepType = SLEEP_UNTIL_NEXT_XMSN;
+										g_go_to_sleep_now = true;
+										g_sendID_seconds_countdown = MAX(0, g_sendID_seconds_countdown - (int)seconds_to_sleep);
+									}
+								}
+							}
+							else /* Transmissions are continuous */
+							{
+								g_on_the_air = g_on_air_seconds;
+								g_code_throttle = throttleValue(g_pattern_codespeed);
+							}
+						}
+					}
+				}
+				else if(g_on_the_air < 0)   /* off the air - g_on_the_air = 0 means all transmissions are disabled */
+				{
+					g_on_the_air++;
+
+					if(!g_on_the_air)       /* off-the-air time has expired */
+					{
+						g_muteAfterID = false;
+						g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
+						g_on_the_air = g_on_air_seconds;
+						g_code_throttle = throttleValue(g_pattern_codespeed);
+						bool repeat = true;
+						makeMorse(getPatternText(), &repeat, NULL);
+					}
+				}
+			}
+		}
+		else if(g_event_start_epoch > MINIMUM_VALID_EPOCH) /* off the air - waiting for the start time to arrive */
+		{
+			temp_time = time(null);
+
+			if(temp_time >= g_event_start_epoch) /* Time for the event to start */
+			{
+				powerToTransmitter(ON);
+				
+				if(g_intra_cycle_delay_time)
+				{
+					g_last_status_code = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
+					g_on_the_air = -g_intra_cycle_delay_time;
+					g_sendID_seconds_countdown = g_intra_cycle_delay_time + g_on_air_seconds - g_time_needed_for_ID;
+				}
+				else
+				{
+					g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
+					g_on_the_air = g_on_air_seconds;
+					g_sendID_seconds_countdown = g_on_air_seconds - g_time_needed_for_ID;
+					g_code_throttle = throttleValue(g_pattern_codespeed);
+					bool repeat = true;
+					makeMorse(getPatternText(), &repeat, NULL);
+				}
+
+				g_event_commenced = true;
+				LEDS.init();
+			}
+		}
+	}
+
+
+	/**************************************
+	* Delay before re-enabling linkbus receive
+	***************************************/
+	if(g_wifi_enable_delay)
+	{
+		g_wifi_enable_delay--;
+
+		if(!g_wifi_enable_delay)
+		{
+			wifi_power(ON);     /* power on WiFi */
+			wifi_reset(OFF);    /* bring WiFi out of reset */
+			g_WiFi_shutdown_seconds = 120;
+		}
+	}
+	else
+	{
+		if(g_shutting_down_wifi || (!g_check_for_next_event && !g_waiting_for_next_event))
+		{
+			if(g_WiFi_shutdown_seconds)
+			{
+				g_WiFi_shutdown_seconds--;
+
+				if(!g_WiFi_shutdown_seconds && !g_enable_manual_transmissions)
+				{
+					g_wifi_ready = false;
+					wifi_reset(ON);     /* put WiFi into reset */
+					wifi_power(OFF);    /* power off WiFi */
+					g_shutting_down_wifi = false;
+					g_wifi_active = false;
+							
+					if(g_sleepType != DO_NOT_SLEEP)
+					{
+						g_go_to_sleep_now = true;								
+					}
+				}
+			}
+		}
+
+		if(g_wifi_active)
+		{
+			g_report_seconds = true;
+		}
+	}
 }
 
 /**
@@ -418,7 +487,9 @@ Antenna disconnect interrupt.
 */
 ISR(PORTD_PORT_vect)
 {
-	if(PORTD.INTFLAGS & (1 << X80M_ANTENNA_DETECT)) /* Handle antenna change */
+	uint8_t x = VPORTD.INTFLAGS;
+	
+	if(x & (1 << X80M_ANTENNA_DETECT)) /* Handle antenna change */
 	{
 		bool ant = antennaIsConnected();
 
@@ -427,13 +498,14 @@ ISR(PORTD_PORT_vect)
 			if(g_antenna_connect_state != ANT_DISCONNECTED)
 			{
 				g_antenna_connect_state = ANT_DISCONNECTED;
-				g_antenna_connection_changed = true;
 				inhibitRFOutput(true);
 			}
 		}
+		
+		g_antenna_connection_changed = true;
 	}
 
-    PORTD.INTFLAGS = 0xFF; /* Clear all PORTD interrupt flags */
+    VPORTD.INTFLAGS = 0xFF; /* Clear all PORTD interrupt flags */
 }
 
 
@@ -443,25 +515,56 @@ Periodic tasks not requiring precise timing. Rate = 300 Hz
 */
 ISR(TCB0_INT_vect)
 {
-    if(TCB0.INTFLAGS & TCB_CAPT_bm)
+	static bool initializeManualTransmissions = true;
+	uint8_t x = TCB0.INTFLAGS;
+	
+    if(x & TCB_CAPT_bm)
     {
 		static bool conversionInProcess = false;
 		static int8_t indexConversionInProcess = 0;
 		static uint16_t codeInc = 0;
 		bool repeat, finished;
+		static uint16_t switch_closures_count_period = 0;
 		
 		if(g_util_tick_countdown)
 		{
 			g_util_tick_countdown--;
 		}
 		
+		if(switch_closures_count_period)
+		{
+			switch_closures_count_period--;
+				
+			if(!switch_closures_count_period)
+			{
+				if(g_switch_presses_count && (g_switch_presses_count<=3))
+				{
+					g_handle_counted_presses = g_switch_presses_count;
+				}
+					
+				g_switch_presses_count = 0;
+			}
+		}
+		else if(g_switch_presses_count == 1)
+		{
+			switch_closures_count_period = 300;
+		}
+		else if(g_switch_presses_count > 2)
+		{
+			g_switch_presses_count = 0;
+		}
+
 		// Check switch state		
 		if(!PORTC_get_pin_level(SWITCH))
 		{
 			if(g_switch_closed_count<1000)
 			{
 				g_switch_closed_count++;
-			}
+				if(g_switch_closed_count >= 1000)
+				{
+					g_long_button_press = true;
+				}
+			}			
 		}		
 							
 		updateAntennaStatus();
@@ -470,6 +573,8 @@ ISR(TCB0_INT_vect)
 
 		if(g_event_enabled && g_event_commenced) /* Handle cycling transmissions */
 		{
+			initializeManualTransmissions = true;
+			
 			if(g_on_the_air > 0)
 			{
 				if(codeInc)
@@ -485,19 +590,20 @@ ISR(TCB0_INT_vect)
 							g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
 							g_code_throttle = throttleValue(g_pattern_codespeed);
 							repeat = true;
-							makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
+							makeMorse(getPatternText(), &repeat, NULL);
 							key = makeMorse(NULL, &repeat, &finished);
-						}
-
-						if(key)
-						{
-							powerToTransmitter(ON);
-							LEDS.setRed(ON);
+							g_muteAfterID = g_sending_station_ID && g_off_air_seconds;
+							g_sending_station_ID = false;
 						}
 					}
 				}
 				else
 				{
+					if(g_muteAfterID) 
+					{
+						key = OFF;
+					}
+					
 					keyTransmitter(key);
 					LEDS.setRed(key);
 					codeInc = g_code_throttle;
@@ -505,6 +611,8 @@ ISR(TCB0_INT_vect)
 			}
 			else if(!g_on_the_air)
 			{
+				g_muteAfterID = false;
+				
 				if(key)
 				{
 					key = OFF;
@@ -515,12 +623,21 @@ ISR(TCB0_INT_vect)
 				}
 			}
 		}
-		else if(g_enable_manual_transmissions) /* Handle single-character transmissions */
+		else if(g_enable_manual_transmissions || g_enable_LED_enunciations) /* Handle enunciations & character string transmissions */
 		{
 			static bool charFinished = true;
 			static bool idle = true;
 			bool sendBuffEmpty = g_text_buff.empty();
 			repeat = false;
+			
+			if(initializeManualTransmissions)
+			{
+				initializeManualTransmissions = false;
+				g_text_buff.reset();
+				makeMorse((char*)"\0", &repeat, null); /* reset makeMorse */
+				sendBuffEmpty = true;
+				charFinished = true;
+			}
 			
 			if(sendBuffEmpty && charFinished)
 			{
@@ -564,15 +681,14 @@ ISR(TCB0_INT_vect)
 							}
 						}
 
-						powerToTransmitter(!charFinished);
-						keyTransmitter(key);
+						if(g_enunciator == LED_AND_RF) keyTransmitter(key);
 						LEDS.setRed(key);
 						codeInc = g_code_throttle;
 					}
 				}
 				else
 				{
-					keyTransmitter(key);
+					if(g_enunciator == LED_AND_RF) keyTransmitter(key);
 					LEDS.setRed(key);
 					codeInc = g_code_throttle;
 				}
@@ -585,11 +701,9 @@ ISR(TCB0_INT_vect)
  		if(!conversionInProcess)
  		{
 			/* Note: countdowns will pause while a conversion is in process. Conversions are so fast that this should not be an issue though. */
-
-			volatile uint8_t i; /* volatile to prevent optimization performing undefined behavior */
 			indexConversionInProcess = -1;
 
-			for(i = 0; i < NUMBER_OF_POLLED_ADC_CHANNELS; i++)
+			for(uint8_t i = 0; i < NUMBER_OF_POLLED_ADC_CHANNELS; i++)
 			{
 				if(g_adcCountdownCount[i])
 				{
@@ -670,30 +784,31 @@ Handle switch closure interrupts
 */
 ISR(PORTC_PORT_vect)
 {
-	if(PORTC.INTFLAGS & (1 << SWITCH))
+	uint8_t x = VPORTC.INTFLAGS;
+	
+	if(x & (1 << SWITCH))
 	{
 		if(g_sleeping)
 		{
 			g_go_to_sleep_now = false;
 			g_sleeping = false;
-			LEDS.resume();
+			antennaIsConnected(); /* Set green LED appropriately */
 			g_awakenedBy = AWAKENED_BY_BUTTONPRESS;	
 			g_waiting_for_next_event = false; /* Ensure the wifi module does not get shut off prematurely */
 		}
-		else if(g_switch_closed_count >= 1000)
+		else if(g_switch_closed_count > 5) /* debounce */
 		{
-			g_long_button_press = true;
-		}
-		else if(g_switch_closed_count > 10) /* debounce */
-		{
-			g_hardware_error = false;
+			g_hardware_error = HARDWARE_OK; // Clear any detected hardware failures
 			
 			if(!LEDS.active())
 			{
-				LEDS.resume();
+				antennaIsConnected(); /* Set green LED appropriately */
 			}
 			else
 			{
+				if(PORTC_get_pin_level(SWITCH)) g_switch_presses_count++;		
+				g_switch_closed_count = 0;
+
 				if(wifiEnabled())
 				{
 					sprintf(g_tempStr, "$ESP,X;"); /* send shutdown message to allow WiFi to prepare for shutdown */
@@ -710,7 +825,7 @@ ISR(PORTC_PORT_vect)
 		g_switch_closed_count = 0;
 	}
 	
-	PORTC.INTFLAGS = 0xFF; /* Clear all flags */
+	VPORTC.INTFLAGS = 0xFF; /* Clear all flags */
 }
 
 
@@ -728,20 +843,77 @@ void powerUp3V3(void)
 	PORTA_set_pin_level(V3V3_PWR_ENABLE, HIGH);  /* Enable 3V3 power regulator */
 }
 
+void setFan(bool on)
+{
+	if(on)
+	{
+		PORTA_set_pin_level(FAN_ENABLE, HIGH);  /* Turn fan on */
+	}
+	else
+	{
+		PORTA_set_pin_level(FAN_ENABLE, LOW);  /* Turn fan off */
+	}
+}
+
+bool fanIsOn(void)
+{
+	return(PORTA_get_pin_level(FAN_ENABLE) > 0);
+}
+
 #include "dac0.h"
 
 int main(void)
 {
 	atmel_start_init();
-	LEDS.blink(LEDS_OFF);
+	LEDS.blink(LEDS_OFF, true);
 	powerUp3V3();
+	setFan(ON);
 	
 	g_ee_mgr.initializeEEPROMVars();
 	g_ee_mgr.readNonVols();
-					
-	if(rtc_init() == ERROR_CODE_RTC_NONRESPONSIVE)
+	
+	wifi_reset(ON);
+	wifi_power(ON);
+	util_delay_ms(0);
+	while(util_delay_ms(1000) && !wifiPresent());
+	
+	if(wifiPresent())
 	{
-		g_hardware_error = true;
+		wifi_power(OFF);
+	}
+	else
+	{
+		wifi_power(OFF);
+		wifi_reset(ON);
+		g_wifi_enable_delay = 0;
+		g_WiFi_shutdown_seconds = 0;
+		g_hardware_error |= (int)HARDWARE_NO_WIFI;
+//		sb_send_string(TEXT_WIFI_NOT_DETECTED_TXT);	
+	}
+	
+	if(init_transmitter() != ERROR_CODE_NO_ERROR)
+	{
+		if(!txIsInitialized())
+		{
+			g_hardware_error |= (int)HARDWARE_NO_SI5351;
+//			sb_send_string(TEXT_TX_NOT_RESPONDING_TXT);	
+		}
+	}
+	
+	util_delay_ms(0);
+	while(util_delay_ms(1000));
+	
+	EC code = rtc_init();
+	
+	util_delay_ms(0);
+	while(util_delay_ms(7000) && (code == ERROR_CODE_RTC_NONRESPONSIVE))
+	{
+		code = rtc_init();
+	}
+	
+	if(code == ERROR_CODE_RTC_NONRESPONSIVE)
+	{
+		g_hardware_error |= (int)HARDWARE_NO_RTC;
 	}
 	else
 	{
@@ -751,67 +923,93 @@ int main(void)
 		{
 			set_system_time(current_epoch);
 		}
+		g_event_scheduled = eventScheduled();
 	}
 	
-	wifi_reset(ON);
-	wifi_power(ON);
-	while(util_delay_ms(250));
-	
-	if(wifiPresent())
-	{
-		wifi_power(OFF);
-		g_wifi_enable_delay = 3;
-	}
-	else
-	{
-		wifi_power(OFF);
-		wifi_reset(ON);
-		g_wifi_enable_delay = 0;
-		g_WiFi_shutdown_seconds = 0;
-		g_hardware_error = true;
-	}
-	
-	if(init_transmitter() != ERROR_CODE_NO_ERROR)
-	{
-		if(!txIsInitialized())
-		{
-			g_hardware_error = true;
-		}
-	}
-
-	
-	if(g_hardware_error)
-	{
-		powerDown3V3();
-		LEDS.blink(LEDS_RED_AND_GREEN_BLINK_FAST_OVERRIDE_ALL); /* LEDs blink an error signal */
-		
-		while(g_hardware_error) /* For test purposes, a button press will allow program flow to continue */
-		{
-		}
-		
-		LEDS.reset();
-		g_hardware_error = true;
-	}
-	
-	g_start_event = eventEnabled(); /* Start any event stored in EEPROM */
-	if(!g_start_event)
-	{
-		LEDS.blink(LEDS_RED_OFF);
-		LEDS.blink(LEDS_GREEN_ON_CONSTANT);
-	}
+	g_wifi_enable_delay = 3;
+	g_start_event = eventEnabled(); /* Set flag to start any event stored in EEPROM */
 
 	while (1) {
 		handleLinkBusMsgs();
-		handleSerialBusMsgs();
+//		handleSerialBusMsgs(); /* Uncomment when serial port comms are supported */
+		
+		if(g_handle_counted_presses)
+		{
+			if(g_handle_counted_presses == 1)
+			{
+//				sb_send_string((char*)"\n1 press\n");
+				startEventNow(PROGRAMMATIC);
+			}
+			else if (g_handle_counted_presses == 2)
+			{
+//				sb_send_string((char*)"\n2 presses\n");
+				suspendEvent();
+			}
+			
+			g_handle_counted_presses = 0;
+		}
 		
 		if(g_switch_closed_count >= 1000)
 		{
 			LEDS.blink(LEDS_GREEN_ON_CONSTANT);
 			LEDS.blink(LEDS_RED_ON_CONSTANT);
 		}
+		else if(g_text_buff.empty())
+		{
+			if(g_hardware_error != HARDWARE_OK)
+			{
+				LEDS.blink(LEDS_RED_AND_GREEN_BLINK_FAST);
+			}
+			else 
+			{
+				antennaIsConnected(); /* Set green LED appropriately */
+
+				if(g_event_scheduled)
+				{
+					LEDS.sendCode((char*)"E  ");
+				}
+				else
+				{
+					if(g_event_enabled)
+					{
+						LEDS.blink(LEDS_RED_OFF);
+					}
+					else
+					{
+						LEDS.blink(LEDS_RED_BLINK_FAST);
+					}
+				}
+			}
+		}
+		
+		if(!g_check_temperature)
+		{
+			int16_t temp = temperatureC();
+			
+			if((temp > -200) && (temp < 150)) // sanity check
+			{
+				if(fanIsOn())
+				{
+					if(temp <= 30)
+					{
+						setFan(OFF);
+					}
+				}
+				else
+				{
+					if(temp >= 35)
+					{
+						setFan(ON);
+					}
+				}			
+			}
+				
+			g_check_temperature = 10;
+		}
 		
 		if(g_long_button_press)
 		{
+			g_long_button_press = false;
 			if(g_event_enabled)
 			{
 				suspendEvent(); /* disable a running event */
@@ -820,8 +1018,7 @@ int main(void)
 			{
 				g_check_for_next_event = true; /* Request next scheduled event */
 			}
-			
-			g_long_button_press = false;
+			LEDS.init(LEDS_GREEN_ON_CONSTANT);
 		}
 		
 		if(g_start_event)
@@ -830,18 +1027,7 @@ int main(void)
 			
 			SC status = STATUS_CODE_IDLE;
 			g_last_error_code = launchEvent(&status);
-			
-			LEDS.blink(LEDS_RED_OFF);
-
-			if(g_event_enabled)
-			{
-				LEDS.blink(LEDS_GREEN_BLINK_FAST);
-			}
-			else
-			{
-				LEDS.blink(LEDS_GREEN_ON_CONSTANT);
-			}
-			
+						
 			if(g_WiFi_shutdown_seconds)
 			{
 				g_WiFi_shutdown_seconds = MAX(g_WiFi_shutdown_seconds, 10);
@@ -894,14 +1080,18 @@ int main(void)
 		if(g_antenna_connection_changed)
 		{
 			g_antenna_connection_changed = false;
+			
+			g_antenna_connect_state = antennaIsConnected() ? ANT_CONNECTED:ANT_DISCONNECTED;
 			/* Take appropriate action here */
 			if(g_antenna_connect_state == ANT_DISCONNECTED)
 			{
 				inhibitRFOutput(true);
+				/* Green LED OFF */
 			}
 			else
 			{
 				inhibitRFOutput(false);
+				/* Green LED ON */
 			}
 		}
 		
@@ -916,6 +1106,8 @@ int main(void)
 			wifi_reset(ON);
 			wifi_power(OFF);
 			powerDown3V3();
+			setFan(OFF);
+			system_sleep_settings();
 			
 			g_waiting_for_next_event = false;
 
@@ -926,6 +1118,8 @@ int main(void)
 			
  			while(g_go_to_sleep_now)
  			{
+				set_sleep_mode(SLEEP_MODE_STANDBY);
+//					set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 				DISABLE_INTERRUPTS();
 				sleep_enable();
 				ENABLE_INTERRUPTS();
@@ -940,25 +1134,16 @@ int main(void)
 			powerUp3V3();
 			init_transmitter();
 			
-			if((g_awakenedBy == AWAKENED_BY_BUTTONPRESS) || (g_awakenedBy == AWAKENED_BY_ANTENNA) || (g_awakenedBy == AWAKENED_BY_POWERUP))
+			if((g_awakenedBy == AWAKENED_BY_BUTTONPRESS) || (g_awakenedBy == AWAKENED_BY_ANTENNA) || (g_awakenedBy == POWER_UP_START))
 			{	
-				LEDS.reset();
-				
-				if(g_event_enabled)
-				{
-					LEDS.blink(LEDS_GREEN_BLINK_FAST);
-				}
-				else
-				{
-					LEDS.blink(LEDS_GREEN_ON_CONSTANT);
-				}
-				
-				LEDS.blink(LEDS_RED_OFF);
+				antennaIsConnected(); /* Set green LED appropriately */
  				linkbus_enable();
 				g_wifi_enable_delay = 2; /* Ensure WiFi is enabled and countdown is reset */
 			}
 			else if(g_awakenedBy == AWAKENED_BY_CLOCK)
 			{
+				powerToTransmitter(ON);
+				
 				if(!g_event_enabled)
 				{
 					g_start_event = eventEnabled(); /* Start any event stored in EEPROM */
@@ -971,6 +1156,7 @@ int main(void)
 				}
 			}
 
+			g_event_scheduled = eventScheduled();
  			g_last_status_code = STATUS_CODE_RETURNED_FROM_SLEEP;
 		}
 	}
@@ -983,6 +1169,15 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 
 	while((sb_buff = nextFullSBRxBuffer()))
 	{
+		if(!g_WiFi_shutdown_seconds)
+		{
+			g_wifi_enable_delay = 2;
+		}
+		else
+		{
+			g_WiFi_shutdown_seconds = 240;
+		}
+		
 		SBMessageID msg_id = sb_buff->id;
 
 		switch(msg_id)
@@ -990,181 +1185,339 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 			case SB_MESSAGE_SET_FOX:
 			{
 				int c = (int)(sb_buff->fields[SB_FIELD1][0]);
-
+				
 				if(c)
 				{
-					if(c == 'B')
+					if(g_event == EVENT_FOXORING)
 					{
-						c = BEACON;
-					}
-					else if(c == 'F')
-					{
-						c = FOXORING;
-					}
-					else if(c == 'C')
-					{
-						char t = sb_buff->fields[SB_FIELD2][0];
-						sb_buff->fields[SB_FIELD2][1] = '\0';
-
-						if(t == 'B')
+						if((c == 'A') || (c == '1'))
 						{
-							t = '0';
+							c = FOXORING_EVENT_FOXA;
 						}
-
-						if(isdigit(t))
+						else if((c == 'B') || (c == '2'))
 						{
-							c = CLAMP(BEACON, atoi(sb_buff->fields[SB_FIELD2]), FOX_5);
+							c = FOXORING_EVENT_FOXB;
 						}
-					}
-					else if(c == 'S')
-					{
-						char x = 0;
-						char t = sb_buff->fields[SB_FIELD2][0];
-						char u = sb_buff->fields[SB_FIELD2][1];
-						sb_buff->fields[SB_FIELD2][2] = '\0';
-
-						if(t == 'B')
+						else if((c == 'C') || (c == '3'))
 						{
-							x = BEACON;
-						}
-						else if(t == 'F')
-						{
-							if((u > '0') && (u < '6'))
-							{
-								x = SPRINT_F1 + (u - '1');
-							}
-						}
-						else if(t == 'S')
-						{
-							if((u > '0') && (u < '6'))
-							{
-								x = SPRINT_S1 + (u - '1');
-							}
-							else
-							{
-								x = SPECTATOR;
-							}
-						}
-						else if(u == 'F')
-						{
-							if((t > '0') && (t < '6'))
-							{
-								x = SPRINT_F1 + (t - '1');
-							}
-						}
-						else if(u == 'S')
-						{
-							if((t > '0') && (t < '6'))
-							{
-								x = SPRINT_S1 + (t - '1');
-							}
-						}
-
-						if((x >= SPECTATOR) && (x <= SPRINT_F5))
-						{
-							c = x;
+							c = FOXORING_EVENT_FOXC;
 						}
 						else
 						{
-							c = BEACON;
+							sb_send_string((char*)"Use: FOX A, B, or C\n");
 						}
 					}
 					else
 					{
-						c = atoi(sb_buff->fields[SB_FIELD1]);
+						if(c == 'B')
+						{
+							c = BEACON;
+						}
+						else if(c == 'F')
+						{
+							c = FOXORING;
+						}
+						else if(c == 'C')
+						{
+							char t = sb_buff->fields[SB_FIELD2][0];
+							sb_buff->fields[SB_FIELD2][1] = '\0';
+
+							if(t == 'B')
+							{
+								t = '0';
+							}
+
+							if(isdigit(t))
+							{
+								c = CLAMP(BEACON, atoi(sb_buff->fields[SB_FIELD2]), FOX_5);
+							}
+						}
+						else if(c == 'S')
+						{
+							char x = 0;
+							char t = sb_buff->fields[SB_FIELD2][0];
+							char u = sb_buff->fields[SB_FIELD2][1];
+							sb_buff->fields[SB_FIELD2][2] = '\0';
+
+							if(t == 'B')
+							{
+								x = BEACON;
+							}
+							else if(t == 'F')
+							{
+								if((u > '0') && (u < '6'))
+								{
+									x = SPRINT_F1 + (u - '1');
+								}
+							}
+							else if(t == 'S')
+							{
+								if((u > '0') && (u < '6'))
+								{
+									x = SPRINT_S1 + (u - '1');
+								}
+								else
+								{
+									x = SPECTATOR;
+								}
+							}
+							else if(u == 'F')
+							{
+								if((t > '0') && (t < '6'))
+								{
+									x = SPRINT_F1 + (t - '1');
+								}
+							}
+							else if(u == 'S')
+							{
+								if((t > '0') && (t < '6'))
+								{
+									x = SPRINT_S1 + (t - '1');
+								}
+							}
+
+							if((x >= SPECTATOR) && (x <= SPRINT_F5))
+							{
+								c = x;
+							}
+							else
+							{
+								c = BEACON;
+							}
+						}
+						else
+						{
+							c = atoi(sb_buff->fields[SB_FIELD1]);
+						}
 					}
 
 					if((c >= BEACON) && (c < INVALID_FOX))
 					{
  						Fox_t holdFox = (Fox_t)c;
  						g_ee_mgr.updateEEPROMVar(Fox_setting, (void*)&holdFox);
- 						if(holdFox != g_fox)
+						 
+ 						if(holdFox != getFoxSetting())
  						{
- 							setupForFox(&holdFox, START_NOTHING);
+							 if(g_event == EVENT_FOXORING)
+							 {
+								 if((c >= FOXORING_EVENT_FOXA) && (c <= FOXORING_EVENT_FOXC))
+								 {
+									 g_foxoring_fox = holdFox;
+									 setupForFox(holdFox, START_EVENT_WITH_STARTFINISH_TIMES);
+								 }
+							 }
+							 else
+							 {
+								 g_fox = holdFox;
+								 setupForFox(holdFox, START_EVENT_WITH_STARTFINISH_TIMES);
+							 }
  						}
 					}
-				}
+				} /* if(c) */
 
-				if(!fox2Text(g_tempStr, g_fox))
-				{
-					char str1[25];
-					strcpy(str1, g_tempStr);
-					sprintf(g_tempStr, "Fox=%s\n", str1);
-				}
-				else
-				{
-					sprintf(g_tempStr, "Fox=%u\n", (uint16_t)g_fox);
-				}
-				
-				sb_send_string(g_tempStr);
+//				reportSettings();
 			}
 			break;
 			
-			case SB_MESSAGE_TX_POWER:
+			
+			case SB_MESSAGE_SLP:
 			{
-				static uint16_t pwr_mW;
-
 				if(sb_buff->fields[SB_FIELD1][0])
 				{
-					EC ec;
-
-					pwr_mW = (uint16_t)atoi(sb_buff->fields[SB_FIELD1]);
-					
-					if(pwr_mW <= MAX_RF_POWER_MW)
+					if(sb_buff->fields[SB_FIELD1][0] == '0')    
 					{
-						ec = txSetParameters(&pwr_mW, NULL);
-						if(ec)
-						{
-							g_last_error_code = ec;
-						}
+						g_sleepType = DO_NOT_SLEEP;
 					}
-			
-					sprintf(g_tempStr, "PWR=%u mW\n", txGetPowerMw());
-					sb_send_string(g_tempStr);
+					else if (sb_buff->fields[SB_FIELD1][0] == '1')
+					{
+						g_event_enabled = eventEnabled(); // Set sleep type based on current event settings
+					}
+					else
+					{
+						g_go_to_sleep_now = true;
+					}
 				}
 				else
 				{
-					sprintf(g_tempStr, "PWR=%u mW\n", txGetPowerMw());
-					sb_send_string(g_tempStr);
+					g_go_to_sleep_now = true;
 				}
 			}
 			break;
 				
 			case SB_MESSAGE_TX_FREQ:
 			{
-				Frequency_Hz transmitter_freq = 0;
-
+// 				if(sb_buff->fields[SB_FIELD1][0])
+// 				{
+// 					Frequency_Hz f;
+// 					if(g_cloningInProgress)
+// 					{
+// 						if(!frequencyVal(sb_buff->fields[SB_FIELD2], &f))
+// 						{
+// 							if(sb_buff->fields[SB_FIELD1][0] == 'A')
+// 							{
+// 								g_foxoring_frequencyA = f;
+// 								g_ee_mgr.updateEEPROMVar(Foxoring_FrequencyA, (void*)&f);
+// 							}
+// 							else if(sb_buff->fields[SB_FIELD1][0] == 'B')
+// 							{
+// 								g_foxoring_frequencyB = f;
+// 								g_ee_mgr.updateEEPROMVar(Foxoring_FrequencyB, (void*)&f);
+// 							}
+// 							else if(sb_buff->fields[SB_FIELD1][0] == 'C')
+// 							{
+// 								g_foxoring_frequencyC = f;
+// 								g_ee_mgr.updateEEPROMVar(Foxoring_FrequencyC, (void*)&f);
+// 							}
+// 							
+// 							g_event_checksum += f;
+// 					
+// 							sb_send_string((char*)"FRE\r");
+// 							g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
+// 						}
+// 					}
+// 					else if(!frequencyVal(sb_buff->fields[SB_FIELD1], &f))
+// 					{
+// 						if(g_event == EVENT_FOXORING)
+// 						{
+// 							if(g_foxoring_fox == FOXORING_EVENT_FOXA)
+// 							{
+// 								g_foxoring_frequencyA = f;
+// 							}
+// 							else if(g_foxoring_fox == FOXORING_EVENT_FOXB)
+// 							{
+// 								g_foxoring_frequencyB = f;
+// 							}
+// 							else if(g_foxoring_fox == FOXORING_EVENT_FOXC)
+// 							{
+// 								g_foxoring_frequencyC = f;
+// 							}
+// 						}
+// 						else
+// 						{
+// 							g_frequency = f;
+// 						}
+// 						
+// 						if(!txSetFrequency(&f, true))
+// 						{
+// 							g_ee_mgr.updateEEPROMVar(Frequency, (void*)&f);
+// 						}
+// 						else
+// 						{
+// 							sb_send_string(TEXT_TX_NOT_RESPONDING_TXT);
+// 						}
+// 					}
+// 					else
+// 					{
+// 						sb_send_string((char*)"\n3500 kHz < Freq < 4000 kHz\n");
+// 					}
+// 				}
+// 				
+// 				if(!(g_cloningInProgress)) reportSettings();
+			}
+			break;
+				
+			case SB_MESSAGE_PATTERN:
+			{
+// 				if(g_cloningInProgress)
+// 				{
+// 					if(sb_buff->fields[SB_FIELD1][0] && sb_buff->fields[SB_FIELD2][0])
+// 					{
+// 						int len = MIN(MAX_PATTERN_TEXT_LENGTH, strlen(sb_buff->fields[SB_FIELD2]));
+// 						
+// 						if(sb_buff->fields[SB_FIELD1][0] == 'A')
+// 						{
+// 							strncpy((char*)g_messages_text[FOXA_PATTERN_TEXT], sb_buff->fields[SB_FIELD2], len);
+// 							g_ee_mgr.updateEEPROMVar(FoxA_pattern_text, g_messages_text[FOXA_PATTERN_TEXT]);
+// 						}
+// 						else if(sb_buff->fields[SB_FIELD1][0] == 'B')
+// 						{
+// 							strncpy((char*)g_messages_text[FOXB_PATTERN_TEXT], sb_buff->fields[SB_FIELD2], len);
+// 							g_ee_mgr.updateEEPROMVar(FoxB_pattern_text, g_messages_text[FOXB_PATTERN_TEXT]);
+// 						}
+// 						else if(sb_buff->fields[SB_FIELD1][0] == 'C')
+// 						{
+// 							strncpy((char*)g_messages_text[FOXC_PATTERN_TEXT], sb_buff->fields[SB_FIELD2], len);
+// 							g_ee_mgr.updateEEPROMVar(FoxC_pattern_text, g_messages_text[FOXC_PATTERN_TEXT]);
+// 						}
+// 						
+// 						for(int i=0; i<len; i++)
+// 						{
+// 							g_event_checksum += sb_buff->fields[SB_FIELD2][i];
+// 						}
+// 					
+// 						sb_send_string((char*)"PAT\r");
+// 						g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
+// 					}
+// 				}
+// 				else
+// 				{
+// 					if(sb_buff->fields[SB_FIELD1][0])
+// 					{
+// 						if(strlen(sb_buff->fields[SB_FIELD1]) <= MAX_PATTERN_TEXT_LENGTH)
+// 						{
+// 							strcpy(g_tempStr, sb_buff->fields[SB_FIELD1]);
+// 						
+// 							if(g_event == EVENT_FOXORING)
+// 							{
+// 								if(g_foxoring_fox == FOXORING_EVENT_FOXA)
+// 								{
+// 									strcpy(g_messages_text[FOXA_PATTERN_TEXT], g_tempStr);
+// 									g_ee_mgr.updateEEPROMVar(FoxA_pattern_text, g_messages_text[FOXA_PATTERN_TEXT]);
+// 								}
+// 								else if(g_foxoring_fox == FOXORING_EVENT_FOXB)
+// 								{
+// 									strcpy(g_messages_text[FOXB_PATTERN_TEXT], g_tempStr);
+// 									g_ee_mgr.updateEEPROMVar(FoxB_pattern_text, g_messages_text[FOXB_PATTERN_TEXT]);
+// 								}
+// 								else if(g_foxoring_fox == FOXORING_EVENT_FOXC)
+// 								{
+// 									strcpy(g_messages_text[FOXC_PATTERN_TEXT], g_tempStr);
+// 									g_ee_mgr.updateEEPROMVar(FoxC_pattern_text, g_messages_text[FOXC_PATTERN_TEXT]);
+// 								}
+// 							}
+// 							else
+// 							{
+// 								strcpy(g_messages_text[PATTERN_TEXT], g_tempStr);
+// 							}
+// 						}
+// 						else
+// 						{
+// 							sb_send_string((char*)"Illegal pattern\n");
+// 						}
+// 					}
+// 				}
+// 				
+// 				if(!(g_cloningInProgress)) reportSettings();
+			}
+			break;
+			
+			case SB_MESSAGE_KEY:
+			{
 				if(sb_buff->fields[SB_FIELD1][0])
 				{
-					Frequency_Hz f;
-					frequencyVal(sb_buff->fields[SB_FIELD1], &f);
-
-					if(!txSetFrequency(&f, true))
+					if(sb_buff->fields[SB_FIELD1][0] == '0')    
 					{
-						transmitter_freq = f;
-						g_ee_mgr.saveAllEEPROM();
+ 						stopEventNow(PROGRAMMATIC);
+						LEDS.setRed(OFF);
+ 						keyTransmitter(OFF);
+					}
+					else if(sb_buff->fields[SB_FIELD1][0] == '1')  
+					{
+ 						stopEventNow(PROGRAMMATIC);
+						LEDS.setRed(ON);
+ 						keyTransmitter(ON);
 					}
 					else
 					{
-						sb_send_string(TEXT_TX_NOT_RESPONDING_TXT);						
+						sb_send_string((char*)"err\n");
 					}
 				}
-
-				transmitter_freq = txGetFrequency();
-
-				if(transmitter_freq)
+				else
 				{
-					char result[20];
-					if(!frequencyString(result, transmitter_freq))
-					{
-						sprintf(g_tempStr, "FRE=%s\n", result);						
-					}
-					else
-					{
-						sprintf(g_tempStr, "FRE=%lu\n", transmitter_freq);
-					}
-					
-					sb_send_string(g_tempStr);
+					LEDS.setRed(OFF);
+					antennaIsConnected(); /* Set green LED appropriately */
+ 					keyTransmitter(OFF);
+					startEventNow(PROGRAMMATIC);
 				}
 			}
 			break;
@@ -1179,6 +1532,7 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 					}
 					else if(sb_buff->fields[SB_FIELD1][0] == '1')  /* Start the event, re-syncing to a start time of now - same as a button press */
 					{
+						LEDS.setRed(OFF);
  						startEventNow(PROGRAMMATIC);
 					}
 					else if(sb_buff->fields[SB_FIELD1][0] == '2')  /* Start the event at the programmed start time */
@@ -1186,9 +1540,9 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
  						g_event_enabled = false;					/* Disable an event currently underway */
  						startEventUsingRTC();
 					}
-					else if(sb_buff->fields[SB_FIELD1][0] == '3')  /* Start the event immediately with a transmissions starting now */
+					else if(sb_buff->fields[SB_FIELD1][0] == '3')  /* Start the event immediately with transmissions starting now */
 					{
- 						setupForFox(NULL, START_TRANSMISSIONS_NOW);
+ 						setupForFox(INVALID_FOX, START_TRANSMISSIONS_NOW);
 					}
 					else
 					{
@@ -1204,225 +1558,322 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 
 			case SB_MESSAGE_SET_STATION_ID:
 			{
-				if(sb_buff->fields[SB_FIELD1][0])
-				{
-					strcpy(g_tempStr, " "); /* Space before ID gets sent */
-					strcat(g_tempStr, sb_buff->fields[SB_FIELD1]);
-
-					if(sb_buff->fields[SB_FIELD2][0])
-					{
-						strcat(g_tempStr, " ");
-						strcat(g_tempStr, sb_buff->fields[SB_FIELD2]);
-					}
-
-					if(strlen(g_tempStr) <= MAX_PATTERN_TEXT_LENGTH)
-					{
-						strcpy((char*)g_messages_text[STATION_ID], g_tempStr);
-						g_ee_mgr.updateEEPROMVar(StationID_text, (void*)g_tempStr);
-					}
-				}
-
-				if(g_messages_text[STATION_ID][0])
-				{
-					g_time_needed_for_ID = (600 + timeRequiredToSendStrAtWPM((char*)g_messages_text[STATION_ID], g_id_codespeed)) / 1000;
-				}
-
-				sprintf(g_tempStr, "ID:%s\n", g_messages_text[STATION_ID]);
-				sb_send_string(g_tempStr);
+// 				if(sb_buff->fields[SB_FIELD1][0])
+// 				{
+// 					int len = 0;
+// 					
+// 					if((sb_buff->fields[SB_FIELD1][0] == '\"') && (sb_buff->fields[SB_FIELD1][1] == '\"')) /* "" */
+// 					{
+// 						g_messages_text[STATION_ID][0] = '\0';
+// 					}
+// 					else
+// 					{
+// 						strcpy(g_tempStr, " "); /* Add a Space before ID gets sent */
+// 						strcat(g_tempStr, sb_buff->fields[SB_FIELD1]);
+// 
+// 						if(sb_buff->fields[SB_FIELD2][0])
+// 						{
+// 							strcat(g_tempStr, " ");
+// 							strcat(g_tempStr, sb_buff->fields[SB_FIELD2]);
+// 						}
+// 						
+// 						len = MIN(MAX_PATTERN_TEXT_LENGTH, strlen(g_tempStr));
+// 						strncpy((char*)g_messages_text[STATION_ID], g_tempStr, len);
+// 					}
+// 					
+// 					if(g_cloningInProgress)
+// 					{				
+// 						for(int i=0; i<len; i++)
+// 						{
+// 							g_event_checksum += g_messages_text[STATION_ID][i];
+// 						}
+// 
+// 						sb_send_string((char*)"ID\r");
+// 						g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
+// 					}
+// 				}
+// 
+// 				g_ee_mgr.updateEEPROMVar(StationID_text, g_messages_text[STATION_ID]);
+// 				
+// 				if(g_messages_text[STATION_ID][0])
+// 				{
+// 					g_time_needed_for_ID = timeNeededForID();
+// 				}
+// 				
+// 				if(!(g_cloningInProgress)) reportSettings();
 			}
 			break;
 
 
 			case SB_MESSAGE_CODE_SETTINGS:
 			{
-				if(sb_buff->fields[SB_FIELD1][0] == 'S')
-				{
-					char x = sb_buff->fields[SB_FIELD2][0];
-
-					if(x)
-					{
- 						uint8_t speed = atol(sb_buff->fields[SB_FIELD2]);
- 						g_id_codespeed = CLAMP(MIN_CODE_SPEED_WPM, speed, MAX_CODE_SPEED_WPM);
-						g_ee_mgr.updateEEPROMVar(Id_codespeed, (void*)&g_id_codespeed);
-
-						if(g_messages_text[STATION_ID][0])
-						{
-							g_time_needed_for_ID = (600 + timeRequiredToSendStrAtWPM((char*)g_messages_text[STATION_ID], g_id_codespeed)) / 1000;
-						}
-					}
-
-					sprintf(g_tempStr, "ID Speed: %d wpm\n", g_id_codespeed);
-				}
-				else
-				{
-					sprintf(g_tempStr, "err\n");
-				}
-
-				sb_send_string(g_tempStr);
+// 				if(sb_buff->fields[SB_FIELD1][0] == 'S')
+// 				{
+// 					char x = sb_buff->fields[SB_FIELD2][0];
+// 
+// 					if(x)
+// 					{
+//  						uint8_t speed = atol(sb_buff->fields[SB_FIELD2]);
+//  						g_id_codespeed = CLAMP(MIN_CODE_SPEED_WPM, speed, MAX_CODE_SPEED_WPM);
+// 						g_ee_mgr.updateEEPROMVar(Id_codespeed, (void*)&g_id_codespeed);
+// 
+// 						if(g_messages_text[STATION_ID][0])
+// 						{
+// 							g_time_needed_for_ID = timeNeededForID();
+// 						}
+// 					}
+// 				}
+// 				else
+// 				{
+// 					sprintf(g_tempStr, "err\n");
+// 				}
+// 
+// 				if(!(g_cloningInProgress)) reportSettings();
 			}
 			break;
 
-			case SB_MESSAGE_PASSWORD:
+			case SB_MESSAGE_MASTER:
 			{
-				if(sb_buff->fields[SB_FIELD1][0])
-				{
- 					strncpy(g_tempStr, sb_buff->fields[SB_FIELD1], MAX_UNLOCK_CODE_LENGTH);
- 					g_tempStr[MAX_UNLOCK_CODE_LENGTH] = '\0';   /* truncate to no more than max characters */
-
- 					if(only_digits(g_tempStr) && (strlen(g_tempStr) >= MIN_UNLOCK_CODE_LENGTH))
- 					{
- 						strcpy((char*)g_unlockCode, g_tempStr);
-						g_ee_mgr.updateEEPROMVar(UnlockCode, (void*)g_unlockCode);
- 					}
-				}
-
-				sprintf(g_tempStr, "PWD=%s\n", g_unlockCode);
-				sb_send_string(g_tempStr);
+// 				if(sb_buff->fields[SB_FIELD1][0] == 'P')
+// 				{
+// 					if(!g_send_clone_success_countdown)
+// 					{
+// 						g_cloningInProgress = true;
+// 						sb_send_string((char*)"MAS\r");
+// 						g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
+// 						suspendEvent();
+// 						g_event_checksum = 0;
+// 					}
+// 				}
+// 				else if((sb_buff->fields[SB_FIELD1][0] == 'Q') && g_cloningInProgress)
+// 				{
+// 					uint32_t sum = atol(sb_buff->fields[SB_FIELD2]);
+// 					g_cloningInProgress = false;
+// 					g_programming_countdown = 0;
+// 					if(sum == g_event_checksum)
+// 					{
+// 						sb_send_string((char*)"MAS ACK\r");
+// 						g_send_clone_success_countdown = 18000;
+// 						setupForFox(INVALID_FOX, START_EVENT_WITH_STARTFINISH_TIMES);   /* Start the event if one is configured */
+// 						g_start_event = true;
+// 					}
+// 					else
+// 					{
+// 						sb_send_string((char*)"MAS NAK\r");
+// 					}
+// 				}
+// 				else
+// 				{
+// 					if(sb_buff->fields[SB_FIELD1][0])
+// 					{
+// 						if((sb_buff->fields[SB_FIELD1][0] == 'M') || (sb_buff->fields[SB_FIELD1][0] == '1'))
+// 						{
+//  							g_isMaster = true;
+// 							isMasterCountdownSeconds = 600; /* Remain Master for 10 minutes */
+// 						}
+// // 						else
+// // 						{
+// // 							g_isMaster = false;
+// // 							isMasterCountdownSeconds = 0;
+// // 							g_start_event = true;
+// // 							reportSettings();
+// // 						}
+// 					}
+// 				}
+			}
+			break;
+			
+			case SB_MESSAGE_EVENT:
+			{
+// 				if(g_cloningInProgress)
+// 				{
+// 					sb_send_string((char*)"EVT F\r");
+// 					g_event = EVENT_FOXORING;
+// 					g_ee_mgr.updateEEPROMVar(Event_setting, (void*)&g_event);
+// 					g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
+// 					g_event_checksum += 'F';
+// 				}
+// 				else
+// 				{
+// 					if(sb_buff->fields[SB_FIELD1][0] == 'F')
+// 					{
+// 						g_event = EVENT_FOXORING;
+// 						g_ee_mgr.updateEEPROMVar(Event_setting, (void*)&g_event);
+// 						init_transmitter(getFrequencySetting());
+// 						setupForFox(getFoxSetting(), START_NOTHING);
+// 					}
+// 					else if(sb_buff->fields[SB_FIELD1][0])
+// 					{
+// 						g_event = EVENT_NONE;
+// 						g_ee_mgr.updateEEPROMVar(Event_setting, (void*)&g_event);
+// 						init_transmitter(getFrequencySetting());
+// 						setupForFox(getFoxSetting(), START_NOTHING);
+// 					}
+// 				}
+// 				
+// 				if(!(g_cloningInProgress)) reportSettings();
 			}
 			break;
 
 			case SB_MESSAGE_CLOCK:
 			{
-				bool doprint = false;
- 				time_t now = time(null);
-
-				if(!sb_buff->fields[SB_FIELD1][0] || sb_buff->fields[SB_FIELD1][0] == 'T')   /* Current time format "YYMMDDhhmmss" */
-				{		 
-					if(sb_buff->fields[SB_FIELD2][0])
-					{
-						strncpy(g_tempStr, sb_buff->fields[SB_FIELD2], 12);
-						g_tempStr[12] = '\0';               /* truncate to no more than 12 characters */
-						time_t now = time(null);
- 						time_t t = validateTimeString(g_tempStr, &now, -g_utc_offset);
- 
- 						if(t)
- 						{
-							bool result = ds3231_set_date_time_arducon(g_tempStr, RTC_CLOCK);
-							
-							if(result)
-							{
-								sprintf(g_tempStr, TEXT_RTC_NOT_RESPONDING_TXT);
-							}
-							else
-							{
-								char t[50];
-								set_system_time(ds3231_get_epoch(null));
- 								sprintf(g_tempStr, "Time: %s\n", convertEpochToTimeString(now, t, 50));
- 								setupForFox(NULL, START_NOTHING);   /* Avoid timing problems if an event is already active */
-							}
- 						}
-					}
-					else
-					{
-							EC result;
-							ds3231_get_epoch(&result);
-							 
-							if(result)
-							{
-								sprintf(g_tempStr, TEXT_RTC_NOT_RESPONDING_TXT);
-							}
-							else
-							{
-								char t[50];
-								sprintf(g_tempStr, "Time:   %s\n", convertEpochToTimeString(now, t, 50));
-								sb_send_string(g_tempStr);
-								sprintf(g_tempStr, "Start:  %s\n", convertEpochToTimeString(g_event_start_epoch, t, 50));
-								sb_send_string(g_tempStr);
-								sprintf(g_tempStr, "Finish: %s\n", convertEpochToTimeString(g_event_finish_epoch, t, 50));
-								sb_send_string(g_tempStr);
-
- 								ConfigurationState_t cfg = clockConfigurationCheck();
- 
- 								if((cfg != WAITING_FOR_START) && (cfg != EVENT_IN_PROGRESS))
- 								{
- 									reportConfigErrors();
- 								}
- 								else
- 								{
- 									reportTimeTill(now, g_event_start_epoch, "Starts in: ", "In progress\n");
- 									reportTimeTill(g_event_start_epoch, g_event_finish_epoch, "Lasts: ", NULL);
- 									if(g_event_start_epoch < now)
- 									{
- 										reportTimeTill(now, g_event_finish_epoch, "Time Remaining: ", NULL);
- 									}
- 								}
-							}
-					}
-
-					doprint = true;
-				}
-				else if(sb_buff->fields[SB_FIELD1][0] == 'S')  /* Event start time */
-				{
-					strcpy(g_tempStr, sb_buff->fields[SB_FIELD2]);
- 					time_t s = validateTimeString(g_tempStr, (time_t*)&g_event_start_epoch, -g_utc_offset);
- 
- 					if(s)
- 					{
- 						g_event_start_epoch = s;
-  						g_ee_mgr.updateEEPROMVar(Event_start_epoch, (void*)&g_event_start_epoch);
- 						g_event_finish_epoch = MAX(g_event_finish_epoch, (g_event_start_epoch + SECONDS_24H));
-  						g_ee_mgr.updateEEPROMVar(Event_finish_epoch, (void*)&g_event_finish_epoch);
- 						setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);
- 						if(g_event_start_epoch > time(null)) startEventUsingRTC();
- 					}
- 
-					char t[50];
-					sprintf(g_tempStr, "Start: %s\n", convertEpochToTimeString(g_event_start_epoch, t, 50));
-  					doprint = true;
-				}
-				else if(sb_buff->fields[SB_FIELD1][0] == 'F')  /* Event finish time */
-				{
- 					strcpy(g_tempStr, sb_buff->fields[SB_FIELD2]);
- 					time_t f = validateTimeString(g_tempStr, (time_t*)&g_event_finish_epoch, -g_utc_offset);
- 
- 					if(f)
- 					{
- 						g_event_finish_epoch = f;
-  						g_ee_mgr.updateEEPROMVar(Event_finish_epoch, (void*)&g_event_finish_epoch);
- 						setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);
- 						if(g_event_start_epoch > now) startEventUsingRTC();
- 					}
- 
-					char t[50];
-					sprintf(g_tempStr, "Finish: %s\n", convertEpochToTimeString(g_event_finish_epoch, t, 50));
- 					doprint = true;
-				}
-				else if(sb_buff->fields[SB_FIELD1][0] == '*')  /* Sync seconds to zero */
-				{
- 					ds3231_sync2nearestMinute();
-				}
-
-				if(doprint)
-				{
-					sb_send_string(g_tempStr);
-				}
+// 				if(!sb_buff->fields[SB_FIELD1][0] || sb_buff->fields[SB_FIELD1][0] == 'T')   /* Current time format "YYMMDDhhmmss" */
+// 				{		 
+// 					if(sb_buff->fields[SB_FIELD2][0])
+// 					{
+// 						strncpy(g_tempStr, sb_buff->fields[SB_FIELD2], 12);
+//   						time_t t;
+// 						  
+// 						if(g_cloningInProgress)
+// 						{
+// 							t = atol(g_tempStr);
+// 						}
+// 						else
+// 						{	
+// 							g_tempStr[12] = '\0';               /* truncate to no more than 12 characters */
+// 							t = validateTimeString(g_tempStr, null);
+// 						}
+//   
+//   						if(t)
+//   						{
+//  							set_system_time(t);
+// 							 
+// 							if(g_cloningInProgress)
+// 							{
+// 								sprintf(g_tempStr, "CLK T %lu\r", t);
+// 								sb_send_string(g_tempStr);
+// 								g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
+// 								g_event_checksum += t;
+// 							}
+// 							else
+// 							{
+//   								setupForFox(INVALID_FOX, START_EVENT_WITH_STARTFINISH_TIMES);   /* Start the event if one is configured */
+// 							}
+//  						}
+// 					}
+// 				}
+// 				else if(sb_buff->fields[SB_FIELD1][0] == 'S')  /* Event start time */
+// 				{
+// 					strncpy(g_tempStr, sb_buff->fields[SB_FIELD2], 12);
+// 					time_t s;
+// 						
+// 					if(g_cloningInProgress)
+// 					{
+// 						s = atol(g_tempStr);
+// 					}
+// 					else
+// 					{
+// 						g_tempStr[12] = '\0';               /* truncate to no more than 12 characters */
+// 						s = validateTimeString(g_tempStr, null);
+// 					}
+//  
+//  					if(s)
+//  					{
+// 						if(g_cloningInProgress)
+// 						{
+// 							g_event_start_epoch = atol(g_tempStr);
+// 					
+// 							g_ee_mgr.updateEEPROMVar(Event_start_epoch, (void*)&g_event_start_epoch);
+// 							sb_send_string((char*)"CLK\r");
+// 							g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
+// 							g_event_checksum += s;
+// 						}
+// 						else
+// 						{
+//  							g_event_start_epoch = s;
+//  							g_event_finish_epoch = MAX(g_event_finish_epoch, (g_event_start_epoch + SECONDS_24H));
+// 							g_ee_mgr.updateEEPROMVar(Event_start_epoch, (void*)&g_event_start_epoch);
+//  							setupForFox(INVALID_FOX, START_EVENT_WITH_STARTFINISH_TIMES);
+// 							if(eventScheduled())
+// 							{
+// 								startEventUsingRTC();
+// 							}
+//  						}
+// 					 }
+// 				}
+// 				else if(sb_buff->fields[SB_FIELD1][0] == 'F')  /* Event finish time */
+// 				{
+// 					strncpy(g_tempStr, sb_buff->fields[SB_FIELD2], 12);
+// 					time_t f;
+// 					
+// 					if(g_cloningInProgress)
+// 					{
+// 						f = atol(g_tempStr);
+// 					}
+// 					else
+// 					{
+// 						g_tempStr[12] = '\0';               /* truncate to no more than 12 characters */
+// 						f = validateTimeString(g_tempStr, null);
+// 					}					
+//  
+//  					if(f)
+//  					{
+// 						if(g_cloningInProgress)
+// 						{
+// 							g_event_finish_epoch = atol(g_tempStr);
+// 							
+// 							g_ee_mgr.updateEEPROMVar(Event_finish_epoch, (void*)&g_event_finish_epoch);
+// 							sb_send_string((char*)"CLK\r");
+// 							g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
+// 							g_event_checksum += f;
+// 						}
+// 						else
+// 						{
+//  							g_event_finish_epoch = f;
+//   							g_ee_mgr.updateEEPROMVar(Event_finish_epoch, (void*)&g_event_finish_epoch);
+//  							setupForFox(INVALID_FOX, START_EVENT_WITH_STARTFINISH_TIMES);
+// 							if(eventScheduled())
+// 							{
+// 								startEventUsingRTC();
+// 							}
+// 						}
+//  					}
+// 				}
+// 				else if(sb_buff->fields[SB_FIELD1][0] == 'C' && !g_cloningInProgress)  /* Clock calibration */
+// 				{
+// 					strncpy(g_tempStr, sb_buff->fields[SB_FIELD2], 12);
+// 					uint16_t cal;
+// 					
+// 					cal = atoi(g_tempStr);
+// 					RTC_set_calibration(cal);
+// 				}
+// //  				else if(sb_buff->fields[SB_FIELD1][0] == '*')  /* Sync seconds to zero */
+// //  				{
+// //  				}
+// 
+// 				if(!(g_cloningInProgress)) reportSettings();
 			}
 			break;
 
-			case SB_MESSAGE_UTIL:
+			case SB_MESSAGE_VOLTS:
 			{
-				if(sb_buff->fields[SB_FIELD1][0] == 'C')
-				{
-					if(sb_buff->fields[SB_FIELD2][0])
-					{
-						int16_t v = atoi(sb_buff->fields[SB_FIELD2]);
-
-						if((v > -2000) && (v < 2000))
-						{
-// 							g_atmega_temp_calibration = v;
-// 							ee_mgr.updateEEPROMVar(Atmega_temp_calibration, (void*)&g_atmega_temp_calibration);
-						}
-					}
-
-// 					sprintf(g_tempStr, "T Cal= %d\n", g_atmega_temp_calibration);
-// 					sb_send_string(g_tempStr);
-				}
-
-// 				sprintf(g_tempStr, "T=%dC\n", g_temperature);
-// 				sb_send_string(g_tempStr);
+// 				char txt[6];
 // 
-// 				sprintf(g_tempStr, "V=%d.%02dV\n", g_voltage / 100, g_voltage % 100);
-// 				sb_send_string(g_tempStr);
+// 				if(sb_buff->fields[SB_FIELD1][0])
+// 				{
+// 					float v = atof(sb_buff->fields[SB_FIELD1]);
+// 
+// 					if((v >= 0.1) && (v <= 15.))
+// 					{
+//  						g_voltage_threshold = v;
+// 						g_ee_mgr.updateEEPROMVar(Voltage_threshold, (void*)&g_voltage_threshold);
+// 					}
+// 					else
+// 					{
+// 						sb_send_string((char*)"Err: 0.1 V < thresh < 15.0 V\n");
+// 					}
+// 
+// 				}
+// 
+// 				dtostrf(g_battery_voltage, 4, 1, txt);
+// 				txt[5] = '\0';
+//   				sprintf(g_tempStr, "Bat =%s Volts\n", txt);
+//  				sb_send_string(g_tempStr);
+// 
+// 				dtostrf(g_voltage_threshold, 4, 1, txt);
+// 				txt[5] = '\0';
+//  				sprintf(g_tempStr, "thresh =%s Volts\n", txt);
+//  				sb_send_string(g_tempStr);
 			}
 			break;
 
@@ -1438,6 +1889,7 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 
 // 		g_LED_timeout_countdown = LED_TIMEOUT_SECONDS;
 // 		g_config_error = NULL_CONFIG;   /* Trigger a new configuration enunciation */
+
 	}
 }
 
@@ -1510,14 +1962,14 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 						if(c == '[')
 						{
 							powerToTransmitter(ON);
-							LEDS.blink(LEDS_RED_ON_CONSTANT);
+							LEDS.blink(LEDS_RED_ON_CONSTANT, true);
 							txKeyDown(ON);
 						}
 						else if(c == ']')
 						{
 							txKeyDown(OFF);
 							powerToTransmitter(OFF);
-							LEDS.blink(LEDS_RED_OFF);
+							LEDS.blink(LEDS_RED_OFF, true);
 						}
 						else if(c == '^') /* Prevent sleep shutdown */
 						{
@@ -1577,6 +2029,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					{
 						g_wifi_enable_delay = 1; /* Start countdown to WiFi power off */
 						if(!g_event_enabled) g_start_event = true; /* Attempt to launch any event that is already set */
+						antennaIsConnected(); /* Set green LED appropriately */
 					}
 					else if(f1 == '3')                      /* ESP is ready for power off" */
 					{			
@@ -1652,6 +2105,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 							{
 								/* Set the Morse code pattern and speed */
 								g_event_enabled = false; // prevent interrupts from affecting the settings
+								powerToTransmitter(ON);
 								bool repeat = true;
 								makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 								g_code_throttle = throttleValue(g_pattern_codespeed);
@@ -1664,6 +2118,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 								g_event_commenced = true;                   /* get things running immediately */
 								g_event_enabled = true;                     /* get things running immediately */
 								g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
+								antennaIsConnected(); /* Set green LED appropriately */
 							}
 							else
 							{
@@ -1672,6 +2127,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 						}
 						else if(f1 == '2')  /* enables a downloaded event stored in EEPROM */
 						{
+							g_event_scheduled = eventScheduled();
 							/* This command configures the transmitter to launch an event at its scheduled start time */
 							if(g_Event_Configuration_Check != FULLY_CONFIGURED_EVENT)
 							{
@@ -1694,15 +2150,6 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 									SC status = STATUS_CODE_IDLE;
 									g_last_error_code = launchEvent(&status);
 									g_wifi_enable_delay = 2; /* Ensure WiFi is enabled and countdown is reset */
-									
-									if(g_event_enabled)
-									{
-										LEDS.blink(LEDS_GREEN_BLINK_FAST);
-									}
-									else
-									{
-										LEDS.blink(LEDS_GREEN_ON_CONSTANT);
-									}								
 								}
 								else
 								{
@@ -1833,7 +2280,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 						if(strcmp(g_messages_text[STATION_ID], lb_buff->fields[LB_MSG_FIELD1]))
 						{
 							strncpy(g_messages_text[STATION_ID], lb_buff->fields[LB_MSG_FIELD1], MAX_PATTERN_TEXT_LENGTH);
-							g_time_needed_for_ID = (500 + timeRequiredToSendStrAtWPM(g_messages_text[STATION_ID], g_id_codespeed)) / 1000;				
+							g_time_needed_for_ID = timeNeededForID();		
 							new_event_parameter_count++;    /* Any ID or no ID is acceptable */
 						}
 					}
@@ -1878,7 +2325,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 
 							if(g_messages_text[STATION_ID][0])
 							{
-								g_time_needed_for_ID = (500 + timeRequiredToSendStrAtWPM(g_messages_text[STATION_ID], g_id_codespeed)) / 1000;
+								g_time_needed_for_ID = timeNeededForID();
 							}
 						}
 						
@@ -2149,7 +2596,8 @@ bool __attribute__((optimize("O0"))) eventEnabled()
 		g_wifi_enable_delay = 2;
 		return(false); /* completed events are never enabled */
 	}
-
+	
+	powerToTransmitter(ON);
 	dif = timeDif(now, g_event_start_epoch);
 
 	if(dif >= -30)  /* Don't sleep if the event starts in 30 seconds or less, or has already started */
@@ -2243,7 +2691,7 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 			return( ERROR_CODE_EVENT_STATION_ID_ERROR);
 		}
 
-		g_time_needed_for_ID = (500 + timeRequiredToSendStrAtWPM(g_messages_text[STATION_ID], g_id_codespeed)) / 1000;
+		g_time_needed_for_ID = timeNeededForID();
 	}
 	else
 	{
@@ -2332,6 +2780,7 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 			}
 
 			g_event_commenced = true;
+			antennaIsConnected(); /* Set green LED appropriately */
 		}
 		else    /* start time is in the future */
 		{
@@ -2356,12 +2805,30 @@ EC hw_init()
 
 EC rtc_init()
 {	
-	PORTC_set_pin_pull_mode(3, PORT_PULL_UP);
-	PORTC_set_pin_pull_mode(2, PORT_PULL_UP);
+	bool failure = true;
 	
-	ds3231_init();
+	util_delay_ms(0);
+	while(util_delay_ms(1000) && failure)
+	{
+		failure = ds3231_init();
+	}
+	
+	if(!failure)
+	{
+		failure = true;
 		
-	if(ds3231_1s_sqw(ON))
+		util_delay_ms(0);
+		while(util_delay_ms(1000) && failure)
+		{
+			failure = ds3231_1s_sqw(ON);
+		}
+		
+		if(failure)
+		{
+			return ERROR_CODE_RTC_NONRESPONSIVE;
+		}
+	}
+	else
 	{
 		return ERROR_CODE_RTC_NONRESPONSIVE;
 	}
@@ -2372,6 +2839,19 @@ EC rtc_init()
 bool antennaIsConnected()
 {
 	bool val = PORTD_get_pin_level(X80M_ANTENNA_DETECT);
+
+	if(g_hardware_error == HARDWARE_OK)
+	{
+		if(val)
+		{
+			LEDS.blink(LEDS_GREEN_OFF);		
+		}
+		else
+		{
+			LEDS.blink(LEDS_GREEN_ON_CONSTANT);
+		}
+	}
+
 	return(!val);
 }
 
@@ -2389,8 +2869,6 @@ void suspendEvent()
 	powerToTransmitter(OFF);
 	bool repeat = false;
 	makeMorse((char*)"\0", &repeat, null);  /* reset makeMorse */
-	LEDS.blink(LEDS_RED_OFF);
-	LEDS.blink(LEDS_GREEN_ON_CONSTANT);
 }
 
 
@@ -2402,47 +2880,47 @@ void startEventNow(EventActionSource_t activationSource)
 	{
 		if(conf == CONFIGURATION_ERROR)
 		{
-			setupForFox(NULL, START_NOTHING);
+			setupForFox(INVALID_FOX, START_NOTHING);
 		}
 		else
 		{
-			setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);
+			setupForFox(INVALID_FOX, START_EVENT_WITH_STARTFINISH_TIMES);
 		}
 	}
 	else if(activationSource == PROGRAMMATIC)
 	{
 		if(conf == CONFIGURATION_ERROR)                                                                                             /* Start immediately */
 		{
-			setupForFox(NULL, START_EVENT_NOW);
+			setupForFox(INVALID_FOX, START_EVENT_NOW);
 		}
 		else if((conf == WAITING_FOR_START) || (conf == SCHEDULED_EVENT_WILL_NEVER_RUN) || (conf == SCHEDULED_EVENT_DID_NOT_START)) /* Start immediately */
 		{
-			setupForFox(NULL, START_EVENT_NOW);
+			setupForFox(INVALID_FOX, START_EVENT_NOW);
 		}
 		else                                                                                                                        /*if((conf == EVENT_IN_PROGRESS) */
 		{
-			setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);                                                                  /* Let the RTC start the event */
+			setupForFox(INVALID_FOX, START_EVENT_WITH_STARTFINISH_TIMES);                                                                  /* Let the RTC start the event */
 		}
 	}
 	else                                                                                                                            /* PUSHBUTTON */
 	{
 		if(conf == CONFIGURATION_ERROR)                                                                                             /* No scheduled event */
 		{
-			setupForFox(NULL, START_EVENT_NOW);
+			setupForFox(INVALID_FOX, START_EVENT_NOW);
 		}
 		else                                                                                                                        /* if(buttonActivated) */
 		{
 			if(conf == WAITING_FOR_START)
 			{
-				setupForFox(NULL, START_TRANSMISSIONS_NOW);                                                                         /* Start transmitting! */
+				setupForFox(INVALID_FOX, START_TRANSMISSIONS_NOW);                                                                         /* Start transmitting! */
 			}
 			else if(conf == SCHEDULED_EVENT_WILL_NEVER_RUN)
 			{
-				setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);                                                              /* rtc starts the event */
+				setupForFox(INVALID_FOX, START_EVENT_WITH_STARTFINISH_TIMES);                                                              /* rtc starts the event */
 			}
 			else                                                                                                                    /* Event should be running now */
 			{
-				setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);                                                              /* start the running event */
+				setupForFox(INVALID_FOX, START_EVENT_WITH_STARTFINISH_TIMES);                                                              /* start the running event */
 			}
 		}
 	}
@@ -2456,21 +2934,21 @@ void stopEventNow(EventActionSource_t activationSource)
 
 	if(activationSource == PROGRAMMATIC)
 	{
-		setupForFox(NULL, START_NOTHING);
+		setupForFox(INVALID_FOX, START_NOTHING);
 	}
 	else    /* if(activationSource == PUSHBUTTON) */
 	{
 		if(conf == WAITING_FOR_START)
 		{
-			setupForFox(NULL, START_TRANSMISSIONS_NOW);
+			setupForFox(INVALID_FOX, START_TRANSMISSIONS_NOW);
 		}
 		if(conf == SCHEDULED_EVENT_WILL_NEVER_RUN)
 		{
-			setupForFox(NULL, START_NOTHING);
+			setupForFox(INVALID_FOX, START_NOTHING);
 		}
 		else    /*if(conf == CONFIGURATION_ERROR) */
 		{
-			setupForFox(NULL, START_NOTHING);
+			setupForFox(INVALID_FOX, START_NOTHING);
 		}
 	}
 
@@ -2488,7 +2966,7 @@ void startEventUsingRTC(void)
 
 	if(state != CONFIGURATION_ERROR)
 	{
-		setupForFox(NULL, START_EVENT_WITH_STARTFINISH_TIMES);
+		setupForFox(INVALID_FOX, START_EVENT_WITH_STARTFINISH_TIMES);
 		reportTimeTill(now, g_event_start_epoch, "Starts in: ", "In progress\n");
 
 		if(g_event_start_epoch < now)
@@ -2508,16 +2986,13 @@ void startEventUsingRTC(void)
 
 
 
-void setupForFox(Fox_t* fox, EventAction_t action)
+void setupForFox(Fox_t fox, EventAction_t action)
 {
 	bool patternNotSet = true;
 	
-	if(fox)
+	if(fox == INVALID_FOX)
 	{
-		if(*fox != INVALID_FOX)
-		{
-			g_fox = *fox;
-		}
+		fox = getFoxSetting();
 	}
 
 	g_event_enabled = false;
@@ -2525,7 +3000,7 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 	LEDS.setRed(OFF);
  	set_system_time(ds3231_get_epoch(null));
 
-	switch(g_fox)
+	switch(fox)
 	{
 		case FOX_1:
 		{
@@ -2572,8 +3047,8 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 				g_intra_cycle_delay_time = 240;
 			}
 			
-			bool repeat = true;
-			makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
+//			bool repeat = true;
+//			makeMorse(getPatternText(), &repeat, NULL);
 			g_code_throttle = throttleValue(g_pattern_codespeed);
 
 			g_sendID_seconds_countdown = 60;			/* wait 1 minute to send the ID */
@@ -2628,8 +3103,8 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 				}
 			}
 			
-			bool repeat = true;
-			makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
+//			bool repeat = true;
+//			makeMorse(getPatternText(), &repeat, NULL);
 			g_pattern_codespeed = 8;
 			g_code_throttle = throttleValue(g_pattern_codespeed);
 
@@ -2683,8 +3158,8 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 				g_intra_cycle_delay_time = 48;
 			}
 			
-			bool repeat = true;
-			makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
+//			bool repeat = true;
+//			makeMorse(getPatternText(), &repeat, NULL);
 			g_pattern_codespeed = 15;
 			g_code_throttle = throttleValue(g_pattern_codespeed);
 
@@ -2708,7 +3183,54 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 		break;
 #endif // SUPPORT_TEMP_AND_VOLTAGE_REPORTING
 
+		case FOXORING_EVENT_FOXA:
+		{
+			init_transmitter(getFrequencySetting());
+			patternNotSet = false;
+			g_intra_cycle_delay_time = 0;
+//			bool repeat = true;
+//			makeMorse(getPatternText(), &repeat, NULL);
+			g_pattern_codespeed = 8;
+			g_code_throttle = throttleValue(g_pattern_codespeed);
 
+			g_sendID_seconds_countdown = 600;			/* wait 10 minutes send the ID */
+			g_on_air_seconds = 60;						/* on period is very long */
+			g_off_air_seconds = 0;						/* off period is very short */
+		}
+		break;
+		
+		case FOXORING_EVENT_FOXB:
+		{
+			init_transmitter(getFrequencySetting());
+			patternNotSet = false;
+			g_intra_cycle_delay_time = 0;
+//			bool repeat = true;
+//			makeMorse(getPatternText(), &repeat, NULL);
+			g_pattern_codespeed = 8;
+			g_code_throttle = throttleValue(g_pattern_codespeed);
+
+			g_sendID_seconds_countdown = 600;			/* wait 10 minutes send the ID */
+			g_on_air_seconds = 60;						/* on period is very long */
+			g_off_air_seconds = 0;						/* off period is very short */
+		}
+		break;
+		
+		case FOXORING_EVENT_FOXC:
+		{
+			init_transmitter(getFrequencySetting());
+			patternNotSet = false;
+			g_intra_cycle_delay_time = 0;
+//			bool repeat = true;
+//			makeMorse(getPatternText(), &repeat, NULL);
+			g_pattern_codespeed = 8;
+			g_code_throttle = throttleValue(g_pattern_codespeed);
+
+			g_sendID_seconds_countdown = 600;			/* wait 10 minutes send the ID */
+			g_on_air_seconds = 60;						/* on period is very long */
+			g_off_air_seconds = 0;						/* off period is very short */
+		}
+		break;
+		
 		case SPECTATOR:
 		{
 			sprintf(g_messages_text[PATTERN_TEXT], "S");
@@ -2724,8 +3246,8 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 			}
 			
 			g_intra_cycle_delay_time = 0;
-			bool repeat = true;
-			makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
+//			bool repeat = true;
+//			makeMorse(getPatternText(), &repeat, NULL);
 			g_pattern_codespeed = 8;
 			g_code_throttle = throttleValue(g_pattern_codespeed);
 
@@ -2779,8 +3301,8 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 	}
 	else if(action == START_TRANSMISSIONS_NOW)                                  /* Immediately start transmitting, regardless RTC or time slot */
 	{
-		bool repeat = true;
-		makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
+//		bool repeat = true;
+//		makeMorse(getPatternText(), &repeat, NULL);
 		g_code_throttle = throttleValue(g_pattern_codespeed);
 
 // 		g_event_start_epoch = 1;                     /* have it start a long time ago */
@@ -2789,7 +3311,7 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 		g_event_commenced = true;                   /* get things running immediately */
 		g_event_enabled = true;                     /* get things running immediately */
 		g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
-		
+		antennaIsConnected(); /* Set green LED appropriately */
 // 		g_seconds_since_sync = (g_fox_counter - 1) * g_on_air_interval_seconds; /* Total elapsed time since start of event */
  		g_use_rtc_for_startstop = false;
  		g_event_enabled = true;
@@ -2815,17 +3337,17 @@ void setupForFox(Fox_t* fox, EventAction_t action)
 // 	g_config_error = NULL_CONFIG;           /* Trigger a new configuration enunciation */
 }
 
-time_t validateTimeString(char* str, time_t* epochVar, int8_t offsetHours)
+time_t validateTimeString(char* str, time_t* epochVar)
 {
 	time_t valid = 0;
 	int len = strlen(str);
-	time_t minimumEpoch = MINIMUM_EPOCH;
+	time_t minimumEpoch = MINIMUM_VALID_EPOCH;
 	uint8_t validationType = 0;
 	time_t now = time(null);
 
 	if(epochVar == &g_event_start_epoch)
 	{
-		minimumEpoch = MAX(now, MINIMUM_EPOCH);
+		minimumEpoch = MAX(now, MINIMUM_VALID_EPOCH);
 		validationType = 1;
 	}
 	else if(epochVar == &g_event_finish_epoch)
@@ -2845,8 +3367,6 @@ time_t validateTimeString(char* str, time_t* epochVar, int8_t offsetHours)
 	if((len == 12) && (only_digits(str)))
 	{
 		time_t ep = RTC_String2Epoch(NULL, str);    /* String format "YYMMDDhhmmss" */
-
-		ep += (HOUR * offsetHours);
 
 		if(ep > minimumEpoch)
 		{
@@ -2954,7 +3474,7 @@ ConfigurationState_t clockConfigurationCheck(void)
 {
 	time_t now = time(null);
 	
-	if((g_event_finish_epoch < MINIMUM_EPOCH) || (g_event_start_epoch < MINIMUM_EPOCH) || (now < MINIMUM_EPOCH))
+	if((g_event_finish_epoch <= MINIMUM_VALID_EPOCH) || (g_event_start_epoch <= MINIMUM_VALID_EPOCH) || (now <= MINIMUM_VALID_EPOCH))
 	{
 		return(CONFIGURATION_ERROR);
 	}
@@ -2998,12 +3518,21 @@ void reportConfigErrors(void)
 		sb_send_string(TEXT_SET_ID_TXT);
 	}
 
-	if(now < MINIMUM_EPOCH) /* Current time is invalid */
+	if(now <= MINIMUM_VALID_EPOCH) /* Current time is invalid */
 	{
 		sb_send_string(TEXT_SET_TIME_TXT);
 	}
-
-	if(g_event_finish_epoch < now)      /* Event has already finished */
+	
+	if(g_event_finish_epoch <= MINIMUM_VALID_EPOCH)
+	{
+		sb_send_string(TEXT_SET_FINISH_TXT);
+		
+		if(g_event_start_epoch < MINIMUM_VALID_EPOCH)
+		{
+			sb_send_string(TEXT_SET_START_TXT);
+		}
+	}
+	else if(g_event_finish_epoch <= now)      /* Event has already finished */
 	{
 		if(g_event_start_epoch < now)   /* Event has already started */
 		{
@@ -3014,9 +3543,13 @@ void reportConfigErrors(void)
 	}
 	else if(g_event_start_epoch < now)  /* Event has already started */
 	{
-		if(g_event_start_epoch < MINIMUM_EPOCH)     /* Start in invalid */
+		if(g_event_start_epoch < MINIMUM_VALID_EPOCH)     /* Start invalid */
 		{
 			sb_send_string(TEXT_SET_START_TXT);
+		}
+		else if(!g_event_enabled)
+		{
+			sb_send_string((char*)"Start with > SYN 2\n");
 		}
 		else
 		{
@@ -3025,6 +3558,138 @@ void reportConfigErrors(void)
 	}
 }
 
+uint16_t timeNeededForID(void)
+{
+	return((uint16_t)(((float)timeRequiredToSendStrAtWPM((char*)g_messages_text[STATION_ID], g_id_codespeed)) / 1000.));
+}
 
+Fox_t getFoxSetting(void)
+{
+	Fox_t fox;
+	
+	if(g_event == EVENT_FOXORING)
+	{
+		switch(g_foxoring_fox)
+		{
+			case FOXORING_EVENT_FOXA:
+			{
+				fox = FOXORING_EVENT_FOXA;
+			}
+			break;
+			
+			case FOXORING_EVENT_FOXB:
+			{
+				fox = FOXORING_EVENT_FOXB;
+			}
+			break;
+			
+			case FOXORING_EVENT_FOXC:
+			{
+				fox = FOXORING_EVENT_FOXC;
+			}
+			break;
+			
+			default:
+			{
+				fox = INVALID_FOX;
+			}
+			break;
+		}
+	}
+	else
+	{
+		fox = g_fox;
+	}
+	
+	return fox;
+}
 
+char* getPatternText(void)
+{
+	char* txt = NULL;
+		
+	if(g_event == EVENT_FOXORING)
+	{
+		switch(g_foxoring_fox)
+		{
+			case FOXORING_EVENT_FOXA:
+			{
+				txt = g_messages_text[FOXA_PATTERN_TEXT];
+			}
+			break;
+				
+			case FOXORING_EVENT_FOXB:
+			{
+				txt = g_messages_text[FOXB_PATTERN_TEXT];
+			}
+			break;
+				
+			case FOXORING_EVENT_FOXC:
+			{
+				txt = g_messages_text[FOXC_PATTERN_TEXT];
+			}
+			break;
+				
+			default:
+			{
+				txt = g_messages_text[FOXA_PATTERN_TEXT];
+			}
+			break;
+		}
+	}
+	else
+	{
+		txt = g_messages_text[PATTERN_TEXT];
+	}
+	
+	return txt;
+}
 
+Frequency_Hz getFrequencySetting(void)
+{
+	Frequency_Hz freq;
+		
+	if(g_event == EVENT_FOXORING)
+	{
+		switch(g_foxoring_fox)
+		{
+			case FOXORING_EVENT_FOXA:
+			{
+				freq = g_foxoring_frequencyA;
+			}
+			break;
+				
+			case FOXORING_EVENT_FOXB:
+			{
+				freq = g_foxoring_frequencyB;
+			}
+			break;
+				
+			case FOXORING_EVENT_FOXC:
+			{
+				freq = g_foxoring_frequencyC;
+			}
+			break;
+				
+			default:
+			{
+				freq = EEPROM_FOXORING_FREQUENCYA_DEFAULT;
+			}
+			break;
+		}
+	}
+	else
+	{
+		freq = g_80m_frequency;
+	}
+
+	return(freq);
+}
+
+bool eventScheduled(void)
+{
+	set_system_time(ds3231_get_epoch(null));
+	time_t now = time(null);	
+	bool result = ((now > MINIMUM_VALID_EPOCH) && (g_event_start_epoch > now) && (g_event_finish_epoch > g_event_start_epoch));
+	return(result);
+}

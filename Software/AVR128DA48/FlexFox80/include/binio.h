@@ -26,6 +26,8 @@
 #ifndef __BINIO_H__
 #define __BINIO_H__
 
+#include "defs.h"
+
 /* PORTA *************************************************************************************/
 #define V3V3_PWR_ENABLE 7
 #define WIFI_RESET 6
@@ -72,6 +74,7 @@
 
 
 void BINIO_init(void);
+void BINIO_sleep(void);
 
 class binio
 {
@@ -79,11 +82,15 @@ class binio
 public:
 protected:
 private:
+// 	uint8_t portDpinReadings[3];
+// 	uint8_t portDdebounced;
 
 //functions
 public:
 	binio();
 	~binio();
+// 	void debounce(void);
+// 	uint8_t portDdebouncedVals(void);
 protected:
 private:
 	binio( const binio &c );

@@ -34,8 +34,9 @@ main.d main.o: .././main.cpp .././atmel_start.h \
  ../include/morse.h ../include/adc.h ../include/Goertzel.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\math.h \
  ../include/util.h ../include/binio.h ../include/eeprommanager.h \
- ../include/leds.h ../include/huzzah.h ../include/ccp.h \
- ../include/protected_io.h ../include/dac0.h
+ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\eeprom.h \
+ ../include/leds.h ../include/huzzah.h ../include/CircularStringBuff.h \
+ ../include/ccp.h ../include/protected_io.h ../include/dac0.h
 
 .././atmel_start.h:
 
@@ -143,9 +144,13 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 
 ../include/eeprommanager.h:
 
+c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\eeprom.h:
+
 ../include/leds.h:
 
 ../include/huzzah.h:
+
+../include/CircularStringBuff.h:
 
 ../include/ccp.h:
 

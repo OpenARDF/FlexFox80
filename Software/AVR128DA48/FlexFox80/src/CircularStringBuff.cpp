@@ -21,7 +21,7 @@
 **********************************************************************************************/
 #include "CircularStringBuff.h"
 #include <stdlib.h>
-
+#include <ctype.h>
 
 CircularStringBuff::CircularStringBuff(size_t size)
 {
@@ -83,7 +83,7 @@ size_t CircularStringBuff::size() const
  */
 void CircularStringBuff::put(char item)
 {
-  buf_[head_] = item;
+  buf_[head_] = toupper(item);
 
   if (full_)
   {

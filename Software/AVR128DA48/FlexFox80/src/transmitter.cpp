@@ -275,6 +275,12 @@ void final_drain_voltage(bool state);
 		si5351_start_comms();
 	}
 
+	EC init_transmitter(Frequency_Hz freq)
+	{
+		g_80m_frequency = freq;
+		return init_transmitter();
+	}
+	
 	EC init_transmitter(void)
 	{
 		EC code;

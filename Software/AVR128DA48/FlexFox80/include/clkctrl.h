@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-int8_t CLKCTRL_init();
+int8_t CLKCTRL_init(void);
 
 #ifdef __cplusplus
 }

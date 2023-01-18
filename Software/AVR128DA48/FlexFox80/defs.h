@@ -33,7 +33,7 @@
 
 /******************************************************
  * Set the text that gets displayed to the user */
-#define SW_REVISION "0.4"
+#define SW_REVISION "0.91"
 
 //#define TRANQUILIZE_WATCHDOG
 
@@ -120,7 +120,13 @@ typedef enum {
 	SLEEP_FOREVER
 	} SleepType;
 	
-	
+
+typedef enum {
+	DO_NOT_ENUNCIATE,
+	LED_AND_RF,
+	LED_ONLY
+	} Enunciation_t;
+
 /*******************************************************/
 
 #ifndef uint16_t_defined
@@ -195,7 +201,7 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 #define ANTENNA_DETECT_DEBOUNCE 50
 
 #define NUMBER_OF_ESSENTIAL_EVENT_PARAMETERS 12
-
+#define TEXT_BUFF_SIZE 50
 
 /*******************************************************/
 
@@ -205,12 +211,13 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 
 /******************************************************
  * EEPROM definitions */
-#define EEPROM_INITIALIZED_FLAG 0x00CE
+#define EEPROM_INITIALIZED_FLAG (uint16_t)0x0102
 #define EEPROM_UNINITIALIZED 0x00
 
 #define EEPROM_STATION_ID_DEFAULT "FOXBOX"
 #define EEPROM_PATTERN_TEXT_DEFAULT "PARIS|"
 
+#define EEPROM_MASTER_SETTING_DEFAULT false
 #define EEPROM_START_TIME_DEFAULT 0
 #define EEPROM_FINISH_TIME_DEFAULT 0
 #define EEPROM_EVENT_ENABLED_DEFAULT false
@@ -229,7 +236,8 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 #define EEPROM_CLK1_ONOFF_DEFAULT OFF
 #define EEPROM_CLK2_ONOFF_DEFAULT OFF
 
-#define EEPROM_BATTERY_EMPTY_MV 3430
+#define EEPROM_CLOCK_CALIBRATION_DEFAULT 32767
+#define EEPROM_BATTERY_THRESHOLD_V (3.800)
 #define MAX_UNLOCK_CODE_LENGTH 8
 #define EEPROM_DTMF_UNLOCK_CODE_DEFAULT "1357"
 #define MIN_UNLOCK_CODE_LENGTH 4
@@ -241,10 +249,20 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 #define EEPROM_FINISH_EPOCH_DEFAULT 0
 #define EEPROM_UTC_OFFSET_DEFAULT 0
 #define EEPROM_FOX_SETTING_DEFAULT FOX_1
+#define EEPROM_EVENT_SETTING_DEFAULT EVENT_NONE
+#define EEPROM_FOX_PATTERN_DEFAULT "MOE"
+#define EEPROM_FOX_FREQUENCY_DEFAULT 3550000
+#define EEPROM_FOXORING_FOXA_PATTERN_DEFAULT "MOE"
+#define EEPROM_FOXORING_FOXB_PATTERN_DEFAULT "MOI"
+#define EEPROM_FOXORING_FOXC_PATTERN_DEFAULT "MOS"
+#define EEPROM_FOXORING_FREQUENCYA_DEFAULT 3520000
+#define EEPROM_FOXORING_FREQUENCYB_DEFAULT 3550000
+#define EEPROM_FOXORING_FREQUENCYC_DEFAULT 3570000
+#define EEPROM_FOXORING_FOX_SETTING_DEFAULT FOXORING_EVENT_FOXA
 #define TEXT_SET_TIME_TXT (char*)"CLK T YYMMDDhhmmss <- Set current time\n"
 #define TEXT_SET_START_TXT (char*)"CLK S YYMMDDhhmmss <- Set start time\n"
 #define TEXT_SET_FINISH_TXT (char*)"CLK F YYMMDDhhmmss <- Set finish time\n"
-#define TEXT_SET_ID_TXT (char*)"ID [\"callsign\"] <- Set callsign\n"
+#define TEXT_SET_ID_TXT (char*)"ID \"callsign\" <- Set callsign\n"
 #define TEXT_ERR_FINISH_BEFORE_START_TXT (char*)"Err: Finish before start!\n"
 #define TEXT_ERR_FINISH_IN_PAST_TXT (char*)"Err: Finish in past!\n"
 #define TEXT_ERR_START_IN_PAST_TXT (char*)"Err: Start in past!\n"
@@ -253,7 +271,13 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 #define TEXT_RTC_NOT_RESPONDING_TXT (char*)"Error: No response from clock hardware\n"
 #define TEXT_TX_NOT_RESPONDING_TXT (char*)"Error: No response from transmit hardware\n"
 #define TEXT_WIFI_NOT_DETECTED_TXT (char*)"Warning: WiFi hardware not detected\n"
-#define MINIMUM_EPOCH ((time_t)1609459200)  /* 1 Jan 2021 00:00:00 */
+#define TEXT_RESET_OCCURRED_TXT (char*)"Warning: CPU Reset! Need to set clock\n"
+#define TEXT_NOT_SLEEPING_TXT (char*)"NanoFox is not sleeping\n"
+#define TEXT_CURRENT_SETTINGS_TXT (char*)"\n   === NanoFox Settings ===\n"
+#define TEXT_EVENT_SETTINGS_TXT (char*)"\n    === Event Settings ===\n"
+#define MINIMUM_VALID_EPOCH ((time_t)1609459200)  /* 1 Jan 2021 00:00:00 */
+#define YEAR_2000_EPOCH ((time_t)946684800)  /* 1 Jan 2000 00:00:00 */
+#define FOREVER_EPOCH ((time_t)4796712000) /* 1 Jan 2122 00:00:00 */
 #define SECONDS_24H 86400
 
 typedef enum
@@ -332,6 +356,9 @@ typedef enum
 	SPRINT_F3,
 	SPRINT_F4,
 	SPRINT_F5,
+	FOXORING_EVENT_FOXA,
+	FOXORING_EVENT_FOXB,
+	FOXORING_EVENT_FOXC,
 	INVALID_FOX
 	#if SUPPORT_TEMP_AND_VOLTAGE_REPORTING
 	,
@@ -339,24 +366,11 @@ typedef enum
 	#endif // SUPPORT_TEMP_AND_VOLTAGE_REPORTING
 } Fox_t;
 
-#define QUAD_MASK 0xC0
-#define QUAD_A 7
-#define QUAD_B 6
-
-#define MAX_TONE_VOLUME_SETTING 15
-#define TONE_POT_VAL(x) (255 - (x*17))
-#define MAX_MAIN_VOLUME_SETTING 15
-
-#define POWER_OFF_DELAY 5000
-#define BACKLIGHT_OFF_DELAY 5000
-#define BACKLIGHT_ALWAYS_ON 65535
-#define HEADPHONE_REMOVED_DELAY 100
-#define POWERUP_LOW_VOLTAGE_DELAY 900   /* A short delay at first power up before declaring battery is too low */
-#define LOW_VOLTAGE_DELAY 9000          /* A longer delay if the receiver has been running and the battery starts to sag */
-#define CURSOR_EXPIRATION_DELAY 5000    /* Keep cursor displayed this long without user action */
-#define LONG_PRESS_TICK_COUNT 1200      /* Press a button for this many ticks in order to access a long-press function */
-
-#define SEND_ID_DELAY 4100
+typedef enum
+{
+	EVENT_NONE,
+	EVENT_FOXORING
+} Event_t;
 
 /* Periodic TIMER2 interrupt timing definitions */
 #define OCR2A_OVF_FREQ_300 0x0C
@@ -368,52 +382,8 @@ typedef enum
 #define TIMER2_5_8HZ (1200/OCR2A_OVF_BASE_FREQ)
 #define TIMER2_0_5HZ (12000/OCR2A_OVF_BASE_FREQ)
 
-#define BEEP_SHORT 100
-#define BEEP_LONG 65535
-
 /******************************************************
  * UI Hardware-related definitions */
-
-typedef enum lcdRow
-{
-	ROW0,
-	ROW1,
-	NUMBER_OF_LCD_ROWS
-} LcdRowType;
-
-typedef enum lcdColumn
-{
-	COL0,
-	COL1,
-	COL2,
-	COL3,
-	COL4,
-	COL5,
-	COL6,
-	COL7,
-	COL8,
-	COL9,
-	COL10,
-	COL11,
-	COL12,
-	COL13,
-	COL14,
-	COL15,
-	COL16,
-	COL17,
-	COL18,
-	COL19,
-	NUMBER_OF_LCD_COLS,
-	INVALID_LCD_COLUMN
-} LcdColType;
-
-typedef enum
-{
-	BUTTON1_COLUMN = COL0,
-	BUTTON2_COLUMN = COL5,
-	BUTTON3_COLUMN = COL10,
-	BUTTON4_COLUMN = COL15
-} ButtonColumn;
 
 typedef enum
 {
@@ -421,57 +391,6 @@ typedef enum
 	HourMinuteSecondFormat,
 	HourMinuteSecondDateFormat
 } TextFormat;
-
-#define DISPLAY_WIDTH_STRING_SIZE (NUMBER_OF_LCD_COLS + 1)
-
-typedef uint8_t BackLightSettingType;
-#define BL_OFF 0xFF
-#define BL_LOW 0xCF
-#define BL_MED 0x8F
-#define BL_HIGH 0x00
-
-typedef uint8_t ContrastType;
-
-typedef enum volumeSetting
-{
-	VOL_ZERO = 0,
-	VOL_10,
-	VOL_20,
-	VOL_30,
-	VOL_40,
-	VOL_50,
-	VOL_60,
-	VOL_70,
-	VOL_80,
-	VOL_90,
-	VOL_100,
-	DECREMENT_VOL,
-	INCREMENT_VOL,
-	VOL_NOT_SPECIFIED
-} VolumeSetting;
-
-typedef enum volumeType
-{
-	TONE_VOLUME,
-	MAIN_VOLUME
-} VolumeType;
-
-typedef enum batteryType
-{
-	BATTERY_9V,
-	BATTERY_4r2V,
-	BATTERY_EXTERNAL,
-	BATTERY_UNKNOWN
-} BatteryType;
-
-typedef enum buttons
-{
-	BUTTON1,
-	BUTTON2,
-	BUTTON3,
-	BUTTON4,
-	NUMBER_OF_BUTTONS
-} ButtonType;
 
 typedef enum
 {
@@ -490,10 +409,14 @@ typedef enum
 typedef enum
 {
 	PATTERN_TEXT,
+	FOXA_PATTERN_TEXT,
+	FOXB_PATTERN_TEXT,
+	FOXC_PATTERN_TEXT,
 	STATION_ID
 } TextIndex;
 
-#define MAX_PATTERN_TEXT_LENGTH 20
+#define MAX_PATTERN_TEXT_LENGTH (uint8_t)20
+#define UNLOCK_CODE_SIZE (uint8_t)8
 
 typedef enum
 {

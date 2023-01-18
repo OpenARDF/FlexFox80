@@ -49,6 +49,7 @@ C_SRCS +=  \
 ../src/adc.cpp \
 ../src/binio.cpp \
 ../src/bod.cpp \
+../src/CircularStringBuff.cpp \
 ../src/clkctrl.cpp \
 ../src/cpuint.cpp \
 ../src/dac0.cpp \
@@ -84,6 +85,7 @@ main.o \
 src/adc.o \
 src/binio.o \
 src/bod.o \
+src/CircularStringBuff.o \
 src/clkctrl.o \
 src/cpuint.o \
 src/dac0.o \
@@ -112,6 +114,7 @@ main.o \
 src/adc.o \
 src/binio.o \
 src/bod.o \
+src/CircularStringBuff.o \
 src/clkctrl.o \
 src/cpuint.o \
 src/dac0.o \
@@ -140,6 +143,7 @@ main.d \
 src/adc.d \
 src/binio.d \
 src/bod.d \
+src/CircularStringBuff.d \
 src/clkctrl.d \
 src/cpuint.d \
 src/dac0.d \
@@ -168,6 +172,7 @@ main.d \
 src/adc.d \
 src/binio.d \
 src/bod.d \
+src/CircularStringBuff.d \
 src/clkctrl.d \
 src/cpuint.d \
 src/dac0.d \
@@ -239,6 +244,13 @@ src/binio.o: ../src/binio.cpp
 	
 
 src/bod.o: ../src/bod.cpp
+	@echo Building file: $<
+	@echo Invoking: AVR8/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -funsigned-char -funsigned-bitfields -DDEBUG  -I"../Config" -I"../include" -I"../utils" -I"../utils/assembler" -I".." -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\AVR-Dx_DFP\1.9.103\include"  -O0 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=avr128da48 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\AVR-Dx_DFP\1.9.103\gcc\dev\avr128da48" -c -fno-threadsafe-statics -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+src/CircularStringBuff.o: ../src/CircularStringBuff.cpp
 	@echo Building file: $<
 	@echo Invoking: AVR8/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -funsigned-char -funsigned-bitfields -DDEBUG  -I"../Config" -I"../include" -I"../utils" -I"../utils/assembler" -I".." -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\AVR-Dx_DFP\1.9.103\include"  -O0 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -mmcu=avr128da48 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\AVR-Dx_DFP\1.9.103\gcc\dev\avr128da48" -c -fno-threadsafe-statics -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 

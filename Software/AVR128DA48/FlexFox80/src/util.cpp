@@ -399,6 +399,24 @@ bool fox2Text(char* str, Fox_t fox)
 		}
 		break;
 		
+		case FOXORING_EVENT_FOXA:
+		{
+			sprintf(str, "Foxoring Fox \"A\"");
+		}
+		break;
+		
+		case FOXORING_EVENT_FOXB:
+		{
+			sprintf(str, "Foxoring Fox \"B\"");
+		}
+		break;
+		
+		case FOXORING_EVENT_FOXC:
+		{
+			sprintf(str, "Foxoring Fox \"C\"");
+		}
+		break;		
+		
 		default:
 		{
 			failure = true;

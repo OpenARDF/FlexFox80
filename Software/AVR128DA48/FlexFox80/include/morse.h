@@ -31,14 +31,6 @@
 #define WPM_TO_MS_PER_DOT(w)		(1200/(w))
 #define THROTTLE_VAL_FROM_WPM(w)	(PROCESSSOR_CLOCK_HZ / 8000000L) * ((7042 / (w)) / 10)
 
-/*
-*/
-typedef struct {
-	uint8_t		pattern;
-	uint8_t		lengthInSymbols;
-	uint8_t		lengthInElements;
-} MorseCharacter;
-
 /**
 Load a string to send by passing in a pointer to the string in the argument.
 Call this function with a NULL argument at intervals of 1 element of time to generate Morse code.
