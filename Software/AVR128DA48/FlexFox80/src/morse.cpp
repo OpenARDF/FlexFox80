@@ -73,7 +73,7 @@ bool makeMorse(char* s, bool* repeating, bool* finished)
 		if(*s)
 		{
 			str = s;
-			c = ' ';
+			c = str[0];
 			morseInProgress = getMorseChar(*str);
 			charIndex = 0;
 			symbolIndex = 0;

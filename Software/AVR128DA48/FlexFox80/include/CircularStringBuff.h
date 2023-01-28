@@ -34,6 +34,8 @@ class CircularStringBuff {
     size_t capacity(void) const;
     size_t size(void) const;
 	char pop(void);
+	void setBusy(bool busy);
+	bool isBusy(void);
 
   private:
 	int head_;
@@ -41,4 +43,5 @@ class CircularStringBuff {
 	bool full_;
 	char* buf_;
 	size_t max_size_;
+	volatile bool busy_;
 };

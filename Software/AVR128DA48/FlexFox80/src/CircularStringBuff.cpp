@@ -30,6 +30,7 @@ CircularStringBuff::CircularStringBuff(size_t size)
   head_ = 0;
   tail_ = 0;
   full_ = false;
+  busy_ = false;
 }
 
 CircularStringBuff::~CircularStringBuff() {
@@ -41,12 +42,30 @@ void CircularStringBuff::reset()
 {
   head_ = tail_;
   full_ = false;
+  busy_ = false;
 }
 
 bool CircularStringBuff::empty() const
 {
   /*if head and tail are equal, we are empty */
   return (!full_ && (head_ == tail_));
+}
+
+void CircularStringBuff::setBusy(bool busy)
+{
+	if(busy)
+	{
+		busy_ = true;
+	}
+	else
+	{
+		busy_ = false;
+	}
+}
+
+bool CircularStringBuff::isBusy(void)
+{
+	return busy_;
 }
 
 bool CircularStringBuff::full() const

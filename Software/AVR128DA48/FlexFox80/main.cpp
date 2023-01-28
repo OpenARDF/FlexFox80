@@ -87,6 +87,7 @@ static volatile bool g_end_event = false;
 static volatile int32_t g_on_the_air = 0;
 static volatile int g_sendID_seconds_countdown = 0;
 static volatile uint16_t g_code_throttle = 50;
+static volatile uint16_t g_enunciation_code_throttle = 50;
 static volatile uint8_t g_WiFi_shutdown_seconds = 120;
 static volatile bool g_report_seconds = false;
 static volatile bool g_wifi_active = true;
@@ -148,6 +149,7 @@ volatile bool g_long_button_press = false;
 volatile uint16_t g_check_temperature = 0;
 
 Enunciation_t g_enunciator = LED_ONLY;
+static volatile bool g_do_powerup_xmsn = false;
 
 uint16_t g_Event_Configuration_Check = 0;
 
@@ -208,6 +210,7 @@ void startEventUsingRTC(void);
 void setupForFox(Fox_t fox, EventAction_t action);
 time_t validateTimeString(char* str, time_t* epochVar);
 bool reportTimeTill(time_t from, time_t until, const char* prefix, const char* failMsg);
+void makeTimeTillString(char* str, time_t from, time_t until, bool* fail);
 ConfigurationState_t clockConfigurationCheck(void);
 void reportConfigErrors(void);
 /*******************************/
@@ -651,7 +654,8 @@ ISR(TCB0_INT_vect)
 						powerToTransmitter(OFF);
 					}
 				
-					codeInc = g_code_throttle;
+					g_text_buff.setBusy(false); /* free the text buffer for other users */
+					codeInc = g_enunciation_code_throttle;
 					makeMorse((char*)"\0", &repeat, null); /* reset makeMorse */
 					idle = true;
 				}
@@ -673,24 +677,25 @@ ISR(TCB0_INT_vect)
 							if(!g_text_buff.empty())
 							{
 								static char cc[2]; /* Must be static because makeMorse saves only a pointer to the character array */
-								g_code_throttle = throttleValue(g_pattern_codespeed);
+								g_enunciation_code_throttle = MIN(g_enunciation_code_throttle, throttleValue(g_pattern_codespeed));
 								cc[0] = g_text_buff.get();
 								cc[1] = '\0';
 								makeMorse(cc, &repeat, null);
 								key = makeMorse(null, &repeat, &charFinished);
+								g_text_buff.setBusy(true); /* ensure other buffer users don't interfere with the last character being sent */
 							}
 						}
 
 						if(g_enunciator == LED_AND_RF) keyTransmitter(key);
 						LEDS.setRed(key);
-						codeInc = g_code_throttle;
+						codeInc = g_enunciation_code_throttle;
 					}
 				}
 				else
 				{
 					if(g_enunciator == LED_AND_RF) keyTransmitter(key);
 					LEDS.setRed(key);
-					codeInc = g_code_throttle;
+					codeInc = g_enunciation_code_throttle;
 				}
 			}
 		}
@@ -954,11 +959,46 @@ int main(void)
 			LEDS.blink(LEDS_GREEN_ON_CONSTANT);
 			LEDS.blink(LEDS_RED_ON_CONSTANT);
 		}
-		else if(g_text_buff.empty())
+		else if(!g_text_buff.isBusy() && g_text_buff.empty())
 		{
+			g_enunciator = LED_ONLY;
+			
 			if(g_hardware_error != HARDWARE_OK)
 			{
 				LEDS.blink(LEDS_RED_AND_GREEN_BLINK_FAST);
+			}
+			else if(g_do_powerup_xmsn)
+			{
+				time_t now = time(null);
+				ConfigurationState_t state = clockConfigurationCheck();
+
+				if((state != CONFIGURATION_ERROR) && (now < g_event_start_epoch))
+				{
+					bool fail;
+					char str[50];
+					
+					g_WiFi_shutdown_seconds = MAX(60, g_WiFi_shutdown_seconds);
+
+					makeTimeTillString(str, now, g_event_start_epoch, &fail);	
+					sprintf(g_tempStr, "Starts %s =", str);					
+				
+					if(g_messages_text[PATTERN_TEXT][0])
+					{
+						strcat(g_tempStr, (const char*)g_messages_text[PATTERN_TEXT]);
+					}
+				
+					if(g_messages_text[STATION_ID][0])
+					{
+						strcat(g_tempStr, "= ");
+						strcat(g_tempStr, (const char*)g_messages_text[STATION_ID]);
+					}
+
+					g_enunciation_code_throttle = throttleValue(15);
+					LEDS.sendCode(g_tempStr);
+					g_enunciator = LED_AND_RF;
+				}
+				
+				g_do_powerup_xmsn = false;
 			}
 			else 
 			{
@@ -966,6 +1006,7 @@ int main(void)
 
 				if(g_event_scheduled)
 				{
+					g_enunciation_code_throttle = throttleValue(8);
 					LEDS.sendCode((char*)"E  ");
 				}
 				else
@@ -1086,12 +1127,12 @@ int main(void)
 			if(g_antenna_connect_state == ANT_DISCONNECTED)
 			{
 				inhibitRFOutput(true);
-				/* Green LED OFF */
 			}
 			else
 			{
 				inhibitRFOutput(false);
-				/* Green LED ON */
+				g_do_powerup_xmsn = eventEnabled();
+				LEDS.init();
 			}
 		}
 		
@@ -3403,25 +3444,20 @@ time_t validateTimeString(char* str, time_t* epochVar)
 	return(valid);
 }
 
-
-bool reportTimeTill(time_t from, time_t until, const char* prefix, const char* failMsg)
+void makeTimeTillString(char* str, time_t from, time_t until, bool* fail)
 {
-	bool failure = false;
-
 	if(from >= until)   /* Negative time */
 	{
-		failure = true;
-		if(failMsg)
+		if(fail)
 		{
-			sb_send_string((char*)failMsg);
+			*fail = true;
 		}
+		
+		return;
 	}
-	else
+	
+	if(str)
 	{
-		if(prefix)
-		{
-			sb_send_string((char*)prefix);
-		}
 		time_t dif = until - from;
 		uint16_t years = dif / YEAR;
 		time_t hold = dif - (years * YEAR);
@@ -3431,38 +3467,61 @@ bool reportTimeTill(time_t from, time_t until, const char* prefix, const char* f
 		hold -= (hours * HOUR);
 		uint16_t minutes = hold / MINUTE;
 		uint16_t seconds = hold - (minutes * MINUTE);
-
-		g_tempStr[0] = '\0';
+		char tmpstr[15];
+		
+		str[0] = '\0';
 
 		if(years)
 		{
-			sprintf(g_tempStr, "%d yrs ", years);
-			sb_send_string(g_tempStr);
+			sprintf(tmpstr, "%d yrs ", years);
+			strcat(str, tmpstr);
 		}
 
 		if(days)
 		{
-			sprintf(g_tempStr, "%d days ", days);
-			sb_send_string(g_tempStr);
+			sprintf(tmpstr, "%d days ", days);
+			strcat(str, tmpstr);
 		}
 
 		if(hours)
 		{
-			sprintf(g_tempStr, "%d hrs ", hours);
-			sb_send_string(g_tempStr);
+			sprintf(tmpstr, "%d hrs ", hours);
+			strcat(str, tmpstr);
 		}
 
 		if(minutes)
 		{
-			sprintf(g_tempStr, "%d min ", minutes);
-			sb_send_string(g_tempStr);
+			sprintf(tmpstr, "%d min ", minutes);
+			strcat(str, tmpstr);
 		}
 
-		sprintf(g_tempStr, "%d sec", seconds);
-		sb_send_string(g_tempStr);
+		if(seconds)
+		{
+			sprintf(tmpstr, "%d sec", seconds);
+			strcat(str, tmpstr);
+		}
+	}
+}
 
+
+bool reportTimeTill(time_t from, time_t until, const char* prefix, const char* failMsg)
+{
+	bool failure = false;
+	makeTimeTillString(g_tempStr, from, until, &failure);
+
+	if(failure)
+	{
+		sb_send_string((char*)failMsg);
+	}
+	else
+	{
+		if(prefix)
+		{
+			sb_send_string((char*)prefix);
+		}
+		
+		sb_send_string(g_tempStr);	
 		sb_send_NewLine();
-		g_tempStr[0] = '\0';
 	}
 
 	return( failure);

@@ -219,6 +219,7 @@ void leds::init(Blink_t setBlink)
 void leds::sendCode(char* str)
 {
 	if(!led_timeout_count) return;
+	if(g_text_buff.isBusy()) return;
 	
 	if(!str || !strlen(str))
 	{
