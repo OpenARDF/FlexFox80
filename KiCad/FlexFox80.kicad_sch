@@ -2887,10 +2887,10 @@
     (in_bom yes) (on_board yes)
     (uuid 00000000-0000-0000-0000-000060a40aaa)
     (property "Reference" "J102" (id 0) (at 92.71 100.33 0))
-    (property "Value" "Conn_01x02" (id 1) (at 90.6272 99.4664 0)
+    (property "Value" "" (id 1) (at 90.6272 99.4664 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Footprint" "Pin_Headers:Pin_Header_Straight_1x02" (id 2) (at 92.71 105.41 0)
+    (property "Footprint" "" (id 2) (at 92.71 105.41 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "" (id 3) (at 92.71 105.41 0)
@@ -3641,6 +3641,12 @@
     (path "/00000000-0000-0000-0000-00005bc7f38c/00000000-0000-0000-0000-000062087421"
       (reference "#PWR0309") (unit 1) (value "GNDD") (footprint "")
     )
+    (path "/00000000-0000-0000-0000-00005bc7f38c/ae6aa4fd-de19-4521-8377-1280b62d121c"
+      (reference "#PWR?") (unit 1) (value "GNDD") (footprint "")
+    )
+    (path "/00000000-0000-0000-0000-0000591bc960/eed54263-4042-4250-b65b-f4823a51e154"
+      (reference "#PWR?") (unit 1) (value "GND_L8") (footprint "")
+    )
     (path "/00000000-0000-0000-0000-00005bf4c520/00000000-0000-0000-0000-00005bf4cc06"
       (reference "BOX401") (unit 1) (value "Chassis Box") (footprint "Oddities:Dummy_Empty")
     )
@@ -3816,7 +3822,7 @@
       (reference "J101") (unit 1) (value "DIN-5_180degree") (footprint "Connect:SDF-50J")
     )
     (path "/00000000-0000-0000-0000-000060a40aaa"
-      (reference "J102") (unit 1) (value "Conn_01x02") (footprint "Pin_Headers:Pin_Header_Straight_1x02")
+      (reference "J102") (unit 1) (value "Conn_01x02") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical")
     )
     (path "/00000000-0000-0000-0000-0000591bc960/00000000-0000-0000-0000-00005c64c637"
       (reference "J203") (unit 1) (value "V4") (footprint "Pin_Headers:Pin_Header_Straight_1x01_circle_pad")
@@ -3825,25 +3831,25 @@
       (reference "J301") (unit 1) (value "DB9_Female") (footprint "Connect:DB9F_CI")
     )
     (path "/00000000-0000-0000-0000-00005bc7f38c/00000000-0000-0000-0000-000060a04d07"
-      (reference "J302") (unit 1) (value "Conn_01x06") (footprint "Pin_Headers:Pin_Header_Angled_1x06")
+      (reference "J302") (unit 1) (value "Conn_01x06") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005bc7f38c/00000000-0000-0000-0000-0000609fe9a1"
       (reference "J303") (unit 1) (value "DB9_Male") (footprint "Connect:DB9F_CI")
     )
     (path "/00000000-0000-0000-0000-00005bc7f38c/00000000-0000-0000-0000-000061c4fe52"
-      (reference "J304") (unit 1) (value "Conn_01x10") (footprint "Pin_Headers:Pin_Header_Straight_1x10")
+      (reference "J304") (unit 1) (value "Conn_01x10") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x10_P2.54mm_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005bc7f38c/00000000-0000-0000-0000-000062a55759"
-      (reference "J305") (unit 1) (value "Conn_01x02") (footprint "Pin_Headers:Pin_Header_Straight_1x02")
+      (reference "J305") (unit 1) (value "Conn_01x02") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005bc7f38c/00000000-0000-0000-0000-000062a34144"
-      (reference "J306") (unit 1) (value "Conn_01x02") (footprint "Pin_Headers:Pin_Header_Straight_1x02")
+      (reference "J306") (unit 1) (value "Conn_01x02") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005bc7f38c/00000000-0000-0000-0000-000062a0f023"
-      (reference "J307") (unit 1) (value "Conn_01x02") (footprint "Pin_Headers:Pin_Header_Straight_1x02")
+      (reference "J307") (unit 1) (value "Conn_01x02") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005bc7f38c/00000000-0000-0000-0000-00006208b0c7"
-      (reference "J308") (unit 1) (value "Conn_01x02") (footprint "Pin_Headers:Pin_Header_Straight_1x02")
+      (reference "J308") (unit 1) (value "Conn_01x03") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005bf4c520/00000000-0000-0000-0000-00005c10b0e5"
       (reference "J401") (unit 1) (value "CONN_01X06") (footprint "Oddities:Dummy_Empty")
@@ -3854,11 +3860,17 @@
     (path "/00000000-0000-0000-0000-00005bf4c520/00000000-0000-0000-0000-000060aef502"
       (reference "J403") (unit 1) (value "CONN_01X10") (footprint "Oddities:Dummy_Empty")
     )
+    (path "/00000000-0000-0000-0000-0000591bc960/0d6d79aa-3153-425d-b3e8-bdf472b45573"
+      (reference "J?") (unit 1) (value "Conn_01x02") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical")
+    )
     (path "/00000000-0000-0000-0000-0000591bc960/00000000-0000-0000-0000-000062207d51"
       (reference "JP201") (unit 1) (value "Boost Bypass") (footprint "Wire_Connections_Bridges:Solder-Jumper-NO-SMD-Pad_Small")
     )
     (path "/00000000-0000-0000-0000-00005bc7f38c/00000000-0000-0000-0000-00006206c578"
       (reference "JP301") (unit 1) (value "Jumper_NO_Small") (footprint "Wire_Connections_Bridges:Solder-Jumper-NO-SMD-Pad_Small")
+    )
+    (path "/00000000-0000-0000-0000-00005bc7f38c/290392e3-0d5b-4ead-b60f-8e77273ebc5a"
+      (reference "JP?") (unit 1) (value "Jumper_NO_Small") (footprint "Wire_Connections_Bridges:Solder-Jumper-NO-SMD-Pad_Small")
     )
     (path "/00000000-0000-0000-0000-00005cb66258"
       (reference "L104") (unit 1) (value "9T #24 Bifilar T50-43") (footprint "Inductors:Toroid_T-50A_TH_BF_CT_Vertical")
@@ -3891,7 +3903,7 @@
       (reference "P302") (unit 1) (value "Thru") (footprint "Pin_Headers:Pin_Header_Straight_1x01")
     )
     (path "/00000000-0000-0000-0000-00005bc7f38c/00000000-0000-0000-0000-00005bcbb8a3"
-      (reference "P304") (unit 1) (value "Header") (footprint "Pin_Headers:Pin_Header_Straight_1x06")
+      (reference "P304") (unit 1) (value "Header") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005bf4c520/00000000-0000-0000-0000-00005bf5c2d3"
       (reference "PCB401") (unit 1) (value "Circuit Board") (footprint "Oddities:Dummy_Empty")
@@ -4038,10 +4050,10 @@
       (reference "SW301") (unit 1) (value "SPST") (footprint "Buttons_Switches_SMD:PTS645SL50SMTR92")
     )
     (path "/00000000-0000-0000-0000-00005bc7f38c/00000000-0000-0000-0000-000061c41f8a"
-      (reference "TP301") (unit 1) (value "I2C1") (footprint "Pin_Headers:Pin_Header_Straight_1x04")
+      (reference "TP301") (unit 1) (value "I2C1") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical")
     )
     (path "/00000000-0000-0000-0000-00005bc7f38c/00000000-0000-0000-0000-0000608ada8e"
-      (reference "TP302") (unit 1) (value "I2C0") (footprint "Pin_Headers:Pin_Header_Straight_1x04")
+      (reference "TP302") (unit 1) (value "I2C0") (footprint "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical")
     )
     (path "/00000000-0000-0000-0000-0000628d7f12"
       (reference "U101") (unit 1) (value "TPS22810DBVT") (footprint "TO_SOT_Packages_SMD:SOT-23-6")

@@ -1315,12 +1315,12 @@
                                         var roleIndex = 0;
 
                                         while ((g_typeTxNames[roleIndex].indices != text) && (roleIndex < g_typeTxNames.length)) {
-                                            roleIndex++;
+                                            r[roleIndex++].setAttribute("selected", "false");
                                         }
 
                                         if (roleIndex < g_typeTxNames.length) {
                                             r[roleIndex].setAttribute("selected", "true");
-                                            g_selectedTxType = r[roleIndex].role;
+                                            g_selectedTxType = r[roleIndex].value;
                                         }
 
                                         var msgText = "FREQ," + currentRoleIndex();
@@ -1589,9 +1589,26 @@
         function currentRoleIndex() {
             var r = document.getElementById("roleSelect");
             if (r) {
-                g_selectedTxType = document.getElementById("roleSelect").value;
-                var indices = g_typeTxNames.find(g_typeTxNames => g_typeTxNames.name == g_selectedTxType).indices;
-                return Number(indices.charAt(0));
+                var roleIndex = g_typeTxNames.length - 1;
+                while ((r[roleIndex].selected != true) && (roleIndex != 0)) {
+                    roleIndex--;
+                }
+
+                r[roleIndex].setAttribute("selected", "true");
+                r.options[roleIndex].selected = true;
+                g_selectedTxType = r[roleIndex].value;
+                r.selectedIndex = roleIndex;
+
+                if (roleIndex) {
+                    var i = roleIndex - 1;
+                    while (i) {
+                        r[i--].setAttribute("selected", "false");
+                        r.options[roleIndex].selected = false;
+                    }
+                }
+
+                r.selectedIndex = roleIndex;
+                return Number(roleIndex);
             } else {
                 console.log("Warning: Selected role not available!")
             }
