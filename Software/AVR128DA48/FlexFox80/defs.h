@@ -33,7 +33,7 @@
 
 /******************************************************
  * Set the text that gets displayed to the user */
-#define SW_REVISION "0.92"
+#define SW_REVISION "0.93"
 
 //#define TRANQUILIZE_WATCHDOG
 

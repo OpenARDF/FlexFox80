@@ -75,6 +75,9 @@
 
 void BINIO_init(void);
 void BINIO_sleep(void);
+void debounce(void);
+uint8_t portCdebouncedVals(void);
+uint8_t portDdebouncedVals(void);
 
 class binio
 {
@@ -82,15 +85,11 @@ class binio
 public:
 protected:
 private:
-// 	uint8_t portDpinReadings[3];
-// 	uint8_t portDdebounced;
 
 //functions
 public:
 	binio();
 	~binio();
-// 	void debounce(void);
-// 	uint8_t portDdebouncedVals(void);
 protected:
 private:
 	binio( const binio &c );

@@ -30,10 +30,14 @@
 
 extern volatile uint16_t g_switch_closed_count;
 
+uint8_t portCpinReadings[3];
+uint8_t portDpinReadings[3];
+uint8_t portCdebounced = 0;
+uint8_t portDdebounced = 0;
+
 // default constructor
 binio::binio()
 {
-// 	portDdebounced = 0;
 } //binio
 
 // default destructor
@@ -43,26 +47,40 @@ binio::~binio()
 
 
 // This function is called approximately each 1/60 to 1/30 sec.
-// void binio::debounce(void)
-// {
-// 	// Move previously sampled raw input bits one step down the line.
-// 	portDpinReadings[2] = portDpinReadings[1];
-// 	portDpinReadings[1] = portDpinReadings[0];
-// 	
-// 	// Sample new raw input bits from PORT_A.
-// 	portDpinReadings[0] = PORTD_get_port_level();
-// 	
-// 	// Debounce output bits using low-pass filtering.
-// 	portDdebounced = portDdebounced ^ (
-// 	(portDdebounced ^ portDpinReadings[0])
-// 	& (portDdebounced ^ portDpinReadings[1])
-// 	& (portDdebounced ^ portDpinReadings[2]));
-// }
-// 
-// uint8_t binio::portDdebouncedVals(void)
-// {
-// 	return portDdebounced;
-// }
+void debounce(void)
+{
+	// Move previously sampled raw input bits one step down the line.
+	portDpinReadings[2] = portDpinReadings[1];
+	portDpinReadings[1] = portDpinReadings[0];
+	
+	portCpinReadings[2] = portCpinReadings[1];
+	portCpinReadings[1] = portCpinReadings[0];
+	
+	// Sample new raw input bits from PORT_A.
+	portCpinReadings[0] = PORTC_get_port_level();
+	portDpinReadings[0] = PORTD_get_port_level();
+
+	// Debounce output bits using low-pass filtering.
+	portCdebounced = portCdebounced ^ (
+	(portCdebounced ^ portCpinReadings[0])
+	& (portCdebounced ^ portCpinReadings[1])
+	& (portCdebounced ^ portCpinReadings[2]));
+	
+	portDdebounced = portDdebounced ^ (
+	(portDdebounced ^ portDpinReadings[0])
+	& (portDdebounced ^ portDpinReadings[1])
+	& (portDdebounced ^ portDpinReadings[2]));
+}
+
+uint8_t portCdebouncedVals(void)
+{
+	return portCdebounced;
+}
+
+uint8_t portDdebouncedVals(void)
+{
+	return portDdebounced;
+}
 
 
 /**

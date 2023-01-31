@@ -74,7 +74,6 @@ static volatile SC g_last_status_code = STATUS_CODE_IDLE;
 
 static volatile bool g_powering_off = false;
 
-static volatile uint16_t g_util_tick_countdown = 0;
 static volatile bool g_battery_measurements_active = false;
 static volatile uint16_t g_maximum_battery = 0;
 
@@ -170,6 +169,7 @@ bool g_use_rtc_for_startstop = false;
 
 volatile bool g_enable_manual_transmissions = false;
 volatile bool g_enable_LED_enunciations = true;
+volatile uint16_t g_delay_before_powerup_xmsn = 0;
 
 /***********************************************************************
  * Private Function Prototypes
@@ -186,8 +186,7 @@ EC activateEventUsingCurrentSettings(SC* statusCode);
 EC launchEvent(SC* statusCode);
 EC hw_init(void);
 EC rtc_init(void);
-bool antennaIsConnected(void);
-void updateAntennaStatus(void);
+bool setAntennaStateEnunciator(void);
 void powerDown3V3(void);
 void powerUp3V3(void);
 void setFan(bool on);
@@ -297,7 +296,7 @@ void handle_1sec_tasks(void)
 				g_event_commenced = false;
 				g_check_for_next_event = true;
 				g_wifi_enable_delay = 2;
-				antennaIsConnected(); /* Set green LED appropriately */
+//				setAntennaStateEnunciator(); /* Set green LED appropriately */
 				g_sleepType = SLEEP_FOREVER;
 					
 				if(g_hardware_error & (int)HARDWARE_NO_WIFI)
@@ -494,18 +493,13 @@ ISR(PORTD_PORT_vect)
 	
 	if(x & (1 << X80M_ANTENNA_DETECT)) /* Handle antenna change */
 	{
-		bool ant = antennaIsConnected();
-
-		if(!ant)    /* immediately detect disconnection */
+		if(g_sleeping)
 		{
-			if(g_antenna_connect_state != ANT_DISCONNECTED)
-			{
-				g_antenna_connect_state = ANT_DISCONNECTED;
-				inhibitRFOutput(true);
-			}
+			g_go_to_sleep_now = false;
+			g_sleeping = false;
+			g_awakenedBy = AWAKENED_BY_ANTENNA;	
+			g_waiting_for_next_event = false; /* Ensure the wifi module does not get shut off prematurely */
 		}
-		
-		g_antenna_connection_changed = true;
 	}
 
     VPORTD.INTFLAGS = 0xFF; /* Clear all PORTD interrupt flags */
@@ -519,6 +513,8 @@ Periodic tasks not requiring precise timing. Rate = 300 Hz
 ISR(TCB0_INT_vect)
 {
 	static bool initializeManualTransmissions = true;
+	static uint8_t fiftyMS = 6;
+	
 	uint8_t x = TCB0.INTFLAGS;
 	
     if(x & TCB_CAPT_bm)
@@ -528,50 +524,97 @@ ISR(TCB0_INT_vect)
 		static uint16_t codeInc = 0;
 		bool repeat, finished;
 		static uint16_t switch_closures_count_period = 0;
+		uint8_t holdSwitch;
+		static uint8_t buttonReleased = false;
+		static uint8_t longPressEnabled = true;
 		
-		if(g_util_tick_countdown)
+		if(g_delay_before_powerup_xmsn)
 		{
-			g_util_tick_countdown--;
+			g_delay_before_powerup_xmsn--;
 		}
-		
-		if(switch_closures_count_period)
+
+		fiftyMS++;
+		if(!(fiftyMS % 6))
 		{
-			switch_closures_count_period--;
-				
-			if(!switch_closures_count_period)
+			holdSwitch = portCdebouncedVals() & (1 << SWITCH);
+			debounce();
+			
+			if(holdSwitch != (portCdebouncedVals() & (1 << SWITCH))) /* Change detected */
 			{
-				if(g_switch_presses_count && (g_switch_presses_count<=3))
+				if(holdSwitch) /* Switch was open, so now it must be closed */
 				{
-					g_handle_counted_presses = g_switch_presses_count;
+					if(!LEDS.active())
+					{
+						LEDS.init();
+					}
+					else
+					{
+						g_switch_presses_count++;
+						buttonReleased = false;
+					}
 				}
+				else /* Switch is now open */
+				{
+					g_switch_closed_count = 0;
+					buttonReleased = true;
+					longPressEnabled = true;
+				}
+			}
+			else if(!holdSwitch) /* Switch closed */
+			{
+				if(!g_long_button_press && longPressEnabled)
+				{
+					if(++g_switch_closed_count >= 200)
+					{
+						g_long_button_press = true;
+						g_switch_closed_count = 0;
+						g_switch_presses_count = 0;
+						longPressEnabled = false;
+					}
+				}
+			}
+			
+			if(switch_closures_count_period)
+			{
+				switch_closures_count_period--;
+				
+				if(!switch_closures_count_period)
+				{
+					if(g_switch_presses_count && (g_switch_presses_count < 3))
+					{
+						g_handle_counted_presses = g_switch_presses_count;
+					}
 					
+					g_switch_presses_count = 0;
+				}
+			}
+			else if(g_switch_presses_count == 1 && buttonReleased)
+			{
+				switch_closures_count_period = 50;
+			}
+			else if(g_switch_presses_count > 2)
+			{
 				g_switch_presses_count = 0;
 			}
-		}
-		else if(g_switch_presses_count == 1)
-		{
-			switch_closures_count_period = 300;
-		}
-		else if(g_switch_presses_count > 2)
-		{
-			g_switch_presses_count = 0;
-		}
-
-		// Check switch state		
-		if(!PORTC_get_pin_level(SWITCH))
-		{
-			if(g_switch_closed_count<1000)
+			
+			if(portDdebouncedVals() & (1 << X80M_ANTENNA_DETECT)) 
 			{
-				g_switch_closed_count++;
-				if(g_switch_closed_count >= 1000)
+				if(g_antenna_connect_state != ANT_DISCONNECTED)
 				{
-					g_long_button_press = true;
+					g_antenna_connect_state = ANT_DISCONNECTED;
+					g_antenna_connection_changed = true;
 				}
-			}			
-		}		
+			}
+			else 
+			{
+				if(g_antenna_connect_state != ANT_CONNECTED)
+				{
+					g_antenna_connect_state = ANT_CONNECTED;
+					g_antenna_connection_changed = true;
+				}
+			}
+		}
 							
-		updateAntennaStatus();
-
 		static bool key = false;
 
 		if(g_event_enabled && g_event_commenced) /* Handle cycling transmissions */
@@ -797,37 +840,9 @@ ISR(PORTC_PORT_vect)
 		{
 			g_go_to_sleep_now = false;
 			g_sleeping = false;
-			antennaIsConnected(); /* Set green LED appropriately */
 			g_awakenedBy = AWAKENED_BY_BUTTONPRESS;	
 			g_waiting_for_next_event = false; /* Ensure the wifi module does not get shut off prematurely */
 		}
-		else if(g_switch_closed_count > 5) /* debounce */
-		{
-			g_hardware_error = HARDWARE_OK; // Clear any detected hardware failures
-			
-			if(!LEDS.active())
-			{
-				antennaIsConnected(); /* Set green LED appropriately */
-			}
-			else
-			{
-				if(PORTC_get_pin_level(SWITCH)) g_switch_presses_count++;		
-				g_switch_closed_count = 0;
-
-				if(wifiEnabled())
-				{
-					sprintf(g_tempStr, "$ESP,X;"); /* send shutdown message to allow WiFi to prepare for shutdown */
-					lb_send_msg(LINKBUS_MSG_COMMAND, LB_MESSAGE_ESP_LABEL, g_tempStr);
-					g_WiFi_shutdown_seconds = 5;
-				}
-				else
-				{
-					g_wifi_enable_delay = 2;
-				}					
-			}
-		}
-		
-		g_switch_closed_count = 0;
 	}
 	
 	VPORTC.INTFLAGS = 0xFF; /* Clear all flags */
@@ -942,12 +957,10 @@ int main(void)
 		{
 			if(g_handle_counted_presses == 1)
 			{
-//				sb_send_string((char*)"\n1 press\n");
 				startEventNow(PROGRAMMATIC);
 			}
 			else if (g_handle_counted_presses == 2)
 			{
-//				sb_send_string((char*)"\n2 presses\n");
 				suspendEvent();
 			}
 			
@@ -969,41 +982,42 @@ int main(void)
 			}
 			else if(g_do_powerup_xmsn)
 			{
-				time_t now = time(null);
-				ConfigurationState_t state = clockConfigurationCheck();
-
-				if((state != CONFIGURATION_ERROR) && (now < g_event_start_epoch))
+				if(!g_delay_before_powerup_xmsn)
 				{
-					bool fail;
-					char str[50];
+					time_t now = time(null);
+					ConfigurationState_t state = clockConfigurationCheck();
+
+					if((state != CONFIGURATION_ERROR) && (now < g_event_start_epoch))
+					{
+						bool fail;
+						char str[50];
 					
-					g_WiFi_shutdown_seconds = MAX(60, g_WiFi_shutdown_seconds);
+						g_WiFi_shutdown_seconds = MAX(60, g_WiFi_shutdown_seconds);
 
-					makeTimeTillString(str, now, g_event_start_epoch, &fail);	
-					sprintf(g_tempStr, "Starts %s =", str);					
+						makeTimeTillString(str, now, g_event_start_epoch, &fail);	
+						sprintf(g_tempStr, "Starts %s =", str);					
 				
-					if(g_messages_text[PATTERN_TEXT][0])
-					{
-						strcat(g_tempStr, (const char*)g_messages_text[PATTERN_TEXT]);
+						if(g_messages_text[PATTERN_TEXT][0])
+						{
+							strcat(g_tempStr, (const char*)g_messages_text[PATTERN_TEXT]);
+						}
+				
+						if(g_messages_text[STATION_ID][0])
+						{
+							strcat(g_tempStr, "= ");
+							strcat(g_tempStr, (const char*)g_messages_text[STATION_ID]);
+						}
+
+						g_enunciation_code_throttle = throttleValue(15);
+						LEDS.sendCode(g_tempStr);
+						g_enunciator = LED_AND_RF;
 					}
 				
-					if(g_messages_text[STATION_ID][0])
-					{
-						strcat(g_tempStr, "= ");
-						strcat(g_tempStr, (const char*)g_messages_text[STATION_ID]);
-					}
-
-					g_enunciation_code_throttle = throttleValue(15);
-					LEDS.sendCode(g_tempStr);
-					g_enunciator = LED_AND_RF;
+					g_do_powerup_xmsn = false;
 				}
-				
-				g_do_powerup_xmsn = false;
 			}
 			else 
 			{
-				antennaIsConnected(); /* Set green LED appropriately */
-
 				if(g_event_scheduled)
 				{
 					g_enunciation_code_throttle = throttleValue(8);
@@ -1122,7 +1136,6 @@ int main(void)
 		{
 			g_antenna_connection_changed = false;
 			
-			g_antenna_connect_state = antennaIsConnected() ? ANT_CONNECTED:ANT_DISCONNECTED;
 			/* Take appropriate action here */
 			if(g_antenna_connect_state == ANT_DISCONNECTED)
 			{
@@ -1131,9 +1144,17 @@ int main(void)
 			else
 			{
 				inhibitRFOutput(false);
-				g_do_powerup_xmsn = eventEnabled();
-				LEDS.init();
+				LEDS.init();				
+				eventEnabled();
+
+				if(g_sleepType == SLEEP_UNTIL_START_TIME)
+				{
+					g_do_powerup_xmsn = true;
+					g_delay_before_powerup_xmsn = 1000;
+				}
 			}
+			
+			setAntennaStateEnunciator(); /* update green LED setting */
 		}
 		
 		/********************************
@@ -1177,7 +1198,7 @@ int main(void)
 			
 			if((g_awakenedBy == AWAKENED_BY_BUTTONPRESS) || (g_awakenedBy == AWAKENED_BY_ANTENNA) || (g_awakenedBy == POWER_UP_START))
 			{	
-				antennaIsConnected(); /* Set green LED appropriately */
+				setAntennaStateEnunciator(); /* Set green LED appropriately */
  				linkbus_enable();
 				g_wifi_enable_delay = 2; /* Ensure WiFi is enabled and countdown is reset */
 			}
@@ -1556,7 +1577,6 @@ void __attribute__((optimize("O0"))) handleSerialBusMsgs()
 				else
 				{
 					LEDS.setRed(OFF);
-					antennaIsConnected(); /* Set green LED appropriately */
  					keyTransmitter(OFF);
 					startEventNow(PROGRAMMATIC);
 				}
@@ -2070,7 +2090,6 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					{
 						g_wifi_enable_delay = 1; /* Start countdown to WiFi power off */
 						if(!g_event_enabled) g_start_event = true; /* Attempt to launch any event that is already set */
-						antennaIsConnected(); /* Set green LED appropriately */
 					}
 					else if(f1 == '3')                      /* ESP is ready for power off" */
 					{			
@@ -2159,7 +2178,6 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 								g_event_commenced = true;                   /* get things running immediately */
 								g_event_enabled = true;                     /* get things running immediately */
 								g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
-								antennaIsConnected(); /* Set green LED appropriately */
 							}
 							else
 							{
@@ -2578,46 +2596,6 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
  *
  * These functions are available only within this file
  ************************************************************************/
-void updateAntennaStatus(void)
-{
-	static bool lastAntennaConnectionState = false;
-	static uint8_t antennaReadCount = 3;
-	bool ant = antennaIsConnected();
-
-	if(!ant)    /* immediately detect disconnection */
-	{
-		if(g_antenna_connect_state != ANT_DISCONNECTED)
-		{
-			g_antenna_connect_state = ANT_DISCONNECTED;
-			g_antenna_connection_changed = true;
-		}
-		
-		antennaReadCount = 3;
-	}
-	else if(g_antenna_connect_state != ANT_CONNECTED)
-	{
-		if(ant == lastAntennaConnectionState)
-		{
-			if(antennaReadCount)
-			{
-				antennaReadCount--;
-
-				if(!antennaReadCount)
-				{
-					g_antenna_connect_state = ANT_CONNECTED;
-					g_antenna_connection_changed = true;
-					antennaReadCount = 3;
-				}
-			}
-		}
-		else
-		{
-			antennaReadCount = 3;
-		}
-	}
-
-	lastAntennaConnectionState = ant;
-}
 
 bool __attribute__((optimize("O0"))) eventEnabled()
 {
@@ -2641,7 +2619,7 @@ bool __attribute__((optimize("O0"))) eventEnabled()
 	powerToTransmitter(ON);
 	dif = timeDif(now, g_event_start_epoch);
 
-	if(dif >= -30)  /* Don't sleep if the event starts in 30 seconds or less, or has already started */
+	if(dif >= -60)  /* Don't sleep if the event starts in 60 seconds or less, or has already started */
 	{
 		g_sleepType = DO_NOT_SLEEP;
 		g_time_to_wake_up = g_event_start_epoch - 5;
@@ -2821,7 +2799,6 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 			}
 
 			g_event_commenced = true;
-			antennaIsConnected(); /* Set green LED appropriately */
 		}
 		else    /* start time is in the future */
 		{
@@ -2877,23 +2854,23 @@ EC rtc_init()
 	return ERROR_CODE_NO_ERROR;
 }
 
-bool antennaIsConnected()
+bool setAntennaStateEnunciator()
 {
-	bool val = PORTD_get_pin_level(X80M_ANTENNA_DETECT);
+	bool val = (g_antenna_connect_state == ANT_CONNECTED);
 
 	if(g_hardware_error == HARDWARE_OK)
 	{
 		if(val)
 		{
-			LEDS.blink(LEDS_GREEN_OFF);		
+			LEDS.blink(LEDS_GREEN_ON_CONSTANT);
 		}
 		else
 		{
-			LEDS.blink(LEDS_GREEN_ON_CONSTANT);
+			LEDS.blink(LEDS_GREEN_OFF);
 		}
 	}
 
-	return(!val);
+	return(val);
 }
 
 void initializeAllEventSettings(bool disableEvent)
@@ -3352,7 +3329,7 @@ void setupForFox(Fox_t fox, EventAction_t action)
 		g_event_commenced = true;                   /* get things running immediately */
 		g_event_enabled = true;                     /* get things running immediately */
 		g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
-		antennaIsConnected(); /* Set green LED appropriately */
+//		setAntennaStateEnunciator(); /* Set green LED appropriately */
 // 		g_seconds_since_sync = (g_fox_counter - 1) * g_on_air_interval_seconds; /* Total elapsed time since start of event */
  		g_use_rtc_for_startstop = false;
  		g_event_enabled = true;

@@ -67,10 +67,10 @@ ISR(TCB3_INT_vect)
 			}
 		}
 		
-		if(!timer_blink_inhibit)
-		{
-			if(led_timeout_count)
-			{		
+		if(led_timeout_count)
+		{		
+			if(!timer_blink_inhibit)
+			{
 				if(red_blink_count)
 				{
 					if(red_blink_count > 1)
@@ -105,50 +105,50 @@ ISR(TCB3_INT_vect)
 				{
 					LED_set_RED_level(OFF);
 				}
-			
-				if(green_blink_count)
+			}
+
+			if(green_blink_count)
+			{
+				if(green_blink_count > 1)
 				{
-					if(green_blink_count > 1)
-					{
-						LED_set_GREEN_level(ON);
-						green_blink_count--;
-					}
-					else if(green_blink_count < -1)
-					{
-						LED_set_GREEN_level(OFF);
-						green_blink_count++;
-					}
+					LED_set_GREEN_level(ON);
+					green_blink_count--;
+				}
+				else if(green_blink_count < -1)
+				{
+					LED_set_GREEN_level(OFF);
+					green_blink_count++;
+				}
 				
-					if(green_blink_count == 1)
+				if(green_blink_count == 1)
+				{
+					if(green_blink_off_period)
 					{
-						if(green_blink_off_period)
-						{
-							green_blink_count = -green_blink_off_period;
-						}
-						else /* constantly on */
-						{
-							green_blink_count = green_blink_on_period;
-						}
+						green_blink_count = -green_blink_off_period;
 					}
-					else if(green_blink_count == -1)
+					else /* constantly on */
 					{
 						green_blink_count = green_blink_on_period;
 					}
 				}
-				else if(green_led_configured)
+				else if(green_blink_count == -1)
 				{
-					LED_set_GREEN_level(OFF);
+					green_blink_count = green_blink_on_period;
 				}
 			}
-			else
+			else if(green_led_configured)
 			{
-	//			TCB1.INTCTRL &= ~TCB_CAPT_bm;   /* Capture or Timeout: disabled */
-				LED_set_RED_level(OFF);
 				LED_set_GREEN_level(OFF);
-		// 		red_led_configured = false;
-		// 		green_led_configured = false;
-			}		
+			}
 		}
+		else
+		{
+//			TCB1.INTCTRL &= ~TCB_CAPT_bm;   /* Capture or Timeout: disabled */
+			LED_set_RED_level(OFF);
+			LED_set_GREEN_level(OFF);
+	// 		red_led_configured = false;
+	// 		green_led_configured = false;
+		}		
 	}
 		
 	TCB3.INTFLAGS =  (TCB_CAPT_bm | TCB_OVF_bm); /* clear interrupt flag */
