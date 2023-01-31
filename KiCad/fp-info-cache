@@ -1,4 +1,4 @@
-20190696122003690
+20263077580742762
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -3594,6 +3594,13 @@ Capacitor_THT
 CP_Axial_L93.0mm_D35.0mm_P100.00mm_Horizontal
 CP, Axial series, Axial, Horizontal, pin pitch=100mm, , length*diameter=93*35.0mm^2, Electrolytic Capacitor, , http://www.vishay.com/docs/42037/53d.pdf
 CP Axial series Axial Horizontal pin pitch 100mm  length 93mm diameter 35.0mm Electrolytic Capacitor
+0
+2
+2
+Capacitor_THT
+CP_Radial_Ceramic_Trimmer_D9.4mm_P8.00mm
+
+
 0
 2
 2
@@ -50015,6 +50022,13 @@ SMD SMT crystal
 2
 2
 Crystal
+Crystal_SMD_TXETCLSANF-4Pin
+Abracon Miniature Ceramic Smd Crystal ABM3C http://www.abracon.com/Resonators/abm3c.pdf, 5.0x3.2mm^2 package
+SMD SMT crystal
+0
+4
+4
+Crystal
 Resonator-2Pin_W6.0mm_H3.0mm
 Ceramic Resomator/Filter 6.0x3.0mm^2, length*width=6.0x3.0mm^2 package, package length=6.0mm, package width=3.0mm, 2 pins
 THT ceramic resonator filter
@@ -60332,6 +60346,307 @@ net tie
 0
 4
 4
+Oddities
+8-WCDFN
+8-pin 8-SON (3.2x1.5)
+WCDFN 8-SON
+0
+8
+8
+Oddities
+1042P_18650_BAT_Handsolder
+http://keyelco.com/userAssets/file/M65p27.pdf
+
+0
+2
+2
+Oddities
+ADAFRUIT_LSM303
+Through hole pin header
+pin header
+0
+8
+8
+Oddities
+Adafruit_HUZZAH_ESP8266_Breakout_SM
+Through hole pin header
+pin header
+0
+26
+26
+Oddities
+Autotransformer_TH
+Through hole pin header
+pin header
+0
+4
+3
+Oddities
+BC501SM_CR1220_BAT_Handsolder
+
+
+0
+2
+2
+Oddities
+BN-202_Core_1Tapped_winding_Vert_TH
+Through hole toroid
+toroid
+0
+5
+3
+Oddities
+BN-2402_Core_1tapped_winding
+Through hole toroid
+toroid
+0
+6
+3
+Oddities
+BN-2402_Core_1winding
+Through hole toroid
+toroid
+0
+2
+2
+Oddities
+BN-2402_Core_2_windings_Vert_TH
+Through hole toroid
+toroid
+0
+4
+4
+Oddities
+Bare_Copper_100mil_square
+Bare copper pad
+
+0
+1
+0
+Oddities
+Bare_Copper_200mil_square
+Bare copper pad
+
+0
+1
+0
+Oddities
+Core_150A_2_windings_Horiz_TH
+Through hole toroid
+toroid
+0
+8
+4
+Oddities
+DPST_switch_TH
+Through hole pin header
+switch DPST
+0
+4
+4
+Oddities
+Directional_Coupler_Toroid_T-50_TH
+T-50 Toroid
+toroid inductor
+0
+8
+8
+Oddities
+Dummy_Empty
+Only empty Dummy to give satsfaction to DRC
+Only empty Dummy to give satsfaction to DRC
+0
+0
+0
+Oddities
+Dummy_Empty_2
+Only empty Dummy to give satsfaction to DRC
+Only empty Dummy to give satsfaction to DRC
+0
+2
+2
+Oddities
+Dummy_Empty_3
+Only empty Dummy to give satsfaction to DRC
+Only empty Dummy to give satsfaction to DRC
+0
+3
+3
+Oddities
+FT-23_Core_2_windings_Horiz_TH
+Through hole toroid
+toroid
+0
+4
+4
+Oddities
+FT-23_Core_3_windings_Horiz_TH
+Through hole pin header
+pin header
+0
+6
+6
+Oddities
+Large_Loop_Attachment
+
+
+0
+2
+2
+Oddities
+Micro_Stripline_Directional_Coupler
+Micro Stripline Directional Coupler
+Micro Stripline Directional Coupler
+0
+72
+7
+Oddities
+NetTie-I
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between 1 and 2 by yourself.
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between 1 and 2 by yourself.
+0
+2
+2
+Oddities
+NetTie-II
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between the pads by yourself.
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between the pads by yourself.
+0
+3
+3
+Oddities
+NetTie-III
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between The Pads by yourself.
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between the pads by yourself.
+0
+4
+4
+Oddities
+NetTie-III_Connected
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between 1 and 2 by yourself.
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between 1 and 2 by yourself.
+0
+4
+4
+Oddities
+NetTie-III_Connected_SMD
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between 1 and 2 by yourself.
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between 1 and 2 by yourself.
+0
+4
+4
+Oddities
+NetTie-III_SMD
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between the pads by yourself.
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between the pads by yourself.
+0
+4
+4
+Oddities
+NetTie-II_Connected
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between 1 and 2 by yourself.
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between 1 and 2 by yourself.
+0
+3
+3
+Oddities
+NetTie-II_Connected_SMD
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between 1 and 2 by yourself.
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between 1 and 2 by yourself.
+0
+3
+3
+Oddities
+NetTie-I_Connected
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC.
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC.
+0
+2
+2
+Oddities
+NetTie-I_Connected_SMD
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC.
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC.
+0
+2
+2
+Oddities
+NetTie-I_SMD
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between 1 and 2 by yourself.
+Just a "Net tie" as an more or less elegant way to connect two different nets without disturbing ERC and DRC. Make connection between 1 and 2 by yourself.
+0
+2
+2
+Oddities
+R3500D_Whip_Ant_Attachment
+WireConnection with 2.5mm drill
+
+0
+2
+2
+Oddities
+RG-174_Attachment
+
+rod antenna
+0
+11
+3
+Oddities
+RN171_Module_Handsolder
+
+
+0
+49
+49
+Oddities
+RV-3028-C7
+Low Power RTC Module
+RV-3028-C7
+0
+8
+8
+Oddities
+Rod_Attachment
+
+rod antenna
+0
+1
+1
+Oddities
+Trace_Loop_SM
+
+loop antenna
+0
+2
+2
+Oddities
+Trace_Loop_TH
+Through hole pin header
+pin header
+0
+15
+2
+Oddities
+Transformer_1Pri_2Sec_TH
+Through hole pin header
+pin header
+0
+6
+6
+Oddities
+Waveguide_T_50_ohms
+
+
+0
+6
+4
+Oddities
+Wire_Strain_Relief_and_Attach
+
+rod antenna
+0
+3
+1
 OptoDevice
 ADNS-9800
 Laser Gaming Sensor ADNS-9800
