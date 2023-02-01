@@ -252,12 +252,6 @@ ISR(PORTA_PORT_vect)
 					g_sleeping = false;
 					g_awakenedBy = AWAKENED_BY_CLOCK;
 				}
-				else if(g_antenna_connection_changed)
-				{
-					g_go_to_sleep_now = false;
-					g_sleeping = false;
-					g_awakenedBy = AWAKENED_BY_ANTENNA;
-				}
 			}
 		}
 		else
@@ -485,7 +479,7 @@ void handle_1sec_tasks(void)
 
 /**
 PORTD interrupts:
-Antenna disconnect interrupt.
+Antenna connection interrupt.
 */
 ISR(PORTD_PORT_vect)
 {
@@ -497,9 +491,10 @@ ISR(PORTD_PORT_vect)
 		{
 			g_go_to_sleep_now = false;
 			g_sleeping = false;
-			g_awakenedBy = AWAKENED_BY_ANTENNA;	
 			g_waiting_for_next_event = false; /* Ensure the wifi module does not get shut off prematurely */
 		}
+		
+		g_awakenedBy = AWAKENED_BY_ANTENNA;	/* Flag that this interrupt has occurred regardless whether CPU was sleeping */
 	}
 
     VPORTD.INTFLAGS = 0xFF; /* Clear all PORTD interrupt flags */
@@ -989,14 +984,12 @@ int main(void)
 
 					if((state != CONFIGURATION_ERROR) && (now < g_event_start_epoch))
 					{
-						bool fail;
 						char str[50];
 					
 						g_WiFi_shutdown_seconds = MAX(60, g_WiFi_shutdown_seconds);
 
-						makeTimeTillString(str, now, g_event_start_epoch, &fail);	
-						sprintf(g_tempStr, "Starts %s =", str);					
-				
+						sprintf(g_tempStr, "Start: %s Z = ", convertEpochToTimeString(g_event_start_epoch, str, 50));
+			
 						if(g_messages_text[PATTERN_TEXT][0])
 						{
 							strcat(g_tempStr, (const char*)g_messages_text[PATTERN_TEXT]);
@@ -1004,7 +997,7 @@ int main(void)
 				
 						if(g_messages_text[STATION_ID][0])
 						{
-							strcat(g_tempStr, "= ");
+							strcat(g_tempStr, " = ");
 							strcat(g_tempStr, (const char*)g_messages_text[STATION_ID]);
 						}
 
@@ -1141,13 +1134,13 @@ int main(void)
 			{
 				inhibitRFOutput(true);
 			}
-			else
+			else if(g_antenna_connect_state == ANT_CONNECTED)
 			{
 				inhibitRFOutput(false);
 				LEDS.init();				
 				eventEnabled();
 
-				if(g_sleepType == SLEEP_UNTIL_START_TIME)
+				if((g_sleepType == SLEEP_UNTIL_START_TIME) && (g_awakenedBy != POWER_UP_START))
 				{
 					g_do_powerup_xmsn = true;
 					g_delay_before_powerup_xmsn = 1000;
