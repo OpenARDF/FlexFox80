@@ -68,7 +68,8 @@ typedef enum
  * Whenever possible limit globals' scope to this file using "static"
  * Use "volatile" for globals shared between ISRs and foreground
  ************************************************************************/
-static char g_tempStr[50] = { '\0' };
+#define TEMPSTR_SIZE 100
+static char g_tempStr[TEMPSTR_SIZE] = { '\0' };
 static volatile EC g_last_error_code = ERROR_CODE_NO_ERROR;
 static volatile SC g_last_status_code = STATUS_CODE_IDLE;
 
@@ -197,6 +198,9 @@ Frequency_Hz getFrequencySetting(void);
 char* getPatternText(void);
 Fox_t getFoxSetting(void);
 bool eventScheduled(void);
+char* externBatString(bool volts);
+int repChar(char *str, char orig, char rep);
+char *trimwhitespace(char *str);
 
 /*******************************/
 /* Hardcoded event support     */
@@ -988,19 +992,32 @@ int main(void)
 					
 						g_WiFi_shutdown_seconds = MAX(60, g_WiFi_shutdown_seconds);
 
-						sprintf(g_tempStr, "Start: %s Z = ", convertEpochToTimeString(g_event_start_epoch, str, 50));
-			
-						if(g_messages_text[PATTERN_TEXT][0])
+						// TEMPSTR_SIZE must be > 44 to hold start time and battery voltage string
+						sprintf(g_tempStr, "Start %sZ = %sV = ", convertEpochToTimeString(g_event_start_epoch, str, 50), externBatString(true));
+						repChar(g_tempStr, '.', 'r'); // replace decimal points with 'r' for sending in Morse
+						repChar(g_tempStr, '-', ' '); // replace hyphens with spaces
+						repChar(g_tempStr, ':', 'r'); // replace colons with 'r'
+						
+						// TEMPSTR_SIZE must be > 44 + MAX_PATTERN_TEXT_LENGTH to hold pattern
+						if(strlen(g_tempStr) < TEMPSTR_SIZE - MAX_PATTERN_TEXT_LENGTH)
 						{
-							strcat(g_tempStr, (const char*)g_messages_text[PATTERN_TEXT]);
-						}
+							if(g_messages_text[PATTERN_TEXT][0])
+							{
+								strncat(g_tempStr, (const char*)g_messages_text[PATTERN_TEXT], MAX_PATTERN_TEXT_LENGTH);
+							}							
+						}	
 				
-						if(g_messages_text[STATION_ID][0])
+						// TEMPSTR_SIZE must be > 49 + 2xMAX_PATTERN_TEXT_LENGTH to hold ID
+						if(strlen(g_tempStr) < (TEMPSTR_SIZE - MAX_PATTERN_TEXT_LENGTH + 5))
 						{
-							strcat(g_tempStr, " = ");
-							strcat(g_tempStr, (const char*)g_messages_text[STATION_ID]);
+							if(g_messages_text[STATION_ID][0])
+							{
+								strcat(g_tempStr, " = ");
+								strncat(g_tempStr, (const char*)g_messages_text[STATION_ID], MAX_PATTERN_TEXT_LENGTH);
+								strcat(g_tempStr, " ~");
+							}
 						}
-
+						
 						g_enunciation_code_throttle = throttleValue(15);
 						LEDS.sendCode(g_tempStr);
 						g_enunciator = LED_AND_RF;
@@ -1133,6 +1150,7 @@ int main(void)
 			if(g_antenna_connect_state == ANT_DISCONNECTED)
 			{
 				inhibitRFOutput(true);
+				g_last_error_code = ERROR_CODE_NO_ANTENNA_FOR_BAND;
 			}
 			else if(g_antenna_connect_state == ANT_CONNECTED)
 			{
@@ -2145,72 +2163,66 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 				char f1 = lb_buff->fields[LB_MSG_FIELD1][0];
 
 				if((f1 == '1') || (f1 == '2'))
-				{
-					if((g_antenna_connect_state != ANT_CONNECTED) && !g_tx_power_is_zero)
+				{					
+					if(g_antenna_connect_state != ANT_CONNECTED)
 					{
 						g_last_error_code = ERROR_CODE_NO_ANTENNA_FOR_BAND;
 					}
-					else
+
+					if(f1 == '1')   /* Xmit immediately using current settings */
 					{
-						if(f1 == '1')   /* Xmit immediately using current settings */
+						if((g_antenna_connect_state == ANT_CONNECTED) || g_tx_power_is_zero)
 						{
-							if((g_antenna_connect_state == ANT_CONNECTED) || g_tx_power_is_zero)
-							{
-								/* Set the Morse code pattern and speed */
-								g_event_enabled = false; // prevent interrupts from affecting the settings
-								powerToTransmitter(ON);
-								bool repeat = true;
-								makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
-								g_code_throttle = throttleValue(g_pattern_codespeed);
-								g_event_start_epoch = 1;                     /* have it start a long time ago */
-								g_event_finish_epoch = MAX_TIME;             /* run for a long long time */
-								g_on_air_seconds = 9999;                    /* on period is very long */
-								g_off_air_seconds = 0;                      /* off period is very short */
-								g_on_the_air = 9999;                        /*  start out transmitting */
-								g_sendID_seconds_countdown = MAX_UINT16;    /* wait a long time to send the ID */
-								g_event_commenced = true;                   /* get things running immediately */
-								g_event_enabled = true;                     /* get things running immediately */
-								g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
-							}
-							else
-							{
-								g_last_error_code = ERROR_CODE_NO_ANTENNA_FOR_BAND;
-							}
+							/* Set the Morse code pattern and speed */
+							g_event_enabled = false; // prevent interrupts from affecting the settings
+							powerToTransmitter(ON);
+							bool repeat = true;
+							makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
+							g_code_throttle = throttleValue(g_pattern_codespeed);
+							g_event_start_epoch = 1;                     /* have it start a long time ago */
+							g_event_finish_epoch = MAX_TIME;             /* run for a long long time */
+							g_on_air_seconds = 9999;                    /* on period is very long */
+							g_off_air_seconds = 0;                      /* off period is very short */
+							g_on_the_air = 9999;                        /*  start out transmitting */
+							g_sendID_seconds_countdown = MAX_UINT16;    /* wait a long time to send the ID */
+							g_event_commenced = true;                   /* get things running immediately */
+							g_event_enabled = true;                     /* get things running immediately */
+							g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
 						}
-						else if(f1 == '2')  /* enables a downloaded event stored in EEPROM */
+					}
+					else if(f1 == '2')  /* enables a downloaded event stored in EEPROM */
+					{
+						g_event_scheduled = eventScheduled();
+						/* This command configures the transmitter to launch an event at its scheduled start time */
+						if(g_Event_Configuration_Check != FULLY_CONFIGURED_EVENT)
 						{
-							g_event_scheduled = eventScheduled();
-							/* This command configures the transmitter to launch an event at its scheduled start time */
-							if(g_Event_Configuration_Check != FULLY_CONFIGURED_EVENT)
+							g_last_error_code = ERROR_CODE_EVENT_NOT_CONFIGURED;
+						}
+						else
+						{
+							if(new_event_parameter_count)
 							{
-								g_last_error_code = ERROR_CODE_EVENT_NOT_CONFIGURED;
+								if(g_event_enabled)
+								{
+									suspendEvent();
+								}
+									
+								g_ee_mgr.saveAllEEPROM();
+							}
+								
+							if(!g_event_enabled)
+							{
+								SC status = STATUS_CODE_IDLE;
+								g_last_error_code = launchEvent(&status);
+								g_wifi_enable_delay = 2; /* Ensure WiFi is enabled and countdown is reset */
 							}
 							else
 							{
-								if(new_event_parameter_count)
-								{
-									if(g_event_enabled)
-									{
-										suspendEvent();
-									}
-									
-									g_ee_mgr.saveAllEEPROM();
-								}
-								
-								if(!g_event_enabled)
-								{
-									SC status = STATUS_CODE_IDLE;
-									g_last_error_code = launchEvent(&status);
-									g_wifi_enable_delay = 2; /* Ensure WiFi is enabled and countdown is reset */
-								}
-								else
-								{
-									g_WiFi_shutdown_seconds = 60;
-								}
-							
-								new_event_parameter_count = 0;
-								g_Event_Configuration_Check = 0;
+								g_WiFi_shutdown_seconds = 60;
 							}
+							
+							new_event_parameter_count = 0;
+							g_Event_Configuration_Check = 0;
 						}
 					}
 				}
@@ -2519,15 +2531,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 
 			case LB_MESSAGE_BAT:
 			{
-				float bat = (float)g_lastConversionResult[EXTERNAL_BATTERY_VOLTAGE];
-				bat *= 172.;
-				bat *= 0.0005;
-				bat += 1.;
-				
-				dtostrf(bat, 4, 0, g_tempStr);
-				g_tempStr[5] = '\0';
-
-				lb_broadcast_str(g_tempStr, "!BAT");
+				lb_broadcast_str(externBatString(false), "!BAT");
 
 				/* The system clock gets re-initialized whenever a battery message is received. This
 				 * is just to ensure the two stay closely in sync while the user interface is active */
@@ -2612,14 +2616,14 @@ bool __attribute__((optimize("O0"))) eventEnabled()
 	powerToTransmitter(ON);
 	dif = timeDif(now, g_event_start_epoch);
 
-	if(dif >= -60)  /* Don't sleep if the event starts in 60 seconds or less, or has already started */
+	if(dif >= -120)  /* Don't sleep if the event starts in 120 seconds or less, or has already started */
 	{
 		g_sleepType = DO_NOT_SLEEP;
 		g_time_to_wake_up = g_event_start_epoch - 5;
 		return( true);
 	}
 
-	/* If we reach here, we have an event that will not start for at least 30 seconds. It needs to be enabled, and a sleep time needs to be calculated
+	/* If we reach here, we have an event that will not start for at least 120 seconds. It needs to be enabled, and a sleep time needs to be calculated
 	 * while allowing time for power-up (coming out of sleep) prior to the event start */
 	g_time_to_wake_up = g_event_start_epoch - 5;
 	g_sleepType = SLEEP_UNTIL_START_TIME;
@@ -3721,4 +3725,66 @@ bool eventScheduled(void)
 	time_t now = time(null);	
 	bool result = ((now > MINIMUM_VALID_EPOCH) && (g_event_start_epoch > now) && (g_event_finish_epoch > g_event_start_epoch));
 	return(result);
+}
+
+// Caller must provide a pointer to a string of length 6 or greater.
+char* externBatString(bool volts)
+{
+	static char str[7] = "?";
+	char* pstr = str;
+	float bat = (float)g_lastConversionResult[EXTERNAL_BATTERY_VOLTAGE];
+	bat *= 172.;
+	bat *= 0.0005;
+	bat += 1.;
+	
+	if((bat >= 0.) && (bat <= 180.))
+	{
+		if(volts)
+		{
+			dtostrf(bat/10., 5, 1, str);
+			str[6] = '\0';
+			pstr = trimwhitespace(str);
+			return pstr;
+		}
+		else
+		{
+			dtostrf(bat, 4, 0, str);		
+			str[5] = '\0';
+			return str;
+		}
+	}
+				
+	return str;
+}
+
+int repChar(char *str, char orig, char rep) 
+{
+	char *p = str;
+	int n = 0;
+	while((p = strchr(p, orig)) != NULL) 
+	{
+		*p++ = rep;
+		n++;
+	}
+	return n;
+}
+
+char *trimwhitespace(char *str)
+{
+  char *end;
+
+  // Trim leading space
+  while(isspace((unsigned char)*str)) str++;
+
+  if(*str == '\0')  // All spaces?
+    return str;
+
+  // Trim trailing space
+  end = str + strlen(str) - 1;
+  while(end > str && isspace((unsigned char)*end)) end--;
+
+  // Write new null terminator character
+  end[1] = '\0';
+
+  return str;
 }

@@ -33,7 +33,7 @@
 
 /******************************************************
  * Set the text that gets displayed to the user */
-#define SW_REVISION "0.93"
+#define SW_REVISION "0.97"
 
 //#define TRANQUILIZE_WATCHDOG
 
@@ -201,7 +201,7 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 #define ANTENNA_DETECT_DEBOUNCE 50
 
 #define NUMBER_OF_ESSENTIAL_EVENT_PARAMETERS 12
-#define TEXT_BUFF_SIZE 50
+#define TEXT_BUFF_SIZE 100
 
 /*******************************************************/
 
