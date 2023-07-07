@@ -51,7 +51,9 @@ TCB0.CTRLA = TCB_CLKSEL_DIV2_gc     /* CLK_PER */
 TCB0.INTFLAGS = (TCB_CAPT_bm | TCB_OVF_bm); /* Clear flag */
 
 /********************************************************************************/
-
+/** 
+LED Timer
+*/
 TCB1.INTCTRL = 1 << TCB_CAPT_bp   /* Capture or Timeout: enabled */
 | 0 << TCB_OVF_bp; /* OverFlow Interrupt: disabled */
 
@@ -68,6 +70,9 @@ TCB1.INTFLAGS = TCB_CAPT_bm; /* Clear flag */
 
 
 /********************************************************************************/
+/** 
+I2C Timeout Flag Timer
+*/
 
 CPUINT.LVL1VEC = 30; /* Set to level 1 - highest priority interrupt */
 TCB2.INTCTRL = 1 << TCB_CAPT_bp   /* Capture or Timeout: enabled */
