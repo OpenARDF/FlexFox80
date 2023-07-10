@@ -115,7 +115,6 @@ volatile bool g_waiting_for_next_event = false;
 volatile bool g_seconds_transition = false;
 
 volatile bool g_sending_station_ID = false;											/* Allows a small extension of transmissions to ensure the ID is fully sent */
-volatile bool g_muteAfterID = false;												/* Inhibit any transmissions after the ID has been sent */
 
 static volatile bool g_sufficient_power_detected = false;
 static volatile bool g_enableHardwareWDResets = false;
@@ -447,6 +446,7 @@ ISR(TCB0_INT_vect)
 		uint8_t holdSwitch;
 		static uint8_t buttonReleased = false;
 		static uint8_t longPressEnabled = true;
+		static bool muteAfterID = false;				/* Inhibit any transmissions immediately after the ID has been sent */
 		
 		if(g_delay_before_powerup_xmsn)
 		{
@@ -546,7 +546,7 @@ ISR(TCB0_INT_vect)
 				on_air_finished = true;
 				transitionPrepped = false;
 				
-				if(!g_sending_station_ID && (g_on_the_air == g_time_needed_for_ID) && !g_sendID_countdown && g_time_needed_for_ID)
+				if(!g_sending_station_ID && (g_on_the_air <= g_time_needed_for_ID) && !g_sendID_countdown && g_time_needed_for_ID)
 				{
 					g_last_status_code = STATUS_CODE_SENDING_ID;
 					g_code_throttle = throttleValue(g_id_codespeed);
@@ -570,8 +570,12 @@ ISR(TCB0_INT_vect)
 							g_code_throttle = throttleValue(g_pattern_codespeed);
 							repeat = true;
 							makeMorse(getPatternText(), &repeat, NULL);
-							g_muteAfterID = g_sending_station_ID && g_off_air_seconds;
+							muteAfterID = g_sending_station_ID && g_off_air_seconds;
 							g_sending_station_ID = false;
+							if(!g_off_air_seconds)
+							{
+								g_on_the_air = g_on_air_seconds;
+							}
 						}
 						
 						codeInc = g_code_throttle;
@@ -582,7 +586,7 @@ ISR(TCB0_INT_vect)
 					codeInc = g_code_throttle;
 				}
 				
-				if(g_muteAfterID)
+				if(muteAfterID)
 				{
 					key = OFF;
 				}
@@ -602,10 +606,16 @@ ISR(TCB0_INT_vect)
 					
 					if(on_air_finished)
 					{
-						keyTransmitter(OFF);
-				
 						if(g_off_air_seconds)
 						{
+							keyTransmitter(OFF);
+				
+							if(key)
+							{
+								key = OFF;
+								keyTransmitter(OFF);
+							}
+						
 							g_on_the_air = -g_off_air_seconds;
 							on_air_finished = false;							
 							/* Enable sleep during off-the-air periods */
@@ -637,14 +647,8 @@ ISR(TCB0_INT_vect)
 							g_code_throttle = throttleValue(g_pattern_codespeed);
 						}
 	
-						g_muteAfterID = false;
+						muteAfterID = false;
 						g_sending_station_ID = false;
-				
-						if(key)
-						{
-							key = OFF;
-							keyTransmitter(OFF);
-						}
 				
 						/* Resume normal pattern */
 						repeat = true;
