@@ -541,12 +541,12 @@ ISR(TCB0_INT_vect)
 		{
 			initializeManualTransmissions = true;
 			
-			if((g_on_the_air > 0) || (g_sending_station_ID))
+			if((g_on_the_air > 0) || (g_sending_station_ID) || (!g_off_air_seconds))
 			{
 				on_air_finished = true;
 				transitionPrepped = false;
 				
-				if(!g_sending_station_ID && (g_on_the_air <= g_time_needed_for_ID) && !g_sendID_countdown && g_time_needed_for_ID)
+				if(!g_sending_station_ID && (!g_off_air_seconds || (g_on_the_air <= g_time_needed_for_ID)) && !g_sendID_countdown && g_time_needed_for_ID)
 				{
 					g_last_status_code = STATUS_CODE_SENDING_ID;
 					g_code_throttle = throttleValue(g_id_codespeed);
@@ -606,46 +606,46 @@ ISR(TCB0_INT_vect)
 					
 					if(on_air_finished)
 					{
-						if(g_off_air_seconds)
-						{
-							keyTransmitter(OFF);
+// 						if(g_off_air_seconds)
+// 						{
+						keyTransmitter(OFF);
 				
-							if(key)
-							{
-								key = OFF;
-								keyTransmitter(OFF);
-							}
-						
-							g_on_the_air = -g_off_air_seconds;
-							on_air_finished = false;							
-							/* Enable sleep during off-the-air periods */
-							int32_t timeRemaining = 0;
-							time_t temp_time = time(null);
-							if(temp_time < g_event_finish_epoch)
-							{
-								timeRemaining = timeDif(g_event_finish_epoch, temp_time);
-								g_last_status_code = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
-							}
-
-							/* Don't sleep for the last cycle to ensure that the event doesn't end while
-							* the transmitter is sleeping - which can cause problems with loading the next event */
-							if(timeRemaining > (g_off_air_seconds + g_on_air_seconds + 15))
-							{
-								if((g_off_air_seconds > 15) && !g_WiFi_shutdown_seconds)
-								{
-									time_t seconds_to_sleep = (time_t)(g_off_air_seconds - 10);
-									g_time_to_wake_up = temp_time + seconds_to_sleep;
-									g_sleepType = SLEEP_UNTIL_NEXT_XMSN;
-									g_go_to_sleep_now = true;
-									g_sendID_countdown = MAX(0, g_ID_period_seconds - (int)seconds_to_sleep);
-								}
-							}
-						}
-						else /* Transmissions are continuous */
+						if(key)
 						{
-							g_on_the_air = g_on_air_seconds;
-							g_code_throttle = throttleValue(g_pattern_codespeed);
+							key = OFF;
+							keyTransmitter(OFF);
 						}
+						
+						g_on_the_air = -g_off_air_seconds;
+						on_air_finished = false;							
+						/* Enable sleep during off-the-air periods */
+						int32_t timeRemaining = 0;
+						time_t temp_time = time(null);
+						if(temp_time < g_event_finish_epoch)
+						{
+							timeRemaining = timeDif(g_event_finish_epoch, temp_time);
+							g_last_status_code = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
+						}
+
+						/* Don't sleep for the last cycle to ensure that the event doesn't end while
+						* the transmitter is sleeping - which can cause problems with loading the next event */
+						if(timeRemaining > (g_off_air_seconds + g_on_air_seconds + 15))
+						{
+							if((g_off_air_seconds > 15) && !g_WiFi_shutdown_seconds)
+							{
+								time_t seconds_to_sleep = (time_t)(g_off_air_seconds - 10);
+								g_time_to_wake_up = temp_time + seconds_to_sleep;
+								g_sleepType = SLEEP_UNTIL_NEXT_XMSN;
+								g_go_to_sleep_now = true;
+								g_sendID_countdown = MAX(0, g_ID_period_seconds - (int)seconds_to_sleep);
+							}
+						}
+// 						}
+// 						else /* Transmissions are continuous */
+// 						{
+// 							g_on_the_air = g_on_air_seconds;
+// 							g_code_throttle = throttleValue(g_pattern_codespeed);
+// 						}
 	
 						muteAfterID = false;
 						g_sending_station_ID = false;
