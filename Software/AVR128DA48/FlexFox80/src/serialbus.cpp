@@ -144,6 +144,11 @@ SerialbusRxBuffer* nextEmptySBRxBuffer(void)
 
 	if(found)
 	{
+		for(int i=0; i<SERIALBUS_MAX_MSG_NUMBER_OF_FIELDS; i++)
+		{
+			rx_buffer[bufferIndex].fields[i][0] = '\0';
+		}
+		
 		return((SerialbusRxBuffer*)&rx_buffer[bufferIndex]);
 	}
 
