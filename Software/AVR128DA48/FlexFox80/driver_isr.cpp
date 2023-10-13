@@ -143,7 +143,7 @@ void serial_Rx(uint8_t rx_char)
 
 			charIndex = 0;
 			field_len = 0;
-			msg_ID = LB_MESSAGE_EMPTY;
+			msg_ID = SB_MESSAGE_EMPTY;
 
 			field_index = 0;
 			buff = NULL;
@@ -191,7 +191,7 @@ void serial_Rx(uint8_t rx_char)
 				{
 					if(rx_char == ' ')
 					{
-						if((textBuff[charIndex - 1] == ' ') || ((field_index + 1) >= LINKBUS_MAX_MSG_NUMBER_OF_FIELDS))
+						if((textBuff[charIndex - 1] == ' ') || ((field_index + 1) >= SERIALBUS_MAX_MSG_NUMBER_OF_FIELDS))
 						{
 							rx_char = '\0';
 						}
@@ -204,15 +204,28 @@ void serial_Rx(uint8_t rx_char)
 
 							field_index++;
 							field_len = 0;
-							charIndex = MIN(charIndex + 1, (LINKBUS_MAX_MSG_LENGTH - 1));
+							charIndex = MIN(charIndex + 1, (SERIALBUS_MAX_MSG_LENGTH - 1));
 						}
 					}
-					else if(field_len < LINKBUS_MAX_MSG_FIELD_LENGTH)
+					else if(field_len < SERIALBUS_MAX_MSG_FIELD_LENGTH)
 					{
 						if(field_index == 0)    /* message ID received */
 						{
 							msg_ID = msg_ID * 10 + rx_char;
-							field_len++;
+							if(field_len++ > SERIALBUS_MAX_MSG_ID_LENGTH) /* Invalid ID length = throw out everything */
+							{
+								rx_char = '\0';
+								buff->id = SB_INVALID_MESSAGE; /* print help message */
+
+								charIndex = 0;
+								field_len = 0;
+								msg_ID = SB_MESSAGE_EMPTY;
+
+								field_index = 0;
+								buff = NULL;
+
+								receiving_msg = false;
+							}
 						}
 						else
 						{
@@ -220,7 +233,7 @@ void serial_Rx(uint8_t rx_char)
 							buff->fields[field_index - 1][field_len] = '\0';
 						}
 
-						charIndex = MIN(charIndex + 1, (LINKBUS_MAX_MSG_LENGTH - 1));
+						charIndex = MIN(charIndex + 1, (SERIALBUS_MAX_MSG_LENGTH - 1));
 					}
 					else
 					{
@@ -250,13 +263,14 @@ void serial_Rx(uint8_t rx_char)
 					msg_ID = rx_char;
 
 					/* Empty the field buffers */
-					for(i = 0; i < LINKBUS_MAX_MSG_NUMBER_OF_FIELDS; i++)
+					for(i = 0; i < SERIALBUS_MAX_MSG_NUMBER_OF_FIELDS; i++)
 					{
 						buff->fields[i][0] = '\0';
 					}
 
 					receiving_msg = true;
 					charIndex++;
+					field_len = 1;
 				}
 			}
 

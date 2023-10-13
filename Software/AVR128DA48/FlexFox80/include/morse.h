@@ -31,12 +31,20 @@
 #define WPM_TO_MS_PER_DOT(w)		(1200/(w))
 #define THROTTLE_VAL_FROM_WPM(w)	(PROCESSSOR_CLOCK_HZ / 8000000L) * ((7042 / (w)) / 10)
 
+typedef enum{
+	NO_CALLER,
+	CALLER_AUTOMATED_EVENT,
+	CALLER_MANUAL_TRANSMISSIONS
+} callerID_t;
+
 /**
 Load a string to send by passing in a pointer to the string in the argument.
 Call this function with a NULL argument at intervals of 1 element of time to generate Morse code.
 Once loaded with a string each call to this function returns a bool indicating whether a CW carrier should be sent
  */
-bool makeMorse(char* s, bool* repeating, bool* finished);
+bool makeMorse(char* s, bool* repeating, bool* finished, callerID_t caller);
+
+callerID_t lastMorseCaller(void);
 
 /**
 Returns the number of milliseconds required to send the string pointed to by the first argument at the WPM code speed

@@ -37,9 +37,17 @@ typedef struct {
 
 MorseCharacter getMorseChar(char c);
 
+static callerID_t g_lastCallerID = NO_CALLER;
+
+
 #define SOLID_KEYDOWN 0xFF
 #define INTER_CHAR_SPACE 0xFE
 #define INTER_WORD_SPACE 0xFD
+
+callerID_t lastMorseCaller(void)
+{
+	return g_lastCallerID;
+}
 
 /*
  *  Load a string to send by passing in a pointer via the first argument.
@@ -47,7 +55,7 @@ MorseCharacter getMorseChar(char c);
  *  Once loaded with a string each call to this function returns a bool indicating whether a CW carrier should be sent
  *  Pass in a pointer to a bool in the second and third arguments:
  */
-bool makeMorse(char* s, bool* repeating, bool* finished)
+bool makeMorse(char* s, bool* repeating, bool* finished, callerID_t caller)
 {
 	static char* str = NULL;
 	static char c = ' ';
@@ -60,6 +68,11 @@ bool makeMorse(char* s, bool* repeating, bool* finished)
 	static bool completedString = true;
 	static bool carrierOn = false;
 	static bool holdKeyDown = false;
+	
+	if(!s && (caller != g_lastCallerID))
+	{
+		return false;
+	}
 
 	if(s)   /* load a new NULL-terminated string to send */
 	{
@@ -68,6 +81,17 @@ bool makeMorse(char* s, bool* repeating, bool* finished)
 		if(repeating)
 		{
 			repeat = *repeating;
+		}
+		
+		if(caller != g_lastCallerID)
+		{
+			g_lastCallerID = caller;
+			str = NULL;
+			completedString = true;
+			if(finished)
+			{
+				*finished = true;
+			}
 		}
 
 		if(*s)
@@ -80,15 +104,6 @@ bool makeMorse(char* s, bool* repeating, bool* finished)
 			elementIndex = 0;
 			addedSpace = 0;
 			completedString = false;
-		}
-		else    /* a zero-length string shuts down makeMorse */
-		{
-			str = NULL;
-			completedString = true;
-			if(finished)
-			{
-				*finished = true;
-			}
 		}
 
 		carrierOn = OFF;

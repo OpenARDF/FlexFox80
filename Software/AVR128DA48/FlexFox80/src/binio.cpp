@@ -28,7 +28,7 @@
 #include "defs.h"
 #include "atmel_start_pins.h"
 
-extern volatile uint16_t g_switch_closed_count;
+extern volatile uint16_t g_switch_closed_time;
 
 uint8_t portCpinReadings[3];
 uint8_t portDpinReadings[3];

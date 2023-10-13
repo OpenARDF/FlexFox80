@@ -33,7 +33,7 @@
 
 /******************************************************
  * Set the text that gets displayed to the user */
-#define SW_REVISION "0.101"
+#define SW_REVISION "0.103"
 
 //#define TRANQUILIZE_WATCHDOG
 
@@ -66,7 +66,6 @@
 typedef enum {
 	ERROR_CODE_NO_ERROR = 0x00,
 	ERROR_CODE_REPORT_NO_ERROR = 0x01,
-//	ERROR_CODE_2M_BIAS_SM_NOT_READY = 0xC6,
 	ERROR_CODE_EVENT_STATION_ID_ERROR = 0xC7,
 	ERROR_CODE_EVENT_PATTERN_CODE_SPEED_NOT_SPECIFIED = 0xC8,
 	ERROR_CODE_EVENT_PATTERN_NOT_SPECIFIED = 0xC9,
@@ -116,7 +115,9 @@ typedef enum {
 typedef enum {
 	DO_NOT_SLEEP,
 	SLEEP_UNTIL_START_TIME,
+	SLEEP_AFTER_EVENT,
 	SLEEP_UNTIL_NEXT_XMSN,
+	SLEEP_USER_OVERRIDE,
 	SLEEP_FOREVER
 	} SleepType;
 	
@@ -126,6 +127,8 @@ typedef enum {
 	LED_AND_RF,
 	LED_ONLY
 	} Enunciation_t;
+	
+#define ENUNCIATION_BLINK_WPM 8
 
 /*******************************************************/
 
@@ -168,6 +171,10 @@ typedef unsigned char uint8_t;
 #define YEAR 31536000UL
 #endif
 
+#ifndef UINT16_MAX
+#define UINT16_MAX 0xFFFFU
+#endif
+
 /*******************************************************/
 /*******************************************************
 * ADC Scale Factors */
@@ -203,6 +210,8 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 #define NUMBER_OF_ESSENTIAL_EVENT_PARAMETERS 12
 #define TEXT_BUFF_SIZE 100
 
+#define UNUSED_VAR 0
+
 /*******************************************************/
 
 #ifndef SELECTIVELY_DISABLE_OPTIMIZATION
@@ -211,7 +220,7 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 
 /******************************************************
  * EEPROM definitions */
-#define EEPROM_INITIALIZED_FLAG (uint16_t)0x0102
+#define EEPROM_INITIALIZED_FLAG (uint16_t)0x0103
 #define EEPROM_UNINITIALIZED 0x00
 
 #define EEPROM_STATION_ID_DEFAULT "FOXBOX"
@@ -223,6 +232,7 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 #define EEPROM_EVENT_ENABLED_DEFAULT false
 #define EEPROM_ID_CODE_SPEED_DEFAULT 20
 #define EEPROM_PATTERN_CODE_SPEED_DEFAULT 8
+#define EEPROM_FOXORING_PATTERN_CODESPEED_DEFAULT 8
 #define EEPROM_ON_AIR_TIME_DEFAULT 60
 #define EEPROM_OFF_AIR_TIME_DEFAULT 240
 #define EEPROM_INTRA_CYCLE_DELAY_TIME_DEFAULT 0
@@ -248,36 +258,39 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 #define EEPROM_START_EPOCH_DEFAULT 0
 #define EEPROM_FINISH_EPOCH_DEFAULT 0
 #define EEPROM_UTC_OFFSET_DEFAULT 0
-#define EEPROM_FOX_SETTING_DEFAULT FOX_1
-#define EEPROM_EVENT_SETTING_DEFAULT EVENT_NONE
+
+#define EEPROM_FOX_SETTING_NONE_DEFAULT BEACON
+#define EEPROM_FOX_SETTING_CLASSIC_DEFAULT FOX_1
+#define EEPROM_FOX_SETTING_SPRINT_DEFAULT SPRINT_S1
+#define EEPROM_FOX_SETTING_FOXORING_DEFAULT FOXORING_FOX1
+#define EEPROM_FOX_SETTING_BLIND_DEFAULT FOX_1
+#define EEPROM_EVENT_SETTING_DEFAULT EVENT_FOXORING
 #define EEPROM_FOX_PATTERN_DEFAULT "MOE"
-#define EEPROM_FOX_FREQUENCY_DEFAULT 3550000
-#define EEPROM_FOXORING_FOXA_PATTERN_DEFAULT "MOE"
-#define EEPROM_FOXORING_FOXB_PATTERN_DEFAULT "MOI"
-#define EEPROM_FOXORING_FOXC_PATTERN_DEFAULT "MOS"
-#define EEPROM_FOXORING_FREQUENCYA_DEFAULT 3530000
-#define EEPROM_FOXORING_FREQUENCYB_DEFAULT 3550000
-#define EEPROM_FOXORING_FREQUENCYC_DEFAULT 3570000
-#define EEPROM_FOXORING_FOX_SETTING_DEFAULT FOXORING_EVENT_FOXA
-#define TEXT_SET_TIME_TXT (char*)"CLK T YYMMDDhhmmss <- Set current time\n"
-#define TEXT_SET_START_TXT (char*)"CLK S YYMMDDhhmmss <- Set start time\n"
-#define TEXT_SET_FINISH_TXT (char*)"CLK F YYMMDDhhmmss <- Set finish time\n"
-#define TEXT_SET_ID_TXT (char*)"ID \"callsign\" <- Set callsign\n"
-#define TEXT_ERR_FINISH_BEFORE_START_TXT (char*)"Err: Finish before start!\n"
-#define TEXT_ERR_FINISH_IN_PAST_TXT (char*)"Err: Finish in past!\n"
-#define TEXT_ERR_START_IN_PAST_TXT (char*)"Err: Start in past!\n"
-#define TEXT_ERR_INVALID_TIME_TXT (char*)"Err: Invalid time!\n"
-#define TEXT_ERR_TIME_IN_PAST_TXT (char*)"Err: Time in past!\n"
-#define TEXT_RTC_NOT_RESPONDING_TXT (char*)"Error: No response from clock hardware\n"
-#define TEXT_TX_NOT_RESPONDING_TXT (char*)"Error: No response from transmit hardware\n"
-#define TEXT_WIFI_NOT_DETECTED_TXT (char*)"Warning: WiFi hardware not detected\n"
-#define TEXT_RESET_OCCURRED_TXT (char*)"Warning: CPU Reset! Need to set clock\n"
-#define TEXT_NOT_SLEEPING_TXT (char*)"NanoFox is not sleeping\n"
-#define TEXT_CURRENT_SETTINGS_TXT (char*)"\n   === NanoFox Settings ===\n"
-#define TEXT_EVENT_SETTINGS_TXT (char*)"\n    === Event Settings ===\n"
-#define MINIMUM_VALID_EPOCH ((time_t)1609459200)  /* 1 Jan 2021 00:00:00 */
-#define YEAR_2000_EPOCH ((time_t)946684800)  /* 1 Jan 2000 00:00:00 */
-#define FOREVER_EPOCH ((time_t)4796712000) /* 1 Jan 2122 00:00:00 */
+#define EEPROM_FOXORING_PATTERN_DEFAULT "ME"
+#define EEPROM_FREQUENCY_DEFAULT 3700000
+#define EEPROM_FREQUENCY_LOW_DEFAULT 3530000
+#define EEPROM_FREQUENCY_MED_DEFAULT 3550000
+#define EEPROM_FREQUENCY_HI_DEFAULT 3570000
+#define EEPROM_FREQUENCY_BEACON_DEFAULT 3600000
+#define TEXT_SET_TIME_TXT (char*)"* > CLK T YYMMDDhhmmss <- Set current time\n"
+#define TEXT_SET_START_TXT (char*)"* > CLK S YYMMDDhhmmss <- Set start time\n"
+#define TEXT_SET_FINISH_TXT (char*)"* > CLK F YYMMDDhhmmss <- Set finish time\n"
+#define TEXT_SET_ID_TXT (char*)"* > ID \"callsign\" <- Set callsign\n"
+#define TEXT_ERR_FINISH_BEFORE_START_TXT (char*)"* Err: Finish before start!\n"
+#define TEXT_ERR_FINISH_IN_PAST_TXT (char*)"* Err: Finish in past!\n"
+#define TEXT_ERR_START_IN_PAST_TXT (char*)"* Err: Start in past!\n"
+#define TEXT_ERR_INVALID_TIME_TXT (char*)"* Err: Invalid time!\n"
+#define TEXT_ERR_TIME_IN_PAST_TXT (char*)"* Err: Time in past!\n"
+#define TEXT_RTC_NOT_RESPONDING_TXT (char*)"* Error: No response from clock hardware\n"
+#define TEXT_TX_NOT_RESPONDING_TXT (char*)"* Error: No response from transmit hardware\n"
+#define TEXT_WIFI_NOT_DETECTED_TXT (char*)"* Warning: WiFi hardware not detected\n"
+#define TEXT_RESET_OCCURRED_TXT (char*)"* Warning: CPU Reset! Need to set clock\n"
+#define TEXT_NOT_SLEEPING_TXT (char*)"* NanoFox is not sleeping\n"
+#define TEXT_CURRENT_SETTINGS_TXT (char*)"\n*   === NanoFox Settings ===\n"
+#define TEXT_EVENT_SETTINGS_TXT (char*)"\n*    === Event Frequency Settings ===\n"
+#define MINIMUM_VALID_EPOCH ((time_t)1609459200UL)  /* 1 Jan 2021 00:00:00 */
+#define YEAR_2000_EPOCH ((time_t)946684800UL)  /* 1 Jan 2000 00:00:00 */
+#define FOREVER_EPOCH ((time_t)4294967295UL) /* 7 Feb 2106 00:00:00 */
 #define SECONDS_24H 86400
 
 typedef enum
@@ -344,7 +357,6 @@ typedef enum
 	FOX_3,
 	FOX_4,
 	FOX_5,
-	FOXORING,
 	SPECTATOR,
 	SPRINT_S1,
 	SPRINT_S2,
@@ -356,9 +368,9 @@ typedef enum
 	SPRINT_F3,
 	SPRINT_F4,
 	SPRINT_F5,
-	FOXORING_EVENT_FOXA,
-	FOXORING_EVENT_FOXB,
-	FOXORING_EVENT_FOXC,
+	FOXORING_FOX1,
+	FOXORING_FOX2,
+	FOXORING_FOX3,
 	INVALID_FOX
 	#if SUPPORT_TEMP_AND_VOLTAGE_REPORTING
 	,
@@ -369,7 +381,11 @@ typedef enum
 typedef enum
 {
 	EVENT_NONE,
-	EVENT_FOXORING
+	EVENT_CLASSIC,
+	EVENT_SPRINT,
+	EVENT_FOXORING,
+	EVENT_BLIND_ARDF,
+	EVENT_NUMBER_OF_EVENTS
 } Event_t;
 
 /* Periodic TIMER2 interrupt timing definitions */
@@ -409,9 +425,7 @@ typedef enum
 typedef enum
 {
 	PATTERN_TEXT,
-	FOXA_PATTERN_TEXT,
-	FOXB_PATTERN_TEXT,
-	FOXC_PATTERN_TEXT,
+	FOXORING_PATTERN_TEXT,
 	STATION_ID
 } TextIndex;
 
@@ -429,7 +443,7 @@ typedef enum
 typedef enum
 {
 	START_NOTHING,
-	START_EVENT_NOW,
+	START_EVENT_NOW_AND_RUN_FOREVER,
 	START_TRANSMISSIONS_NOW,
 	START_EVENT_WITH_STARTFINISH_TIMES
 } EventAction_t;
@@ -441,18 +455,5 @@ typedef enum
 	INIT_TRANSMISSIONS_STARTING_NOW,
 	INIT_EVENT_IN_PROGRESS_WITH_STARTFINISH_TIMES
 } InitializeAction_t;
-// 
-// typedef enum
-// {
-// 	AUDIO_SAMPLING,
-// 	TEMPERATURE_SAMPLING,
-// 	VOLTAGE_SAMPLING
-// } ADCChannel_t;
-
 
 #endif  /* DEFS_H */
-
-
-
-
-

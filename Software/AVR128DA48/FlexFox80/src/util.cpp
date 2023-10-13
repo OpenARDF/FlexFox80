@@ -327,12 +327,6 @@ bool fox2Text(char* str, Fox_t fox)
 		}
 		break;
 		
-		case FOXORING:
-		{
-			sprintf(str, "Foxoring");
-		}
-		break;
-		
 		case SPECTATOR:
 		{
 			sprintf(str, "Spectator \"S\"");
@@ -399,23 +393,70 @@ bool fox2Text(char* str, Fox_t fox)
 		}
 		break;
 		
-		case FOXORING_EVENT_FOXA:
+		case FOXORING_FOX1:
 		{
-			sprintf(str, "Foxoring Fox \"A\"");
+			sprintf(str, "Foxoring \"Low Freq\" Fox");
 		}
 		break;
 		
-		case FOXORING_EVENT_FOXB:
+		case FOXORING_FOX2:
 		{
-			sprintf(str, "Foxoring Fox \"B\"");
+			sprintf(str, "Foxoring \"Medium Freq\" Fox");
 		}
 		break;
 		
-		case FOXORING_EVENT_FOXC:
+		case FOXORING_FOX3:
 		{
-			sprintf(str, "Foxoring Fox \"C\"");
+			sprintf(str, "Foxoring \"High Freq\" Fox");
 		}
-		break;		
+		break;
+		
+		default:
+		{
+			failure = true;
+		}
+		break;
+	}
+	
+	return(failure);
+}
+
+
+bool event2Text(char* str, Event_t evt)
+{
+	bool failure = false;
+	
+	switch(evt)
+	{
+		case EVENT_CLASSIC:
+		{
+			sprintf(str, "Classic");
+		}
+		break;
+		
+		case EVENT_SPRINT:
+		{
+			sprintf(str, "Sprint");
+		}
+		break;
+		
+		case EVENT_FOXORING:
+		{
+			sprintf(str, "Foxoring");
+		}
+		break;
+		
+		case EVENT_BLIND_ARDF:
+		{
+			sprintf(str, "Blind ARDF");
+		}
+		break;
+		
+		case EVENT_NONE:
+		{
+			sprintf(str, "None Set");
+		}
+		break;
 		
 		default:
 		{

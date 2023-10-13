@@ -17,7 +17,7 @@
 #define SLOW_OFF 500
 #define BRIEF_ON 15
 #define BRIEF_OFF 50
-#define LED_TIMEOUT_DELAY 180000
+#define LED_TIMEOUT_DELAY 60000
 
 extern volatile bool g_event_enabled;
 extern volatile bool g_enable_manual_transmissions;
@@ -67,10 +67,10 @@ ISR(TCB3_INT_vect)
 			}
 		}
 		
-		if(led_timeout_count)
-		{		
-			if(!timer_blink_inhibit)
-			{
+		if(!timer_blink_inhibit)
+		{
+			if(led_timeout_count)
+			{		
 				if(red_blink_count)
 				{
 					if(red_blink_count > 1)
@@ -105,50 +105,50 @@ ISR(TCB3_INT_vect)
 				{
 					LED_set_RED_level(OFF);
 				}
-			}
-
-			if(green_blink_count)
-			{
-				if(green_blink_count > 1)
+			
+				if(green_blink_count)
 				{
-					LED_set_GREEN_level(ON);
-					green_blink_count--;
-				}
-				else if(green_blink_count < -1)
-				{
-					LED_set_GREEN_level(OFF);
-					green_blink_count++;
-				}
-				
-				if(green_blink_count == 1)
-				{
-					if(green_blink_off_period)
+					if(green_blink_count > 1)
 					{
-						green_blink_count = -green_blink_off_period;
+						LED_set_GREEN_level(ON);
+						green_blink_count--;
 					}
-					else /* constantly on */
+					else if(green_blink_count < -1)
+					{
+						LED_set_GREEN_level(OFF);
+						green_blink_count++;
+					}
+				
+					if(green_blink_count == 1)
+					{
+						if(green_blink_off_period)
+						{
+							green_blink_count = -green_blink_off_period;
+						}
+						else /* constantly on */
+						{
+							green_blink_count = green_blink_on_period;
+						}
+					}
+					else if(green_blink_count == -1)
 					{
 						green_blink_count = green_blink_on_period;
 					}
 				}
-				else if(green_blink_count == -1)
+				else if(green_led_configured)
 				{
-					green_blink_count = green_blink_on_period;
+					LED_set_GREEN_level(OFF);
 				}
 			}
-			else if(green_led_configured)
+			else
 			{
+	//			TCB1.INTCTRL &= ~TCB_CAPT_bm;   /* Capture or Timeout: disabled */
+				LED_set_RED_level(OFF);
 				LED_set_GREEN_level(OFF);
-			}
+		// 		red_led_configured = false;
+		// 		green_led_configured = false;
+			}		
 		}
-		else
-		{
-//			TCB1.INTCTRL &= ~TCB_CAPT_bm;   /* Capture or Timeout: disabled */
-			LED_set_RED_level(OFF);
-			LED_set_GREEN_level(OFF);
-	// 		red_led_configured = false;
-	// 		green_led_configured = false;
-		}		
 	}
 		
 	TCB3.INTFLAGS =  (TCB_CAPT_bm | TCB_OVF_bm); /* clear interrupt flag */
@@ -158,6 +158,17 @@ ISR(TCB3_INT_vect)
 bool leds::active(void)
 {
 	return(led_timeout_count && (TCB3.INTCTRL & (1 << TCB_CAPT_bp)));
+}
+
+void leds::deactivate(void)
+{
+	TCB3.INTCTRL &= ~TCB_CAPT_bm; /* Disable timer interrupt */
+	LED_set_RED_level(OFF);
+	LED_set_GREEN_level(OFF);
+	g_text_buff.reset();
+	g_enable_manual_transmissions = false;
+	timer_blink_inhibit = true; /* Disable timer LED control */
+	led_timeout_count = 0;
 }
 
 void leds::setRed(bool on)
@@ -210,9 +221,9 @@ void leds::init(void)
 
 void leds::init(Blink_t setBlink)
 {
-	TCB1.INTCTRL &= ~TCB_CAPT_bm; /* Disable timer interrupt */
+	TCB3.INTCTRL &= ~TCB_CAPT_bm; /* Disable timer interrupt */
 	reset();
-	TCB1.INTCTRL |= TCB_CAPT_bm;   /* Capture or Timeout: enabled */
+	TCB3.INTCTRL |= TCB_CAPT_bm;   /* Capture or Timeout: enabled */
 	if(setBlink != LEDS_OFF) blink(setBlink, true);
 }
 
@@ -258,7 +269,7 @@ void leds::blink(Blink_t blinkMode, bool resetTimeout)
 	
 	if(!led_timeout_count && (blinkMode != LEDS_OFF)) return;
 	
-	if(blinkMode != lastBlinkSetting)
+	if((blinkMode != lastBlinkSetting) || (blinkMode == LEDS_OFF))
 	{
 		TCB3.INTCTRL &= ~TCB_CAPT_bm;   /* Capture or Timeout: disabled */
 
