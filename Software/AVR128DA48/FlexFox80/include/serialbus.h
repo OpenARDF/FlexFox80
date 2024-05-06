@@ -72,7 +72,7 @@
  *
  */
 
-typedef enum
+enum SBMessageID : uint16_t
 {
 	SB_MESSAGE_EMPTY = 0,
 
@@ -91,50 +91,49 @@ typedef enum
 	SB_MESSAGE_SLP = 'S' * 100 + 'L' * 10 + 'P',				/* Sleep */
 	SB_MESSAGE_VER = 'V' * 100 + 'E' * 10 + 'R',				/* Version */
 	SB_MESSAGE_HELP = '?',										/* Help */
-
 	SB_INVALID_MESSAGE = MAX_UINT16								/* This value must never overlap a valid message ID */
-} SBMessageID;
+};
 
-typedef enum
+enum SBMessageType
 {
 	SERIALBUS_MSG_UNKNOWN = 0,
 	SERIALBUS_MSG_COMMAND,
 	SERIALBUS_MSG_QUERY,
 	SERIALBUS_MSG_REPLY,
 	SERIALBUS_MSG_INVALID
-} SBMessageType;
+};
 
-typedef enum
+enum SBMessageField
 {
 	SB_FIELD1 = 0,
 	SB_FIELD2 = 1
-} SBMessageField;
+} ;
 
-typedef enum
+enum SBbroadcastType
 {
 	SB_BATTERY_BROADCAST = 0x0001,
 	SB_RSSI_BROADCAST = 0x0002,
 	SB_RF_BROADCAST = 0x0004,
 	SB_UPC_TEMP_BROADCAST = 0x0008,
 	SB_ALL_BROADCASTS = 0x000FF
-} SBbroadcastType;
+} ;
 
-// typedef enum
+// enum DeviceID
 // {
 // 	SB_NO_ID = 0,
 // 	SB_CONTROL_HEAD_ID = 1,
 // 	SB_RECEIVER_ID = 2,
 // 	SB_TRANSMITTER_ID = 3
-// } DeviceID;
+// } ;
 
 typedef char SerialbusTxBuffer[SERIALBUS_MAX_TX_MSG_LENGTH];
 
-typedef struct
+struct SerialbusRxBuffer
 {
 	SBMessageType type;
 	SBMessageID id;
 	char fields[SERIALBUS_MAX_MSG_NUMBER_OF_FIELDS][SERIALBUS_MAX_MSG_FIELD_LENGTH];
-} SerialbusRxBuffer;
+};
 
 #define WAITING_FOR_UPDATE -1
 #define HELP_TEXT_TXT (char*)"\n* Commands:\n* > CLK [T|S|F|D [\"YYMMDDhhmmss\"]] - Read/set time/start/finish/days\n* > EVT [B|C|F|S] - Set event\n* > FOX [fox]- Set fox role\n* > FRE [frequency] - Set tx frequency\n* > ID [callsign] -  Set callsign\n* > KEY [1|0] - key down/up\n* > MAS 1 - Set master\n* > PAT [text] - Set xmit pattern\n* > SPD S|P [wpm] - Set ID code speed\n* > GO 0-3 - Start event\n* > BAT [v] - Battery volts\n\0"

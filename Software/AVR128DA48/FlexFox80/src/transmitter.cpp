@@ -35,7 +35,7 @@
 extern volatile AntConnType g_antenna_connect_state;
 
 static volatile bool g_tx_initialized = false;
-volatile Frequency_Hz g_80m_frequency = EEPROM_TX_80M_FREQUENCY_DEFAULT;
+volatile Frequency_Hz g_tx_frequency = EEPROM_TX_80M_FREQUENCY_DEFAULT;
 volatile uint16_t g_80m_power_level_mW = EEPROM_TX_80M_POWER_MW_DEFAULT;
 volatile Frequency_Hz g_rtty_offset = EEPROM_RTTY_OFFSET_FREQUENCY_DEFAULT;
 
@@ -69,7 +69,7 @@ void final_drain_voltage(bool state);
 		{
 			if(!si5351_set_freq(*freq, TX_CLOCK_HF_0, leaveClockOff))
 			{
-				g_80m_frequency = *freq;
+				g_tx_frequency = *freq;
 				err = false;
 			}
 		}
@@ -79,7 +79,7 @@ void final_drain_voltage(bool state);
 
 	Frequency_Hz txGetFrequency(void)
 	{
-		return( g_80m_frequency);
+		return(g_tx_frequency);
 	}
 
 	EC powerToTransmitter(bool state)
@@ -277,7 +277,7 @@ void final_drain_voltage(bool state);
 
 	EC init_transmitter(Frequency_Hz freq)
 	{
-		g_80m_frequency = freq;
+		g_tx_frequency = freq;
 		return init_transmitter();
 	}
 	
@@ -306,7 +306,7 @@ void final_drain_voltage(bool state);
 
 		uint16_t pwr_mW = g_80m_power_level_mW;
 		
-		err = txSetFrequency((Frequency_Hz*)&g_80m_frequency, true);
+		err = txSetFrequency((Frequency_Hz*)&g_tx_frequency, true);
 		if(!err)
 		{
 			code = txSetParameters(&pwr_mW, NULL);

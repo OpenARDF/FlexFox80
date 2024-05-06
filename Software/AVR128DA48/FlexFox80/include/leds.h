@@ -9,7 +9,7 @@
 #ifndef __LEDS_H__
 #define __LEDS_H__
 
-typedef enum {
+enum Blink_t : uint16_t{
 	LEDS_OFF,
 	LEDS_RED_OFF,
 	LEDS_GREEN_OFF,
@@ -24,7 +24,7 @@ typedef enum {
 	LEDS_RED_THEN_GREEN_BLINK_FAST,
 	LEDS_RED_THEN_GREEN_BLINK_SLOW,
 	LEDS_NUMBER_OF_SETTINGS
-	}Blink_t;
+};
 
 class leds
 {

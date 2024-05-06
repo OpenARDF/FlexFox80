@@ -99,7 +99,7 @@
  *
  */
 
-typedef enum
+enum LBMessageID : uint16_t
 {
 	LB_MESSAGE_EMPTY = 0,
 
@@ -133,7 +133,7 @@ typedef enum
 	LB_MESSAGE_RESET = 'R' * 100 + 'S' * 10 + 'T',		/* Processor reset */
 	LB_MESSAGE_WIFI = 'W' * 10 + 'I',					/* Enable/disable WiFi */
 	LB_INVALID_MESSAGE = MAX_UINT16					/* This value must never overlap a valid message ID */
-} LBMessageID;
+};
 
 #define LB_MESSAGE_CLOCK_LABEL "TIM"
 #define LB_MESSAGE_ESP_LABEL "ESP"

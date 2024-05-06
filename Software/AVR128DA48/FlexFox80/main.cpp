@@ -95,9 +95,9 @@ static volatile bool g_wifi_active = true;
 static volatile uint8_t g_wifi_enable_delay = 0;
 static volatile bool g_shutting_down_wifi = false;
 static volatile bool g_wifi_ready = false;
-static volatile int g_hardware_error = (int)HARDWARE_OK;
+static volatile uint16_t g_hardware_error = (uint16_t)HARDWARE_OK;
 
-extern Frequency_Hz g_80m_frequency;
+extern Frequency_Hz g_tx_frequency;
 char g_messages_text[STATION_ID+1][MAX_PATTERN_TEXT_LENGTH + 1];
 volatile uint8_t g_id_codespeed = EEPROM_ID_CODE_SPEED_DEFAULT;
 volatile uint8_t g_pattern_codespeed = EEPROM_PATTERN_CODE_SPEED_DEFAULT;
@@ -167,7 +167,7 @@ extern Fox_t g_foxoring_fox;
 extern Frequency_Hz g_foxoring_frequencyA;
 extern Frequency_Hz g_foxoring_frequencyB;
 extern Frequency_Hz g_foxoring_frequencyC;
-Frequency_Hz g_frequency = EEPROM_FREQUENCY_DEFAULT;
+extern Frequency_Hz g_tx_frequency;
 Frequency_Hz g_frequency_low = EEPROM_FREQUENCY_LOW_DEFAULT;
 Frequency_Hz g_frequency_med = EEPROM_FREQUENCY_MED_DEFAULT;
 Frequency_Hz g_frequency_hi = EEPROM_FREQUENCY_HI_DEFAULT;
@@ -189,7 +189,6 @@ void handle_1sec_tasks(void);
 EC syncSystemTimeToRTC(void);
 bool eventEnabled(void);
 void handleLinkBusMsgs(void);
-void handleSerialBusMsgs(void);
 void wdt_init(WDReset resetType);
 uint16_t throttleValue(uint8_t speed);
 EC activateEventUsingCurrentSettings(SC* statusCode);
@@ -207,6 +206,10 @@ Frequency_Hz getFrequencySetting(void);
 char* getCurrentPatternText(void);
 Fox_t getFoxSetting(void);
 bool eventScheduled(void);
+bool eventScheduledForNow(void);
+bool eventScheduledForTheFuture(void);
+bool noEventWillRun(void);
+
 char* externBatString(bool volts);
 int repChar(char *str, char orig, char rep);
 char *trimwhitespace(char *str);
@@ -269,7 +272,9 @@ ISR(PORTA_PORT_vect)
 				{
 					g_go_to_sleep_now = false;
 					g_sleeping = false;
-					g_awakenedBy = AWAKENED_BY_CLOCK;
+					g_awakenedBy = AWAKENED_BY_CLOCK;			
+					g_on_the_air = 0; /* This will cause this variable to be properly initialized in the fast interrupt */
+					g_timer_launched_new_event = true;
 				}
 			}
 		}
@@ -310,7 +315,7 @@ void handle_1sec_tasks(void)
 				g_wifi_enable_delay = 2;
 				g_sleepType = SLEEP_FOREVER;
 					
-				if(g_hardware_error & (int)HARDWARE_NO_WIFI)
+				if(g_hardware_error & (uint16_t)HARDWARE_NO_WIFI)
 				{
 					g_check_for_next_event = false;
 					g_go_to_sleep_now = true;
@@ -342,21 +347,21 @@ void handle_1sec_tasks(void)
 				{
 					powerToTransmitter(ON);
 				
-					if(g_intra_cycle_delay_time)
-					{
-						g_last_status_code = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
-//						g_on_the_air = -g_intra_cycle_delay_time;
-						g_sendID_seconds_countdown = g_intra_cycle_delay_time + g_on_air_seconds - g_time_needed_for_ID;
-					}
-					else
-					{
-						g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
-//						g_on_the_air = g_on_air_seconds;
-						g_sendID_seconds_countdown = g_on_air_seconds - g_time_needed_for_ID;
-						g_code_throttle = throttleValue(g_pattern_codespeed);
-						bool repeat = true;
-						makeMorse(getCurrentPatternText(), &repeat, NULL, CALLER_AUTOMATED_EVENT);
-					}
+// 					if(g_intra_cycle_delay_time)
+// 					{
+// 						g_last_status_code = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
+// //						g_on_the_air = -g_intra_cycle_delay_time;
+// 						g_sendID_seconds_countdown = g_intra_cycle_delay_time + g_on_air_seconds - g_time_needed_for_ID;
+// 					}
+// 					else
+// 					{
+// 						g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
+// //						g_on_the_air = g_on_air_seconds;
+// 						g_sendID_seconds_countdown = g_on_air_seconds - g_time_needed_for_ID;
+// 						g_code_throttle = throttleValue(g_pattern_codespeed);
+// 						bool repeat = true;
+// 						makeMorse(getCurrentPatternText(), &repeat, NULL, CALLER_AUTOMATED_EVENT);
+// 					}
 					
 					g_on_the_air = 0; /* This will cause this variable to be properly initialized in the fast interrupt */
 
@@ -447,6 +452,7 @@ ISR(TCB0_INT_vect)
 	static uint8_t fiftyMS = 6;
 	static bool on_air_finished = false;
 	static bool transitionPrepped = false;
+	static bool intra_cycle_delay_counting = false;
 	
 	uint8_t x = TCB0.INTFLAGS;
 	
@@ -461,6 +467,7 @@ ISR(TCB0_INT_vect)
 		static uint8_t buttonReleased = false;
 		static uint8_t longPressEnabled = true;
 		static bool muteAfterID = false;				/* Inhibit any transmissions immediately after the ID has been sent */
+		static bool hold_event_commenced = false;
 		
 		if(g_delay_before_powerup_xmsn)
 		{
@@ -493,6 +500,7 @@ ISR(TCB0_INT_vect)
 					{
 						LEDS.init();
 						serialbus_init(SB_BAUD, SERIALBUS_USART);
+						setAntennaStateEnunciator(); /* Set green LED appropriately */
 					}
 					else
 					{
@@ -559,6 +567,19 @@ ISR(TCB0_INT_vect)
 		}
 							
 		static bool key = false;
+		
+		/* Ensure that whenever an event commences, makeMorse() immediately gets initialized with the correct pattern text */
+		if(hold_event_commenced != g_event_commenced)
+		{
+			hold_event_commenced = g_event_commenced;
+			
+			if(g_event_commenced)
+			{
+				g_code_throttle = throttleValue(g_pattern_codespeed);
+				bool repeat = true;
+				makeMorse(getCurrentPatternText(), &repeat, NULL, CALLER_AUTOMATED_EVENT);
+			}
+		}
 
 		if(g_event_enabled && g_event_commenced) /* Handle cycling transmissions */
 		{
@@ -566,6 +587,7 @@ ISR(TCB0_INT_vect)
 			{
 				on_air_finished = true;
 				transitionPrepped = false;
+				intra_cycle_delay_counting = false;
 				
 				if(!g_sending_station_ID && (!g_off_air_seconds || (g_on_the_air <= g_time_needed_for_ID)) && !g_sendID_seconds_countdown && g_time_needed_for_ID)
 				{
@@ -621,15 +643,38 @@ ISR(TCB0_INT_vect)
 			}
 			else if(!g_on_the_air)
 			{
-				if(!transitionPrepped || g_timer_launched_new_event)
+				if(g_timer_launched_new_event)
+				{
+					g_timer_launched_new_event = false;	
+					
+					if(g_intra_cycle_delay_time)
+					{
+						g_on_the_air = -g_intra_cycle_delay_time; /* wait the delay time */
+						intra_cycle_delay_counting = true;	
+						transitionPrepped = true;				
+					}
+					else
+					{
+						transitionPrepped = false;
+					}
+					
+					on_air_finished = false;
+				}
+				else if (intra_cycle_delay_counting)
+				{
+					intra_cycle_delay_counting = false;
+					transitionPrepped = false;
+					on_air_finished = false;
+				}
+
+				if(!transitionPrepped)
 				{
 					transitionPrepped = true;
-					
-					if(on_air_finished || g_timer_launched_new_event) /* A transmission just finished, or the event just began */
+										
+					if(on_air_finished) /* A transmission just finished */
 					{
-						on_air_finished = false;	
-						g_timer_launched_new_event = false;						
-				
+						on_air_finished = false;
+						
 						key = OFF;
 						keyTransmitter(OFF);
 						
@@ -659,25 +704,29 @@ ISR(TCB0_INT_vect)
 									g_sendID_seconds_countdown = MAX(0, g_ID_period_seconds - (int)seconds_to_sleep);
 								}
 							}
+	
+							muteAfterID = false;
+							g_sending_station_ID = false;
+							LEDS.setRed(OFF);
 						}
 						else
 						{
 							g_on_the_air = g_on_air_seconds;
 						}
-	
-						muteAfterID = false;
-						g_sending_station_ID = false;
-						LEDS.setRed(OFF);
 					}
 					else /* Off-the-air period just finished */
 					{
 						g_on_the_air = g_on_air_seconds;
-					}
 					
-					g_code_throttle = throttleValue(g_pattern_codespeed);
-					repeat = true;
-					makeMorse(getCurrentPatternText(), &repeat, NULL, CALLER_AUTOMATED_EVENT);
-					codeInc = g_code_throttle;
+						muteAfterID = false;
+						g_sending_station_ID = false;
+						LEDS.setRed(OFF);
+						
+						g_code_throttle = throttleValue(g_pattern_codespeed);
+						repeat = true;
+						makeMorse(getCurrentPatternText(), &repeat, NULL, CALLER_AUTOMATED_EVENT);
+						codeInc = g_code_throttle;
+					}
 				}
 			}
 		}
@@ -919,7 +968,7 @@ int main(void)
 		wifi_reset(ON);
 		g_wifi_enable_delay = 0;
 		g_WiFi_shutdown_seconds = 0;
-		g_hardware_error |= (int)HARDWARE_NO_WIFI;
+		g_hardware_error |= (uint16_t)HARDWARE_NO_WIFI;
 //		sb_send_string(TEXT_WIFI_NOT_DETECTED_TXT);	
 	}
 	
@@ -927,7 +976,7 @@ int main(void)
 	{
 		if(!txIsInitialized())
 		{
-			g_hardware_error |= (int)HARDWARE_NO_SI5351;
+			g_hardware_error |= (uint16_t)HARDWARE_NO_SI5351;
 //			sb_send_string(TEXT_TX_NOT_RESPONDING_TXT);	
 		}
 	}
@@ -945,7 +994,7 @@ int main(void)
 	
 	if(code == ERROR_CODE_RTC_NONRESPONSIVE)
 	{
-		g_hardware_error |= (int)HARDWARE_NO_RTC;
+		g_hardware_error |= (uint16_t)HARDWARE_NO_RTC;
 	}
 	else
 	{
@@ -963,7 +1012,6 @@ int main(void)
 	
 	while (1) {
 		handleLinkBusMsgs();
-//		handleSerialBusMsgs(); /* Uncomment when serial port comms are supported */
 		
 		if(g_handle_counted_presses)
 		{
@@ -984,81 +1032,89 @@ int main(void)
 			LEDS.blink(LEDS_GREEN_ON_CONSTANT);
 			LEDS.blink(LEDS_RED_ON_CONSTANT);
 		}
-		else if(!g_text_buff.isBusy() && g_text_buff.empty())
+		else if(g_text_buff.empty())
 		{
-			g_enunciator = LED_ONLY;
+			if(!g_text_buff.isBusy())
+			{
+				g_enunciator = LED_ONLY;
 			
-			if(g_hardware_error != HARDWARE_OK)
-			{
-				LEDS.blink(LEDS_RED_AND_GREEN_BLINK_FAST);
-			}
-			else if(g_do_powerup_xmsn)
-			{
-				if(!g_delay_before_powerup_xmsn)
+				if(g_hardware_error != HARDWARE_OK)
 				{
-					time_t now = time(null);
-					ConfigurationState_t state = clockConfigurationCheck();
-
-					if((state != CONFIGURATION_ERROR) && (now < g_event_start_epoch))
+					LEDS.blink(LEDS_RED_AND_GREEN_BLINK_FAST);
+				}
+				else if(g_do_powerup_xmsn)
+				{
+					if(!g_delay_before_powerup_xmsn)
 					{
-						char str[50];
+						time_t now = time(null);
+						ConfigurationState_t state = clockConfigurationCheck();
+
+						if((state != CONFIGURATION_ERROR) && (now < g_event_start_epoch))
+						{
+							char str[50];
 					
-						g_WiFi_shutdown_seconds = MAX(60, g_WiFi_shutdown_seconds);
+							g_WiFi_shutdown_seconds = MAX(60, g_WiFi_shutdown_seconds);
 
-						// TEMPSTR_SIZE must be > 44 to hold start time and battery voltage string
-						sprintf(g_tempStr, "Start %sZ = %sV = ", convertEpochToTimeString(g_event_start_epoch, str, 50), externBatString(true));
-						repChar(g_tempStr, '.', 'r'); // replace decimal points with 'r' for sending in Morse
-						repChar(g_tempStr, '-', ' '); // replace hyphens with spaces
-						repChar(g_tempStr, ':', 'r'); // replace colons with 'r'
+							// TEMPSTR_SIZE must be > 44 to hold start time and battery voltage string
+							sprintf(g_tempStr, "Start %sZ = %sV = ", convertEpochToTimeString(g_event_start_epoch, str, 50), externBatString(true));
+							repChar(g_tempStr, '.', 'r'); // replace decimal points with 'r' for sending in Morse
+							repChar(g_tempStr, '-', ' '); // replace hyphens with spaces
+							repChar(g_tempStr, ':', 'r'); // replace colons with 'r'
 						
-						// TEMPSTR_SIZE must be > 44 + MAX_PATTERN_TEXT_LENGTH to hold pattern
-						if(strlen(g_tempStr) < TEMPSTR_SIZE - MAX_PATTERN_TEXT_LENGTH)
-						{
-							if(g_messages_text[PATTERN_TEXT][0])
+							// TEMPSTR_SIZE must be > 44 + MAX_PATTERN_TEXT_LENGTH to hold pattern
+							if(strlen(g_tempStr) < TEMPSTR_SIZE - MAX_PATTERN_TEXT_LENGTH)
 							{
-								strncat(g_tempStr, (const char*)g_messages_text[PATTERN_TEXT], MAX_PATTERN_TEXT_LENGTH);
-							}							
-						}	
+								if(g_messages_text[PATTERN_TEXT][0])
+								{
+									strncat(g_tempStr, (const char*)g_messages_text[PATTERN_TEXT], MAX_PATTERN_TEXT_LENGTH);
+								}							
+							}	
 				
-						// TEMPSTR_SIZE must be > 49 + 2xMAX_PATTERN_TEXT_LENGTH to hold ID
-						if(strlen(g_tempStr) < (TEMPSTR_SIZE - MAX_PATTERN_TEXT_LENGTH + 5))
-						{
-							if(g_messages_text[STATION_ID][0])
+							// TEMPSTR_SIZE must be > 49 + 2xMAX_PATTERN_TEXT_LENGTH to hold ID
+							if(strlen(g_tempStr) < (TEMPSTR_SIZE - MAX_PATTERN_TEXT_LENGTH + 5))
 							{
-								strcat(g_tempStr, " = ");
-								strncat(g_tempStr, (const char*)g_messages_text[STATION_ID], MAX_PATTERN_TEXT_LENGTH);
-								strcat(g_tempStr, " ~");
+								if(g_messages_text[STATION_ID][0])
+								{
+									strcat(g_tempStr, " = ");
+									strncat(g_tempStr, (const char*)g_messages_text[STATION_ID], MAX_PATTERN_TEXT_LENGTH);
+									strcat(g_tempStr, " ~");
+								}
 							}
-						}
 						
-						g_enunciation_code_throttle = throttleValue(15);
-						LEDS.sendCode(g_tempStr);
-						g_enunciator = LED_AND_RF;
-					}
+							g_enunciation_code_throttle = throttleValue(15);
+							LEDS.sendCode(g_tempStr);
+							g_enunciator = LED_AND_RF;
+						}
 				
-					g_do_powerup_xmsn = false;
+						g_do_powerup_xmsn = false;
+					}
 				}
-			}
-			else 
-			{
-				if(g_event_scheduled)
+				else 
 				{
-					g_enunciation_code_throttle = throttleValue(8);
-					LEDS.sendCode((char*)"E  ");
-				}
-				else
-				{
-					if(g_event_enabled)
+					if(g_event_scheduled)
 					{
-						LEDS.blink(LEDS_RED_OFF);
+						g_enunciation_code_throttle = throttleValue(8);
+						LEDS.sendCode((char*)"E  ");
 					}
 					else
 					{
-						LEDS.blink(LEDS_RED_BLINK_FAST);
+						if(g_event_enabled)
+						{
+							LEDS.blink(LEDS_RED_OFF);
+						}
+						else
+						{
+							LEDS.blink(LEDS_RED_BLINK_FAST);
+						}
 					}
 				}
 			}
 		}
+		else /* Make sure the text buffer is being emptied */
+		{
+			g_enable_LED_enunciations = true; /* There is only one consumer of g_text_buff so it is always OK to enable manual transmissions */
+		}
+
 		
 		if(!g_check_temperature)
 		{
@@ -1186,6 +1242,7 @@ int main(void)
 				}
 			}
 			
+			LEDS.init();
 			setAntennaStateEnunciator(); /* update green LED setting */
 		}
 		
@@ -1257,772 +1314,6 @@ int main(void)
 	}
 }
 
-void __attribute__((optimize("O0"))) handleSerialBusMsgs()
-//void handleSerialBusMsgs()
-{
-	SerialbusRxBuffer* sb_buff;
-
-	while((sb_buff = nextFullSBRxBuffer()))
-	{
-		if(!g_WiFi_shutdown_seconds)
-		{
-			g_wifi_enable_delay = 2;
-		}
-		else
-		{
-			g_WiFi_shutdown_seconds = 240;
-		}
-		
-		SBMessageID msg_id = sb_buff->id;
-
-		switch(msg_id)
-		{
-			case SB_MESSAGE_SET_FOX:
-			{
-				int c1 = (int)(sb_buff->fields[SB_FIELD1][0]);
-				int c2 = (int)(sb_buff->fields[SB_FIELD1][1]);
-				
-				if(c1)
-				{
-					if(c1 == 'B')
-					{
-						c1 = BEACON;
-					}
-					else if(g_event == EVENT_FOXORING)
-					{
-						if((c1 == '1') && (c2 == '\0'))
-						{
-							c1 = FOXORING_FOX1;
-						}
-						else if((c1 == '2') && (c2 == '\0'))
-						{
-							c1 = FOXORING_FOX2;
-						}
-						else
-						{
-							c1 = FOXORING_FOX3;
-						}		
-					}
-					else if(g_event == EVENT_SPRINT)
-					{
-						if((c1 == 'S') && (c2 == '\0'))
-						{
-							c1 = SPECTATOR;
-						}
-						else if(c2 == 'F')
-						{
-							if(c1 == '1')
-							{
-								c1 = SPRINT_F1;
-							}
-							else if(c1 == '2')
-							{
-								c1 = SPRINT_F2;
-							}
-							else if(c1 == '3')
-							{
-								c1 = SPRINT_F3;
-							}
-							else if(c1 == '4')
-							{
-								c1 = SPRINT_F4;
-							}
-							else if(c1 == '5')
-							{
-								c1 = SPRINT_F5;
-							}
-						}
-						else
-						{
-							if(c1 == '1')
-							{
-								c1 = SPRINT_S1;
-							}
-							else if(c1 == '2')
-							{
-								c1 = SPRINT_S2;
-							}
-							else if(c1 == '3')
-							{
-								c1 = SPRINT_S3;
-							}
-							else if(c1 == '4')
-							{
-								c1 = SPRINT_S4;
-							}
-							else if(c1 == '5')
-							{
-								c1 = SPRINT_S5;
-							}
-						}
-					}
-					else if((g_event == EVENT_CLASSIC) || (g_event == EVENT_BLIND_ARDF))
-					{
-						if(c1 == '1')
-						{
-							c1 = FOX_1;
-						}
-						else if(c1 == '2')
-						{
-							c1 = FOX_2;
-						}
-						else if(c1 == '3')
-						{
-							c1 = FOX_3;
-						}
-						else if(c1 == '4')
-						{
-							c1 = FOX_4;
-						}
-						else if(c1 == '5')
-						{
-							c1 = FOX_5;
-						}
-					}
-					else
-					{
-						c1 = INVALID_FOX;
-					}
-
-					if((c1 >= BEACON) && (c1 < INVALID_FOX))
-					{
- 						Fox_t holdFox = (Fox_t)c1;
-						 
-						switch(g_event)
-						{
-							case EVENT_CLASSIC:
-							{
-								g_ee_mgr.updateEEPROMVar(Fox_setting_classic, (void*)&holdFox);
-							}
-							break;
-							
-							case EVENT_SPRINT:
-							{
-								g_ee_mgr.updateEEPROMVar(Fox_setting_sprint, (void*)&holdFox);
-							}
-							break;
-							
-							case EVENT_FOXORING:
-							{
-								g_ee_mgr.updateEEPROMVar(Fox_setting_foxoring, (void*)&holdFox);
-							}
-							break;
-							
-							case EVENT_BLIND_ARDF:
-							{
-								g_ee_mgr.updateEEPROMVar(Fox_setting_blind, (void*)&holdFox);
-							}
-							break;
-							
-							default: /* none */
-							{
-								g_ee_mgr.updateEEPROMVar(Fox_setting_none, (void*)&holdFox);
-							}
-							break;
-						}
-						 
- 						if(holdFox != getFoxSetting())
- 						{
-							g_fox[g_event] = holdFox;
-							setupForFox(holdFox, START_EVENT_WITH_STARTFINISH_TIMES);
-						}
-					}
-				} /* if(c1) */
-
-//				reportSettings();
-			}
-			break;
-			
-			
-			case SB_MESSAGE_SLP:
-			{
-				if(sb_buff->fields[SB_FIELD1][0])
-				{
-					if(sb_buff->fields[SB_FIELD1][0] == '0')    
-					{
-						g_sleepType = DO_NOT_SLEEP;
-					}
-					else if (sb_buff->fields[SB_FIELD1][0] == '1')
-					{
-						g_event_enabled = eventEnabled(); // Set sleep type based on current event settings
-					}
-					else
-					{
-						g_sleepType = SLEEP_FOREVER;
-						g_go_to_sleep_now = true;
-					}
-				}
-				else
-				{
-					g_go_to_sleep_now = true;
-				}
-			}
-			break;
-				
-			case SB_MESSAGE_TX_FREQ:
-			{
-// 				if(sb_buff->fields[SB_FIELD1][0])
-// 				{
-// 					Frequency_Hz f;
-// 					if(g_cloningInProgress)
-// 					{
-// 						if(!frequencyVal(sb_buff->fields[SB_FIELD2], &f))
-// 						{
-// 							char freqTier = sb_buff->fields[SB_FIELD1][0];
-// 							
-// 							if(freqTier == 'L')
-// 							{
-// 								g_frequency_low = f;
-// 								g_ee_mgr.updateEEPROMVar(Frequency_Low, (void*)&f);
-// 							}
-// 							else if(freqTier == 'M')
-// 							{
-// 								g_frequency_med = f;
-// 								g_ee_mgr.updateEEPROMVar(Frequency_Med, (void*)&f);
-// 							}
-// 							else if(freqTier == 'H')
-// 							{
-// 								g_frequency_hi = f;
-// 								g_ee_mgr.updateEEPROMVar(Frequency_Hi, (void*)&f);
-// 							}
-// 							else if(freqTier == 'B')
-// 							{
-// 								g_frequency_beacon = f;
-// 								g_ee_mgr.updateEEPROMVar(Frequency_Beacon, (void*)&f);
-// 							}
-// 							else
-// 							{
-// 								g_frequency = f;
-// 								g_ee_mgr.updateEEPROMVar(Frequency, (void*)&f);
-// 							}
-// 							
-// 							g_event_checksum += f;
-// 					
-// 							sb_send_string((char*)"FRE\r");
-// 							g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 						}
-// 					}
-// 					else if(!frequencyVal(sb_buff->fields[SB_FIELD1], &f))
-// 					{
-// 						g_frequency = f;
-// 						
-// 						if(!txSetFrequency(&f, true))
-// 						{
-// 							if(getFoxSetting() == BEACON)
-// 							{
-// 								g_frequency_beacon = f;
-// 								g_ee_mgr.updateEEPROMVar(Frequency_Beacon, (void*)&f);
-// 							}
-// 							else if(g_event == EVENT_FOXORING)
-// 							{
-// 								if(getFoxSetting() == FOXORING_FOX1)
-// 								{
-// 									g_frequency_low = f;
-// 									g_ee_mgr.updateEEPROMVar(Frequency_Low, (void*)&f);
-// 								}
-// 								else if(getFoxSetting() == FOXORING_FOX2)
-// 								{
-// 									g_frequency_med = f;
-// 									g_ee_mgr.updateEEPROMVar(Frequency_Med, (void*)&f);
-// 								}
-// 								else if(getFoxSetting() == FOXORING_FOX3)
-// 								{
-// 									g_frequency_hi = f;
-// 									g_ee_mgr.updateEEPROMVar(Frequency_Hi, (void*)&f);
-// 								}
-// 							}
-// 							else if(g_event == EVENT_SPRINT)
-// 							{
-// 								if((getFoxSetting() >= SPRINT_S1) && (getFoxSetting() <= SPRINT_S5))
-// 								{
-// 									g_frequency_low = f;
-// 									g_ee_mgr.updateEEPROMVar(Frequency_Low, (void*)&f);
-// 								}
-// 								else if(getFoxSetting() == SPECTATOR)
-// 								{
-// 									g_frequency_med = f;
-// 									g_ee_mgr.updateEEPROMVar(Frequency_Med, (void*)&f);
-// 								}
-// 								else if((getFoxSetting() >= SPRINT_F1) && (getFoxSetting() <= SPRINT_F5))
-// 								{
-// 									g_frequency_hi = f;
-// 									g_ee_mgr.updateEEPROMVar(Frequency_Hi, (void*)&f);
-// 								}
-// 							}
-// 							else if(g_event == EVENT_CLASSIC)
-// 							{
-// 								g_frequency_low = f;
-// 								g_ee_mgr.updateEEPROMVar(Frequency_Low, (void*)&f);
-// 							}
-// 							else // No event set
-// 							{
-// 								g_frequency = f;
-// 								g_ee_mgr.updateEEPROMVar(Frequency, (void*)&f);
-// 							}
-// 						}
-// 						else
-// 						{
-// 							sb_send_string(TEXT_TX_NOT_RESPONDING_TXT);
-// 						}
-// 					}
-// 					else
-// 					{
-// 						sb_send_string((char*)"\n3500 kHz < Freq < 4000 kHz\n");
-// 					}
-// 				}
-// 				
-// 				if(!(g_cloningInProgress)) reportSettings();
-			}
-			break;
-				
-			case SB_MESSAGE_PATTERN:
-			{
-// 				if(g_cloningInProgress)
-// 				{
-// 					if(sb_buff->fields[SB_FIELD1][0] && sb_buff->fields[SB_FIELD2][0])
-// 					{
-// 						int len = MIN(MAX_PATTERN_TEXT_LENGTH, strlen(sb_buff->fields[SB_FIELD2]));
-// 						
-// 						for(int i=0; i<len; i++)
-// 						{
-// 							g_event_checksum += sb_buff->fields[SB_FIELD2][i];
-// 						}
-// 					
-// 						sb_send_string((char*)"PAT\r");
-// 						g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					}
-// 				}
-// 				else
-// 				{
-// 					if(sb_buff->fields[SB_FIELD1][0])
-// 					{
-// 						if(strlen(sb_buff->fields[SB_FIELD1]) <= MAX_PATTERN_TEXT_LENGTH)
-// 						{
-// 							strncpy(g_tempStr, sb_buff->fields[SB_FIELD1], MAX_PATTERN_TEXT_LENGTH);
-// 						
-// 							if(g_event == EVENT_FOXORING)
-// 							{
-// 								strncpy(g_messages_text[FOXORING_PATTERN_TEXT], g_tempStr, MAX_PATTERN_TEXT_LENGTH);
-// 								g_ee_mgr.updateEEPROMVar(Foxoring_pattern_text, g_messages_text[FOXORING_PATTERN_TEXT]);
-// 							}
-// 							else
-// 							{
-// 								strncpy(g_messages_text[PATTERN_TEXT], g_tempStr, MAX_PATTERN_TEXT_LENGTH);
-// 							}
-// 						}
-// 						else
-// 						{
-// 							sb_send_string((char*)"Illegal pattern\n");
-// 						}
-// 					}
-// 				}
-// 				
-// 				if(!(g_cloningInProgress)) reportSettings();
-			}
-			break;
-			
-			case SB_MESSAGE_KEY:
-			{
-				if(sb_buff->fields[SB_FIELD1][0])
-				{
-					if(sb_buff->fields[SB_FIELD1][0] == '0')    
-					{
- 						stopEventNow(PROGRAMMATIC);
-						LEDS.setRed(OFF);
- 						keyTransmitter(OFF);
-					}
-					else if(sb_buff->fields[SB_FIELD1][0] == '1')  
-					{
- 						stopEventNow(PROGRAMMATIC);
-						LEDS.setRed(ON);
- 						keyTransmitter(ON);
-					}
-					else
-					{
-						sb_send_string((char*)"err\n");
-					}
-				}
-				else
-				{
-					LEDS.setRed(OFF);
-					LEDS.init();
- 					keyTransmitter(OFF);
-					startEventNow(PROGRAMMATIC);
-				}
-			}
-			break;
-
-			case SB_MESSAGE_GO:
-			{
-				if(sb_buff->fields[SB_FIELD1][0])
-				{
-					if(sb_buff->fields[SB_FIELD1][0] == '0')       /* Stop the event. Re-sync will occur on next start */
-					{
- 						stopEventNow(PROGRAMMATIC);
-					}
-					else if(sb_buff->fields[SB_FIELD1][0] == '1')  /* Start the event, re-syncing to a start time of now - same as a button press */
-					{
-						LEDS.setRed(OFF);
-						g_event_enabled = false; /* ensure that it will run immediately */
- 						startEventNow(PROGRAMMATIC);
-					}
-					else if(sb_buff->fields[SB_FIELD1][0] == '2')  /* Start the event at the programmed start time */
-					{
- 						g_event_enabled = false;					/* Disable an event currently underway */
- 						startEventUsingRTC();
-					}
-					else if(sb_buff->fields[SB_FIELD1][0] == '3')  /* Start the event immediately with transmissions starting now */
-					{
- 						setupForFox(INVALID_FOX, START_TRANSMISSIONS_NOW);
-					}
-					else
-					{
-						sb_send_string((char*)"err\n");
-					}
-				}
-				else
-				{
-					sb_send_string((char*)"err\n");
-				}
-			}
-			break;
-
-			case SB_MESSAGE_SET_STATION_ID:
-			{
-// 				if(sb_buff->fields[SB_FIELD1][0])
-// 				{
-// 					int len = 0;
-// 					
-// 					if((sb_buff->fields[SB_FIELD1][0] == '\"') && (sb_buff->fields[SB_FIELD1][1] == '\"')) /* "" */
-// 					{
-// 						g_messages_text[STATION_ID][0] = '\0';
-// 					}
-// 					else
-// 					{
-// 						strcpy(g_tempStr, " "); /* Add a Space before ID gets sent */
-// 						strcat(g_tempStr, sb_buff->fields[SB_FIELD1]);
-// 
-// 						if(sb_buff->fields[SB_FIELD2][0])
-// 						{
-// 							strcat(g_tempStr, " ");
-// 							strcat(g_tempStr, sb_buff->fields[SB_FIELD2]);
-// 						}
-// 						
-// 						len = MIN(MAX_PATTERN_TEXT_LENGTH, strlen(g_tempStr));
-// 						strncpy((char*)g_messages_text[STATION_ID], g_tempStr, len);
-// 					}
-// 					
-// 					if(g_cloningInProgress)
-// 					{				
-// 						for(int i=0; i<len; i++)
-// 						{
-// 							g_event_checksum += g_messages_text[STATION_ID][i];
-// 						}
-// 
-// 						sb_send_string((char*)"ID\r");
-// 						g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					}
-// 				}
-// 
-// 				g_ee_mgr.updateEEPROMVar(StationID_text, g_messages_text[STATION_ID]);
-// 				
-// 				if(g_messages_text[STATION_ID][0])
-// 				{
-// 					g_time_needed_for_ID = timeNeededForID();
-// 				}
-// 				
-// 				if(!(g_cloningInProgress)) reportSettings();
-			}
-			break;
-
-
-			case SB_MESSAGE_CODE_SETTINGS:
-			{
-// 				if(sb_buff->fields[SB_FIELD1][0] == 'S')
-// 				{
-// 					char x = sb_buff->fields[SB_FIELD2][0];
-// 
-// 					if(x)
-// 					{
-//  						uint8_t speed = atol(sb_buff->fields[SB_FIELD2]);
-//  						g_id_codespeed = CLAMP(MIN_CODE_SPEED_WPM, speed, MAX_CODE_SPEED_WPM);
-// 						g_ee_mgr.updateEEPROMVar(Id_codespeed, (void*)&g_id_codespeed);
-// 
-// 						if(g_messages_text[STATION_ID][0])
-// 						{
-// 							g_time_needed_for_ID = timeNeededForID();
-// 						}
-// 					}
-// 				}
-// 				else
-// 				{
-// 					sprintf(g_tempStr, "err\n");
-// 				}
-// 
-// 				if(!(g_cloningInProgress)) reportSettings();
-			}
-			break;
-
-			case SB_MESSAGE_MASTER:
-			{
-// 				if(sb_buff->fields[SB_FIELD1][0] == 'P')
-// 				{
-// 					if(!g_send_clone_success_countdown)
-// 					{
-// 						g_cloningInProgress = true;
-// 						sb_send_string((char*)"MAS\r");
-// 						g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 						suspendEvent();
-// 						g_event_checksum = 0;
-// 					}
-// 				}
-// 				else if((sb_buff->fields[SB_FIELD1][0] == 'Q') && g_cloningInProgress)
-// 				{
-// 					uint32_t sum = atol(sb_buff->fields[SB_FIELD2]);
-// 					g_cloningInProgress = false;
-// 					g_programming_countdown = 0;
-// 					if(sum == g_event_checksum)
-// 					{
-// 						sb_send_string((char*)"MAS ACK\r");
-// 						g_send_clone_success_countdown = 18000;
-// 						setupForFox(INVALID_FOX, START_EVENT_WITH_STARTFINISH_TIMES);   /* Start the event if one is configured */
-// 						g_start_event = true;
-// 					}
-// 					else
-// 					{
-// 						sb_send_string((char*)"MAS NAK\r");
-// 					}
-// 				}
-// 				else
-// 				{
-// 					if(sb_buff->fields[SB_FIELD1][0])
-// 					{
-// 						if((sb_buff->fields[SB_FIELD1][0] == 'M') || (sb_buff->fields[SB_FIELD1][0] == '1'))
-// 						{
-//  							g_isMaster = true;
-// 							isMasterCountdownSeconds = 600; /* Remain Master for 10 minutes */
-// 						}
-// // 						else
-// // 						{
-// // 							g_isMaster = false;
-// // 							isMasterCountdownSeconds = 0;
-// // 							g_start_event = true;
-// // 							reportSettings();
-// // 						}
-// 					}
-// 				}
-			}
-			break;
-			
-			case SB_MESSAGE_EVENT:
-			{
-// 				if(g_cloningInProgress)
-// 				{
-// 					sb_send_string((char*)"EVT F\r");
-// 					g_event = EVENT_FOXORING;
-// 					g_ee_mgr.updateEEPROMVar(Event_setting, (void*)&g_event);
-// 					g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					g_event_checksum += 'F';
-// 				}
-// 				else
-// 				{
-// 					if(sb_buff->fields[SB_FIELD1][0] == 'F')
-// 					{
-// 						g_event = EVENT_FOXORING;
-// 						g_ee_mgr.updateEEPROMVar(Event_setting, (void*)&g_event);
-// 						init_transmitter(getFrequencySetting());
-// 						setupForFox(getFoxSetting(), START_NOTHING);
-// 					}
-// 					else if(sb_buff->fields[SB_FIELD1][0])
-// 					{
-// 						g_event = EVENT_NONE;
-// 						g_ee_mgr.updateEEPROMVar(Event_setting, (void*)&g_event);
-// 						init_transmitter(getFrequencySetting());
-// 						setupForFox(getFoxSetting(), START_NOTHING);
-// 					}
-// 				}
-// 				
-// 				if(!(g_cloningInProgress)) reportSettings();
-			}
-			break;
-
-			case SB_MESSAGE_CLOCK:
-			{
-// 				if(!sb_buff->fields[SB_FIELD1][0] || sb_buff->fields[SB_FIELD1][0] == 'T')   /* Current time format "YYMMDDhhmmss" */
-// 				{		 
-// 					if(sb_buff->fields[SB_FIELD2][0])
-// 					{
-// 						strncpy(g_tempStr, sb_buff->fields[SB_FIELD2], 12);
-//   						time_t t;
-// 						  
-// 						if(g_cloningInProgress)
-// 						{
-// 							t = atol(g_tempStr);
-// 						}
-// 						else
-// 						{	
-// 							g_tempStr[12] = '\0';               /* truncate to no more than 12 characters */
-// 							t = validateTimeString(g_tempStr, null);
-// 						}
-//   
-//   						if(t)
-//   						{
-//  							set_system_time(t);
-// 							 
-// 							if(g_cloningInProgress)
-// 							{
-// 								sprintf(g_tempStr, "CLK T %lu\r", t);
-// 								sb_send_string(g_tempStr);
-// 								g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 								g_event_checksum += t;
-// 							}
-// 							else
-// 							{
-//   								setupForFox(INVALID_FOX, START_EVENT_WITH_STARTFINISH_TIMES);   /* Start the event if one is configured */
-// 							}
-//  						}
-// 					}
-// 				}
-// 				else if(sb_buff->fields[SB_FIELD1][0] == 'S')  /* Event start time */
-// 				{
-// 					strncpy(g_tempStr, sb_buff->fields[SB_FIELD2], 12);
-// 					time_t s;
-// 						
-// 					if(g_cloningInProgress)
-// 					{
-// 						s = atol(g_tempStr);
-// 					}
-// 					else
-// 					{
-// 						g_tempStr[12] = '\0';               /* truncate to no more than 12 characters */
-// 						s = validateTimeString(g_tempStr, null);
-// 					}
-//  
-//  					if(s)
-//  					{
-// 						if(g_cloningInProgress)
-// 						{
-// 							g_event_start_epoch = atol(g_tempStr);
-// 					
-// 							g_ee_mgr.updateEEPROMVar(Event_start_epoch, (void*)&g_event_start_epoch);
-// 							sb_send_string((char*)"CLK\r");
-// 							g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 							g_event_checksum += s;
-// 						}
-// 						else
-// 						{
-//  							g_event_start_epoch = s;
-//  							g_event_finish_epoch = MAX(g_event_finish_epoch, (g_event_start_epoch + SECONDS_24H));
-// 							g_ee_mgr.updateEEPROMVar(Event_start_epoch, (void*)&g_event_start_epoch);
-//  							setupForFox(INVALID_FOX, START_EVENT_WITH_STARTFINISH_TIMES);
-// 							if(eventScheduled())
-// 							{
-// 								startEventUsingRTC();
-// 							}
-//  						}
-// 					 }
-// 				}
-// 				else if(sb_buff->fields[SB_FIELD1][0] == 'F')  /* Event finish time */
-// 				{
-// 					strncpy(g_tempStr, sb_buff->fields[SB_FIELD2], 12);
-// 					time_t f;
-// 					
-// 					if(g_cloningInProgress)
-// 					{
-// 						f = atol(g_tempStr);
-// 					}
-// 					else
-// 					{
-// 						g_tempStr[12] = '\0';               /* truncate to no more than 12 characters */
-// 						f = validateTimeString(g_tempStr, null);
-// 					}					
-//  
-//  					if(f)
-//  					{
-// 						if(g_cloningInProgress)
-// 						{
-// 							g_event_finish_epoch = atol(g_tempStr);
-// 							
-// 							g_ee_mgr.updateEEPROMVar(Event_finish_epoch, (void*)&g_event_finish_epoch);
-// 							sb_send_string((char*)"CLK\r");
-// 							g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 							g_event_checksum += f;
-// 						}
-// 						else
-// 						{
-//  							g_event_finish_epoch = f;
-//   							g_ee_mgr.updateEEPROMVar(Event_finish_epoch, (void*)&g_event_finish_epoch);
-//  							setupForFox(INVALID_FOX, START_EVENT_WITH_STARTFINISH_TIMES);
-// 							if(eventScheduled())
-// 							{
-// 								startEventUsingRTC();
-// 							}
-// 						}
-//  					}
-// 				}
-// 				else if(sb_buff->fields[SB_FIELD1][0] == 'C' && !g_cloningInProgress)  /* Clock calibration */
-// 				{
-// 					strncpy(g_tempStr, sb_buff->fields[SB_FIELD2], 12);
-// 					uint16_t cal;
-// 					
-// 					cal = atoi(g_tempStr);
-// 					RTC_set_calibration(cal);
-// 				}
-// //  				else if(sb_buff->fields[SB_FIELD1][0] == '*')  /* Sync seconds to zero */
-// //  				{
-// //  				}
-// 
-// 				if(!(g_cloningInProgress)) reportSettings();
-			}
-			break;
-
-			case SB_MESSAGE_VOLTS:
-			{
-// 				char txt[6];
-// 
-// 				if(sb_buff->fields[SB_FIELD1][0])
-// 				{
-// 					float v = atof(sb_buff->fields[SB_FIELD1]);
-// 
-// 					if((v >= 0.1) && (v <= 15.))
-// 					{
-//  						g_voltage_threshold = v;
-// 						g_ee_mgr.updateEEPROMVar(Voltage_threshold, (void*)&g_voltage_threshold);
-// 					}
-// 					else
-// 					{
-// 						sb_send_string((char*)"Err: 0.1 V < thresh < 15.0 V\n");
-// 					}
-// 
-// 				}
-// 
-// 				dtostrf(g_battery_voltage, 4, 1, txt);
-// 				txt[5] = '\0';
-//   				sprintf(g_tempStr, "Bat =%s Volts\n", txt);
-//  				sb_send_string(g_tempStr);
-// 
-// 				dtostrf(g_voltage_threshold, 4, 1, txt);
-// 				txt[5] = '\0';
-//  				sprintf(g_tempStr, "thresh =%s Volts\n", txt);
-//  				sb_send_string(g_tempStr);
-			}
-			break;
-
-			default:
-			{
-				sb_send_string(HELP_TEXT_TXT);
-			}
-			break;
-		}
-
-		sb_buff->id = SB_MESSAGE_EMPTY;
-		sb_send_NewPrompt();
-
-// 		g_LED_timeout_countdown = LED_TIMEOUT_SECONDS;
-// 		g_config_error = NULL_CONFIG;   /* Trigger a new configuration enunciation */
-
-	}
-}
 
 /* The compiler does not seem to optimize large switch statements correctly */
 void __attribute__((optimize("O0"))) handleLinkBusMsgs()
@@ -2292,7 +1583,6 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 				}
 				else if(f1 == '0')  /* Prepare to receive new event data */
 				{
-//					suspendEvent();
 					new_event_parameter_count = 0;
 					g_Event_Configuration_Check = 0;
 					g_last_status_code = STATUS_CODE_RECEIVING_EVENT_DATA;
@@ -2854,12 +2144,6 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 
 			if(turnOnTransmitter)
 			{
-				bool hold = g_event_enabled;
-				g_event_enabled = false; // prevent interrupts from affecting the settings
-// 				bool repeat = true;
-// 				makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
-// 				g_code_throttle = throttleValue(g_pattern_codespeed);
-				g_event_enabled = hold;
 				powerToTransmitter(ON);
 			}
 			else
@@ -2924,20 +2208,23 @@ EC rtc_init()
 	return ERROR_CODE_NO_ERROR;
 }
 
-bool setAntennaStateEnunciator()
+bool __attribute__((optimize("O0"))) setAntennaStateEnunciator()
 {
 	bool val = (g_antenna_connect_state == ANT_CONNECTED);
+	static Blink_t b = LEDS_OFF;
 
-	if(g_hardware_error == HARDWARE_OK)
+	if(g_hardware_error == (uint16_t)HARDWARE_OK)
 	{
 		if(val)
 		{
-			LEDS.blink(LEDS_GREEN_ON_CONSTANT);
+			b = LEDS_GREEN_ON_CONSTANT;
 		}
 		else
 		{
-			LEDS.blink(LEDS_GREEN_OFF);
+			b = LEDS_GREEN_OFF;
 		}
+		
+		LEDS.blink(b);
 	}
 
 	return(val);
@@ -3582,684 +2869,185 @@ int getPatternCodeSpeed(void)
 
 char* getCurrentPatternText(void)
 {
-	char* c;
-	
-	switch(g_fox[g_event])
-	{
-		case FOX_1:
-		{
-			c = (char*)"MOE";
-		}
-		break;
-		
-		case FOX_2:
-		{
-			c = (char*)"MOI";
-		}
-		break;
-		
-		case FOX_3:
-		{
-			c = (char*)"MOS";
-		}
-		break;
-		
-		case FOX_4:
-		{
-			c = (char*)"MOH";
-		}
-		break;
-		
-		case FOX_5:
-		{
-			c = (char*)"MO5";
-		}
-		break;
-		
-		case SPECTATOR:
-		{
-			c = (char*)"S";
-		}
-		break;
-		
-		case SPRINT_S1:
-		{
-			c = (char*)"ME";
-		}
-		break;
-		
-		case SPRINT_S2:
-		{
-			c = (char*)"MI";
-		}
-		break;
-		
-		case SPRINT_S3:
-		{
-			c = (char*)"MS";
-		}
-		break;
-		
-		case SPRINT_S4:
-		{
-			c = (char*)"MH";
-		}
-		break;
-		
-		case SPRINT_S5:
-		{
-			c = (char*)"M5";
-		}
-		break;
-		
-		case SPRINT_F1:
-		{
-			c = (char*)"OE";
-		}
-		break;
-		
-		case SPRINT_F2:
-		{
-			c = (char*)"OI";
-		}
-		break;
-		
-		case SPRINT_F3:
-		{
-			c = (char*)"OS";
-		}
-		break;
-		
-		case SPRINT_F4:
-		{
-			c = (char*)"OH";
-		}
-		break;
-		
-		case SPRINT_F5:
-		{
-			c = (char*)"O5";
-		}
-		break;
-		
-		case FOXORING_FOX1:
-		case FOXORING_FOX2:
-		case FOXORING_FOX3:
-		{
-			c = g_messages_text[FOXORING_PATTERN_TEXT];
-		}
-		break;
-		
-		case BEACON:
-		{
-			c = (char*)"MO";
-		}
-		break;
-		
-		default:
-		{
-			c = g_messages_text[PATTERN_TEXT];
-		}
-		break;
-	}
-	
-	return c;
+	return g_messages_text[PATTERN_TEXT];
+// 	char* c;
+// 	
+// 	switch(g_fox[g_event])
+// 	{
+// 		case FOX_1:
+// 		{
+// 			c = (char*)"MOE";
+// 		}
+// 		break;
+// 		
+// 		case FOX_2:
+// 		{
+// 			c = (char*)"MOI";
+// 		}
+// 		break;
+// 		
+// 		case FOX_3:
+// 		{
+// 			c = (char*)"MOS";
+// 		}
+// 		break;
+// 		
+// 		case FOX_4:
+// 		{
+// 			c = (char*)"MOH";
+// 		}
+// 		break;
+// 		
+// 		case FOX_5:
+// 		{
+// 			c = (char*)"MO5";
+// 		}
+// 		break;
+// 		
+// 		case SPECTATOR:
+// 		{
+// 			c = (char*)"S";
+// 		}
+// 		break;
+// 		
+// 		case SPRINT_S1:
+// 		{
+// 			c = (char*)"ME";
+// 		}
+// 		break;
+// 		
+// 		case SPRINT_S2:
+// 		{
+// 			c = (char*)"MI";
+// 		}
+// 		break;
+// 		
+// 		case SPRINT_S3:
+// 		{
+// 			c = (char*)"MS";
+// 		}
+// 		break;
+// 		
+// 		case SPRINT_S4:
+// 		{
+// 			c = (char*)"MH";
+// 		}
+// 		break;
+// 		
+// 		case SPRINT_S5:
+// 		{
+// 			c = (char*)"M5";
+// 		}
+// 		break;
+// 		
+// 		case SPRINT_F1:
+// 		{
+// 			c = (char*)"OE";
+// 		}
+// 		break;
+// 		
+// 		case SPRINT_F2:
+// 		{
+// 			c = (char*)"OI";
+// 		}
+// 		break;
+// 		
+// 		case SPRINT_F3:
+// 		{
+// 			c = (char*)"OS";
+// 		}
+// 		break;
+// 		
+// 		case SPRINT_F4:
+// 		{
+// 			c = (char*)"OH";
+// 		}
+// 		break;
+// 		
+// 		case SPRINT_F5:
+// 		{
+// 			c = (char*)"O5";
+// 		}
+// 		break;
+// 		
+// 		case FOXORING_FOX1:
+// 		case FOXORING_FOX2:
+// 		case FOXORING_FOX3:
+// 		{
+// 			c = g_messages_text[FOXORING_PATTERN_TEXT];
+// 		}
+// 		break;
+// 		
+// 		case BEACON:
+// 		{
+// 			c = (char*)"MO";
+// 		}
+// 		break;
+// 		
+// 		default:
+// 		{
+// 			c = g_messages_text[PATTERN_TEXT];
+// 		}
+// 		break;
+// 	}
+// 	
+// 	return c;
 }
 
 Frequency_Hz getFrequencySetting(void)
 {
-	Frequency_Hz freq;
-	
-	switch(g_fox[g_event])
-	{
-		case BEACON:
-		{
-			freq = g_frequency_beacon;
-		}
-		break;
-		
-		case FOX_1:
-		case FOX_2:
-		case FOX_3:
-		case FOX_4:
-		case FOX_5:
-		{
-			freq = g_frequency_low;
-		}
-		break;
-		
-		case SPECTATOR:
-		{
-			freq = g_frequency_med;
-		}
-		break;
-		
-		case SPRINT_S1:
-		case SPRINT_S2:
-		case SPRINT_S3:
-		case SPRINT_S4:
-		case SPRINT_S5:
-		{
-			freq = g_frequency_low;
-		}
-		break;
-		
-		case SPRINT_F1:
-		case SPRINT_F2:
-		case SPRINT_F3:
-		case SPRINT_F4:
-		case SPRINT_F5:
-		{
-			freq = g_frequency_hi;
-		}
-		break;
-		
-		case FOXORING_FOX1:
-		{
-			freq = g_frequency_low;
-		}
-		break;
-		
-		case FOXORING_FOX2:
-		{
-			freq = g_frequency_med;
-		}
-		break;
-		
-		case FOXORING_FOX3:
-		{
-			freq = g_frequency_hi;
-		}
-		break;
-		
-		default:
-		{
-			freq = g_frequency;
-		}
-		break;
-	}
-
-	return(freq);
+	return(txGetFrequency());
 }
 
 
-// void handleSerialCloning(void)
-// {
-// 	if(g_programming_countdown == 0)
-// 	{
-// 		g_programming_state = SYNC_Searching_for_slave;
-// 		g_cloningInProgress = false;
-// 		g_programming_countdown = -1;
-// 	}
-// 	
-// 	SerialbusRxBuffer* sb_buff = nextFullSBRxBuffer();
-// 	SBMessageID msg_id;
-// 	
-// 	if(sb_buff)
-// 	{
-// 		isMasterCountdownSeconds = 600; /* Extend Master time */
-// 		LEDS.init(); /* Extend or resume LED operation */
-// 	}
-// 	
-// 	if(!g_programming_msg_throttle && !g_cloningInProgress)
-// 	{
-// 		sb_send_master_string((char*)"MAS P\r"); /* Set slave to active cloning state */
-// 		g_programming_msg_throttle = 600;
-// 		g_programming_state = SYNC_Searching_for_slave;
-// 	}
-// 	
-// 	
-// 	switch(g_programming_state)
-// 	{
-// 		case SYNC_Searching_for_slave:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_MASTER) /* Slave responds with MAS message */
-// 				{
-// 					g_cloningInProgress = true;
-// 					g_seconds_transition = false;
-// 					g_programming_state = SYNC_Align_to_Second_Transition;
-// 					g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 				}
-// // 				else
-// // 				{
-// // 					handleSerialBusMsgs();
-// // 				}
-// 			}			
-// 		}
-// 		break;
-// 		
-// 		
-// 		case SYNC_Align_to_Second_Transition:
-// 		{
-// 			if(g_seconds_transition)
-// 			{
-// 				time_t now = time(null);
-// 				g_event_checksum = now;
-// 				sprintf(g_tempStr, "CLK T %lu\r", now); /* Set slave's RTC */
-// 				sb_send_master_string(g_tempStr);
-// 				g_programming_state = SYNC_Waiting_for_CLK_T_reply;
-// 				g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 			}
-// 		}
-// 		break;
-// 		
-// 		
-// 		case SYNC_Waiting_for_CLK_T_reply:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_CLOCK)
-// 				{
-// 					if(sb_buff->fields[SB_FIELD1][0] == 'T')
-// 					{
-// 						g_event_checksum += g_event_start_epoch;
-// 						g_programming_state = SYNC_Waiting_for_CLK_S_reply;
-//  						sprintf(g_tempStr, "CLK S %lu\r", g_event_start_epoch);
-//  						sb_send_master_string(g_tempStr);
-// 						g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					}
-// 				}
-// 			}
-// 		}
-// 		break;
-// 
-// 		case SYNC_Waiting_for_CLK_S_reply:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_CLOCK)
-// 				{
-// 					if(sb_buff->fields[SB_FIELD1][0] == 'S')
-// 					{
-// 						g_event_checksum += g_event_finish_epoch;
-// 						g_programming_state = SYNC_Waiting_for_CLK_F_reply;
-//  						sprintf(g_tempStr, "CLK F %lu\r", g_event_finish_epoch);
-//  						sb_send_master_string(g_tempStr);
-// 						g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					}
-// 				}
-// 			}
-// 		}	
-// 		break;
-// 
-// 		case SYNC_Waiting_for_CLK_F_reply:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_CLOCK)
-// 				{
-// 					if(sb_buff->fields[SB_FIELD1][0] == 'F')
-// 					{
-// 						g_event_checksum += g_days_to_run;
-// 						g_programming_state = SYNC_Waiting_for_CLK_D_reply;
-//  						sprintf(g_tempStr, "CLK D %d\r", g_days_to_run);
-//  						sb_send_master_string(g_tempStr);
-// 						g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					}
-// 				}
-// 			}
-// 		}
-// 		break;
-// 				
-// 		case SYNC_Waiting_for_CLK_D_reply:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_CLOCK)
-// 				{
-// 					if(sb_buff->fields[SB_FIELD1][0] == 'D')
-// 					{
-// 						g_programming_msg_throttle = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 						g_programming_state = SYNC_Waiting_for_ID_reply;
-// 						
-// 						char* ptr1=NULL;
-// 						char* ptr2=NULL;
-// 						int ch = ' ';
-// 						
-// 						for(uint8_t i=0; i<strlen(g_messages_text[STATION_ID]); i++)
-// 						{
-// 							g_event_checksum += g_messages_text[STATION_ID][i];
-// 						}
-//  
-// 						ptr1 = strchr( g_messages_text[STATION_ID], ch );
-// 						
-// 						if(ptr1)
-// 						{
-// 							ptr1++;
-// 							ptr2 = strchr((const char*)ptr1, ch);
-// 							
-// 							if(ptr2)
-// 							{
-// 								*ptr2 = '\0';
-// 								ptr2++;
-// 								
-// 								sprintf(g_tempStr, "ID %s %s\r", ptr1, ptr2);
-// 							}
-// 							else
-// 							{
-// 								sprintf(g_tempStr, "ID %s\r", ptr1);
-// 							}
-// 						}
-// 						else
-// 						{
-// 							strncpy(g_tempStr, "ID \"\"\r", TEMP_STRING_SIZE);
-// 						}
-//  
-// 						sb_send_master_string(g_tempStr);
-// 						g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					}
-// 				}
-// 			}
-// 		}
-// 		break;
-// 
-// 		case SYNC_Waiting_for_ID_reply:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_SET_STATION_ID)
-// 				{
-// 					g_event_checksum += g_id_codespeed;
-// 					g_programming_state = SYNC_Waiting_for_ID_CodeSpeed_reply;
-// 					sprintf(g_tempStr, "SPD I %u\r", g_id_codespeed);
-// 					sb_send_master_string(g_tempStr);
-// 					g_programming_msg_throttle = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 				}
-// 			}
-// 		}	
-// 		break;
-// 
-// 
-// 		case SYNC_Waiting_for_ID_CodeSpeed_reply:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_CODE_SETTINGS)
-// 				{
-// 					if(sb_buff->fields[SB_FIELD1][0] == 'I')
-// 					{
-// 						g_programming_state = SYNC_Waiting_for_Pattern_CodeSpeed_reply;
-// 						sprintf(g_tempStr, "SPD P %u\r", g_pattern_codespeed);
-// 						
-// 						g_event_checksum += g_pattern_codespeed;
-// 						sb_send_master_string(g_tempStr);
-// 						g_programming_msg_throttle = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 						g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					}
-// 				}
-// 			}
-// 		}
-// 		break;
-// 		
-// 		
-// 		case SYNC_Waiting_for_Pattern_CodeSpeed_reply:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_CODE_SETTINGS)
-// 				{
-// 					if(sb_buff->fields[SB_FIELD1][0] == 'P')
-// 					{
-// 						char c = '\0';
-// 					
-// 						if(g_event == EVENT_CLASSIC)
-// 						{
-// 							c = 'C';
-// 						}
-// 						else if(g_event == EVENT_FOXORING)
-// 						{
-// 							c = 'F';
-// 						}
-// 						else if(g_event == EVENT_SPRINT)
-// 						{
-// 							c = 'S';
-// 						}
-// 						else
-// 						{
-// 							c = 'N';
-// 						}
-// 						
-// 						g_event_checksum += c;
-// 						sprintf(g_tempStr, "EVT %c\r", c);
-// 						sb_send_master_string(g_tempStr); /* Set slave's event */
-// 						g_programming_state = SYNC_Waiting_for_EVT_reply;
-// 						g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					}
-// 				}
-// 			}
-// 		}	
-// 		break;
-// 		
-// 		
-// 		case SYNC_Waiting_for_EVT_reply:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_EVENT) /* Slave responds with EVT message */
-// 				{
-// 					g_event_checksum += g_frequency;
-// 					g_programming_state = SYNC_Waiting_for_NoEvent_Freq_reply;
-// 					sprintf(g_tempStr, "FRE X %lu\r", g_frequency);
-// 					sb_send_master_string(g_tempStr);
-// 					g_programming_msg_throttle = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 				}
-// 			}
-// 		}
-// 		break;
-// 		
-// 		case SYNC_Waiting_for_NoEvent_Freq_reply:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_TX_FREQ) /* Slave responds with EVT message */
-// 				{
-// 					g_event_checksum += g_frequency_low;
-// 					g_programming_state = SYNC_Waiting_for_Freq_Low_reply;
-// 					sprintf(g_tempStr, "FRE L %lu\r", g_frequency_low);
-// 					sb_send_master_string(g_tempStr);
-// 					g_programming_msg_throttle = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 				}
-// 			}
-// 		}
-// 		break;
-// 			
-// 		case SYNC_Waiting_for_Freq_Low_reply:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_TX_FREQ)
-// 				{
-// 					g_event_checksum += g_frequency_med;
-// 					g_programming_state = SYNC_Waiting_for_Freq_Med_reply;
-// 					sprintf(g_tempStr, "FRE M %lu\r", g_frequency_med);
-// 					sb_send_master_string(g_tempStr);
-// 					g_programming_msg_throttle = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 				}
-// 			}
-// 		}	
-// 		break;
-// 
-// 		case SYNC_Waiting_for_Freq_Med_reply:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_TX_FREQ)
-// 				{
-// 					g_event_checksum += g_frequency_hi;
-// 					g_programming_state = SYNC_Waiting_for_Freq_Hi_reply;
-// 					sprintf(g_tempStr, "FRE H %lu\r", g_frequency_hi);
-// 					sb_send_master_string(g_tempStr);
-// 					g_programming_msg_throttle = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 				}
-// 			}
-// 		}	
-// 		break;
-// 
-// 		case SYNC_Waiting_for_Freq_Hi_reply:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_TX_FREQ)
-// 				{
-// 					g_event_checksum += g_frequency_beacon;
-// 					g_programming_state = SYNC_Waiting_for_Freq_Beacon_reply;
-// 					sprintf(g_tempStr, "FRE B %lu\r", g_frequency_beacon);
-// 					sb_send_master_string(g_tempStr);
-// 					g_programming_msg_throttle = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 					g_programming_countdown = PROGRAMMING_MESSAGE_TIMEOUT_PERIOD;
-// 				}
-// 			}
-// 		}	
-// 		break;
-// 
-// 		case SYNC_Waiting_for_Freq_Beacon_reply:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_TX_FREQ)
-// 				{
-// 					g_programming_state = SYNC_Waiting_for_ACK;
-// 					sprintf(g_tempStr, "MAS Q %lu\r", g_event_checksum);
-// 					sb_send_master_string(g_tempStr);
-// 				}
-// 			}
-// 		}	
-// 		break;
-// 
-// 
-// 		case SYNC_Waiting_for_ACK:
-// 		{
-// 			if(sb_buff)
-// 			{
-// 				msg_id = sb_buff->id;
-// 				if(msg_id == SB_MESSAGE_MASTER)
-// 				{
-// 					if(sb_buff->fields[SB_FIELD1][0] == 'A')
-// 					{
-// 						g_send_clone_success_countdown = 18000;
-// 					}
-// 					else
-// 					{
-// 						isMasterCountdownSeconds = 600; /* Extend Master time */
-// 						g_programming_msg_throttle = 0;
-// 						g_cloningInProgress = false;
-// 					}
-// 					
-// 					g_programming_state = SYNC_Searching_for_slave;
-// 				}
-// 			}
-// 		}
-// 		break;
-// 	}
-// 	
-// 	if(sb_buff) sb_buff->id = SB_MESSAGE_EMPTY;
-// 
-// }
-
-// bool noEventWillRun(void)
-// {
-// 	bool result;
-// 	
-// 	result = !eventScheduled() || !g_event_enabled || ((g_sleepType == SLEEP_USER_OVERRIDE) || (g_sleepType == SLEEP_FOREVER));
-// 	
-// 	return result;
-// }
-// 
-// bool eventScheduledForNow(void)
-// {
-// 	time_t now = time(null);	
-// 	bool result = false;
-// 	
-// 	if((now > MINIMUM_VALID_EPOCH) && (g_event_start_epoch > MINIMUM_VALID_EPOCH))
-// 	{
-// 		result = ((g_event_start_epoch < now) && (g_event_finish_epoch > now));
-// 	}
-// 	
-// 	return(result);
-// }
-// 
-// bool eventScheduledForTheFuture(void)
-// {
-// 	time_t now = time(null);	
-// 	bool result = false;
-// 	
-// 	if(now > MINIMUM_VALID_EPOCH)
-// 	{
-// 		result = ((g_event_start_epoch > now) && (g_event_finish_epoch > g_event_start_epoch));
-// 	}
-// 	
-// 	return(result);
-// }
-// 
-// bool eventScheduled(void)
-// {
-// 	time_t now = time(null);	
-// 	bool result = false;
-// 	
-// 	if(now > MINIMUM_VALID_EPOCH)
-// 	{
-// 		result = eventScheduledForTheFuture() || eventScheduledForNow();
-// 		
-// 		if(!result)
-// 		{ 
-// 			uint8_t days_remaining = g_days_to_run - g_days_run;
-// 			if(days_remaining > 0)
-// 			{
-// 				if((g_event_start_epoch > MINIMUM_VALID_EPOCH) && (g_event_finish_epoch > g_event_start_epoch))
-// 				{
-// 					uint16_t days = days_remaining;
-// 					time_t s = g_event_start_epoch;
-// 					time_t f = g_event_finish_epoch;
-// 				
-// 					while((s < now) && days--)
-// 					{
-// 						s += SECONDS_24H;
-// 						f += SECONDS_24H;
-// 					}
-// 				
-// 					if(s > now)
-// 					{
-// 						g_event_start_epoch = s;
-// 						g_event_finish_epoch = f;
-// 						result = true;
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-// 	
-// 	return(result);
-// }
-
-/* Returns true if there is an event scheduled to start and finish in the future */
-bool eventScheduled(void)
+bool noEventWillRun(void)
 {
-	syncSystemTimeToRTC();
+	bool result;
+	
+	result = !eventScheduled() || !g_event_enabled || ((g_sleepType == SLEEP_USER_OVERRIDE) || (g_sleepType == SLEEP_FOREVER));
+	
+	return result;
+}
+
+bool eventScheduledForNow(void)
+{
 	time_t now = time(null);	
-	bool result = ((now > MINIMUM_VALID_EPOCH) && (g_event_start_epoch > now) && (g_event_finish_epoch > g_event_start_epoch));
+	bool result = false;
+	
+	if((now > MINIMUM_VALID_EPOCH) && (g_event_start_epoch > MINIMUM_VALID_EPOCH))
+	{
+		result = ((g_event_start_epoch < now) && (g_event_finish_epoch > now));
+	}
+	
 	return(result);
 }
+
+bool eventScheduledForTheFuture(void)
+{
+	time_t now = time(null);	
+	bool result = false;
+	
+	if(now > MINIMUM_VALID_EPOCH)
+	{
+		result = ((g_event_start_epoch > now) && (g_event_finish_epoch > g_event_start_epoch));
+	}
+	
+	return(result);
+}
+
+bool eventScheduled(void)
+{
+	time_t now = time(null);	
+	bool result = false;
+	
+	if(now > MINIMUM_VALID_EPOCH)
+	{
+		result = eventScheduledForTheFuture() || eventScheduledForNow();
+	}
+	
+	return(result);
+}
+
 
 // Caller must provide a pointer to a string of length 6 or greater.
 char* externBatString(bool volts)
@@ -4291,6 +3079,11 @@ char* externBatString(bool volts)
 	return str;
 }
 
+/** 
+The repChar() function replaces all occurences of \orig with \rep in the passed
+character array str.
+
+\returns The repChar() function returns the number of replaced characters. */
 int repChar(char *str, char orig, char rep) 
 {
 	char *p = str;

@@ -1402,6 +1402,7 @@ bool g_si5351_initialized = false;
 		params[i++] = ms_reg.reg.p2_0;
 
 		/* Write the parameters */
+
 		switch(clk)
 		{
 			case SI5351_CLK0:

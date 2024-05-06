@@ -126,13 +126,13 @@ extern uint8_t g_unlockCode[];
 extern Frequency_Hz g_rtty_offset;
 
 volatile Event_t g_event = EVENT_NONE; // unused
-extern volatile Frequency_Hz g_frequency;
+extern volatile Frequency_Hz g_tx_frequency;
 extern volatile Frequency_Hz g_frequency_low;
 extern volatile Frequency_Hz g_frequency_med;
 extern volatile Frequency_Hz g_frequency_hi;
 extern volatile Frequency_Hz g_frequency_beacon;
 
-extern char g_messages_text[][MAX_PATTERN_TEXT_LENGTH + 2];
+extern char g_messages_text[][MAX_PATTERN_TEXT_LENGTH + 1];
 extern volatile time_t g_event_start_epoch;
 extern volatile time_t g_event_finish_epoch;
 extern uint16_t g_80m_power_level_mW;
@@ -592,7 +592,7 @@ void EepromManager::saveAllEEPROM(void)
 	updateEEPROMVar(Fox_setting_foxoring, (void*)&g_fox[EVENT_FOXORING]);
 	updateEEPROMVar(Fox_setting_blind, (void*)&g_fox[EVENT_BLIND_ARDF]);
 	updateEEPROMVar(Event_setting, (void*)&g_event);
-	updateEEPROMVar(Frequency, (void*)&g_frequency);
+	updateEEPROMVar(Frequency, (void*)&g_tx_frequency);
 	updateEEPROMVar(Frequency_Low, (void*)&g_frequency_low);
 	updateEEPROMVar(Frequency_Med, (void*)&g_frequency_med); /* use for sprint slow */
 	updateEEPROMVar(Frequency_Hi, (void*)&g_frequency_hi); /* use for sprint high - will also need sprint spectator and beacon */
@@ -604,7 +604,6 @@ void EepromManager::saveAllEEPROM(void)
 	updateEEPROMVar(Foxoring_pattern_text, (void*)g_messages_text[FOXORING_PATTERN_TEXT]);
 	updateEEPROMVar(StationID_text, (void*)g_messages_text[STATION_ID]);
 	updateEEPROMVar(UnlockCode, (void*)g_unlockCode);
-	updateEEPROMVar(Frequency, (void*)&g_frequency);
 	updateEEPROMVar(RTTY_offset, (void*)&g_rtty_offset);
 	updateEEPROMVar(RF_Power, (void*)&g_80m_power_level_mW);
 	updateEEPROMVar(Pattern_Code_Speed, (void*)&g_pattern_codespeed);
@@ -631,7 +630,7 @@ bool EepromManager::readNonVols(void)
 		g_isMaster = EEPROM_MASTER_SETTING_DEFAULT; // (int8_t)eeprom_read_byte(&(EepromManager::ee_vars.master_setting));
 		g_id_codespeed = CLAMP(MIN_CODE_SPEED_WPM, eeprom_read_byte(&(EepromManager::ee_vars.id_codespeed)), MAX_CODE_SPEED_WPM);
 		g_event = (Event_t)eeprom_read_byte((const uint8_t*)&(EepromManager::ee_vars.event_setting));
-		g_frequency = CLAMP(TX_MINIMUM_80M_FREQUENCY, eeprom_read_dword(&(EepromManager::ee_vars.frequency)), TX_MAXIMUM_80M_FREQUENCY);
+		g_tx_frequency = CLAMP(TX_MINIMUM_80M_FREQUENCY, eeprom_read_dword(&(EepromManager::ee_vars.frequency)), TX_MAXIMUM_80M_FREQUENCY);
 		g_frequency_low = CLAMP(TX_MINIMUM_80M_FREQUENCY, eeprom_read_dword(&(EepromManager::ee_vars.frequency_low)), TX_MAXIMUM_80M_FREQUENCY);
  		g_frequency_med = CLAMP(TX_MINIMUM_80M_FREQUENCY, eeprom_read_dword(&(EepromManager::ee_vars.frequency_med)), TX_MAXIMUM_80M_FREQUENCY);
  		g_frequency_hi = CLAMP(TX_MINIMUM_80M_FREQUENCY, eeprom_read_dword(&(EepromManager::ee_vars.frequency_high)), TX_MAXIMUM_80M_FREQUENCY);
@@ -751,8 +750,8 @@ bool EepromManager::readNonVols(void)
 			g_event = EEPROM_EVENT_SETTING_DEFAULT;
 			avr_eeprom_write_byte(Event_setting, (uint8_t)g_event);
 			
-			g_frequency = EEPROM_FREQUENCY_DEFAULT;
-			avr_eeprom_write_dword(Frequency, g_frequency);
+			g_tx_frequency = EEPROM_FREQUENCY_DEFAULT;
+			avr_eeprom_write_dword(Frequency, g_tx_frequency);
 			
 			g_frequency_low = EEPROM_FREQUENCY_LOW_DEFAULT;
 			avr_eeprom_write_dword(Frequency_Low, g_frequency_low);

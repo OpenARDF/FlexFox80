@@ -33,7 +33,7 @@
 
 /******************************************************
  * Set the text that gets displayed to the user */
-#define SW_REVISION "0.103"
+#define SW_REVISION "0.200"
 
 //#define TRANQUILIZE_WATCHDOG
 
@@ -220,7 +220,7 @@ typedef uint16_t BatteryLevel;  /* in milliVolts */
 
 /******************************************************
  * EEPROM definitions */
-#define EEPROM_INITIALIZED_FLAG (uint16_t)0x0103
+#define EEPROM_INITIALIZED_FLAG (uint16_t)0x0108
 #define EEPROM_UNINITIALIZED 0x00
 
 #define EEPROM_STATION_ID_DEFAULT "FOXBOX"
@@ -330,8 +330,8 @@ typedef enum
   })
 
 #define MAX_TIME 4294967295UL
-#define MAX_UINT16 65535
-#define MAX_INT16 32767
+#define MAX_UINT16 (uint16_t)65535
+#define MAX_INT16 (int16_t)32767
 
 typedef enum
 {
