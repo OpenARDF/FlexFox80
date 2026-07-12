@@ -299,7 +299,9 @@ The root `README.md` remains user-facing and is not the location for these devel
 - The parser now rejects a fourth ID byte before accumulation while preserving every valid one-to-three-character ID.
 - Direct host coverage protects the boundary, and the constrained target test distinguishes rejection from the pre-fix immediate `VER` alias response.
 - The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, text grows by 22 bytes, and BSS grows by one byte.
-- Exact Windows and connected-target alias verification remain open.
+- The dummy-loaded test unit now runs the exact corrected flash; independent flash, complete EEPROM, and fuse readbacks match the intended and preserved bytes.
+- The read-only `$AZRX?` target reproducer remains unanswered through the ESP retry cycle instead of aliasing `VER`; a following temperature query proves next-frame resynchronization.
+- Exact Windows verification remains open.
 - Evidence: [LINKBUS_RX_ID_LENGTH_2026-07-12.md](Evidence/LINKBUS_RX_ID_LENGTH_2026-07-12.md).
 
 **R6 layout characterization checkpoint:**

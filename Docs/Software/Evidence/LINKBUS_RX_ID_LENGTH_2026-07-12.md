@@ -2,7 +2,7 @@
 
 ## Status
 
-Mac red-green, direct boundary, repository, and exact AVR Release build evidence is complete. Exact Windows and connected-target overlength-ID verification remain open.
+Mac red-green, direct boundary, repository, exact AVR Release build, connected-target programming, and overlength-ID rejection evidence is complete. Exact Windows verification remains open.
 
 ## Confirmed defect
 
@@ -58,8 +58,36 @@ Two consecutive final-source builds used AVR-GCC 7.3.0 and Atmel `AVR-Dx_DFP` 1.
 
 Compared with the preceding field-boundary build, text grows by 22 bytes and BSS by one byte for the parser's ID-length state. Data is unchanged, and the EEPROM initializer remains byte-identical.
 
+## Connected-target programming
+
+The dummy-loaded AVR128DA48 test unit was programmed with the exact `912d24b` Release HEX through the proven chip-erase, flash-write/verify, and complete EEPROM-restore/verify workflow.
+
+Fresh pre-write captures matched the preserved unit baseline:
+
+- EEPROM, 512 bytes: `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401`;
+- fuses, 16 bytes: `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126`.
+
+Avrdude verified all 41,110 input flash bytes twice. Independent post-operation reads then proved:
+
+| Memory | Expected SHA-256 | Post-read SHA-256 | Result |
+| --- | --- | --- | --- |
+| Programmed flash bytes | `19f0ccb3f9b7ff14554327f2aafb8da2696970e1bd1efa9e5be5bab539356574` | `19f0ccb3f9b7ff14554327f2aafb8da2696970e1bd1efa9e5be5bab539356574` | byte-identical |
+| Restored EEPROM | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | byte-identical |
+| Preserved fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | byte-identical |
+
+The first expanded Linkbus test attempt timed out at HTTP after programming, before its WebSocket opened or any test frame was sent. This matches the known Moto/DroidTether association loss after extended Atmel-ICE activity and is not counted as a firmware result.
+
+After restoring the Moto/DroidTether route, the expanded target test passed:
+
+1. HTTP 200 and WebSocket connection succeeded.
+2. Initial `TEMP,33.0C` and `BAT,12.2V` replies established the live AVR path.
+3. A baseline raw `PASS,$TEM?` produced a fresh `TEMP,33.0C` reply.
+4. The existing oversized-field and fourth-field cases remained unanswered through the ESP retry cycle, then each following `$TEM?` produced a fresh reply.
+5. Overlength ID `$AZRX?` remained unanswered through the same retry cycle instead of producing the immediate `VER` response that its pre-fix 16-bit alias would generate.
+6. The following `$TEM?` produced a fresh `TEMP,34.0C` reply, proving next-frame resynchronization after rejecting the overlength ID.
+
+The harness requires at least six seconds of unanswered delay for each malformed frame. This directly distinguishes rejection plus the ESP's existing retry policy from an acknowledged aliased command or query.
+
 ## Remaining verification
 
 - Obtain exact Windows same-source builds and the full Windows host-contract run.
-- Program the connected dummy-loaded test unit through the proven flash/EEPROM-preservation workflow.
-- Prove `$AZRX?` remains unanswered through the ESP retry cycle and that the following read-only temperature query succeeds.
