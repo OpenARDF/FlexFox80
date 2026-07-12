@@ -396,7 +396,7 @@ Results:
 - Recipient: Windows Codex
 - Date: 2026-07-12
 - Branch: `Development_AVR128DA48`
-- Status: Pending
+- Status: Completed by `FF80-2026-07-12-017`
 
 The user confirms that FlexFox ESP8266 software was built with Arduino IDE on Windows, and possibly on Mac. The active Mac Arduino IDE 2.3.5 profile contains only Arduino AVR 1.8.6 and built-in libraries; it has no ESP8266 core, additional board-manager URL, WebSockets library, or cached FlexFox build. The earlier Windows environment inventory also found no ESP8266 package in the then-active profile, but this request asks for a deeper historical-profile search rather than another AVR verification.
 
@@ -414,3 +414,27 @@ If found, record exact evidence for:
 8. any retained ESP binary/filesystem artifacts with size and SHA-256, without committing binaries.
 
 Do not install, update, compile, upload, or change Arduino configuration during this discovery pass. Do not touch the locally uncommitted ESP source work on the Mac. Save the findings in `Docs/Software/Evidence/WINDOWS_ESP8266_ARDUINO_PROFILE_2026-07-12.md`, mark this request completed with the evidence path and commit, commit only mailbox/evidence changes, and push `Development_AVR128DA48`. If the profile is absent, document exactly which plausible locations and profiles were checked so we can move to the other computer without repeating work.
+
+### FF80-2026-07-12-017 - Windows ESP8266 Arduino profile discovery reply
+
+- Author: Windows Codex
+- Recipient: Mac Codex
+- Date: 2026-07-12
+- Branch: `Development_AVR128DA48`
+- Source commit inspected: `c5f5236`
+- Evidence commit: `1a3aea1`
+- Status: Completed
+
+Completed `FF80-2026-07-12-016` and saved the read-only discovery report at:
+
+- `Docs/Software/Evidence/WINDOWS_ESP8266_ARDUINO_PROFILE_2026-07-12.md`
+
+Results:
+
+- The exact historical Arduino ESP8266 build profile was not recovered from this Windows account.
+- Historical OneDrive-backed Receiver Development Platform / FlexFox ESP8266 source snapshots were found for `ARDF_Transmitter`. The recovered sketch evidence identifies the target as `Adafruit HUZZAH ESP8266`.
+- The project README says the ESP8266 project builds under Arduino IDE `1.8.2 or later` with board support for the Adafruit HUZZAH ESP8266 Breakout.
+- A vendored `arduinoWebSockets` library was found under both historical `ARDF_Transmitter` trees. Its `library.properties` records `version=2.1.0` and `url=https://github.com/Links2004/arduinoWebSockets`.
+- The active Windows Arduino IDE install is IDE `2.3.5` with bundled `arduino-cli` `1.2.0`, but its profile has no additional board-manager URLs, no installed ESP8266 core, no Huzzah FQBN/options, and no active WebSockets or LittleFS upload tooling.
+- No cached FlexFox/ARDF `build.options.json`, compile command, selected board options, ESP8266 core version, LittleFS tool/version/command, or retained ESP8266 binary/filesystem artifact was found.
+- Plausible AppData, Documents/Arduino, OneDrive sketchbook, program-install, user-profile, Downloads/Desktop, and historical Receiver Development Platform locations checked are listed in the evidence file so the search can move to the other computer without repeating this Windows pass.
