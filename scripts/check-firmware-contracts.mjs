@@ -95,6 +95,44 @@ if (failures.length > 0) {
 
 process.stdout.write("PASS I2C failure count writes preserve the uint16_t EEPROM width\n");
 
+const rfPowerField = header.match(/\buint16_t\s+rf_power\s*;/);
+if (!rfPowerField) {
+  process.stderr.write("Firmware contract check failed: rf_power is not declared as uint16_t\n");
+  process.exit(1);
+}
+
+const rfPowerUpdateCase = source.match(/case\s+RF_Power\s*:\s*\{([\s\S]*?)\}\s*break\s*;/);
+if (!rfPowerUpdateCase) {
+  process.stderr.write("Firmware contract check failed: RF_Power update case was not found\n");
+  process.exit(1);
+}
+
+const rfPowerFailures = [];
+if (
+  !/avr_eeprom_write_word\s*\(\s*RF_Power\s*,\s*\*\s*\(\s*uint16_t\s*\*\s*\)\s*val\s*\)/.test(
+    rfPowerUpdateCase[1],
+  )
+) {
+  rfPowerFailures.push("RF_Power update does not write its uint16_t width");
+}
+
+if (
+  !/g_80m_power_level_mW\s*=\s*EEPROM_TX_80M_POWER_MW_DEFAULT\s*;\s*avr_eeprom_write_word\s*\(\s*RF_Power\s*,\s*g_80m_power_level_mW\s*\)/.test(
+    source,
+  )
+) {
+  rfPowerFailures.push("RF_Power initialization does not write its uint16_t width");
+}
+
+if (rfPowerFailures.length > 0) {
+  for (const failure of rfPowerFailures) {
+    process.stderr.write(`Firmware contract check failed: ${failure}\n`);
+  }
+  process.exit(1);
+}
+
+process.stdout.write("PASS RF power writes preserve the uint16_t EEPROM width\n");
+
 if (/^\s*#include\s*[<"][^>"\r\n]*\\[^>"\r\n]*[>"]/m.test(driverInitHeader)) {
   process.stderr.write(
     "Firmware contract check failed: driver_init.h contains a Windows-only include path\n",

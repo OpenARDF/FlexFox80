@@ -812,7 +812,7 @@ bool EepromManager::readNonVols(void)
 			avr_eeprom_write_dword(RTTY_offset, g_rtty_offset);
 
 			g_80m_power_level_mW = EEPROM_TX_80M_POWER_MW_DEFAULT;
-			avr_eeprom_write_dword(RF_Power, g_80m_power_level_mW);
+			avr_eeprom_write_word(RF_Power, g_80m_power_level_mW);
 			
 			g_pattern_codespeed = EEPROM_PATTERN_CODE_SPEED_DEFAULT;
 			avr_eeprom_write_byte(Pattern_Code_Speed, g_pattern_codespeed);
