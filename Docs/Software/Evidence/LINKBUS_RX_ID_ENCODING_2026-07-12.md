@@ -2,7 +2,7 @@
 
 ## Status
 
-Mac red-green, direct collision, repository, and exact AVR Release build evidence is complete. Connected-target verification remains open. Routine Windows duplication is not required under the established parity policy.
+Mac red-green, direct collision, repository, exact AVR Release build, and connected-target programming evidence is complete. Live alias-rejection verification remains open. Routine Windows duplication is not required under the established parity policy.
 
 ## Confirmed defect
 
@@ -68,7 +68,25 @@ Two consecutive final-source builds used AVR-GCC 7.3.0 and Atmel `AVR-Dx_DFP` 1.
 
 Compared with the preceding ID-length build, text grows by 72 bytes and BSS by six bytes. Data is unchanged, and the EEPROM initializer remains byte-identical.
 
+## Connected-target programming
+
+The dummy-loaded AVR128DA48 test unit was programmed with the exact `1cb372a` Release HEX through the proven chip-erase, flash-write/verify, and complete EEPROM-restore/verify workflow.
+
+Fresh pre-write captures matched the preserved unit baseline:
+
+- EEPROM, 512 bytes: `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401`;
+- fuses, 16 bytes: `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126`.
+
+Avrdude verified all 41,182 input flash bytes twice. Independent post-operation reads then proved:
+
+| Memory | Expected SHA-256 | Post-read SHA-256 | Result |
+| --- | --- | --- | --- |
+| Programmed flash bytes | `8e38a46062a9266d010e936ec4e34a470b780d1f8d4bdcf5a4dd2787b421869c` | `8e38a46062a9266d010e936ec4e34a470b780d1f8d4bdcf5a4dd2787b421869c` | byte-identical |
+| Restored EEPROM | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | byte-identical |
+| Preserved fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | byte-identical |
+
+The first four-case Linkbus test attempt timed out at HTTP after programming, before its WebSocket opened or any test frame was sent. This matches the known Moto/DroidTether association loss after extended Atmel-ICE activity and is not counted as a firmware result.
+
 ## Remaining verification
 
-- Program the connected dummy-loaded test unit through the proven flash/EEPROM-preservation workflow.
 - Prove `$TYR?` remains unanswered through the ESP retry cycle and that the following read-only temperature query succeeds.
