@@ -102,7 +102,14 @@ The checked-in Microchip Studio project records:
 - `ResetRule`: `0`
 - `BootSegment`: `2`
 
-No explicit fuse byte values or normal operator programming procedure were found in the checked-in project files. No hardware programmer was queried during this evidence pass.
+Follow-up read-only tool probe:
+
+- `atprogram.exe` path: `C:\Program Files (x86)\Atmel\Studio\7.0\atbackend\atprogram.exe`
+- `atprogram.exe --version`: `Version 6.2.1148.0`
+- `atprogram.exe list`: `simulator       No serialnumber found`
+- `atprogram help read` confirms the supported fuse read option is `read --fuses`.
+
+No attached Atmel-ICE or target was visible to `atprogram`, so live fuse bytes could not be read. No explicit fuse byte values or normal operator programming procedure were found in the checked-in project files.
 
 ## ESP8266 / Arduino environment
 
@@ -112,16 +119,55 @@ No explicit fuse byte values or normal operator programming procedure were found
 - Bundled `arduino-cli`: `C:\Program Files\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe`
 - `arduino-cli version`: `arduino-cli Version: 1.2.0 Commit: 9c495211 Date: 2025-02-24T15:57:34Z`
 - `arduino-cli.exe` SHA-256: `1B32BA44BFD00CE207026EEE1DE431F77BAA749DD54D9E2518C3676E77B7240C`
-- `arduino-cli config dump`: `{}`
+- Arduino IDE CLI config file: `C:\Users\charl\.arduinoIDE\arduino-cli.yaml`
+- Configured board-manager additional URLs: empty list.
 - `arduino-cli core list`: only `arduino:avr` `1.8.6` installed.
 - `arduino-cli lib list`: `No libraries installed.`
 - `arduino-cli core search esp8266`: `No platforms matching your search.`
 - `arduino-cli board listall huzzah`: no board FQBN found.
 
-The ESP source identifies the hardware target as `Adafruit HUZZAH ESP8266` in `Software/Huzzah/ARDF_Transmitter/ARDF_Transmitter.ino` and includes `LittleFS.h`, `WebSocketsServer.h`, and `WebSocketsClient.h`. This Windows profile does not currently contain a known-good ESP8266 Arduino core, selected board-option values, installed `arduinoWebSockets`/WebSockets library, LittleFS upload tool, or normal compile/upload/filesystem commands. Those items still need operator evidence or an older Arduino installation/profile if exact reproduction is required.
+The ESP source identifies the hardware target as `Adafruit HUZZAH ESP8266` in `Software/Huzzah/ARDF_Transmitter/ARDF_Transmitter.ino` and includes `LittleFS.h`, `WebSocketsServer.h`, and `WebSocketsClient.h`. This Windows profile does not currently contain a known-good ESP8266 Arduino core, selected board-option values, installed `arduinoWebSockets`/WebSockets library, LittleFS upload tool, or normal compile/upload/filesystem commands.
+
+Follow-up searches checked:
+
+- `C:\Users\charl\AppData\Local\Arduino15`
+- `C:\Users\charl\.arduinoIDE`
+- `C:\Users\charl\AppData\Roaming\Arduino IDE`
+- `C:\Users\charl\Documents\Arduino`
+- `C:\Users\charl\OneDrive\Documents\Arduino`
+- `C:\Program Files\Arduino IDE`
+
+Those locations contained only Arduino AVR packages and built-in Arduino libraries, with no ESP8266 platform, Huzzah FQBN, WebSockets library, or LittleFS upload plugin. Arduino IDE logs from 2025-04-02 through 2026-04-21 also show empty board-manager additional URLs and Arduino AVR installation/activity, not a FlexFox80 ESP8266 build. The recent-sketches file points to `C:\Users\charl\Documents\GitHub\Arducon\Software\Arduino\Arducon`, not FlexFox80. Exact ESP reproduction still requires operator evidence or an older Arduino installation/profile.
 
 The Arduino CLI probe downloaded and installed its missing built-in discovery helper tools under the Arduino user data area. No repository files were changed by that probe.
 
 ## Known-good deployed artifacts
 
 No reliable deployed AVR or ESP artifact provenance was available in this pass. The repository contains historical tracked Debug outputs, but this report does not claim that those files are deployed or known-good artifacts.
+
+## Verification follow-up
+
+The repository checks were rerun on `Development_AVR128DA48` after Mac commit `0b923ac` added host characterization tests.
+
+The Windows shell does not have literal `jq` or `c++` commands on `PATH`. A temporary ignored shim directory under `Software/AVR128DA48/tmp/check-shims/` was used only for local verification:
+
+- `c++` delegates to installed LLVM `clang++.exe` `22.1.1`.
+- `jq empty <files>` delegates to Node JSON parsing for the repository policy script.
+
+`just check` with default sanitizer settings reached the host-test link step but failed because this LLVM install is missing ARM64 Windows ASan runtime libraries:
+
+```text
+clang_rt.asan_dynamic.lib: no such file or directory
+clang_rt.asan_static_runtime_thunk.lib: no such file or directory
+```
+
+The host-test README allows disabling sanitizers when the available compiler does not support them. With `HOST_TEST_SANITIZERS=0`, `just check` passed:
+
+```text
+PASS initial_state_is_empty
+PASS fifo_storage_is_uppercased
+PASS full_buffer_overwrites_oldest_entry
+PASS indices_wrap_without_changing_fifo_order
+PASS reset_clears_data_and_busy_state
+All AVR circular buffer characterization tests passed
+```
