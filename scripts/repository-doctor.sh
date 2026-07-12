@@ -38,4 +38,8 @@ if [ -n "${AVR_TOOLCHAIN_ROOT:-}" ] && [ -n "${AVR_DFP_ROOT:-}" ]; then
 else
 	printf '%s\n' "AVR build: wrapper ready; AVR_TOOLCHAIN_ROOT and AVR_DFP_ROOT are not set"
 fi
-printf '%s\n' "ESP build: deferred until Step A2 pins the board core and libraries"
+if command -v arduino-cli >/dev/null 2>&1 || [ -x "${ARDUINO_CLI:-}" ] || [ -x "/Applications/Arduino IDE.app/Contents/Resources/app/lib/backend/resources/arduino-cli" ]; then
+	printf '%s\n' "ESP build: pinned wrapper ready; run just esp-build"
+else
+	printf '%s\n' "ESP build: wrapper ready; install arduino-cli/Arduino IDE or set ARDUINO_CLI"
+fi

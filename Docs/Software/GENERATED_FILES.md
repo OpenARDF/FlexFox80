@@ -56,7 +56,7 @@ The repository currently tracks historical Debug output and IDE state, including
 
 The tracked KiCad `fp-info-cache` is also generated cache data. Its 2022 history contains a vendor PDF URL whose `hkey` query parameter triggers the generic API-key detector. `.gitleaksignore` suppresses only that exact historical fingerprint; it does not suppress the file, query parameters, or generic-key rule broadly.
 
-These are generated artifacts, not hand-maintained source. Adding ignore rules does not remove already tracked files. Do not untrack them until Step A2 supplies a reproducible build and a dedicated cleanup commit is reviewed.
+These are generated artifacts, not hand-maintained source. Adding ignore rules does not remove already tracked files. Reproducible wrappers now exist, but do not untrack historical artifacts until a dedicated cleanup commit evaluates their remaining evidence value.
 
 Generated release images should eventually be published as release assets with hashes rather than committed as ordinary source.
 

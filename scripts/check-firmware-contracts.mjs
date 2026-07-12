@@ -95,6 +95,20 @@ const ds3231HeaderPath = join(
   "include",
   "ds3231.h",
 );
+const espMainPath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "ARDF_Transmitter.ino",
+);
+const espHeaderPath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "Transmitter.h",
+);
 const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
@@ -110,6 +124,8 @@ const goertzel = readFileSync(goertzelPath, "utf8");
 const avrMain = readFileSync(avrMainPath, "utf8");
 const ds3231 = readFileSync(ds3231Path, "utf8");
 const ds3231Header = readFileSync(ds3231HeaderPath, "utf8");
+const espMain = readFileSync(espMainPath, "utf8");
+const espHeader = readFileSync(espHeaderPath, "utf8");
 const declaration = source.match(/extern\s+volatile\s+Fox_t\s+g_fox\s*\[\s*([^\]]+?)\s*\]\s*;/);
 
 if (!declaration) {
@@ -485,3 +501,74 @@ if (
 }
 
 process.stdout.write("PASS clone time writes require RTC write success and emit an epoch readback\n");
+
+const requiredEspCloneFrames = [
+  '#define SLAVE_SYNC_READY "S"',
+  '#define LB_MESSAGE_ESP_CLONE_QUIET "$ESP,C;"',
+  '#define LB_MESSAGE_ESP_CLONE_SYNC "$ESP,S;"',
+  '#define LB_MESSAGE_ESP_CLONE_RESUME "$ESP,R;"',
+];
+const missingEspCloneFrames = requiredEspCloneFrames.filter(
+  (frame) => !espHeader.includes(frame),
+);
+if (missingEspCloneFrames.length > 0) {
+  process.stderr.write(
+    `Firmware contract check failed: ESP clone protocol lacks ${missingEspCloneFrames.join(", ")}\n`,
+  );
+  process.exit(1);
+}
+
+if (
+  !espMain.includes("setAVRCloneQuietMode(true)") ||
+  !espMain.includes("setAVRCloneQuietMode(false)") ||
+  !espMain.includes("serviceMasterCloneHandshake()") ||
+  !espMain.includes("g_LBOutputBuff->put(LB_MESSAGE_ESP_CLONE_SYNC)") ||
+  !espMain.includes("endMasterCloneSession()") ||
+  !espMain.includes("millis() - g_slaveSyncReadyStartedMillis")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: ESP clone session does not drain, quiet, confirm, and resume deterministically\n",
+  );
+  process.exit(1);
+}
+
+if (
+  !espMain.includes("g_cloneClockVerified") ||
+  !/g_cloneClockVerified\s*&&\s*g_LBOutputBuff->empty\(\)/.test(espMain) ||
+  !espMain.includes('String msgOut = String(String(LB_MESSAGE_TIME_SET) + p + ",C;")') ||
+  !espMain.includes("g_LBOutputBuff->put(msgOut)")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: ESP clone clock completion is not tied to a queued, verified RTC readback\n",
+  );
+  process.exit(1);
+}
+
+if (
+  !espMain.includes("cloneTimeReply") ||
+  !espMain.includes("type.equals(LB_MESSAGE_NACK)") ||
+  !espMain.includes('payload.startsWith("C,")')
+) {
+  process.stderr.write(
+    "Firmware contract check failed: ESP clone mode cannot consume NAK and clone-specific time readback\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS ESP clone handshake drains queues and requires matching RTC readback\n");
+
+if (
+  espMain.includes("g_webSocketServer.isRunning()") ||
+  (espMain.match(/g_webSocketServer\.close\(\)/g) || []).length !== 1 ||
+  !espMain.includes("bool g_webSocketServerStarted = false;") ||
+  !espMain.includes("void stopWebSocketServer()") ||
+  !espMain.includes("g_webSocketServerStarted = true;") ||
+  !espMain.includes("g_webSocketServerStarted = false;")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: ESP WebSocket lifecycle depends on an untracked library extension\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS ESP WebSocket lifecycle uses source-owned state\n");

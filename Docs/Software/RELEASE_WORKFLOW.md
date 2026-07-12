@@ -51,7 +51,7 @@ A firmware release from `AVR128DA48` requires:
 - rollback artifacts and flashing instructions;
 - user-readable release notes.
 
-Until Step A2 establishes reproducible wrappers, checked-in Debug artifacts are historical evidence, not proof of a current release build.
+Checked-in Debug artifacts remain historical evidence, not proof of a current release build. Use the pinned AVR and ESP wrappers for current build evidence, and preserve the explicit gap between the qualified ESP migration baseline and any unrecovered deployed ESP artifact.
 
 ## Release identity
 
@@ -70,7 +70,7 @@ Do not identify a release by a checked-in binary timestamp alone.
 
 - Build products belong in a temporary output directory or release package, not ordinary source commits.
 - Release images should be published as release assets with checksums.
-- Existing tracked AVR Debug artifacts remain in place until Step A2 proves clean reproducible builds and a dedicated cleanup is reviewed.
+- Existing tracked AVR Debug artifacts remain in place until a dedicated cleanup evaluates and preserves their historical evidence value.
 - Manufacturing outputs such as intentional Gerber packages are not firmware build products and must not be hidden by overly broad ignore rules.
 
 ## AVR programming and rollback

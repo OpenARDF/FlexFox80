@@ -13,7 +13,7 @@ The project operator identified Adafruit's [Using Arduino IDE](https://learn.ada
 - guide export timestamp: 2024-07-16;
 - the PDF remains outside Git and is identified by hash only.
 
-This evidence is stronger than a guessed modern configuration, but it is still a setup-instruction baseline rather than a recovered FlexFox `build.options.json` or compile command. Values shown only in the guide's Tools-menu screenshots are labeled accordingly.
+The operator confirmed that Arduino IDE recognizes the product and that this procedure describes how the IDE was configured for programming the HUZZAH. It is therefore the authoritative FlexFox board-configuration baseline. It is not, by itself, evidence of the exact historical core/library versions or a deployed binary.
 
 ## Recovered setup profile
 
@@ -39,12 +39,8 @@ The guide's historical Tools-menu screenshot labels the one-megabyte filesystem 
 
 Do not substitute a SPIFFS image workflow for the current LittleFS source merely because the guide screenshot uses that older label. The core version and compatible LittleFS image command remain required before Checkpoint A2 can close.
 
-## Remaining unknowns
+## Qualified Mac implementation
 
-- exact ESP8266 Arduino core version;
-- exact FQBN spelling for that core version, although the board menu identity is known;
-- whether every screenshot-visible default was retained in the final FlexFox build;
-- exact LittleFS image-generation and upload tool/version;
-- a retained ESP binary/filesystem image or cached compile command for comparison.
+The recovered configuration has now been implemented in the pinned `just esp-build` workflow using ESP8266 core 3.1.2, FQBN `esp8266:esp8266:huzzah`, WebSockets 2.7.2, and the core-bundled LittleFS image tool. The sketch builds cleanly and repeatably to the same flashable binary on Mac. See [Mac ESP8266 qualified build baseline](MAC_ESP8266_BUILD_BASELINE_2026-07-12.md).
 
-Known dependency evidence remains `arduinoWebSockets` 2.1.0 from the Windows historical-source recovery. Together, the Adafruit setup instructions and Windows discovery now leave the ESP8266 core version and LittleFS-era tooling as the principal reproducibility gaps.
+The core/library combination is a deliberately qualified migration baseline because the precise historical tool versions and deployed artifact remain unavailable. Historical WebSockets 2.1.0 cannot compile the checked-in source, and 2.1.1 is incompatible with the qualified current core. This distinction preserves the mature product's provenance boundary while permitting testable ESP changes.

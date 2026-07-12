@@ -59,7 +59,6 @@ wifi-clock-sync-test:
 wifi-linkbus-bounds-test:
     node ./scripts/test-flexfox-linkbus-rx-bounds.mjs
 
-# Step A2 will replace this explicit boundary with a pinned ESP8266 build.
+# Build the ESP8266 sketch and LittleFS image with the qualified pinned profile.
 esp-build:
-    @echo "ESP8266 build wrapper is not configured yet; complete Step A2 before firmware changes."
-    @exit 2
+    node ./scripts/build-esp8266.mjs

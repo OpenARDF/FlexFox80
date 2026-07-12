@@ -200,6 +200,7 @@ typedef enum
 #define SLAVE_FREE "0"
 #define SLAVE_CONFIRMED "1"
 #define SLAVE_CONNECT "C"
+#define SLAVE_SYNC_READY "S"
 #define SLAVE_WAITING_FOR_FILES "WFF"
 #define SLAVE_NO_MORE_FILES "NMF"
 
@@ -218,6 +219,9 @@ typedef enum
 #define LB_MESSAGE_ESP_IDLE "$ESP,2;"               /* ESP is idle */
 #define LB_MESSAGE_ESP_SHUTDOWN "$ESP,3;"           /* Shut down in 3 seconds */
 #define LB_MESSAGE_ESP_KEEPALIVE "$ESP,Z;"          /* Keep alive for 2 minutes */
+#define LB_MESSAGE_ESP_CLONE_QUIET "$ESP,C;"        /* Suppress unsolicited AVR reports during cloning */
+#define LB_MESSAGE_ESP_CLONE_SYNC "$ESP,S;"         /* Report time once, at the next RTC edge */
+#define LB_MESSAGE_ESP_CLONE_RESUME "$ESP,R;"       /* Resume normal AVR reports */
 #define LB_MESSAGE_TIME "TIM"
 #define LB_MESSAGE_TIME_SET "$TIM,"                 /* Prefix for sending RTC time setting to ATMEGA */
 #define LB_MESSAGE_TIME_REQUEST "$TIM?"             /* Request the current time */

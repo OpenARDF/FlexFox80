@@ -210,6 +210,6 @@ The ESP8266 LittleFS is the higher-level source for event files. The AVR EEPROM 
 
 The AVR project targets AVR128DA48 using Atmel Studio 7, AVR-GCC 7.3.0, and the Microchip AVR-Dx device pack. The checked-in generated Makefile contains Windows-specific absolute paths.
 
-The ESP8266 source is an Arduino sketch using ESP8266 Wi-Fi, WebSocket, and LittleFS libraries. No `arduino-cli` or PlatformIO configuration is currently checked in.
+The ESP8266 source is an Arduino sketch using ESP8266 Wi-Fi, WebSocket, and LittleFS libraries. `just esp-build` supplies the pinned Arduino CLI build and LittleFS image workflow; generated tools and artifacts remain under the ignored `Software/Huzzah/tmp/` tree.
 
-There is no repository-level test runner, CI workflow, or portable build wrapper. Generated AVR objects, dependency files, binaries, map/listing files, and IDE state are tracked in Git. These constraints are important when interpreting historical diffs or preparing reproducible validation.
+The repository provides `just test`, pinned AVR and ESP build wrappers, and local policy/document checks, but no hosted CI workflow. Historical generated AVR objects, dependency files, binaries, map/listing files, and IDE state remain tracked in Git. These constraints are important when interpreting historical diffs or preparing reproducible validation.

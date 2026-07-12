@@ -41,6 +41,7 @@ expect_eol() {
 
 expect_ignored "Software/AVR128DA48/.vs/example.suo"
 expect_ignored "Software/AVR128DA48/tmp/verification.log"
+expect_ignored "Software/Huzzah/tmp/esp-build/firmware.bin"
 expect_ignored "KiCad/FlexFox80-backups/future.zip"
 expect_visible "KiCad/Gerber/future-manufacturing.zip"
 expect_visible "KiCad/future-symbols.lib"
@@ -60,7 +61,7 @@ then
 fi
 
 tracked_generated=$(git ls-files -ci --exclude-standard | wc -l | tr -d ' ')
-printf '%s\n' "Tracked files matching generated/IDE ignore rules: $tracked_generated (cleanup deferred to Step A2)"
+printf '%s\n' "Tracked files matching generated/IDE ignore rules: $tracked_generated (cleanup requires dedicated review)"
 
 jq empty KiCad/FlexFox80.kicad_prl KiCad/FlexFox80.kicad_pro
 git diff --check

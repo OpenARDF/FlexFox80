@@ -1,6 +1,6 @@
 # FlexFox80 Hardening and Bug Plan
 
-**Plan status:** Step A1 is complete on `Development_AVR128DA48`; the exact AVR build is reproducible on Mac and Windows while ESP8266 pinning remains open in Step A2; characterization-first TDD and narrow firmware hardening slices are active.
+**Plan status:** Step A1 is complete on `Development_AVR128DA48`; the exact AVR build is reproducible on Mac and Windows, a qualified pinned ESP8266 migration build is available on Mac, and characterization-first TDD plus narrow firmware hardening slices are active.
 
 ## Purpose
 
@@ -136,8 +136,8 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [x] The workflow states which branch is safe for active hardening.
 - [x] Existing KiCad or other unrelated changes can remain present without entering software commits.
 - [x] Line-ending rules were checked across the tracked tree; only `linkbus.cpp` required a dedicated behavior-neutral normalization.
-- [x] Generated-file cleanup is explicitly deferred until Step A2; the current policy reports the 60 tracked generated/IDE artifacts without removing them.
-- [x] Routine Step A1 commands have names and expected outcomes; AVR and ESP builds fail clearly as deferred rather than claiming verification.
+- [x] Generated-file cleanup was deferred pending reproducible builds; those builds now exist, but cleanup still requires a dedicated evidence-preservation review.
+- [x] Routine Step A1 commands have names and expected outcomes; deferred build commands initially failed clearly, and Step A2 has since replaced them with pinned wrappers.
 - [x] Another thread can read the workflow and correctly explain how to start, verify, commit, and hand off a change.
 
 **Step A1 evidence:**
@@ -147,7 +147,7 @@ The root `README.md` remains user-facing and is not the location for these devel
 - `.gitattributes`, `.editorconfig`, and selective `.gitignore` rules protect source and manufacturing assets without importing unsafe global `*.lib` or `*.zip` rules.
 - `just check` runs the repository doctor, Markdown link validation, ignore/attribute safeguards, KiCad JSON parsing, and diff hygiene.
 - `just secrets` completes successfully on the current checkout.
-- Firmware builds and generated-artifact cleanup remain Step A2 work.
+- Firmware builds moved to Step A2 and are now reproducible; historical generated-artifact cleanup remains separately reviewable work.
 
 **Stop condition:** No firmware edits begin until the branch-role decision and narrow-commit policy are settled.
 
@@ -181,16 +181,17 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [x] Run the AVR wrapper with exact-version Mac and Windows inputs. The accumulated `3bc10a5` snapshot builds deterministically and warning-free on both hosts; HEX, EEPROM, resource totals, and the 274-byte layout match.
 - [x] The Release/Debug persisted-enum ABI mismatch is removed: explicit `uint16_t` storage, a source-layout regression, an AVR compile-time assertion, and an exact Mac linker map all preserve the deployed 274-byte EEPROM schema.
 - [x] The operator-identified Adafruit setup procedure recovers the Feather HUZZAH board definition, 80 MHz CPU, 115200 upload, 4 MB/1 MB filesystem layout, erase/debug/lwIP selections, and serial programming procedure; Windows historical source recovers `arduinoWebSockets` 2.1.0.
-- [ ] Pin the ESP8266 build after recovering or deliberately qualifying the ESP8266 core and LittleFS tooling, then confirm the reconstructed board options in a clean build.
+- [x] The operator-confirmed Adafruit profile is implemented as a qualified migration baseline using ESP8266 core 3.1.2, WebSockets 2.7.2, and the core-bundled LittleFS tool. The complete sketch builds warning-free; two independent build directories produced an identical flashable binary.
+- [x] The historical WebSockets boundary is explicit: 2.1.0 lacks APIs used by the checked-in source, 2.1.1 fails against the selected core's BearSSL API, and an untracked `isRunning()` extension was replaced with source-owned lifecycle state.
 
 **Checkpoint A2 — Build baseline ready:**
 
-- [ ] A clean checkout can build both processors from documented commands.
-- [ ] Repeated builds are deterministic or all known nondeterminism is explained.
-- [ ] Warnings are captured and triaged rather than hidden.
-- [ ] Baseline resource and artifact hashes are recorded.
-- [ ] Build outputs are not accidentally committed.
-- [ ] The currently deployed firmware identity can be related to source, or the gap is explicitly documented.
+- [x] A fresh isolated Arduino profile bootstraps the pinned dependencies and builds through the documented command; both processors now have repository wrappers.
+- [x] The flashable ESP `.bin` is deterministic across independent build paths; ELF/map path sensitivity and LittleFS image-hash variation are documented.
+- [x] Warnings are captured and triaged rather than hidden.
+- [x] Baseline resource and artifact hashes are recorded.
+- [x] Build outputs are written beneath ignored processor-specific temporary trees.
+- [x] AVR deployed/source identity is established; the unavailable deployed ESP identity is explicitly separated from the qualified migration baseline.
 
 **Bug reassessment:** Compare reported bugs with compiler warnings, stale artifacts, version mismatches, and processor-to-processor firmware compatibility.
 
@@ -640,8 +641,8 @@ The active diversion is Path B issue `B-TIME-01`, the rare wireless clone/time-c
 
 For active `B-TIME-01`, measure the master and targets through the same read-only WiFi path, preserving unit identity, elapsed time since setting, median offset, observation spread, and RTC aging value before changing calibration. Determine whether an outlier is wrong immediately after cloning, drifts gradually, or jumps by integral seconds.
 
-The first deterministic AVR slice is documented in [AVR clone synchronization controls](Evidence/AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). Its exact build and target memory identity pass; live protocol assertions remain pending because the Moto lost its onward FlexFox route after programming. ESP integration must require a queued clock command, a matching clone-specific RTC readback, and fail-safe quiet-mode cleanup before this issue can be considered corrected.
+The deterministic AVR slice is documented in [AVR clone synchronization controls](Evidence/AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). [ESP clone synchronization controls](Evidence/ESP_CLONE_SYNC_CONTROLS_2026-07-12.md) now quiet both AVRs, wait for the master's next-edge report, queue the target write, require an exact clone-specific RTC readback, and resume reports on cleanup. The pinned Mac ESP build passes; hardware flashing and live end-to-end clone assertions remain pending.
 
-When Path A resumes, the next ordered defect is the confirmed ESP role-index extraction error, but implementation must wait for a reproducible ESP toolchain. Proceed by locating the known-good ESP8266 core and LittleFS tooling or explicitly approving a newly pinned migration environment with its own compatibility qualification; the recovered Adafruit board profile and `arduinoWebSockets` 2.1.0 then provide the starting configuration.
+When Path A resumes, the next ordered defect is the confirmed ESP role-index extraction error. The qualified ESP toolchain removes its former build blocker, but implementation remains behind completion or an explicit re-bookmarking of the active clone-time investigation.
 
-If ESP environment evidence remains unavailable, the next AVR path is numeric input rejection. That work must begin by defining invalid, negative, overflow, and partial-number behavior for time, interval, frequency, power, and aging fields; mature state-mutating behavior must not be guessed or changed as one broad cleanup.
+The next AVR path is numeric input rejection. That work must begin by defining invalid, negative, overflow, and partial-number behavior for time, interval, frequency, power, and aging fields; mature state-mutating behavior must not be guessed or changed as one broad cleanup.

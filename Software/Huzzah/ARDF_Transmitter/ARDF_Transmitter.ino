@@ -113,6 +113,7 @@ ESP8266WebServer g_http_server(80);                         /* HTTP server on po
 WebSocketsServer g_webSocketServer = WebSocketsServer(81);  /* create a websocket server on port 81 */
 String g_AP_NameString;
 WebSocketsClient g_webSocketLocalClient;
+bool g_webSocketServerStarted = false;
 
 typedef struct webSocketClient
 {
@@ -133,6 +134,7 @@ String g_softAP_IP_addr;
 
 void handleRoot();          /* function prototypes for HTTP handlers */
 void handleNotFound();
+void stopWebSocketServer();
 
 /*
     Main Program Support
@@ -149,6 +151,15 @@ bool g_slave_received_new_event_file = false;
 int g_slave_socket_number = -1;
 int g_files_sent_to_slave = 0;
 bool g_onlyUpdateEvent = false;
+bool g_slaveCloneQuietActive = false;
+bool g_slaveSyncReadySent = false;
+unsigned long g_slaveSyncReadyStartedMillis = 0;
+unsigned long g_cloneClockExpected = 0;
+unsigned long g_cloneClockWaitStartedMillis = 0;
+bool g_cloneClockVerified = false;
+bool g_cloneClockReadbackMismatch = false;
+bool g_masterCloneQuietPending = false;
+bool g_masterCloneQuietActive = false;
 
 #define NO_ACTIVITY_TIMEOUT (60 * 5)
 int g_noActivityTimeoutSeconds = NO_ACTIVITY_TIMEOUT;
@@ -198,6 +209,9 @@ bool sendEventToATMEGA(String * errorTxt);
 bool loadActiveEventFile(String updatedFileName);
 int numberOfEventsScheduled(unsigned long epoch);
 void shutdownSlave(void);
+bool setAVRCloneQuietMode(bool quiet);
+void serviceMasterCloneHandshake(void);
+void endMasterCloneSession(void);
 
 void setup()
 {
@@ -1040,12 +1054,95 @@ void loop()
   lights->setLEDs(LEDS_OFF, g_LEDs_enabled);
 }
 
+bool setAVRCloneQuietMode(bool quiet)
+{
+  unsigned long started = millis();
+
+  while (!g_LBOutputBuff->empty() || g_linkBusAckPending)
+  {
+    g_webSocketLocalClient.loop();
+    linkbusLoop();
+    yield();
+
+    if ((unsigned long)(millis() - started) > 12000)
+    {
+      return false;
+    }
+  }
+
+  g_linkBusAckTimoutOccurred = false;
+  g_linkBusNacksReceived = 0;
+  g_LBOutputBuff->put(quiet ? LB_MESSAGE_ESP_CLONE_QUIET : LB_MESSAGE_ESP_CLONE_RESUME);
+  started = millis();
+
+  while (!g_LBOutputBuff->empty() || g_linkBusAckPending)
+  {
+    g_webSocketLocalClient.loop();
+    linkbusLoop();
+    yield();
+
+    if (g_linkBusAckTimoutOccurred || g_linkBusNacksReceived || ((unsigned long)(millis() - started) > 12000))
+    {
+      return false;
+    }
+  }
+
+  g_slaveCloneQuietActive = quiet;
+  return !g_linkBusAckTimoutOccurred && !g_linkBusNacksReceived;
+}
+
+void endMasterCloneSession()
+{
+  if (g_masterCloneQuietPending || g_masterCloneQuietActive)
+  {
+    g_LBOutputBuff->put(LB_MESSAGE_ESP_CLONE_RESUME);
+  }
+
+  g_masterCloneQuietPending = false;
+  g_masterCloneQuietActive = false;
+  g_master_has_connected_slave = false;
+  g_slave_socket_number = -1;
+}
+
+void serviceMasterCloneHandshake()
+{
+  if (!g_masterCloneQuietPending)
+  {
+    return;
+  }
+
+  if (g_linkBusAckTimoutOccurred || g_linkBusNacksReceived)
+  {
+    if (g_slave_socket_number >= 0)
+    {
+      String msg = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_FREE;
+      g_webSocketServer.sendTXT(g_slave_socket_number, stringObjToConstCharString(&msg), msg.length());
+    }
+    endMasterCloneSession();
+    return;
+  }
+
+  if (g_LBOutputBuff->empty() && !g_linkBusAckPending)
+  {
+    g_masterCloneQuietPending = false;
+    g_masterCloneQuietActive = true;
+
+    if (g_slave_socket_number >= 0)
+    {
+      String msg = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_CONFIRMED;
+      g_webSocketServer.sendTXT(g_slave_socket_number, stringObjToConstCharString(&msg), msg.length());
+    }
+  }
+}
+
 void shutdownSlave()
 {
   int times2try = 2;
   bool ready = false;
   unsigned long last = millis();
   int state = 0;
+
+  setAVRCloneQuietMode(false);
 
   while (!ready)
   {
@@ -1211,6 +1308,12 @@ bool clientConnectLoop()
   bool busy = true;
   static unsigned long last = 0;
 
+  if (!setAVRCloneQuietMode(true))
+  {
+    setAVRCloneQuietMode(false);
+    return true;
+  }
+
   while (busy)
   {
     g_webSocketLocalClient.loop();
@@ -1238,6 +1341,8 @@ bool clientConnectLoop()
             if (!g_slave_released) /* Success */
             {
               times2try = 5;
+              g_slaveSyncReadySent = false;
+              g_slaveSyncReadyStartedMillis = millis();
               g_webSocketSlaveState = WSClientSyncClock;
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -1278,8 +1383,19 @@ bool clientConnectLoop()
           else
           {
             g_linkBusAckTimoutOccurred = false;
+            g_linkBusNacksReceived = 0;
             times2try = 5;
-            /* Wait in this state until an incoming sync message changes the state */
+            if ((unsigned long)(millis() - g_slaveSyncReadyStartedMillis) > 12000)
+            {
+              g_webSocketSlaveState = WSClientClose;
+            }
+            else if (!g_slaveSyncReadySent)
+            {
+              msg = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_SYNC_READY;
+              g_webSocketLocalClient.sendTXT(stringObjToConstCharString(&msg));
+              g_slaveSyncReadySent = true;
+            }
+            /* Wait in this state until the master's next-edge sync message arrives. */
           }
         }
         break;
@@ -1298,7 +1414,7 @@ bool clientConnectLoop()
             }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
           }
-          else if (g_LBOutputBuff->empty() && !g_linkBusAckPending && !g_linkBusAckTimoutOccurred)
+          else if (g_cloneClockVerified && g_LBOutputBuff->empty() && !g_linkBusAckPending && !g_linkBusAckTimoutOccurred && !g_linkBusNacksReceived)
           {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
             if (g_debug_prints_enabled)
@@ -1309,27 +1425,16 @@ bool clientConnectLoop()
             g_webSocketSlaveState = WSClientExitSuccess;
             failure = false;
           }
-          else
+          else if (g_cloneClockReadbackMismatch || g_linkBusAckTimoutOccurred || g_linkBusNacksReceived || ((unsigned long)(millis() - g_cloneClockWaitStartedMillis) > 10000))
           {
-            if (times2try)
-            {
-              if ((unsigned long)(millis() - last) > 1000)
-              {
-                last = millis();
-                times2try--;
-              }
-            }
-            else
-            {
-              g_webSocketSlaveState = WSClientClose;
+            g_webSocketSlaveState = WSClientClose;
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
-              if (g_debug_prints_enabled)
-              {
-                Serial.println("WSc: ACK timeout");
-              }
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+            if (g_debug_prints_enabled)
+            {
+              Serial.println("WSc: verified clock readback failed");
             }
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
           }
         }
         break;
@@ -1412,6 +1517,11 @@ bool clientConnectLoop()
         }
         break;
     }
+  }
+
+  if (failure && g_slaveCloneQuietActive)
+  {
+    setAVRCloneQuietMode(false);
   }
 
   return (failure);
@@ -2104,7 +2214,7 @@ void httpWebServerLoop(int blinkRate)
 
       if (g_numberOfWebClients == 0)
       {
-        g_webSocketServer.close(); /* ensure all web socket clients are disconnected - this might not happen if WiFi connection was broken */
+        stopWebSocketServer(); /* ensure all web socket clients are disconnected - this might not happen if WiFi connection was broken */
         g_numberOfSocketClients = 0;
         holdWebSocketClients = 0;
         g_LBOutputBuff->put(LB_MESSAGE_ESP_IDLE);
@@ -2122,6 +2232,7 @@ void httpWebServerLoop(int blinkRate)
 #else
     linkbusLoop();
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+    serviceMasterCloneHandshake();
 
     relativeTimeSeconds = millis() / 1000;
 
@@ -3213,12 +3324,13 @@ void startLittleFS()
 
 void startWebSocketServer()
 { /* Start a WebSocket server */
-  if (g_webSocketServer.isRunning())
+  if (g_webSocketServerStarted)
   {
     return;                                 /* Don't attempt to start a webSocket server that has already begun */
   }
 
   g_webSocketServer.begin();                  /* start the websocket server */
+  g_webSocketServerStarted = true;
   /*  g_webSocketServer.beginSSL(); // start secure wss support? */
   g_webSocketServer.onEvent(webSocketServerEvent);  /* if there's an incoming websocket message, go to function 'webSocketServerEvent' */
 
@@ -3228,6 +3340,17 @@ void startWebSocketServer()
     Serial.println("WebSocket server start tasks complete.");
   }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+}
+
+void stopWebSocketServer()
+{
+  if (!g_webSocketServerStarted)
+  {
+    return;
+  }
+
+  g_webSocketServer.close();
+  g_webSocketServerStarted = false;
 }
 
 void webSocketClientEvent(WStype_t type, uint8_t * payload, size_t length)
@@ -3360,6 +3483,12 @@ void webSocketClientEvent(WStype_t type, uint8_t * payload, size_t length)
                 {
                   g_timeOfDayFromTx = t;
                   p = convertEpochToTimeString(g_timeOfDayFromTx);
+                  g_cloneClockExpected = g_timeOfDayFromTx;
+                  g_cloneClockVerified = false;
+                  g_cloneClockReadbackMismatch = false;
+                  g_cloneClockWaitStartedMillis = millis();
+                  g_linkBusAckTimoutOccurred = false;
+                  g_linkBusNacksReceived = 0;
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
                   if (g_debug_prints_enabled)
@@ -3368,8 +3497,8 @@ void webSocketClientEvent(WStype_t type, uint8_t * payload, size_t length)
                   }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
-                  String msgOut = String(String(LB_MESSAGE_TIME_SET) + p + ";");
-                  Serial.printf(stringObjToConstCharString(&msgOut));
+                  String msgOut = String(String(LB_MESSAGE_TIME_SET) + p + ",C;");
+                  g_LBOutputBuff->put(msgOut);
                   g_webSocketSlaveState = WSClientWaitForSyncAck;
                 }
                 else
@@ -3485,8 +3614,7 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
 
         if (num == g_slave_socket_number)
         {
-          g_master_has_connected_slave = false;
-          g_slave_socket_number = -1;
+          endMasterCloneSession();
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
           if (g_debug_prints_enabled)
           {
@@ -3498,7 +3626,7 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
         if (!g_numberOfSocketClients)
         {
           g_socket_timeout = 0;
-          g_master_has_connected_slave = false;
+          endMasterCloneSession();
         }
       }
       break;
@@ -3581,21 +3709,32 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
                 g_master_has_connected_slave = true;
                 g_files_sent_to_slave = 0;
                 g_slave_socket_number = num;
-                msg = String(String(SOCK_COMMAND_SLAVE) + "," + SLAVE_CONFIRMED);
+                g_masterCloneQuietPending = true;
+                g_masterCloneQuietActive = false;
+                g_linkBusAckTimoutOccurred = false;
+                g_linkBusNacksReceived = 0;
+                g_LBOutputBuff->put(LB_MESSAGE_ESP_CLONE_QUIET);
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
                 if (g_debug_prints_enabled)
                 {
-                  Serial.println("WSs: ack slave");
+                  Serial.println("WSs: quieting AVR before ack slave");
                 }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
               }
             }
+            else if (p.equals(SLAVE_SYNC_READY))
+            {
+              if (g_masterCloneQuietActive && (num == g_slave_socket_number))
+              {
+                g_LBOutputBuff->put(LB_MESSAGE_ESP_CLONE_SYNC);
+              }
+            }
             else if (p.equals(SLAVE_FREE))
             {
-              g_master_has_connected_slave = false;
+              endMasterCloneSession();
               if (g_numberOfSocketClients == 1)
               {
-                g_webSocketServer.close();
+                stopWebSocketServer();
               }
               msg = String(String(SOCK_COMMAND_SLAVE) + "," + SLAVE_FREE);
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -5034,9 +5173,11 @@ void handleLBMessage(String message)
     payload = message.substring(firstDelimit + 1, message.indexOf(';'));
   }
 
+  bool cloneTimeReply = type.equals(LB_MESSAGE_TIME) && payload.startsWith("C,");
+
   if (!g_slave_released) /* If connected to Master ignore most messages */
   {
-    if (!type.equals(LB_MESSAGE_ACK))
+    if (!type.equals(LB_MESSAGE_ACK) && !type.equals(LB_MESSAGE_NACK) && !cloneTimeReply)
     {
       return;
     }
@@ -5105,6 +5246,14 @@ void handleLBMessage(String message)
   }
   else if (type.equals(LB_MESSAGE_TIME))
   {
+    if (payload.startsWith("C,"))
+    {
+      unsigned long rtcEpoch = (unsigned long)payload.substring(2).toInt();
+      g_cloneClockVerified = g_cloneClockExpected && (rtcEpoch == g_cloneClockExpected);
+      g_cloneClockReadbackMismatch = !g_cloneClockVerified;
+      return;
+    }
+
     String timeinfo = payload;
     g_timeOfDayFromTx = (unsigned long)payload.toInt();
     unsigned long epoch = g_timeOfDayFromTx;

@@ -33,6 +33,7 @@
 /Software/AVR128DA48/avr8-gnu-toolchain*/
 /Software/AVR128DA48/release-packages/
 /Software/AVR128DA48/tmp/
+/Software/Huzzah/tmp/
 
 # KiCad automatic backups; intentional Gerber/manufacturing ZIPs stay visible
 /KiCad/*-backups/
