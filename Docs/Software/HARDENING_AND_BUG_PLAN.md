@@ -295,6 +295,8 @@ The root `README.md` remains user-facing and is not the location for these devel
 - Live execution awaits Mac association with the FlexFox SSID while internet connectivity is provided separately or temporarily relinquished.
 - Procedure: [WIFI_AVR_ACCESS.md](WIFI_AVR_ACCESS.md).
 
+The first live routed probe is complete: the Mac retained its normal WiFi/default route, FlexFox-only traffic used the Moto/DroidTether `utun6` host route, and HTTP, WebSocket, ESP identity, and live AVR temperature/battery/version/time replies passed. Continuous `just wifi-monitor` mode supplies a five-second `!&` heartbeat, safely inside the ESP's approximately ten-second socket timeout, for longer sessions. Evidence: [MAC_WIFI_AVR_PROBE_2026-07-12.md](Evidence/MAC_WIFI_AVR_PROBE_2026-07-12.md).
+
 **WiFi command-boundary hardening candidate:**
 
 - The default soft AP is open, and any associated WebSocket client can submit `PASS,<text>` for unrestricted forwarding to the AVR Linkbus.

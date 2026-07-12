@@ -2,6 +2,7 @@
 
 const baseUrl = new URL(process.env.FLEXFOX_URL ?? "http://73.73.73.73/");
 const timeoutMs = Number.parseInt(process.env.FLEXFOX_PROBE_TIMEOUT_MS ?? "12000", 10);
+const monitorMode = process.env.FLEXFOX_PROBE_MONITOR === "1";
 
 if (baseUrl.protocol !== "http:") {
   throw new Error("FLEXFOX_URL must use http:// because the deployed module does not serve TLS");
@@ -24,6 +25,7 @@ if (process.env.FLEXFOX_PROBE_DRY_RUN === "1") {
   console.log(`WebSocket target: ${websocketUrl.href}`);
   console.log(`Safe requests: !&, ${safeRequests.join(", ")}`);
   console.log("The WebSocket connection also asks the AVR for temperature and battery state.");
+  console.log(`Continuous monitor: ${monitorMode ? "enabled" : "disabled"}`);
   process.exit(0);
 }
 
@@ -31,6 +33,7 @@ const messages = [];
 let socket;
 let heartbeat;
 let finishTimer;
+let livePathReported = false;
 
 function messageType(message) {
   return message.split(",", 1)[0].toUpperCase();
@@ -40,6 +43,24 @@ function closeSocket() {
   if (heartbeat) clearInterval(heartbeat);
   if (finishTimer) clearTimeout(finishTimer);
   if (socket && socket.readyState < WebSocket.CLOSING) socket.close(1000, "probe complete");
+}
+
+function reportLivePathIfComplete() {
+  if (livePathReported) return;
+
+  const observed = new Set(messages.map(messageType));
+  if (["SSID", "MAC", "SW_VERSIONS", "MASTER", "TEMP", "BAT"].every((type) => observed.has(type))) {
+    livePathReported = true;
+    console.log("PASS WiFi-to-AVR read-only path returned temperature and battery data");
+    if (monitorMode) console.log("MONITOR Sending !& every 5 seconds; stop with Ctrl-C");
+  }
+}
+
+for (const signal of ["SIGINT", "SIGTERM"]) {
+  process.once(signal, () => {
+    closeSocket();
+    process.exit(0);
+  });
 }
 
 try {
@@ -65,15 +86,16 @@ try {
 
       heartbeat = setInterval(() => {
         if (socket.readyState === WebSocket.OPEN) socket.send("!&");
-      }, 2000);
+      }, 5000);
 
-      finishTimer = setTimeout(resolve, timeoutMs);
+      if (!monitorMode) finishTimer = setTimeout(resolve, timeoutMs);
     });
 
     socket.addEventListener("message", (event) => {
       const message = String(event.data);
       messages.push(message);
       console.log(`RECV ${message}`);
+      reportLivePathIfComplete();
     });
 
     socket.addEventListener("error", () => reject(new Error("WebSocket error")));
@@ -95,7 +117,7 @@ try {
     throw new Error(`missing live AVR replies: ${missingAvr.join(", ")}`);
   }
 
-  console.log("PASS WiFi-to-AVR read-only path returned temperature and battery data");
+  reportLivePathIfComplete();
 } finally {
   closeSocket();
 }

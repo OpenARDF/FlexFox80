@@ -68,11 +68,20 @@ The probe uses Node's built-in HTTP and WebSocket clients. It:
 
 It does not synchronize the clock, change settings, load or execute an event, key the transmitter, save EEPROM, shut off WiFi, or use raw pass-through.
 
+For an extended hardware session, keep DroidTether running and hold the safe WebSocket open:
+
+```text
+just wifi-monitor
+```
+
+Monitor mode performs the same initial proof, then sends only `!&` every five seconds until interrupted with Ctrl-C. The ESP disconnects a WebSocket after approximately ten seconds without text traffic, so a 30-second heartbeat cannot preserve one continuous socket. Five seconds leaves margin for scheduling delay while reducing the built-in pages' two-second heartbeat rate. This resets the ESP WebSocket activity timer and allows the ESP/AVR keep-alive behavior to remain active while the Moto stays associated with the FlexFox AP.
+
 Useful overrides:
 
 ```text
 FLEXFOX_PROBE_DRY_RUN=1 just wifi-probe
 FLEXFOX_URL=http://73.73.73.73/ FLEXFOX_PROBE_TIMEOUT_MS=15000 just wifi-probe
+FLEXFOX_PROBE_DRY_RUN=1 just wifi-monitor
 ```
 
 ## Safety classification

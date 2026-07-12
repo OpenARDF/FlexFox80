@@ -43,6 +43,10 @@ avr-probe:
 wifi-probe:
     node ./scripts/probe-flexfox-wifi.mjs
 
+# Keep the FlexFox WiFi module active with the read-only WebSocket heartbeat.
+wifi-monitor:
+    FLEXFOX_PROBE_MONITOR=1 node ./scripts/probe-flexfox-wifi.mjs
+
 # Step A2 will replace this explicit boundary with a pinned ESP8266 build.
 esp-build:
     @echo "ESP8266 build wrapper is not configured yet; complete Step A2 before firmware changes."
