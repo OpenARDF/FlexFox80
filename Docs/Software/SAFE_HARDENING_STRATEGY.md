@@ -155,6 +155,6 @@ When extracting code:
 - preserve protocol strings and stored-file formats;
 - compare generated code or timing where interrupt behavior is involved.
 
-## Suggested first investigation
+## Suggested first code-hardening investigation
 
 The best first hardening slice is Linkbus input safety. It is locally bounded, directly testable without RF hardware, and protects the AVR from corrupted or unexpected data originating from the ESP, serial noise, or future software changes. It can establish the test infrastructure and narrow-change discipline needed for higher-risk timing and watchdog work.

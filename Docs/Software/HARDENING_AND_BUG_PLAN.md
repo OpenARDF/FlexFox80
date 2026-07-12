@@ -1,0 +1,404 @@
+# FlexFox80 Hardening and Bug Plan
+
+**Plan status:** Proposed; Step A1 is next and no firmware hardening changes have begun.
+
+## Purpose
+
+FlexFox80 development will proceed along two coordinated paths:
+
+- **Path A: Code hardening and clear-error removal.** Establish safe engineering controls, characterize current behavior, remove demonstrable defects, and improve recovery without changing proven transmitter behavior unnecessarily.
+- **Path B: Specific bug investigation.** Capture observed failures, reproduce them, trace them to a subsystem, and fix them with focused regression evidence.
+
+Path A starts first because repository controls, reproducible builds, and characterization tests reduce the risk of every later change. At each Path A checkpoint, the open bug list will be reassessed: hardening work may expose or eliminate a root cause, improve diagnostics, or make a specific bug reproducible.
+
+This is the operational roadmap. [SAFE_HARDENING_STRATEGY.md](SAFE_HARDENING_STRATEGY.md) contains the supporting engineering principles and hardware fault matrix, while [RELIABILITY_REVIEW.md](RELIABILITY_REVIEW.md) contains the initial findings.
+
+## Non-negotiable safety rules
+
+1. The current Git branch and worktree state must be announced before edits.
+2. Pre-existing changes are never included in a commit without explicit authorization.
+3. No behavior change is accepted without a stated expected behavior and proportionate verification.
+4. RF-off and antenna-inhibit behavior must never be weakened to simplify another change.
+5. Protocol and persistence changes must define compatibility with the other processor and deployed data.
+6. Timing-critical ISR, sleep/wake, RTC, EEPROM-layout, and RF-control changes require stronger evidence than ordinary parser or documentation changes.
+7. Clear-looking defects are still fixed in narrow slices after characterization; unrelated cleanup is not bundled into a bug fix.
+8. Generated or vendor-managed files are not reformatted or reorganized as part of normal source work.
+9. A failed or unavailable verification step is reported; it is not silently treated as passed.
+10. Every completed milestone ends with an updated evidence record and bug-list reassessment.
+
+## Branch and release question that must be resolved first
+
+The present repository does not have the same branch model as SignalSlinger:
+
+- `origin/main` is the default branch.
+- active AVR128DA48 development is on `AVR128DA48`.
+- `main` has two merge commits not present on `AVR128DA48`.
+- `AVR128DA48` has substantial development history not reachable from the current `main` tip.
+- the source layout differs between the two branches.
+
+Therefore, Step 1 must not simply rename or merge branches. The project owner must confirm whether:
+
+1. `main` is intended to be the stable/release branch and `AVR128DA48` the active development branch;
+2. `AVR128DA48` is a permanent hardware-generation branch that should remain independent;
+3. a new development branch should be created from `AVR128DA48`; or
+4. `main` should eventually be reconciled with `AVR128DA48` through a separately reviewed migration.
+
+No branch synchronization is part of this plan until that decision is recorded.
+
+**Recommended provisional model:**
+
+- Leave `main` unchanged while its historical role and different source layout are audited.
+- Treat `AVR128DA48` as the current integration/release baseline for this hardware generation.
+- Create a dedicated development branch from `AVR128DA48` for the hardening program after the project owner approves its name and role.
+- Use narrow topic branches for safety-critical or independently reviewable slices when they materially improve isolation.
+- Merge into the AVR128DA48 integration branch only after the applicable checkpoint passes; reconcile to `main` only through a separately planned and reviewed operation.
+
+This recommendation protects the known AVR128DA48 lineage without claiming that the current `main` branch is obsolete or safe to overwrite.
+
+## Path A: Code hardening and clear-error removal
+
+### Step 1: Establish Git, source, and change-control workflows
+
+**Goal:** Give every later change a predictable branch, review, build, test, and commit path comparable to SignalSlinger, adapted to FlexFox80's two-processor architecture.
+
+**Deliverables:**
+
+- A repository-internal workflow document defining:
+  - branch roles and merge policy;
+  - when commits and pushes require explicit authorization;
+  - narrow staging requirements for dirty worktrees;
+  - required review and verification before a commit;
+  - release and rollback expectations;
+  - rules for generated and vendor-managed files.
+- A line-ending and text/binary policy using `.gitattributes` and `.editorconfig`.
+- An expanded `.gitignore` covering IDE state, `.DS_Store`, objects, dependency files, generated firmware images, maps/listings, temporary test output, and local toolchains.
+- A reviewed inventory dividing files into:
+  - hand-maintained AVR source;
+  - generated Microchip START/Atmel Studio source;
+  - hand-maintained ESP source and web assets;
+  - generated build artifacts;
+  - hardware/CAD files outside software-change scope.
+- A decision on currently tracked build artifacts. If they are removed from Git, do so in a dedicated source-hygiene commit that does not delete the developer's local copies or mix firmware changes.
+- Thin repository commands, preferably a `Justfile`, for repeatable operations such as:
+  - `status` or `doctor`;
+  - documentation checks;
+  - AVR build;
+  - ESP build;
+  - host tests;
+  - full verification;
+  - secret scan;
+  - staged-diff verification.
+- A commit policy that does not automatically stage the whole worktree. A convenience publish command may be added later, but selective staging remains mandatory when unrelated work exists.
+
+**Proposed Step 1 file set:**
+
+- `Docs/Software/CODEX_WORKFLOW.md` — everyday branch announcement, edit, verification, staging, commit, and generated-file rules.
+- `Docs/Software/RELEASE_WORKFLOW.md` — branch roles, release checklist, artifact identity, hardware verification, rollback, and merge policy.
+- `Docs/Software/GENERATED_FILES.md` — hand-maintained, generated, vendor-managed, release-artifact, and CAD boundaries.
+- `.gitattributes` — authoritative line endings and text/binary classification.
+- `.editorconfig` — editor-independent indentation, encoding, newline, and whitespace rules.
+- `.gitignore` — comprehensive local/generated-file exclusions.
+- `Justfile` — thin entry points for checks and scripts, without embedding complex build logic.
+- `scripts/` — portable or clearly platform-specific build/verification helpers invoked by the `Justfile`.
+
+The root `README.md` remains user-facing and is not the location for these development policies.
+
+**Checkpoint A1 — Governance ready:**
+
+- [ ] Branch roles are explicitly approved and documented.
+- [ ] The workflow states which branch is safe for active hardening.
+- [ ] Existing KiCad or other unrelated changes can remain present without entering software commits.
+- [ ] Line-ending rules are proven not to create mass source churn.
+- [ ] Generated-file cleanup, if proposed, has a reviewed dry-run file list.
+- [ ] Routine commands have names and expected outcomes, even if the cross-platform build implementation continues in Step 2.
+- [ ] Another thread can read the workflow and correctly explain how to start, verify, commit, and hand off a change.
+
+**Stop condition:** No firmware edits begin until the branch-role decision and narrow-commit policy are settled.
+
+### Step 2: Make both firmware builds reproducible
+
+**Goal:** Build the AVR and ESP8266 from a clean checkout with recorded toolchain versions, without relying on undocumented IDE state.
+
+**Deliverables:**
+
+- A scripted AVR Release build using a pinned AVR-GCC/device-pack combination.
+- A scripted ESP8266 build using pinned board-core and library versions through `arduino-cli` or PlatformIO.
+- Documented flashing outputs and commands for each processor.
+- Baseline build evidence:
+  - compiler and dependency versions;
+  - warnings;
+  - AVR flash, SRAM, and EEPROM usage;
+  - ESP flash and filesystem usage;
+  - SHA-256 hashes of known baseline outputs.
+- A method to compare a no-behavior-change build with the known deployed artifact when exact reproduction is possible.
+- CI or a documented reason why a particular hardware-dependent verification remains local.
+
+**Checkpoint A2 — Build baseline ready:**
+
+- [ ] A clean checkout can build both processors from documented commands.
+- [ ] Repeated builds are deterministic or all known nondeterminism is explained.
+- [ ] Warnings are captured and triaged rather than hidden.
+- [ ] Baseline resource and artifact hashes are recorded.
+- [ ] Build outputs are not accidentally committed.
+- [ ] The currently deployed firmware identity can be related to source, or the gap is explicitly documented.
+
+**Bug reassessment:** Compare reported bugs with compiler warnings, stale artifacts, version mismatches, and processor-to-processor firmware compatibility.
+
+### Step 3: Create characterization and regression infrastructure
+
+**Goal:** Capture current mature behavior before changing it.
+
+**Deliverables:**
+
+- Host-side tests or testable adapters for:
+  - Linkbus framing, parsing, and resynchronization;
+  - event-file parsing and validation;
+  - role and transmitter-slot assignment;
+  - numeric field parsing and range handling;
+  - event-cycle position calculations;
+  - Morse pattern generation and duration;
+  - power-table selection;
+  - EEPROM layout offsets and access widths.
+- Golden fixtures based on the checked-in classic, sprint, and foxoring event files.
+- A protocol compatibility table mapping every ESP command to AVR handling and every AVR reply to ESP handling.
+- A timeline trace format that records requested RF power, key state, pattern/ID state, countdown, status, error, and sleep request.
+
+**Checkpoint A3 — Behavior captured:**
+
+- [ ] Existing valid event fixtures pass on both sides of the protocol model.
+- [ ] Boundary and malformed cases are represented even when the current result is undesirable.
+- [ ] Known mature timing examples have golden traces.
+- [ ] Test failures clearly distinguish an intended behavior change from accidental regression.
+- [ ] Tests run through one repository command.
+
+**Bug reassessment:** Attempt to encode each reported bug as a failing test or trace. Bugs that cannot yet be represented receive an explicit hardware/logging requirement.
+
+### Step 4: Remove clear, locally bounded defects
+
+**Goal:** Correct defects whose unsafe behavior is directly demonstrated, using one narrow change at a time.
+
+**Proposed order:**
+
+1. Bounds-check Linkbus fields and delimiters; discard malformed frames and resynchronize safely.
+2. Replace data-as-format-string sends with bounded copies/formatting.
+3. Correct role-index extraction and cover all valid role/slot forms.
+4. Define and correct event-file integrity validation while retaining existing-file compatibility.
+5. Validate timing and other numeric input before mutating active AVR state.
+6. Verify and correct EEPROM access widths without moving deployed offsets.
+7. Add allocation-failure handling where dynamic allocation remains necessary.
+
+Each item is a separate implementation slice unless two changes cannot be tested independently.
+
+**Checkpoint A4.n — Clear defect removed:**
+
+- [ ] A pre-fix test demonstrates the defect.
+- [ ] The fix changes only the intended behavior.
+- [ ] Existing valid protocol, event, timing, and RF-safety tests remain green.
+- [ ] Resource usage remains within the recorded budget.
+- [ ] Cross-processor compatibility is verified where applicable.
+- [ ] A focused commit describes the failure mechanism and evidence.
+
+**Bug reassessment:** After every slice, re-run all reproducible bug cases and record whether any symptom is fixed, narrowed, or unchanged.
+
+### Step 5: Add fault recovery and diagnostic evidence
+
+**Goal:** Prevent a single peripheral or timing failure from leaving the product permanently hung or silently unsafe.
+
+**Deliverables:**
+
+- A bounded RTC synchronization operation with an explicit degraded/error result.
+- Defined behavior for RTC loss at boot and after boot.
+- Reset-cause capture and reporting.
+- A watchdog policy covering startup, normal foreground operation, long operations, EEPROM writes, and sleep/wake.
+- A proven remote-reset command.
+- Defined I2C bus recovery after timeout/NACK, including safe Si5351 behavior.
+- Persistent or externally retrievable diagnostics sufficient to identify why a reset or degraded state occurred.
+
+**Checkpoint A5 — Recovery proven:**
+
+- [ ] Removing the RTC square wave cannot hang the foreground forever.
+- [ ] A forced foreground stall produces a classified watchdog reset.
+- [ ] Sleep does not cause unintended watchdog resets.
+- [ ] Si5351/I2C failure leaves RF in the defined safe state.
+- [ ] Reset cause and relevant error state are visible after recovery.
+- [ ] Repeated fault injection does not corrupt EEPROM or event files.
+
+**Bug reassessment:** Re-run bugs involving freezes, unexpected resets, missed schedules, and loss of communications with new diagnostics enabled.
+
+### Step 6: Harden concurrency and timing-critical state
+
+**Goal:** Remove torn reads and fragile cross-context invariants without disturbing proven transmit timing.
+
+**Deliverables:**
+
+- An ownership map for globals shared among foreground, RTC ISR, TCB0 ISR, and USART ISRs.
+- Atomic snapshots or brief critical sections for multi-byte shared values.
+- Measured TCB0 ISR normal and worst-case duration.
+- Explicit state-transition invariants for event start, on/off boundaries, ID insertion, finish, and sleep/wake.
+- Refactoring only where measurement and characterization prove equivalence or expose a specific defect.
+
+**Checkpoint A6 — Timing integrity proven:**
+
+- [ ] Multi-byte shared state is either single-owner or atomically transferred.
+- [ ] ISR execution stays within a documented timing budget.
+- [ ] Classic, sprint, foxoring, beacon, and ID timing traces remain correct.
+- [ ] Start, finish, reset, and wake at boundary seconds have directed tests.
+- [ ] On-target timing measurements agree with the model within the accepted tolerance.
+
+**Bug reassessment:** Revisit intermittent timing, missed-transition, incorrect-slot, and wake/sleep bugs.
+
+### Step 7: Improve persistence and long-running resilience
+
+**Goal:** Ensure configuration survives interruption and extended operation without mixed or corrupt state.
+
+**Deliverables:**
+
+- A versioned AVR EEPROM schema and validation strategy.
+- Compatibility or migration behavior for deployed EEPROM contents.
+- Transactional or recoverable multi-field AVR configuration commits.
+- Transactional LittleFS event saves using temporary file plus validated replacement where supported.
+- Power-loss tests during both AVR and ESP persistence.
+- ESP heap/fragmentation stress tests for extended editing and master/clone sessions.
+
+**Checkpoint A7 — Persistence resilient:**
+
+- [ ] Interruption produces either the prior valid configuration or the complete new one.
+- [ ] Deployed EEPROM images load correctly or migrate predictably.
+- [ ] Corruption is detected and produces a safe, visible recovery path.
+- [ ] Extended ESP sessions remain within a defined heap budget.
+- [ ] Event files remain compatible with supported firmware versions.
+
+### Step 8: Hardware regression and hardening release gate
+
+**Goal:** Prove the accumulated hardening on representative hardware before treating it as a release candidate.
+
+**Deliverables:**
+
+- A versioned hardware test checklist covering:
+  - power-up and power-cycle recovery;
+  - event transfer and persistence;
+  - classic, sprint, foxoring, and beacon operation;
+  - antenna removal and reconnection;
+  - RTC, Si5351, ESP, and I2C fault injection;
+  - sleep and scheduled wake;
+  - temperature/fan behavior;
+  - long-duration event operation;
+  - all fixed specific bugs.
+- Captured firmware hashes, board revision, test equipment, results, and approved skips.
+- A rollback artifact and flashing procedure.
+
+**Checkpoint A8 — Hardening release candidate:**
+
+- [ ] All automated gates pass from a clean checkout.
+- [ ] All safety-critical hardware tests pass.
+- [ ] Every skipped test has an explicit reason and owner approval.
+- [ ] Open bugs are classified by severity and release impact.
+- [ ] Release notes distinguish robustness improvements from user-visible changes.
+- [ ] Rollback has been verified, not merely documented.
+
+## Path B: Specific bug investigation
+
+Path B starts as soon as an observed bug is selected. It uses the infrastructure available at that point and may feed new requirements back into Path A. Urgent safety bugs can interrupt the Path A sequence, but they still require a narrow branch/commit and explicit verification.
+
+### Bug intake record
+
+Every bug should begin with:
+
+- a short symptom statement;
+- safety and operational impact;
+- hardware revision and unit identity;
+- AVR and ESP firmware versions or artifact hashes;
+- event file and transmitter assignment;
+- exact setup and steps;
+- expected and observed behavior;
+- frequency or reproducibility rate;
+- power, antenna, temperature, and timing context;
+- logs, serial traffic, LED pattern, reset cause, or RF trace;
+- whether power cycling changes the result;
+- last known version without the problem, if any.
+
+### Bug investigation stages
+
+#### B1: Classify and preserve evidence
+
+Determine whether the symptom is primarily configuration, ESP/UI/filesystem, Linkbus, AVR scheduling, RTC/sleep, RF control, power, or hardware. Preserve the original event/configuration and avoid testing first with a modified copy.
+
+**Checkpoint B1:** Another person can reproduce the setup or state exactly what evidence is missing.
+
+#### B2: Reproduce at the narrowest layer
+
+Attempt reproduction in this order where appropriate:
+
+1. host-side pure logic or parser test;
+2. recorded/replayed Linkbus traffic;
+3. ESP plus simulated AVR, or AVR plus simulated ESP;
+4. complete bench unit into a dummy load;
+5. field-equivalent environment.
+
+**Checkpoint B2:** The symptom is reproducible, or the investigation has a concrete instrumentation plan rather than an unsupported theory.
+
+#### B3: Form and discriminate hypotheses
+
+List plausible root causes and identify the observation that would distinguish each. Prefer instrumentation and controlled fault injection over speculative edits.
+
+**Checkpoint B3:** One code or hardware mechanism explains all reproduced observations and competing explanations have been tested where practical.
+
+#### B4: Add a failing regression
+
+Encode the reproduction as an automated test, trace, protocol fixture, or repeatable hardware checklist before applying the fix.
+
+**Checkpoint B4:** The regression fails for the expected reason on the pre-fix implementation.
+
+#### B5: Apply the smallest fix
+
+Change only the owning subsystem. Do not combine opportunistic cleanup. If the root cause is a Path A hardening item, reference that milestone and keep one source of truth for verification.
+
+**Checkpoint B5:** The regression passes, neighboring behavior remains unchanged, and required hardware evidence is complete.
+
+#### B6: Close and cross-check
+
+Document the root cause, affected versions, correction, test evidence, residual risk, and whether the finding changes any Path A priority.
+
+**Checkpoint B6:** The bug can be closed without relying on undocumented knowledge from the investigating thread.
+
+## Coordination between the paths
+
+Use a small internal issue table or tracker with these fields:
+
+| ID | Path | Severity | Owner subsystem | Reproduction | Evidence | Blocked by | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| R1 | A | High | AVR Linkbus | Pending harness | Static review | A3 | Planned |
+| R2 | A/B | High | AVR RTC | Hardware fault test needed | Static review | A2/A5 | Planned |
+| R3 | A | High | AVR recovery | Directly visible | Static review | A5 | Planned |
+| R4 | A | Medium | ESP event files | Pending fixture | Static review | A3 | Planned |
+| R5 | A/B | High | Cross-processor timing input | Pending fixture | Static review | A3 | Planned |
+| R6 | A | High | AVR EEPROM | Pending layout test | Static review | A3 | Planned |
+| R7 | A | High | AVR text output | Pending boundary test | Static review | A3 | Planned |
+| R8 | A/B | Medium | ESP role assignment | Pending Event test | Static review | A3 | Planned |
+
+Specific field bugs should be added with distinct `B-` identifiers. At each Path A checkpoint:
+
+1. run every available bug reproduction;
+2. update evidence and likely subsystem;
+3. identify bugs fixed incidentally by an approved hardening change;
+4. keep symptom-specific tests even when a shared root cause is found;
+5. reprioritize the next hardening slice based on safety and evidence.
+
+## Initial execution order
+
+The recommended order is:
+
+1. **A1 — Git and workflow policy.** Confirm branch roles and establish safe repository controls.
+2. **A2 — Reproducible AVR and ESP builds.** Know exactly what is being tested and deployed.
+3. **A3 — Characterization tests.** Capture protocol, event, timing, and persistence behavior.
+4. **A4.1 and A4.2 — Linkbus bounds and bounded output.** Address the clearest memory-safety risks first.
+5. **A4.3 through A4.6 — Remaining bounded defects.** Role parsing, event integrity, numeric validation, and EEPROM widths.
+6. **A5 — RTC/watchdog/fault recovery.** Proceed only after builds and core tests are dependable.
+7. **A6 and A7 — Concurrency, timing, and persistence.** Use accumulated evidence to minimize architectural churn.
+8. **A8 — Full hardware regression.** Produce a hardening release candidate.
+
+Path B bug intake can begin immediately, but implementation should normally wait for the earliest Path A checkpoint that supplies the required build or regression evidence.
+
+## Next action
+
+Start Step 1 with a policy-only change set. It should propose the exact FlexFox80 branch roles, workflow files, ignore/attribute rules, generated-file classification, and repository commands. Review that proposal and its dry-run file effects before untracking artifacts, renormalizing files, adding build dependencies, merging branches, or changing firmware.

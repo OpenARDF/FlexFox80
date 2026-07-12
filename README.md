@@ -14,7 +14,5 @@ The KiCad folder holds files for generating the schematic, BOM, and PCB files us
 
 The Software folder holds files for compiling executable code using Atmel Studio 7. 
 
-Developer documentation for the two-processor software architecture, reliability review, and safe hardening approach is available in [Docs/Software](Docs/Software/README.md).
-
 ![Docs/Proto-Flexfox2.jpeg](Docs/Proto-Flexfox2.jpeg)
 Photo: Prototype FlexFox80 with Transparent Cover Removed

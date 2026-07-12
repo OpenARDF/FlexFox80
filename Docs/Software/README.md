@@ -7,6 +7,7 @@ This directory documents the current software architecture on the `AVR128DA48` b
 - [Architecture](ARCHITECTURE.md) describes the ESP8266/AVR128DA48 division of responsibility, major subsystems, runtime flow, persistence, communications, and build layout.
 - [Reliability review](RELIABILITY_REVIEW.md) records existing strengths, confirmed code-level concerns, suspected failure modes, and current verification gaps.
 - [Safe hardening strategy](SAFE_HARDENING_STRATEGY.md) defines a conservative process for reproducing and fixing bugs without unnecessarily changing proven transmitter behavior.
+- [Hardening and bug plan](HARDENING_AND_BUG_PLAN.md) turns the review into two coordinated work paths with specific deliverables, decision points, and exit checkpoints.
 
 ## Scope and status
 
