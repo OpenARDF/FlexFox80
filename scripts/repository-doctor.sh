@@ -5,7 +5,7 @@ set -eu
 repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
 
-required_tools="git rg jq node"
+required_tools="git rg jq node c++"
 optional_tools="just gitleaks shellcheck shfmt"
 missing=0
 

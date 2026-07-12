@@ -17,8 +17,12 @@ docs-check:
 policy-check:
     ./scripts/check-repository-policy.sh
 
-# Run all currently available non-firmware checks.
-check: doctor docs-check policy-check
+# Build and run dependency-light host characterization tests.
+test:
+    ./scripts/run-host-tests.sh
+
+# Run all currently available non-firmware checks and host tests.
+check: doctor docs-check policy-check test
 
 # Scan repository history using the exact-fingerprint false-positive baseline.
 secrets:

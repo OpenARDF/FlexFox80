@@ -194,8 +194,8 @@ The root `README.md` remains user-facing and is not the location for these devel
 
 **Deliverables:**
 
-- A dependency-light host test harness invoked by `just test`, with failures that identify the behavioral contract and input case.
-- An initial passing characterization slice for the AVR circular buffer covering empty/full state, FIFO order, wraparound, overwrite, and reset without changing firmware behavior.
+- [x] A dependency-light host test harness invoked by `just test`, with failures that identify the behavioral contract and input case.
+- [x] An initial passing characterization slice for the AVR circular buffer covering empty/full state, FIFO order, wraparound, overwrite, and reset without changing firmware behavior.
 - A separate red-green defect slice for documented LIFO `pop()` behavior and allocation/zero-capacity handling if the characterization demonstrates a mismatch.
 - Host-side tests or testable adapters for:
   - Linkbus framing, parsing, and resynchronization;
