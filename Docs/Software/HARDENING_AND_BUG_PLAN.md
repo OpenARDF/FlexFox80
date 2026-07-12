@@ -316,6 +316,15 @@ The root `README.md` remains user-facing and is not the location for these devel
 - Routine Windows duplication is not required under the established parity policy; this slice has no remaining verification checkpoint.
 - Evidence: [LINKBUS_RX_ID_ENCODING_2026-07-12.md](Evidence/LINKBUS_RX_ID_ENCODING_2026-07-12.md).
 
+**Mac defect slice — zero-capacity circular buffer:**
+
+- A focused host regression failed red because a zero-capacity buffer reported writable space, attempted a zero-byte-buffer write, and performed modulo by zero.
+- Zero-capacity buffers now report full and ignore `put()` while retaining the existing empty `get()` and `pop()` results.
+- The configured 100-byte production buffer and all nonzero-capacity, FIFO, LIFO, overwrite, reset, busy-state, allocation, and public-interface behavior remain unchanged.
+- The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, text grows by 22 bytes, and data/BSS are unchanged.
+- Connected-target programming and a post-program read-only probe remain open; nonzero allocation failure remains a separate slice.
+- Evidence: [CIRCULAR_BUFFER_ZERO_CAPACITY_2026-07-12.md](Evidence/CIRCULAR_BUFFER_ZERO_CAPACITY_2026-07-12.md).
+
 **R6 layout characterization checkpoint:**
 
 - A host-side AVR-width model now checks all 65 `EE_prom` member offsets against `EE_var_t`.

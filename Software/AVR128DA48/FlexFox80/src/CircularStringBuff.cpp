@@ -70,7 +70,7 @@ bool CircularStringBuff::isBusy(void)
 
 bool CircularStringBuff::full() const
 {
-  return (full_);
+  return ((max_size_ == 0) || full_);
 }
 
 size_t CircularStringBuff::capacity() const
@@ -102,6 +102,11 @@ size_t CircularStringBuff::size() const
  */
 void CircularStringBuff::put(char item)
 {
+  if (max_size_ == 0)
+  {
+    return;
+  }
+
   buf_[head_] = toupper(item);
 
   if (full_)
