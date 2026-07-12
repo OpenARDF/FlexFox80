@@ -251,6 +251,13 @@ The root `README.md` remains user-facing and is not the location for these devel
 - Mac host and repository gates pass green; exact Windows AVR build verification remains required before the slice is closed.
 - Evidence: [EEPROM_I2C_FAILURE_COUNT_WIDTH_2026-07-12.md](Evidence/EEPROM_I2C_FAILURE_COUNT_WIDTH_2026-07-12.md).
 
+**Next characterized R6 candidate — RF power initialization width:**
+
+- The RF power field, global value, normal read path, and normal update path are 16-bit.
+- First-time initialization uses the dword writer, spanning the field and two bytes of the following reserved guard.
+- The candidate is documented but intentionally not changed while the preceding I2C width slice awaits exact Windows target verification.
+- Evidence: [EEPROM_RF_POWER_INITIALIZATION_WIDTH_2026-07-12.md](Evidence/EEPROM_RF_POWER_INITIALIZATION_WIDTH_2026-07-12.md).
+
 ### Step 4: Remove clear, locally bounded defects
 
 **Goal:** Correct defects whose unsafe behavior is directly demonstrated, using one narrow change at a time.
