@@ -304,25 +304,30 @@ if (!driverIsr.includes("linkbus_rx_id_append")) {
 process.stdout.write("PASS Linkbus message IDs use collision-free byte encoding\n");
 
 const expectedMalformedFrames =
-  '["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;", "$AZRX?", "$TYR?"]';
-if (!linkbusBoundsTest.includes(`const malformedFrames = ${expectedMalformedFrames};`)) {
-  process.stderr.write("Firmware contract check failed: Linkbus live test malformed frames changed\n");
+  '["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;", "$AZRX?"]';
+if (!linkbusBoundsTest.includes(`const unansweredFrames = ${expectedMalformedFrames};`)) {
+  process.stderr.write("Firmware contract check failed: Linkbus live test unanswered frames changed\n");
   process.exit(1);
 }
-if (!linkbusBoundsTest.includes('const recoveryQuery = "$TEM?";')) {
-  process.stderr.write("Firmware contract check failed: Linkbus live test recovery query is not $TEM?\n");
+if (!linkbusBoundsTest.includes('const aliasProbe = "$RXW?";')) {
+  process.stderr.write("Firmware contract check failed: Linkbus live test alias probe changed\n");
+  process.exit(1);
+}
+if (!linkbusBoundsTest.includes('const recoveryQueries = ["$TEM?", "$BAT?"];')) {
+  process.stderr.write("Firmware contract check failed: Linkbus live test recovery queries changed\n");
   process.exit(1);
 }
 
 const approvedLinkbusTestSends = [
   'socket.send("!&")',
   'socket.send(`PASS,${frame}`)',
-  'socket.send(`PASS,${recoveryQuery}`)',
+  'socket.send(`PASS,${aliasProbe}`)',
+  'socket.send(`PASS,${query}`)',
 ];
 const linkbusTestSendCount = [...linkbusBoundsTest.matchAll(/socket\.send\(/g)].length;
 const heartbeatSendCount = linkbusBoundsTest.split('socket.send("!&")').length - 1;
 if (
-  linkbusTestSendCount !== 4 ||
+  linkbusTestSendCount !== 5 ||
   heartbeatSendCount !== 2 ||
   approvedLinkbusTestSends.some((send) => !linkbusBoundsTest.includes(send))
 ) {

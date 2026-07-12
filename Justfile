@@ -47,7 +47,7 @@ wifi-probe:
 wifi-monitor:
     FLEXFOX_PROBE_MONITOR=1 node ./scripts/probe-flexfox-wifi.mjs
 
-# Send two non-configuring malformed Linkbus frames, then require read-only recovery replies.
+# Qualify fixed Linkbus parser bounds and ID-alias rejection using read-only recovery.
 wifi-linkbus-bounds-test:
     node ./scripts/test-flexfox-linkbus-rx-bounds.mjs
 

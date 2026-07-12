@@ -2,7 +2,7 @@
 
 ## Status
 
-Mac red-green, direct collision, repository, exact AVR Release build, and connected-target programming evidence is complete. Live alias-rejection verification remains open. Routine Windows duplication is not required under the established parity policy.
+Mac red-green, direct collision, repository, exact AVR Release build, connected-target programming, and live alias-rejection evidence is complete. Routine Windows duplication is not required under the established parity policy.
 
 ## Confirmed defect
 
@@ -44,9 +44,9 @@ This is an internal representation change only:
 - no EEPROM field, protocol payload, event setting, RF setting, or ESP source changes;
 - each of the three AVR receive buffers grows by two bytes because its internal ID member is now four bytes.
 
-Direct host tests prove the canonical `KEY`, `RST`, and `GO` byte encodings and prove their known decimal aliases are distinct. Existing ID-length, field-count, field-width, text-copy, EEPROM, and circular-buffer regressions remain green.
+Direct host tests prove the canonical `KEY`, `RST`, and `GO` byte encodings and prove known decimal aliases for `KEY`, `RST`, `GO`, and `TEM` are distinct. Existing ID-length, field-count, field-width, text-copy, EEPROM, and circular-buffer regressions remain green.
 
-The constrained target test includes read-only `$TYR?`, which the old decimal encoding aliases to `VER`. It requires the frame to remain unanswered through the ESP retry delay before a following `$TEM?` succeeds; an immediate version response would fail the timing assertion.
+The constrained target test includes read-only `$RXW?`, which the old decimal encoding aliases to `TEM`. A legacy-alias response is visible over WebSocket as `TEMP`; the corrected parser instead returns a Linkbus NAK, which the ESP consumes without broadcasting. Two probes make one incidental periodic temperature update insufficient to fail the test, and a following battery query proves that parsing and ESP queue processing remain healthy.
 
 ## Exact Mac AVR build
 
@@ -87,6 +87,16 @@ Avrdude verified all 41,182 input flash bytes twice. Independent post-operation 
 
 The first four-case Linkbus test attempt timed out at HTTP after programming, before its WebSocket opened or any test frame was sent. This matches the known Moto/DroidTether association loss after extended Atmel-ICE activity and is not counted as a firmware result.
 
-## Remaining verification
+## Connected-target qualification
 
-- Prove `$TYR?` remains unanswered through the ESP retry cycle and that the following read-only temperature query succeeds.
+After reconnecting the Moto/DroidTether route, the two field-boundary frames and overlength `$AZRX?` frame each remained unanswered through the ESP's retry cycle. Fresh temperature and battery replies then proved recovery and next-frame resynchronization.
+
+An initial `$TYR?` timing assertion was invalidated during review: a syntactically valid unknown ID intentionally produces `!NAK;`, so correct rejection clears the ESP queue immediately rather than remaining unanswered. In addition, periodic `TEMP` telemetry could satisfy the old single-message recovery assertion. No firmware conclusion was drawn from those failed harness attempts.
+
+The corrected target assertion used `$RXW?`, the legacy alias for `TEM`, and observed:
+
+- two consecutive short alias-probe windows with no `TEMP` reply;
+- a fresh `BAT,12.1V` reply after the probes;
+- all prior bounds and resynchronization checks passing in the same session.
+
+This directly proves that the programmed target no longer dispatches the legacy same-length temperature alias. The harness now requires both temperature and battery recovery replies after unanswered frames, so incidental periodic telemetry cannot satisfy that check by itself. No connected-target verification remains open for this slice.

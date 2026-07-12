@@ -309,10 +309,11 @@ The root `README.md` remains user-facing and is not the location for these devel
 - The legacy decimal-weight ID encoding is non-unique even within the valid three-character limit; alternate labels alias `KEY`, `RST`, `GO`, `VER`, `TEM`, `BAT`, and `WI`.
 - A source contract failed red because `LBMessageID` remained a collision-prone 16-bit value.
 - Internal IDs now preserve their one-to-three wire characters as ordered bytes in `uint32_t`; wire text and all payloads remain unchanged.
-- Direct host tests protect canonical byte encodings and prove known `KEY`, `RST`, and `GO` aliases are distinct.
+- Direct host tests protect canonical byte encodings and prove known `KEY`, `RST`, `GO`, and `TEM` aliases are distinct.
 - The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, text grows by 72 bytes, and BSS grows by six bytes.
 - The dummy-loaded test unit now runs the exact corrected flash; independent flash, complete EEPROM, and fuse readbacks match the intended and preserved bytes.
-- Routine Windows duplication is not required under the established parity policy; connected-target `TYR` alias rejection remains open.
+- The connected target rejects the legacy read-only `$RXW?` temperature alias without a `TEMP` response, and a following battery query proves recovery.
+- Routine Windows duplication is not required under the established parity policy; this slice has no remaining verification checkpoint.
 - Evidence: [LINKBUS_RX_ID_ENCODING_2026-07-12.md](Evidence/LINKBUS_RX_ID_ENCODING_2026-07-12.md).
 
 **R6 layout characterization checkpoint:**

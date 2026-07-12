@@ -2,9 +2,11 @@
 
 const baseUrl = new URL(process.env.FLEXFOX_URL ?? "http://73.73.73.73/");
 const timeoutMs = Number.parseInt(process.env.FLEXFOX_LINKBUS_TEST_TIMEOUT_MS ?? "15000", 10);
-const malformedFrames = ["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;", "$AZRX?", "$TYR?"];
-const recoveryQuery = "$TEM?";
+const unansweredFrames = ["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;", "$AZRX?"];
+const aliasProbe = "$RXW?";
+const recoveryQueries = ["$TEM?", "$BAT?"];
 const minimumUnansweredDelayMs = 6000;
+const aliasObservationMs = 750;
 
 if (baseUrl.protocol !== "http:") {
   throw new Error("FLEXFOX_URL must use http:// because the deployed module does not serve TLS");
@@ -23,25 +25,24 @@ websocketUrl.hash = "";
 if (process.env.FLEXFOX_LINKBUS_TEST_DRY_RUN === "1") {
   console.log(`HTTP target: ${baseUrl.href}`);
   console.log(`WebSocket target: ${websocketUrl.href}`);
-  malformedFrames.forEach((frame) => console.log(`Malformed non-command frame: ${frame}`));
-  console.log(`Read-only recovery query: ${recoveryQuery}`);
+  unansweredFrames.forEach((frame) => console.log(`Unanswered non-command frame: ${frame}`));
+  console.log(`Read-only collision-alias probe: ${aliasProbe}`);
+  recoveryQueries.forEach((query) => console.log(`Read-only recovery query: ${query}`));
   process.exit(0);
 }
 
 let socket;
 let heartbeat;
 let temperatureCount = 0;
-let batteryObserved = false;
-const temperatureWaiters = [];
+let batteryCount = 0;
 
 function closeSocket() {
   if (heartbeat) clearInterval(heartbeat);
   if (socket && socket.readyState < WebSocket.CLOSING) socket.close(1000, "test complete");
 }
 
-function waitFor(predicate, description) {
+function waitFor(predicate, description, deadline = Date.now() + timeoutMs) {
   return new Promise((resolve, reject) => {
-    const deadline = Date.now() + timeoutMs;
     const poll = () => {
       if (predicate()) {
         resolve();
@@ -55,27 +56,12 @@ function waitFor(predicate, description) {
   });
 }
 
-function waitForNextTemperature(previousCount) {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(
-      () => reject(new Error("valid temperature query did not recover after malformed frame")),
-      timeoutMs,
-    );
-    temperatureWaiters.push({
-      previousCount,
-      resolve: () => {
-        clearTimeout(timer);
-        resolve();
-      },
-    });
-  });
+function sendQuery(query) {
+  socket.send(`PASS,${query}`);
 }
 
-async function requestFreshTemperature() {
-  const previousCount = temperatureCount;
-  const received = waitForNextTemperature(previousCount);
-  socket.send(`PASS,${recoveryQuery}`);
-  await received;
+function sendRecoveryQueries() {
+  for (const query of recoveryQueries) sendQuery(query);
 }
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
@@ -107,15 +93,8 @@ try {
     socket.addEventListener("message", (event) => {
       const message = String(event.data);
       console.log(`RECV ${message}`);
-      if (message.toUpperCase().startsWith("TEMP,")) {
-        temperatureCount++;
-        for (let i = temperatureWaiters.length - 1; i >= 0; i--) {
-          if (temperatureCount > temperatureWaiters[i].previousCount) {
-            temperatureWaiters.splice(i, 1)[0].resolve();
-          }
-        }
-      }
-      if (message.toUpperCase().startsWith("BAT,")) batteryObserved = true;
+      if (message.toUpperCase().startsWith("TEMP,")) temperatureCount++;
+      if (message.toUpperCase().startsWith("BAT,")) batteryCount++;
     });
 
     socket.addEventListener("error", () => reject(new Error("WebSocket error")));
@@ -125,26 +104,57 @@ try {
   });
 
   await waitFor(
-    () => temperatureCount > 0 && batteryObserved,
+    () => temperatureCount > 0 && batteryCount > 0,
     "initial live AVR temperature and battery replies",
   );
 
-  await requestFreshTemperature();
-  console.log("PASS raw pass-through temperature query returns a fresh AVR reply");
+  const initialTemperatureCount = temperatureCount;
+  const initialBatteryCount = batteryCount;
+  sendRecoveryQueries();
+  await waitFor(
+    () => temperatureCount > initialTemperatureCount && batteryCount > initialBatteryCount,
+    "fresh raw pass-through temperature and battery replies",
+  );
+  console.log("PASS raw pass-through recovery queries return fresh AVR replies");
 
-  for (const frame of malformedFrames) {
+  for (const frame of unansweredFrames) {
+    const recoveryStarted = Date.now();
     socket.send(`PASS,${frame}`);
     await new Promise((resolve) => setTimeout(resolve, 200));
+    sendRecoveryQueries();
 
-    console.log(`WAIT ESP will retry the intentionally unanswered frame before sending ${recoveryQuery}`);
-    const recoveryStarted = Date.now();
-    await requestFreshTemperature();
-    const recoveryDelay = Date.now() - recoveryStarted;
-    if (recoveryDelay < minimumUnansweredDelayMs) {
-      throw new Error(`${frame} was acknowledged unexpectedly after only ${recoveryDelay} ms`);
-    }
+    console.log("WAIT ESP will retry the intentionally unanswered frame before sending recovery queries");
+    await new Promise((resolve) => setTimeout(resolve, minimumUnansweredDelayMs));
+
+    // Periodic TEMP or BAT telemetry can arrive independently of these queries.
+    // Only a fresh pair after the rejection window proves the queued reads ran.
+    const lateTemperatureCount = temperatureCount;
+    const lateBatteryCount = batteryCount;
+    await waitFor(
+      () => temperatureCount > lateTemperatureCount && batteryCount > lateBatteryCount,
+      `late temperature and battery recovery replies after ${frame}`,
+      recoveryStarted + timeoutMs,
+    );
     console.log(`PASS parser recovered after rejecting ${frame}`);
   }
+
+  const aliasProbeTemperatureStart = temperatureCount;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    socket.send(`PASS,${aliasProbe}`);
+    await new Promise((resolve) => setTimeout(resolve, aliasObservationMs));
+    console.log(`PASS completed collision-alias observation ${attempt}/2`);
+  }
+  if (temperatureCount - aliasProbeTemperatureStart >= 2) {
+    throw new Error(`${aliasProbe} still behaves like its legacy TEM alias`);
+  }
+
+  const postAliasBatteryCount = batteryCount;
+  sendQuery(recoveryQueries[1]);
+  await waitFor(
+    () => batteryCount > postAliasBatteryCount,
+    `battery recovery reply after ${aliasProbe}`,
+  );
+  console.log(`PASS collision-free parser rejects ${aliasProbe} without a TEM response`);
 
   console.log("PASS Linkbus receive bounds and next-frame resynchronization");
 } finally {

@@ -34,13 +34,18 @@ int main()
 		linkbus_rx_id_append(linkbus_rx_id_append(0, 'R'), 'T'), 'J');
 	const uint32_t go_id = linkbus_rx_id_append(linkbus_rx_id_append(0, 'G'), 'O');
 	const uint32_t go_alias = linkbus_rx_id_append(linkbus_rx_id_append(0, 'F'), 'Y');
+	const uint32_t temperature_id = linkbus_rx_id_append(
+		linkbus_rx_id_append(linkbus_rx_id_append(0, 'T'), 'E'), 'M');
+	const uint32_t temperature_alias = linkbus_rx_id_append(
+		linkbus_rx_id_append(linkbus_rx_id_append(0, 'R'), 'X'), 'W');
 
 	expect(
 		key_id == 0x4B4559 && reset_id == 0x525354 && go_id == 0x474F,
 		"message_ids_preserve_wire_characters");
 
 	expect(
-		key_id != key_alias && reset_id != reset_alias && go_id != go_alias,
+		key_id != key_alias && reset_id != reset_alias && go_id != go_alias &&
+			temperature_id != temperature_alias,
 		"legacy_decimal_aliases_are_distinct");
 
 	expect(
