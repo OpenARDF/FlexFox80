@@ -26,6 +26,7 @@
  */
 
 #include "linkbus.h"
+#include "bounded_text_copy.h"
 #include "defs.h"
 #include "usart_basic.h"
 #include <string.h>
@@ -375,10 +376,11 @@ bool lb_send_text(char* text)
 
 		if(buff)
 		{
-			sprintf(*buff, text);
-
-			linkbus_start_tx();
-			err = false;
+			if(copy_text_to_buffer(*buff, sizeof(*buff), text))
+			{
+				linkbus_start_tx();
+				err = false;
+			}
 		}
 	}
 

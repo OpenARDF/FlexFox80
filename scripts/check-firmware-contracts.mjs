@@ -30,10 +30,28 @@ const driverInitHeaderPath = join(
   "driver_init.h",
 );
 const wifiProbePath = join(repoRoot, "scripts", "probe-flexfox-wifi.mjs");
+const linkbusPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "src",
+  "linkbus.cpp",
+);
+const serialbusPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "src",
+  "serialbus.cpp",
+);
 const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
 const wifiProbe = readFileSync(wifiProbePath, "utf8");
+const linkbus = readFileSync(linkbusPath, "utf8");
+const serialbus = readFileSync(serialbusPath, "utf8");
 const declaration = source.match(/extern\s+volatile\s+Fox_t\s+g_fox\s*\[\s*([^\]]+?)\s*\]\s*;/);
 
 if (!declaration) {
@@ -174,3 +192,34 @@ if (unsafeSendExpressions.length > 0) {
 }
 
 process.stdout.write("PASS WiFi smoke probe remains read-only\n");
+
+const unsafeTextSends = [
+  ["Linkbus", linkbus],
+  ["Serialbus", serialbus],
+].filter(([, busSource]) => /sprintf\s*\(\s*\*\s*buff\s*,\s*text\s*\)/.test(busSource));
+
+if (unsafeTextSends.length > 0) {
+  process.stderr.write(
+    `Firmware contract check failed: ${unsafeTextSends.map(([name]) => name).join(" and ")} text send treats data as a format string\n`,
+  );
+  process.exit(1);
+}
+
+const unboundedTextSends = [
+  ["Linkbus", linkbus],
+  ["Serialbus", serialbus],
+].filter(
+  ([, busSource]) =>
+    !/copy_text_to_buffer\s*\(\s*\*\s*buff\s*,\s*sizeof\s*\(\s*\*\s*buff\s*\)\s*,\s*text\s*\)/.test(
+      busSource,
+    ),
+);
+
+if (unboundedTextSends.length > 0) {
+  process.stderr.write(
+    `Firmware contract check failed: ${unboundedTextSends.map(([name]) => name).join(" and ")} text send does not enforce its destination buffer size\n`,
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS text send helpers copy literal data within destination bounds\n");

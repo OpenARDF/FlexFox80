@@ -26,6 +26,7 @@
  */
 
 #include "defs.h"
+#include "bounded_text_copy.h"
 #include "serialbus.h"
 #include "usart_basic.h"
 #include <string.h>
@@ -338,9 +339,11 @@ bool serialbus_send_text(char* text)
 
 		if(buff)
 		{
-			sprintf(*buff, text);
-			serialbus_start_tx();
-			err = false;
+			if(copy_text_to_buffer(*buff, sizeof(*buff), text))
+			{
+				serialbus_start_tx();
+				err = false;
+			}
 		}
 	}
 

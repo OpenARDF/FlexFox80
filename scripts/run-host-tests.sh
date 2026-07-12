@@ -29,3 +29,11 @@ printf '%s\n' "Host compiler: $($cxx --version | head -n 1)"
 	-o "$build_dir/avr-circular-buffer-tests"
 
 "$build_dir/avr-circular-buffer-tests"
+
+# shellcheck disable=SC2086 # Flags are intentionally expanded into individual compiler arguments.
+"$cxx" $common_flags $sanitizer_flags \
+	-I "$repo_root/Software/AVR128DA48/FlexFox80/include" \
+	"$repo_root/Tests/Host/avr_bounded_text_copy_test.cpp" \
+	-o "$build_dir/avr-bounded-text-copy-tests"
+
+"$build_dir/avr-bounded-text-copy-tests"

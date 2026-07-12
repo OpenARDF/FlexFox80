@@ -266,6 +266,16 @@ The root `README.md` remains user-facing and is not the location for these devel
 - Exact Windows verification remains open.
 - Evidence: [EEPROM_RF_POWER_INITIALIZATION_WIDTH_2026-07-12.md](Evidence/EEPROM_RF_POWER_INITIALIZATION_WIDTH_2026-07-12.md).
 
+**Completed Mac defect slice — bounded Linkbus and Serialbus text sends:**
+
+- Both transmit helpers passed caller data directly as the `sprintf()` format string and did not enforce their fixed destination sizes.
+- A source contract failed red against both unsafe calls before the production correction.
+- One shared bounded helper now copies percent characters literally, preserves exact-fit NUL termination, and rejects oversized input without queuing a partial protocol frame.
+- Direct host regressions cover percent sequences, the maximum accepted length, oversized rejection without destination mutation, and invalid arguments.
+- The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, and text grows by 30 bytes.
+- Exact Windows and connected-target Linkbus verification remain open.
+- Evidence: [BOUNDED_TEXT_SEND_2026-07-12.md](Evidence/BOUNDED_TEXT_SEND_2026-07-12.md).
+
 **R6 layout characterization checkpoint:**
 
 - A host-side AVR-width model now checks all 65 `EE_prom` member offsets against `EE_var_t`.
@@ -510,7 +520,7 @@ Use a small internal issue table or tracker with these fields:
 | R4 | A | Medium | ESP event files | Pending fixture | Static review | A3 | Planned |
 | R5 | A/B | High | Cross-processor timing input | Pending fixture | Static review | A3 | Planned |
 | R6 | A | High | AVR EEPROM | I2C counter and enum ABI regressions; 65-field layout protected | Static review, focused red-green evidence, and exact Mac build | A3/A4 | In progress |
-| R7 | A | High | AVR text output | Pending boundary test | Static review | A3 | Planned |
+| R7 | A | High | AVR text output | Direct boundary regression; exact Mac build | Static review and focused red-green evidence | A3/A4 | In progress |
 | R8 | A/B | Medium | ESP role assignment | Pending Event test | Static review | A3 | Planned |
 | R9 | A/B | High | ESP WebSocket/AVR bridge | Open AP plus unrestricted `PASS` forwarding | Static end-to-end trace; safe probe contract | A3/A4 | Characterized |
 

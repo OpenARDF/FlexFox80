@@ -25,6 +25,13 @@ The first slice compiles the production AVR `CircularStringBuff.cpp` unchanged a
 - reset and busy-state behavior;
 - documented LIFO `pop()` behavior, including wrap to the last occupied index.
 
+The bounded text-copy regression compiles the same inline helper used by Linkbus and Serialbus and covers:
+
+- percent characters copied as literal data;
+- exact maximum payload length with a terminating NUL;
+- rejection of oversized input without emitting a partial protocol frame;
+- rejection of null pointers and zero-capacity destinations.
+
 Zero-capacity construction and allocation-failure behavior are intentionally not asserted yet. They are candidate red-green defect slices and must begin with recorded pre-fix evidence.
 
 ## Limits
