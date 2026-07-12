@@ -176,6 +176,7 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [x] The exact Windows evidence request is documented, including deterministic-build, resource, hash, programmer, and ESP dependency information.
 - [x] Two exact Windows AVR Release wrapper runs at `4d17bab` were deterministic across all requested artifacts and established the initial size/hash baseline. They also exposed three repeatable `g_fox` declaration bounds warnings for test-first investigation.
 - [x] The Mac can identify and read the attached AVR128DA48 through Atmel-ICE without writing it. The connected unit's flash verifies exactly against the tracked `33e64e0` Debug HEX, and repeatable EEPROM/fuse captures now provide deployed-state evidence for R6.
+- [x] The connected test unit has been programmed with the exact `57d70a7` Release image. Independent readback matches the intended flash, the complete original EEPROM was restored byte-for-byte, and all fuse bytes remain unchanged.
 - [x] Run the AVR wrapper with exact-version Mac and Windows inputs. Two Mac runs at `0429c2a` are deterministic, warning-free, and match Windows resource totals; same-source Windows artifact comparison for the I2C slice remains pending.
 - [x] The Release/Debug persisted-enum ABI mismatch is removed: explicit `uint16_t` storage, a source-layout regression, an AVR compile-time assertion, and an exact Mac linker map all preserve the deployed 274-byte EEPROM schema.
 - [ ] Pin the ESP8266 build only after retrieving the known-good Arduino core, board-option, WebSockets, and filesystem-tool versions.
@@ -275,6 +276,14 @@ The root `README.md` remains user-facing and is not the location for these devel
 - The live image confirms field-address access but contains unexplained late-layout values, including erased bytes in the unused I2C counter despite a current initialization flag.
 - The observation does not yet prove whether initialization, preserved EEPROM history, or another write-path behavior produced those bytes; no device data was changed.
 - Evidence: [MAC_ATMEL_ICE_TARGET_EVIDENCE_2026-07-12.md](Evidence/MAC_ATMEL_ICE_TARGET_EVIDENCE_2026-07-12.md).
+
+**R6 first programming checkpoint:**
+
+- A no-chip-erase replacement attempt failed verification on a required 0-to-1 flash transition and was not accepted as a valid image.
+- Immediate recovery explicitly erased and verified the Release flash, restored and verified the complete pre-test EEPROM image, and left all fuses unchanged.
+- Independent post-operation reads are byte-identical to the intended flash and preserved EEPROM/fuse baselines.
+- Functional RF, RTC, communications, and timing qualification remain open.
+- Evidence: [MAC_AVR_PROGRAMMING_2026-07-12.md](Evidence/MAC_AVR_PROGRAMMING_2026-07-12.md).
 
 ### Step 4: Remove clear, locally bounded defects
 

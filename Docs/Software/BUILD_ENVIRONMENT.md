@@ -37,6 +37,8 @@ The first live probe confirmed the expected debugger serial and AVR128DA48 signa
 
 The connected FlexFox is authorized as a writable test unit. Before the first write, preserve its current flash, EEPROM, and fuses; select an exact, schema-compatible artifact; and define the rollback and applicable hardware test plan. Do not alter fuses or lock bits unless a separate test explicitly requires it.
 
+The first Mac programming qualification established that disabling automatic chip erase with avrdude `-D` is not sufficient for an arbitrary replacement image: verification failed when a bit needed a 0-to-1 transition. The successful procedure explicitly erased, wrote and verified flash, restored and verified the preserved raw EEPROM, and then independently read back flash, EEPROM, and fuses. See [Mac AVR programming evidence](Evidence/MAC_AVR_PROGRAMMING_2026-07-12.md).
+
 ## Windows reference-environment handoff
 
 The Windows Codex environment can provide high-value evidence without becoming the primary development environment. Requests and replies travel through the repository-root [Codex mailbox](../../CODEX_MAILBOX.md). It should run read-only discovery first and commit no generated IDE output. The requested report should include:

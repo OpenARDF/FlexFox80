@@ -73,6 +73,21 @@ Do not identify a release by a checked-in binary timestamp alone.
 - Existing tracked AVR Debug artifacts remain in place until Step A2 proves clean reproducible builds and a dedicated cleanup is reviewed.
 - Manufacturing outputs such as intentional Gerber packages are not firmware build products and must not be hidden by overly broad ignore rules.
 
+## AVR programming and rollback
+
+Before replacing AVR firmware on a configured unit:
+
+1. read flash, the complete EEPROM address space, and all fuse bytes through the selected programmer;
+2. record hashes and repeat critical reads to establish a stable backup;
+3. confirm the selected image's 274-byte EEPROM ABI and inactive/safe boot configuration;
+4. erase and program flash using a procedure that supports required 0-to-1 transitions;
+5. restore the complete EEPROM backup when erase retention has not been independently proven;
+6. verify the input flash and EEPROM through the programmer;
+7. perform independent post-operation reads and compare flash, EEPROM, and fuses byte-for-byte;
+8. retain the prior flash image and raw unit-specific backup outside Git until functional qualification is complete.
+
+Do not rely on avrdude `-D` alone to preserve EEPROM while replacing arbitrary flash. Without an erase, required 0-to-1 transitions can leave a mixed image even though page writes were attempted. The first Mac procedure and recovery are recorded in [MAC_AVR_PROGRAMMING_2026-07-12.md](Evidence/MAC_AVR_PROGRAMMING_2026-07-12.md).
+
 ## Future AVR128DA48 overwrite transition to main
 
 The transition is intentionally deferred until the current hardware line passes the agreed hardening and release gates.
