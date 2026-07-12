@@ -231,6 +231,7 @@ void linkbus_Rx(uint8_t rx_char)
 	static uint8_t charIndex = 0;
 	static uint8_t field_index = 0;
 	static uint8_t field_len = 0;
+	static uint8_t id_len = 0;
 	static uint32_t tempMsg_ID = 0;
 	static bool receiving_msg = false;
 	static bool escapeNext = false;
@@ -253,6 +254,7 @@ void linkbus_Rx(uint8_t rx_char)
 			charIndex = 0;
 			buff->type = (rx_char == '!') ? LINKBUS_MSG_REPLY : LINKBUS_MSG_COMMAND;
 			field_len = 0;
+			id_len = 0;
 			tempMsg_ID = 0;
 			receiving_msg = true;
 
@@ -327,7 +329,17 @@ void linkbus_Rx(uint8_t rx_char)
 			{
 				if(field_index == 0)    /* message ID received */
 				{
-					tempMsg_ID = tempMsg_ID * 10 + rx_char;
+					if(linkbus_rx_id_can_append(id_len, LINKBUS_MAX_MSG_ID_LENGTH))
+					{
+						tempMsg_ID = tempMsg_ID * 10 + rx_char;
+						id_len++;
+					}
+					else
+					{
+						buff->id = LB_MESSAGE_EMPTY;
+						receiving_msg = false;
+						buff = NULL;
+					}
 				}
 				else
 				{
@@ -352,6 +364,7 @@ void linkbus_Rx(uint8_t rx_char)
 			buff->id = LB_MESSAGE_EMPTY;
 			charIndex = LINKBUS_MAX_MSG_LENGTH;
 			field_len = 0;
+			id_len = 0;
 			tempMsg_ID = 0;
 			field_index = 0;
 			buff = NULL;

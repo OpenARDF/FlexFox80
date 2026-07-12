@@ -235,6 +235,7 @@ if (unboundedTextSends.length > 0) {
 process.stdout.write("PASS text send helpers copy literal data within destination bounds\n");
 
 const requiredLinkbusRxGuards = [
+  "linkbus_rx_id_can_append",
   "linkbus_rx_field_can_terminate",
   "linkbus_rx_can_start_next_field",
   "linkbus_rx_field_can_append",
@@ -252,7 +253,8 @@ if (missingLinkbusRxGuards.length > 0) {
 
 process.stdout.write("PASS Linkbus receive parser guards field count and field length\n");
 
-const expectedMalformedFrames = '["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;"]';
+const expectedMalformedFrames =
+  '["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;", "$AZRX?"]';
 if (!linkbusBoundsTest.includes(`const malformedFrames = ${expectedMalformedFrames};`)) {
   process.stderr.write("Firmware contract check failed: Linkbus live test malformed frames changed\n");
   process.exit(1);

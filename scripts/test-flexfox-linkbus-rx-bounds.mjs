@@ -2,8 +2,9 @@
 
 const baseUrl = new URL(process.env.FLEXFOX_URL ?? "http://73.73.73.73/");
 const timeoutMs = Number.parseInt(process.env.FLEXFOX_LINKBUS_TEST_TIMEOUT_MS ?? "15000", 10);
-const malformedFrames = ["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;"];
+const malformedFrames = ["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;", "$AZRX?"];
 const recoveryQuery = "$TEM?";
+const minimumUnansweredDelayMs = 6000;
 
 if (baseUrl.protocol !== "http:") {
   throw new Error("FLEXFOX_URL must use http:// because the deployed module does not serve TLS");
@@ -136,7 +137,12 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 200));
 
     console.log(`WAIT ESP will retry the intentionally unanswered frame before sending ${recoveryQuery}`);
+    const recoveryStarted = Date.now();
     await requestFreshTemperature();
+    const recoveryDelay = Date.now() - recoveryStarted;
+    if (recoveryDelay < minimumUnansweredDelayMs) {
+      throw new Error(`${frame} was acknowledged unexpectedly after only ${recoveryDelay} ms`);
+    }
     console.log(`PASS parser recovered after rejecting ${frame}`);
   }
 

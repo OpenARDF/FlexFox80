@@ -25,6 +25,11 @@ void expect(bool condition, const char* test_name)
 int main()
 {
 	expect(
+		linkbus_rx_id_can_append(0, 3) && linkbus_rx_id_can_append(2, 3) &&
+			!linkbus_rx_id_can_append(3, 3),
+		"message_id_is_limited_to_three_characters");
+
+	expect(
 		linkbus_rx_field_can_append(1, 19, maximum_fields, field_capacity) &&
 			linkbus_rx_field_can_append(3, 19, maximum_fields, field_capacity),
 		"last_payload_byte_fits_first_and_last_fields");

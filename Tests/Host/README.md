@@ -34,6 +34,7 @@ The bounded text-copy regression compiles the same inline helper used by Linkbus
 
 The Linkbus receive-boundary regression compiles the same guards used by the USART receive parser and covers:
 
+- the one-to-three-character message-ID boundary;
 - the final payload byte in the first and third fields;
 - reserved space for each field's terminating NUL;
 - rejection of writes to the message-ID position or a fourth field;
