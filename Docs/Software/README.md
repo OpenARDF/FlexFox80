@@ -1,0 +1,21 @@
+# FlexFox80 Software Documentation
+
+This directory documents the current software architecture on the `AVR128DA48` branch and records the initial reliability review performed in July 2026. It is intended to give future maintainers and project threads a shared starting point before changing mature transmitter behavior.
+
+## Documents
+
+- [Architecture](ARCHITECTURE.md) describes the ESP8266/AVR128DA48 division of responsibility, major subsystems, runtime flow, persistence, communications, and build layout.
+- [Reliability review](RELIABILITY_REVIEW.md) records existing strengths, confirmed code-level concerns, suspected failure modes, and current verification gaps.
+- [Safe hardening strategy](SAFE_HARDENING_STRATEGY.md) defines a conservative process for reproducing and fixing bugs without unnecessarily changing proven transmitter behavior.
+
+## Scope and status
+
+These documents describe the source present on the `AVR128DA48` branch at commit `33e64e0` (`Bug Fixes`, 2024-05-06). They are an engineering review, not a statement that every identified risk has been observed on deployed hardware.
+
+Items in the reliability review use the following terms:
+
+- **Confirmed code issue** means the problematic behavior is directly visible in the implementation.
+- **Failure candidate** means the code supports a plausible failure mechanism that still needs a focused reproduction.
+- **Verification gap** means the repository does not presently provide a repeatable way to prove behavior.
+
+No broad refactor should be started solely from this review. Begin with an observed symptom or a focused reproduction, add a behavioral test where practical, and make the smallest change that addresses the demonstrated problem.
