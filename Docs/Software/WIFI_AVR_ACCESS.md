@@ -111,6 +111,22 @@ The current bench unit is connected to a dummy load, but RF-active commands stil
 
 ## Mac networking
 
-The Mac must associate its WiFi interface with the FlexFox access point. Because that network normally has no internet route, internet access for Codex, Git, and documentation lookup must use another interface if simultaneous connectivity is needed. A Bluetooth internet path is being investigated separately.
+The proven simultaneous-connectivity arrangement is:
+
+1. keep the Mac WiFi interface associated with ScharStar 2 so its normal default route and internet access remain unchanged;
+2. associate the Moto with the FlexFox `Tx_...` access point;
+3. connect the Moto to the Mac by USB and enable Moto USB tethering;
+4. start DroidTether with default routing disabled;
+5. add a host-only route for `73.73.73.73` through the `utun` interface created by DroidTether;
+6. keep DroidTether running for the entire FlexFox session;
+7. run `just wifi-probe`, followed by `just wifi-monitor` for extended work.
+
+The DroidTether `utun` number can change between sessions. Identify the active interface rather than permanently assuming `utun6`. Verify the IPv4 routing table before probing:
+
+- the ordinary `default` destination must still use the Mac WiFi interface and ScharStar 2 gateway;
+- `73.73.73.73` must be the narrow host route through the active DroidTether `utun`;
+- DroidTether must not install a competing default route.
+
+In the first successful session, the default route remained on `en0` through `10.0.4.1`, while only `73.73.73.73` used `utun6`.
 
 Do not change macOS routing, Internet Sharing, the FlexFox AP address, or the ESP firmware merely to make the first smoke test convenient. First prove the default direct path, then document any repeatable dual-network arrangement separately.
