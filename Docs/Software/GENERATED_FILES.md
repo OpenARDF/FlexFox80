@@ -34,6 +34,8 @@ Treat these as regeneration-sensitive:
 
 `driver_isr.cpp` has a generated header but also contains product-specific USART and Linkbus parsing. It is a customized generated-derived file. A necessary edit must be narrow, retain its license/header, and be documented so a later START regeneration does not silently erase it.
 
+`include/driver_init.h` has one portability correction from the generated Windows-style `utils\\compiler.h` include to the C/C++ portable `utils/compiler.h` spelling. Preserve that correction if Microchip START regenerates the file; changing the separator does not change the selected header or firmware behavior.
+
 Low-level product adaptations in otherwise generated-style files should be identified during Step A2 before any START regeneration is attempted.
 
 ## AVR build outputs and IDE state

@@ -21,8 +21,17 @@ const eepromManagerHeaderPath = join(
   "include",
   "eeprommanager.h",
 );
+const driverInitHeaderPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "include",
+  "driver_init.h",
+);
 const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
+const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
 const declaration = source.match(/extern\s+volatile\s+Fox_t\s+g_fox\s*\[\s*([^\]]+?)\s*\]\s*;/);
 
 if (!declaration) {
@@ -83,3 +92,12 @@ if (failures.length > 0) {
 }
 
 process.stdout.write("PASS I2C failure count writes preserve the uint16_t EEPROM width\n");
+
+if (/^\s*#include\s*[<"][^>"\r\n]*\\[^>"\r\n]*[>"]/m.test(driverInitHeader)) {
+  process.stderr.write(
+    "Firmware contract check failed: driver_init.h contains a Windows-only include path\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS generated driver include paths are host-portable\n");
