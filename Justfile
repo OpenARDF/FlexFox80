@@ -47,6 +47,10 @@ wifi-probe:
 wifi-monitor:
     FLEXFOX_PROBE_MONITOR=1 node ./scripts/probe-flexfox-wifi.mjs
 
+# Send two non-configuring malformed Linkbus frames, then require read-only recovery replies.
+wifi-linkbus-bounds-test:
+    node ./scripts/test-flexfox-linkbus-rx-bounds.mjs
+
 # Step A2 will replace this explicit boundary with a pinned ESP8266 build.
 esp-build:
     @echo "ESP8266 build wrapper is not configured yet; complete Step A2 before firmware changes."

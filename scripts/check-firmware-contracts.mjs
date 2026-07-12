@@ -30,6 +30,7 @@ const driverInitHeaderPath = join(
   "driver_init.h",
 );
 const wifiProbePath = join(repoRoot, "scripts", "probe-flexfox-wifi.mjs");
+const linkbusBoundsTestPath = join(repoRoot, "scripts", "test-flexfox-linkbus-rx-bounds.mjs");
 const linkbusPath = join(
   repoRoot,
   "Software",
@@ -57,6 +58,7 @@ const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
 const wifiProbe = readFileSync(wifiProbePath, "utf8");
+const linkbusBoundsTest = readFileSync(linkbusBoundsTestPath, "utf8");
 const linkbus = readFileSync(linkbusPath, "utf8");
 const serialbus = readFileSync(serialbusPath, "utf8");
 const driverIsr = readFileSync(driverIsrPath, "utf8");
@@ -249,3 +251,31 @@ if (missingLinkbusRxGuards.length > 0) {
 }
 
 process.stdout.write("PASS Linkbus receive parser guards field count and field length\n");
+
+const expectedMalformedFrames = '["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;"]';
+if (!linkbusBoundsTest.includes(`const malformedFrames = ${expectedMalformedFrames};`)) {
+  process.stderr.write("Firmware contract check failed: Linkbus live test malformed frames changed\n");
+  process.exit(1);
+}
+if (!linkbusBoundsTest.includes('const recoveryQuery = "$TEM?";')) {
+  process.stderr.write("Firmware contract check failed: Linkbus live test recovery query is not $TEM?\n");
+  process.exit(1);
+}
+
+const approvedLinkbusTestSends = [
+  'socket.send("!&")',
+  'socket.send(`PASS,${frame}`)',
+  'socket.send(`PASS,${recoveryQuery}`)',
+];
+const linkbusTestSendCount = [...linkbusBoundsTest.matchAll(/socket\.send\(/g)].length;
+const heartbeatSendCount = linkbusBoundsTest.split('socket.send("!&")').length - 1;
+if (
+  linkbusTestSendCount !== 4 ||
+  heartbeatSendCount !== 2 ||
+  approvedLinkbusTestSends.some((send) => !linkbusBoundsTest.includes(send))
+) {
+  process.stderr.write("Firmware contract check failed: Linkbus live test has unapproved sends\n");
+  process.exit(1);
+}
+
+process.stdout.write("PASS Linkbus live test remains limited to malformed ZZZ frames and read-only recovery\n");

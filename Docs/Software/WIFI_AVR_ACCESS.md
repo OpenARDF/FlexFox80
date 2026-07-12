@@ -76,6 +76,8 @@ just wifi-monitor
 
 Monitor mode performs the same initial proof, then sends only `!&` every five seconds until interrupted with Ctrl-C. The ESP disconnects a WebSocket after approximately ten seconds without text traffic, so a 30-second heartbeat cannot preserve one continuous socket. Five seconds leaves margin for scheduling delay while reducing the built-in pages' two-second heartbeat rate. This resets the ESP WebSocket activity timer and allows the ESP/AVR keep-alive behavior to remain active while the Moto stays associated with the FlexFox AP.
 
+`just wifi-linkbus-bounds-test` is a narrow writable-test-unit qualification for the AVR receive parser. It sends only two malformed frames under the unrecognized `ZZZ` message ID, followed by the read-only `$TEM?` query after each rejection. It passes only if a fresh temperature reply proves that the next valid frame was parsed. Do not generalize this recipe into arbitrary `PASS` forwarding; raw pass-through also exposes configuration, RF, reset, clock, EEPROM, and WiFi-shutdown commands.
+
 Useful overrides:
 
 ```text
