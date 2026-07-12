@@ -2,7 +2,7 @@
 
 ## Status
 
-Characterized as the next bounded R6 candidate. No firmware correction is included in this evidence slice because the preceding I2C failure-count correction is still awaiting exact Windows AVR verification.
+Corrected by commit `4dbd90f` (`Correct RF power EEPROM initialization width`). Mac red-green, repository, and exact AVR Release build evidence is complete. Exact Windows verification is requested separately.
 
 ## Observed contract
 
@@ -24,12 +24,41 @@ That writer spans four bytes: the two-byte RF power field and the first two byte
 
 The line predates the AVR128DA48 directory reorganization; `git blame` traces it to commit `d004f26b` from 2021-11-30.
 
-## Proposed TDD slice
+## Completed TDD slice
 
-1. Extend the EEPROM source-contract regression to require word-width initialization for the declared 16-bit RF power field.
-2. Capture the failing result against the current implementation.
-3. Change only the initialization call from the dword writer to the word writer.
-4. Rerun the host and repository gates.
-5. Obtain two deterministic Windows AVR Release builds and record warnings, size, and artifact deltas.
+The source contract was extended first to require both the ordinary update path and first-time initialization to use the word writer for `RF_Power`. Against the pre-fix source, `just test` failed red for exactly one reason:
 
-This candidate should remain separate from broader EEPROM layout, enum-width, and guard-validation work.
+```text
+Firmware contract check failed: RF_Power initialization does not write its uint16_t width
+```
+
+Commit `4dbd90f` changes only the initialization call from `avr_eeprom_write_dword` to `avr_eeprom_write_word`. The same test then passed green, along with the existing host characterization, I2C-width contract, fixed enum-width contract, WiFi probe safety contract, and all 65 fields of the 274-byte EEPROM layout.
+
+No field, offset, default, normal read, normal update, RF-control path, or guard definition changed.
+
+## Exact Mac AVR build
+
+Two consecutive final-source builds used AVR-GCC 7.3.0 and Atmel `AVR-Dx_DFP` 1.9.103. Both reported `reference-version-match`, zero warnings, and byte-identical hashes for all six artifacts:
+
+```text
+   text    data     bss     dec     hex
+  40174    1106    1137   42417    a5b1
+```
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `FlexFox80.elf` | `b5e98b4b5ccea6b5fa3012a5fef4b60730b00feb0e2a743e74f79be4202e930c` |
+| `FlexFox80.hex` | `2b6df2dbf0cf577b5fb3dbc3b0f5e0e9222f6c402b312da6f1116f5f1d990e79` |
+| `FlexFox80.eep` | `c8dc188f9317e79d57b2852dc509c41481951eb974b68baa1e34f53d7cef7906` |
+| `FlexFox80.map` | `05ec49db11e480d232d25991abf2725cc10929a5c94769f7c18449b637b57e8f` |
+| `FlexFox80.lss` | `29d68eb531b005fc35e9622df0ed7375d73b3e371622e7063a9e98ab4ba251f2` |
+| `FlexFox80.srec` | `4fe43bb1b7d24771f82ea9c38fc45e0e881c8a3a1a0a432e77dffd9744dfd41c` |
+
+Compared with the preceding fixed-enum-width Mac build, text decreased by four bytes; data and BSS are unchanged. The EEPROM initializer remains byte-identical, and the linker map still reports `.eeprom = 0x112` (274 bytes).
+
+## Remaining verification
+
+- Obtain exact Windows same-source build and host-contract evidence.
+- Program the test unit only through the proven erase/program/restore workflow.
+- Deliberately invalidate a copied EEPROM initialization flag with sentinel bytes in the beginning of `Guard4_15`, boot once, and prove first-time initialization writes the default RF power without changing those sentinel bytes.
+- Restore and verify the complete preserved unit EEPROM immediately after the fault-injection test.

@@ -255,11 +255,13 @@ The root `README.md` remains user-facing and is not the location for these devel
 - Mac host and repository gates pass green; exact Windows AVR build verification remains required before the slice is closed.
 - Evidence: [EEPROM_I2C_FAILURE_COUNT_WIDTH_2026-07-12.md](Evidence/EEPROM_I2C_FAILURE_COUNT_WIDTH_2026-07-12.md).
 
-**Next characterized R6 candidate — RF power initialization width:**
+**Completed Mac defect slice — RF power initialization width:**
 
 - The RF power field, global value, normal read path, and normal update path are 16-bit.
-- First-time initialization uses the dword writer, spanning the field and two bytes of the following reserved guard.
-- The candidate is documented but intentionally not changed while the preceding I2C width slice awaits exact Windows target verification.
+- A source-contract regression failed red because first-time initialization used the dword writer, spanning the field and two bytes of the following reserved guard.
+- Commit `4dbd90f` changes only that initialization call to the word writer.
+- The full Mac suite passes green; two exact builds are deterministic and warning-free, text decreases by four bytes, EEPROM initialization remains byte-identical, and the schema remains 274 bytes.
+- Exact Windows and deliberate target initialization/guard-sentinel verification remain open.
 - Evidence: [EEPROM_RF_POWER_INITIALIZATION_WIDTH_2026-07-12.md](Evidence/EEPROM_RF_POWER_INITIALIZATION_WIDTH_2026-07-12.md).
 
 **R6 layout characterization checkpoint:**
