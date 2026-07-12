@@ -23,6 +23,8 @@ The wrapper accepts Windows `.exe` tools and native Unix tools. It rejects compi
 
 The checked-in `avr8-gnu-toolchain-3.7.0.1796-win32.any.x86_64.zip.update` archive contains a Windows toolchain and cannot provide native macOS executables. Its retention and eventual replacement should be decided only after both environments reproduce the firmware.
 
+The exact archived macOS compiler has been verified to start through Rosetta. See [Mac build environment evidence](Evidence/MAC_BUILD_ENVIRONMENT_2026-07-11.md) for its identity, hashes, and the remaining historical device-pack boundary.
+
 ## Windows reference-environment handoff
 
 The Windows Codex environment can provide high-value evidence without becoming the primary development environment. Ask it to run read-only discovery first and commit no generated IDE output. The requested report should include:
