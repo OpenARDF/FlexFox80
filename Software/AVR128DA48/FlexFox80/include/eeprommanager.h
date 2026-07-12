@@ -52,15 +52,15 @@ struct EE_prom
 	uint32_t guard4_6;
 	uint8_t unlockCode[MAX_UNLOCK_CODE_LENGTH + 2];
 	uint32_t guard4_7;
-	Fox_t fox_setting_none;
+	uint16_t fox_setting_none;
 	uint32_t guard4_8;
-	Fox_t fox_setting_classic;
+	uint16_t fox_setting_classic;
 	uint32_t guard4_9;
-	Fox_t fox_setting_sprint;
+	uint16_t fox_setting_sprint;
 	uint32_t guard4_10;
-	Fox_t fox_setting_foxoring;
+	uint16_t fox_setting_foxoring;
 	uint32_t guard4_11;
-	Fox_t fox_setting_blind;
+	uint16_t fox_setting_blind;
 	uint32_t guard4_12;
 	uint8_t utc_offset; 
 	uint32_t guard4_13;
@@ -82,7 +82,7 @@ struct EE_prom
 	uint32_t guard4_21;
 	int16_t intra_cycle_delay_time; 
 	uint32_t guard4_22;
-	Event_t event_setting; 
+	uint16_t event_setting;
 	uint32_t guard4_23;
 	uint32_t frequency;
 	uint32_t guard4_24;
@@ -105,6 +105,10 @@ struct EE_prom
 	uint16_t i2c_failure_count;
 };
 
+#ifdef __AVR__
+static_assert(sizeof(EE_prom) == 274, "EE_prom must preserve the deployed EEPROM layout");
+#endif
+
 typedef enum
 {
 	Eeprom_initialization_flag = 0, /* 2 bytes */
@@ -121,16 +125,16 @@ typedef enum
 	Guard4_6 = StationID_text + MAX_PATTERN_TEXT_LENGTH+2,		/**** Guard = 4 bytes ****/
 	UnlockCode =  Guard4_6 + GUARDSIZE, /* UNLOCK_CODE_SIZE + 2 bytes */
 	Guard4_7 = UnlockCode + UNLOCK_CODE_SIZE+2,					/**** Guard = 4 bytes ****/
-	Fox_setting_none =  Guard4_7 + GUARDSIZE, /* 1 bytes */
-	Guard4_8 = Fox_setting_none + sizeof(Fox_t),					/**** Guard = 4 bytes ****/
-	Fox_setting_classic =  Guard4_8 + GUARDSIZE, /* 1 bytes */
-	Guard4_9 = Fox_setting_classic + sizeof(Fox_t),					/**** Guard = 4 bytes ****/
-	Fox_setting_sprint =  Guard4_9 + GUARDSIZE, /* 1 bytes */
-	Guard4_10 = Fox_setting_sprint + sizeof(Fox_t),					/**** Guard = 4 bytes ****/
-	Fox_setting_foxoring =  Guard4_10 + GUARDSIZE, /* 1 bytes */
-	Guard4_11 = Fox_setting_foxoring + sizeof(Fox_t),				/**** Guard = 4 bytes ****/
-	Fox_setting_blind =  Guard4_11 + GUARDSIZE, /* 1 bytes */
-	Guard4_12 = Fox_setting_blind + sizeof(Fox_t),					/**** Guard = 4 bytes ****/
+	Fox_setting_none =  Guard4_7 + GUARDSIZE, /* 2 bytes */
+	Guard4_8 = Fox_setting_none + sizeof(uint16_t),				/**** Guard = 4 bytes ****/
+	Fox_setting_classic =  Guard4_8 + GUARDSIZE, /* 2 bytes */
+	Guard4_9 = Fox_setting_classic + sizeof(uint16_t),			/**** Guard = 4 bytes ****/
+	Fox_setting_sprint =  Guard4_9 + GUARDSIZE, /* 2 bytes */
+	Guard4_10 = Fox_setting_sprint + sizeof(uint16_t),			/**** Guard = 4 bytes ****/
+	Fox_setting_foxoring =  Guard4_10 + GUARDSIZE, /* 2 bytes */
+	Guard4_11 = Fox_setting_foxoring + sizeof(uint16_t),			/**** Guard = 4 bytes ****/
+	Fox_setting_blind =  Guard4_11 + GUARDSIZE, /* 2 bytes */
+	Guard4_12 = Fox_setting_blind + sizeof(uint16_t),				/**** Guard = 4 bytes ****/
 	Utc_offset =  Guard4_12 + GUARDSIZE, /* 1 byte */
 	Guard4_13 = Utc_offset + sizeof(uint8_t),						/**** Guard = 4 bytes ****/
 	RTTY_offset =  Guard4_13 + GUARDSIZE, /* 4 bytes */
@@ -151,8 +155,8 @@ typedef enum
 	Guard4_21 = ID_Period_Seconds + sizeof(int16_t),				/**** Guard = 4 bytes ****/
 	Intra_Cycle_Delay_Seconds =  Guard4_21 + GUARDSIZE, /* 2 bytes */
 	Guard4_22 = Intra_Cycle_Delay_Seconds + sizeof(int16_t),		/**** Guard = 4 bytes ****/
-	Event_setting =  Guard4_22 + GUARDSIZE, /* 1 byte */ 
-	Guard4_23 = Event_setting + sizeof(Event_t),					/**** Guard = 4 bytes ****/
+	Event_setting =  Guard4_22 + GUARDSIZE, /* 2 bytes */
+	Guard4_23 = Event_setting + sizeof(uint16_t),					/**** Guard = 4 bytes ****/
 	Frequency =  Guard4_23 + GUARDSIZE,  /* 4 bytes */
 	Guard4_24 = Frequency + sizeof(Frequency_Hz),					/**** Guard = 4 bytes ****/
 	Frequency_Low =  Guard4_24 + GUARDSIZE,  /* 4 bytes */

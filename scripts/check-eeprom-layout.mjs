@@ -102,7 +102,7 @@ const fields = stripComments(structMatch[1])
       throw new Error(`EEPROM layout check failed: unknown field type ${type}`);
     }
     const length = lengthExpression ? resolveSum(lengthExpression) : 1;
-    return { name, offset: 0, size: width * length };
+    return { type, name, offset: 0, size: width * length };
   });
 
 let layoutSize = 0;
@@ -117,6 +117,7 @@ if (!enumMatch) {
 }
 
 const enumOffsets = new Map();
+const enumExpressions = new Map();
 const enumEntries = stripComments(enumMatch[1])
   .split(",")
   .map((entry) => entry.trim())
@@ -127,6 +128,7 @@ for (const entry of enumEntries) {
   if (!match) {
     throw new Error(`EEPROM layout check failed: unsupported enum entry ${entry}`);
   }
+  enumExpressions.set(match[1], match[2].replace(/\s+/g, ""));
   enumOffsets.set(match[1], resolveSum(match[2], enumOffsets));
 }
 
@@ -147,6 +149,26 @@ const enumNameExceptions = new Map([
 ]);
 
 const failures = [];
+const fixedWidthEnumFields = [
+  ["fox_setting_none", "Guard4_8", "Fox_setting_none"],
+  ["fox_setting_classic", "Guard4_9", "Fox_setting_classic"],
+  ["fox_setting_sprint", "Guard4_10", "Fox_setting_sprint"],
+  ["fox_setting_foxoring", "Guard4_11", "Fox_setting_foxoring"],
+  ["fox_setting_blind", "Guard4_12", "Fox_setting_blind"],
+  ["event_setting", "Guard4_23", "Event_setting"],
+];
+
+for (const [fieldName, followingGuard, enumName] of fixedWidthEnumFields) {
+  const field = fields.find((candidate) => candidate.name === fieldName);
+  if (!field || field.type !== "uint16_t") {
+    failures.push(`${fieldName} is not declared with the deployed uint16_t width`);
+  }
+  const expectedExpression = `${enumName}+sizeof(uint16_t)`;
+  if (enumExpressions.get(followingGuard) !== expectedExpression) {
+    failures.push(`${followingGuard} does not advance by the fixed uint16_t width`);
+  }
+}
+
 if (fields.length !== enumEntries.length) {
   failures.push(
     `EE_prom has ${fields.length} fields but EE_var_t has ${enumEntries.length} offsets`,

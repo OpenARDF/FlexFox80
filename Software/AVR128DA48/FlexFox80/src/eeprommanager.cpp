@@ -66,15 +66,15 @@ const struct EE_prom EEMEM EepromManager::ee_vars
 	0x00000000, // 	Guard
 	"\0\0\0\0\0\0\0\0\0", // 	uint8_t unlockCode[MAX_UNLOCK_CODE_LENGTH + 2]; 
 	0x00000000, // 	Guard
-	(Fox_t)0x00, // Fox_t fox_setting_none;
+	0x0000, // uint16_t fox_setting_none;
 	0x00000000, // 	Guard
-	(Fox_t)0x00, // Fox_t fox_setting_classic;
+	0x0000, // uint16_t fox_setting_classic;
 	0x00000000, // 	Guard
-	(Fox_t)0x00, // Fox_t fox_setting_sprint;
+	0x0000, // uint16_t fox_setting_sprint;
 	0x00000000, // 	Guard
-	(Fox_t)0x00, // Fox_t fox_setting_foxoring;
+	0x0000, // uint16_t fox_setting_foxoring;
 	0x00000000, // 	Guard
-	(Fox_t)0x00, // Fox_t fox_setting_blind;
+	0x0000, // uint16_t fox_setting_blind;
 	0x00000000, // 	Guard
 	0x00, // 	uint8_t utc_offset; 
 	0x00000000, // 	Guard
@@ -96,7 +96,7 @@ const struct EE_prom EEMEM EepromManager::ee_vars
 	0x00000000, // 	Guard
 	0x0000, // 	int16_t intra_cycle_delay_time; 
 	0x00000000, // 	Guard
-	(Event_t)0x00, // Event_t event_setting;
+	0x0000, // uint16_t event_setting;
 	0x00000000, // 	Guard
 	0x00000000,  // uint32_t frequency;
 	0x00000000, // 	Guard
