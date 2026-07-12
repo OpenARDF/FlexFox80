@@ -80,12 +80,22 @@ Monitor mode performs the same initial proof, then sends only `!&` every five se
 
 The same recipe sends the read-only `$RXW?` probe twice. The legacy decimal ID encoding aliases `RXW` to `TEM` and therefore produces a visible temperature reply for every probe; the collision-free parser instead returns a Linkbus NAK, which the ESP consumes without broadcasting. The test fails only if both short observation windows contain temperature replies, tolerating one incidental periodic update, then requires a fresh battery reply to prove recovery. Do not generalize this recipe into arbitrary `PASS` forwarding; raw pass-through also exposes configuration, RF, reset, clock, EEPROM, and WiFi-shutdown commands.
 
+To observe clock phase without setting time or changing configuration, run:
+
+```text
+just wifi-clock-observe
+```
+
+The observer sends only the `!&` heartbeat every five seconds and samples the ESP's `SYNC,<epoch>` broadcasts from the AVR. The five-second interval is required by the deployed module's approximately ten-second WebSocket inactivity timeout; a 30-second interval does not preserve one continuous observation. It reports the Mac receive time, target epoch, median offset, and sample spread. A positive offset means the target-reported epoch is behind the Mac; a negative offset means it is ahead. Absolute offset includes WebSocket and USB-tunnel latency, so compare unit medians only through the same network path. See the [wireless time synchronization investigation](Evidence/WIRELESS_TIME_SYNC_INVESTIGATION_2026-07-12.md) for the protocol limitations and multi-unit measurement plan.
+
 Useful overrides:
 
 ```text
 FLEXFOX_PROBE_DRY_RUN=1 just wifi-probe
 FLEXFOX_URL=http://73.73.73.73/ FLEXFOX_PROBE_TIMEOUT_MS=15000 just wifi-probe
 FLEXFOX_PROBE_DRY_RUN=1 just wifi-monitor
+FLEXFOX_CLOCK_DRY_RUN=1 just wifi-clock-observe
+FLEXFOX_CLOCK_SAMPLES=30 FLEXFOX_CLOCK_TIMEOUT_MS=120000 just wifi-clock-observe
 ```
 
 ## Safety classification

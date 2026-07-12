@@ -30,6 +30,7 @@ const driverInitHeaderPath = join(
   "driver_init.h",
 );
 const wifiProbePath = join(repoRoot, "scripts", "probe-flexfox-wifi.mjs");
+const clockObserverPath = join(repoRoot, "scripts", "observe-flexfox-clock.mjs");
 const linkbusBoundsTestPath = join(repoRoot, "scripts", "test-flexfox-linkbus-rx-bounds.mjs");
 const linkbusPath = join(
   repoRoot,
@@ -74,6 +75,7 @@ const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
 const wifiProbe = readFileSync(wifiProbePath, "utf8");
+const clockObserver = readFileSync(clockObserverPath, "utf8");
 const linkbusBoundsTest = readFileSync(linkbusBoundsTestPath, "utf8");
 const linkbus = readFileSync(linkbusPath, "utf8");
 const linkbusHeader = readFileSync(linkbusHeaderPath, "utf8");
@@ -233,6 +235,19 @@ if (unsafeSendExpressions.length > 0) {
 }
 
 process.stdout.write("PASS WiFi smoke probe remains read-only\n");
+
+const clockObserverSends = [...clockObserver.matchAll(/socket\.send\(([^)]+)\)/g)].map(
+  (match) => match[1].replace(/\s+/g, ""),
+);
+if (
+  clockObserverSends.length !== 2 ||
+  clockObserverSends.some((expression) => expression !== '"!&"')
+) {
+  process.stderr.write("Firmware contract check failed: clock observer sends more than heartbeat\n");
+  process.exit(1);
+}
+
+process.stdout.write("PASS WiFi clock observer sends heartbeat only\n");
 
 const unsafeTextSends = [
   ["Linkbus", linkbus],

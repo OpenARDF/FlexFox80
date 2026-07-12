@@ -47,6 +47,10 @@ wifi-probe:
 wifi-monitor:
     FLEXFOX_PROBE_MONITOR=1 node ./scripts/probe-flexfox-wifi.mjs
 
+# Observe reported clock phase without setting time or changing configuration.
+wifi-clock-observe:
+    node ./scripts/observe-flexfox-clock.mjs
+
 # Qualify fixed Linkbus parser bounds and ID-alias rejection using read-only recovery.
 wifi-linkbus-bounds-test:
     node ./scripts/test-flexfox-linkbus-rx-bounds.mjs

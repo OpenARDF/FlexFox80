@@ -604,6 +604,7 @@ Use a small internal issue table or tracker with these fields:
 | R7 | A | High | AVR text output | Direct boundary regression; exact Mac build and target probe | Static review and focused red-green evidence | — | Complete |
 | R8 | A/B | Medium | ESP role assignment | Concrete `"1:0"` extraction defect; Event test pending | Static review and cross-method comparison | A2 ESP pinning | Confirmed, deferred |
 | R9 | A/B | High | ESP WebSocket/AVR bridge | Open AP plus unrestricted `PASS` forwarding | Static end-to-end trace; safe probe contract | A3/A4 | Characterized |
+| B-TIME-01 | B | High | ESP/Linkbus/AVR RTC | Rare field outlier; read-only multi-unit time series pending | Confirmed false-success paths and attached-unit phase baseline | Unit identities and repeat measurements | Investigating |
 
 Specific field bugs should be added with distinct `B-` identifiers. At each Path A checkpoint:
 
@@ -628,8 +629,16 @@ The recommended order is:
 
 Path B bug intake can begin immediately, but implementation should normally wait for the earliest Path A checkpoint that supplies the required build or regression evidence.
 
+## Hardening bookmark — 2026-07-12
+
+General Path A work is deliberately paused at commit `d6c01a6` after the bounded AVR Linkbus, text-copy, EEPROM-width, allocation, and fixed Goertzel-storage slices passed their applicable host, exact-build, and connected-target gates. Resume from the decision boundary below; do not repeat completed slices or silently broaden the active timing investigation into numeric-input cleanup.
+
+The active diversion is Path B issue `B-TIME-01`, the rare wireless clone/time-coordination outlier documented in [Wireless clone time synchronization investigation](Evidence/WIRELESS_TIME_SYNC_INVESTIGATION_2026-07-12.md). Path A remains bookmarked until this investigation either needs a narrowly justified hardening fix or reaches a measurement/input boundary.
+
 ## Next action
 
-The bounded AVR Linkbus, text-copy, EEPROM-width, and allocation slices are complete through connected-target evidence. The next ordered defect is the confirmed ESP role-index extraction error, but implementation must wait for a reproducible ESP toolchain. Proceed by locating known-good ESP8266 core/board/library/filesystem versions or explicitly approving a newly pinned migration environment with its own compatibility qualification.
+For active `B-TIME-01`, measure the master and targets through the same read-only WiFi path, preserving unit identity, elapsed time since setting, median offset, observation spread, and RTC aging value before changing calibration. Determine whether an outlier is wrong immediately after cloning, drifts gradually, or jumps by integral seconds.
+
+When Path A resumes, the next ordered defect is the confirmed ESP role-index extraction error, but implementation must wait for a reproducible ESP toolchain. Proceed by locating known-good ESP8266 core/board/library/filesystem versions or explicitly approving a newly pinned migration environment with its own compatibility qualification.
 
 If ESP environment evidence remains unavailable, the next AVR path is numeric input rejection. That work must begin by defining invalid, negative, overflow, and partial-number behavior for time, interval, frequency, power, and aging fields; mature state-mutating behavior must not be guessed or changed as one broad cleanup.
