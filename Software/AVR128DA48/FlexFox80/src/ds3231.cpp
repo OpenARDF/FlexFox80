@@ -301,9 +301,10 @@ bool ds3231_set_date_time_arducon(char *datetime, ClockSetting setting) /* Strin
 }
 
 
-void ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-23T18:00:00Z" */
+bool ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-23T18:00:00Z" */
 {
 	uint8_t tries = 10; /* try several times in case of transient bus issues */
+	uint8_t bytes_sent = 0;
 	uint8_t data[7] = { 0, 0, 0, 1, 0, 0, 0 };
 	int temp, year=2000, month, date;
 
@@ -330,7 +331,9 @@ void ds3231_set_date_time(char * dateString, ClockSetting setting) /* "2018-03-2
 	year += 10*temp;
 	data[6] |= (temp << 4); /* year digit 10 */
 
-	while(tries-- && ((I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS+(setting*7), data, 7)) != 7));
+	while(tries-- && ((bytes_sent = I2C_0_SendData(DS3231_I2C_SLAVE_ADDR, RTC_SECONDS+(setting*7), data, 7)) != 7));
+
+	return bytes_sent == 7;
 }
 
 
@@ -582,5 +585,4 @@ char* convertEpochToTimeString(time_t epoch, char* buf, size_t size)
 
 
 #endif  /* #ifdef INCLUDE_DS3231_SUPPORT */
-
 

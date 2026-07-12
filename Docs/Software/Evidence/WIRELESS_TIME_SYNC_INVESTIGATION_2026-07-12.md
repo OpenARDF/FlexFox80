@@ -4,7 +4,7 @@
 
 **Path:** B-TIME-01
 
-**Status:** Investigation active; no product firmware changed
+**Status:** Investigation active; deterministic AVR protocol slice implemented and built; live clone qualification pending
 
 ## Observed field symptom
 
@@ -110,4 +110,4 @@ Do not change the mature clock path until the measurements discriminate the fail
 - validate event checksums independently of clock synchronization;
 - decide explicitly whether aging calibration belongs to hardware identity or should be part of a clone.
 
-The first product change should be a narrow failing regression for the demonstrated mechanism, followed by exact AVR build and connected-target evidence. ESP changes remain gated on a pinned, reproducible ESP8266 build environment.
+The first product change began with a failing source contract and is recorded in [AVR clone synchronization controls](AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). ESP changes remain gated on a pinned, reproducible ESP8266 build environment and end-to-end clone qualification.

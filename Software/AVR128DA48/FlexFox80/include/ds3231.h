@@ -91,8 +91,9 @@ bool ds3231_set_date_time_arducon(char *datetime, ClockSetting setting);
  *  Set year, month, date, day, hours, minutes and seconds of the DS3231 to the time passed in the argument.
  * dateString has the format 2018-03-23T18:00:00
  * ClockSetting setting = clock or alarm to be set
+ * Returns true only after all seven RTC bytes are written.
  */
-	void ds3231_set_date_time(char * dateString, ClockSetting setting);
+	bool ds3231_set_date_time(char * dateString, ClockSetting setting);
 
 /**
  * Returns day of week given any date

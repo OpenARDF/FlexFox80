@@ -604,7 +604,7 @@ Use a small internal issue table or tracker with these fields:
 | R7 | A | High | AVR text output | Direct boundary regression; exact Mac build and target probe | Static review and focused red-green evidence | — | Complete |
 | R8 | A/B | Medium | ESP role assignment | Concrete `"1:0"` extraction defect; Event test pending | Static review and cross-method comparison | A2 ESP pinning | Confirmed, deferred |
 | R9 | A/B | High | ESP WebSocket/AVR bridge | Open AP plus unrestricted `PASS` forwarding | Static end-to-end trace; safe probe contract | A3/A4 | Characterized |
-| B-TIME-01 | B | High | ESP/Linkbus/AVR RTC | Rare field outlier; read-only multi-unit time series pending | Confirmed false-success paths; 33/33 controlled RTC writes passed; post-set phase remained about 0.8–1.5 s | Field unit identities and repeat measurements | Investigating |
+| B-TIME-01 | B | High | ESP/Linkbus/AVR RTC | Rare field outlier; read-only multi-unit time series pending | AVR quiet/edge/readback controls built and programmed; live protocol and ESP integration pending | Re-associate Moto, qualify protocol, then collect field-unit measurements | Implementing |
 
 Specific field bugs should be added with distinct `B-` identifiers. At each Path A checkpoint:
 
@@ -638,6 +638,8 @@ The active diversion is Path B issue `B-TIME-01`, the rare wireless clone/time-c
 ## Next action
 
 For active `B-TIME-01`, measure the master and targets through the same read-only WiFi path, preserving unit identity, elapsed time since setting, median offset, observation spread, and RTC aging value before changing calibration. Determine whether an outlier is wrong immediately after cloning, drifts gradually, or jumps by integral seconds.
+
+The first deterministic AVR slice is documented in [AVR clone synchronization controls](Evidence/AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). Its exact build and target memory identity pass; live protocol assertions remain pending because the Moto lost its onward FlexFox route after programming. ESP integration must require a queued clock command, a matching clone-specific RTC readback, and fail-safe quiet-mode cleanup before this issue can be considered corrected.
 
 When Path A resumes, the next ordered defect is the confirmed ESP role-index extraction error, but implementation must wait for a reproducible ESP toolchain. Proceed by locating known-good ESP8266 core/board/library/filesystem versions or explicitly approving a newly pinned migration environment with its own compatibility qualification.
 

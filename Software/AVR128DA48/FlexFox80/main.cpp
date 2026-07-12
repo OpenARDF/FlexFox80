@@ -92,6 +92,11 @@ static volatile uint16_t g_enunciation_code_throttle = 50;
 static volatile uint8_t g_WiFi_shutdown_seconds = 120;
 static volatile bool g_report_seconds = false;
 static volatile bool g_wifi_active = true;
+static volatile bool g_clone_quiet = false;
+static volatile bool g_clone_sync_report_armed = false;
+static volatile bool g_clone_sync_report_ready = false;
+static volatile time_t g_clone_sync_epoch = 0;
+static volatile uint16_t g_clone_quiet_timeout_seconds = 0;
 static volatile uint8_t g_wifi_enable_delay = 0;
 static volatile bool g_shutting_down_wifi = false;
 static volatile bool g_wifi_ready = false;
@@ -189,6 +194,10 @@ void handle_1sec_tasks(void);
 EC syncSystemTimeToRTC(void);
 bool eventEnabled(void);
 void handleLinkBusMsgs(void);
+void enterCloneQuietMode(void);
+void resumeNormalReports(void);
+void armCloneSyncReport(void);
+void serviceCloneSyncReport(void);
 void wdt_init(WDReset resetType);
 uint16_t throttleValue(uint8_t speed);
 EC activateEventUsingCurrentSettings(SC* statusCode);
@@ -243,6 +252,24 @@ ISR(PORTA_PORT_vect)
     if(x & (1 << RTC_SQW)) /* Handle 1-second interrupt */
     {
 		system_tick();
+
+		if(g_clone_sync_report_armed)
+		{
+			g_clone_sync_epoch = time(NULL);
+			g_clone_sync_report_armed = false;
+			g_clone_sync_report_ready = true;
+		}
+
+		if(g_clone_quiet_timeout_seconds)
+		{
+			g_clone_quiet_timeout_seconds--;
+			if(!g_clone_quiet_timeout_seconds)
+			{
+				g_clone_quiet = false;
+				g_clone_sync_report_armed = false;
+				g_clone_sync_report_ready = false;
+			}
+		}
 
 		if(g_on_the_air < 0)
 		{
@@ -1012,6 +1039,7 @@ int main(void)
 	
 	while (1) {
 		handleLinkBusMsgs();
+		serviceCloneSyncReport();
 		
 		if(g_handle_counted_presses)
 		{
@@ -1174,7 +1202,7 @@ int main(void)
 			suspendEvent();	
 		}
 		
-		if(g_report_seconds)
+		if(g_report_seconds && !g_clone_quiet)
 		{
 			if(holdTime && (holdTime != time(null))) /* Synchronize time updates to second transitions */
 			{
@@ -1189,21 +1217,21 @@ int main(void)
 			}
 		}
 
-		if(g_last_error_code)
+		if(g_last_error_code && !g_clone_quiet)
 		{
 			sprintf(g_tempStr, "%u", g_last_error_code);
 			lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_ERRORCODE_LABEL, g_tempStr);
 			g_last_error_code = ERROR_CODE_NO_ERROR;
 		}
 
-		if(g_last_status_code)
+		if(g_last_status_code && !g_clone_quiet)
 		{
 			sprintf(g_tempStr, "%u", g_last_status_code);
 			lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_STATUSCODE_LABEL, g_tempStr);
 			g_last_status_code = STATUS_CODE_IDLE;
 		}
 		
-		if(g_check_for_next_event)
+		if(g_check_for_next_event && !g_clone_quiet)
 		{
 			if(g_wifi_ready)
 			{
@@ -1320,10 +1348,10 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 {
 	LinkbusRxBuffer* lb_buff;
 	static uint8_t new_event_parameter_count = 0;
-	bool send_ack = true;
 
 	while((lb_buff = nextFullLBRxBuffer()))
 	{
+		bool send_ack = true;
 		LBMessageID msg_id = lb_buff->id;
 
 		switch(msg_id)
@@ -1432,6 +1460,18 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 				{
 					/* shut down WiFi after 2 minutes of inactivity */
 					g_WiFi_shutdown_seconds = 120;                                  /* wait 2 more minutes before shutting down WiFi */
+				}
+				else if(f1 == 'C')                                                  /* ESP is beginning a clone session */
+				{
+					enterCloneQuietMode();
+				}
+				else if(f1 == 'S')                                                  /* Report time once, immediately after the next RTC edge */
+				{
+					armCloneSyncReport();
+				}
+				else if(f1 == 'R')                                                  /* ESP clone session ended */
+				{
+					resumeNormalReports();
 				}
 				else
 				{
@@ -1641,8 +1681,30 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					if(lb_buff->fields[LB_MSG_FIELD1][0])
 					{
 						strncpy(g_tempStr, lb_buff->fields[LB_MSG_FIELD1], 20);
-						ds3231_set_date_time(g_tempStr, RTC_CLOCK);
-						syncSystemTimeToRTC();    /* update system clock */
+						g_tempStr[20] = '\0';
+						bool clock_set = ds3231_set_date_time(g_tempStr, RTC_CLOCK);
+						EC clock_result = ERROR_CODE_RTC_NONRESPONSIVE;
+
+						if(clock_set)
+						{
+							clock_result = syncSystemTimeToRTC();    /* update system clock */
+						}
+
+						if(clock_set && (clock_result == ERROR_CODE_NO_ERROR) && (lb_buff->fields[LB_MSG_FIELD2][0] == 'C'))
+						{
+							time_t rtc_epoch = ds3231_get_epoch(&clock_result);
+							if(clock_result == ERROR_CODE_NO_ERROR)
+							{
+								sprintf(g_tempStr, "C,%lu", rtc_epoch);
+								lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_CLOCK_LABEL, g_tempStr);
+							}
+						}
+
+						if(!clock_set || (clock_result != ERROR_CODE_NO_ERROR))
+						{
+							send_ack = false;
+							lb_send_text((char *)LB_MESSAGE_NACK);
+						}
 					}
 					else
 					{
@@ -1933,6 +1995,59 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 		}
 		
 		lb_buff->id = LB_MESSAGE_EMPTY;
+	}
+}
+
+void enterCloneQuietMode(void)
+{
+	ENTER_CRITICAL(clone_quiet_state);
+	g_clone_quiet = true;
+	g_clone_sync_report_armed = false;
+	g_clone_sync_report_ready = false;
+	g_clone_quiet_timeout_seconds = 900;
+	g_report_seconds = false;
+	EXIT_CRITICAL(clone_quiet_state);
+}
+
+void resumeNormalReports(void)
+{
+	ENTER_CRITICAL(clone_quiet_state);
+	g_clone_quiet = false;
+	g_clone_sync_report_armed = false;
+	g_clone_sync_report_ready = false;
+	g_clone_quiet_timeout_seconds = 0;
+	g_report_seconds = false;
+	EXIT_CRITICAL(clone_quiet_state);
+}
+
+void armCloneSyncReport(void)
+{
+	ENTER_CRITICAL(clone_sync_state);
+	if(g_clone_quiet)
+	{
+		g_clone_sync_report_armed = true;
+		g_clone_sync_report_ready = false;
+		g_clone_quiet_timeout_seconds = 900;
+	}
+	EXIT_CRITICAL(clone_sync_state);
+}
+
+void serviceCloneSyncReport(void)
+{
+	time_t epoch = 0;
+
+	ENTER_CRITICAL(clone_sync_report);
+	if(g_clone_sync_report_ready)
+	{
+		epoch = g_clone_sync_epoch;
+		g_clone_sync_report_ready = false;
+	}
+	EXIT_CRITICAL(clone_sync_report);
+
+	if(epoch)
+	{
+		sprintf(g_tempStr, "%lu", epoch);
+		lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_CLOCK_LABEL, g_tempStr);
 	}
 }
 

@@ -72,6 +72,29 @@ const goertzelPath = join(
   "src",
   "Goertzel.cpp",
 );
+const avrMainPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "main.cpp",
+);
+const ds3231Path = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "src",
+  "ds3231.cpp",
+);
+const ds3231HeaderPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "include",
+  "ds3231.h",
+);
 const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
@@ -84,6 +107,9 @@ const linkbusHeader = readFileSync(linkbusHeaderPath, "utf8");
 const serialbus = readFileSync(serialbusPath, "utf8");
 const driverIsr = readFileSync(driverIsrPath, "utf8");
 const goertzel = readFileSync(goertzelPath, "utf8");
+const avrMain = readFileSync(avrMainPath, "utf8");
+const ds3231 = readFileSync(ds3231Path, "utf8");
+const ds3231Header = readFileSync(ds3231HeaderPath, "utf8");
 const declaration = source.match(/extern\s+volatile\s+Fox_t\s+g_fox\s*\[\s*([^\]]+?)\s*\]\s*;/);
 
 if (!declaration) {
@@ -387,3 +413,75 @@ if (
 }
 
 process.stdout.write("PASS Linkbus live test remains limited to approved malformed frames and read-only recovery\n");
+
+const cloneQuietControls = ["f1 == 'C'", "f1 == 'S'", "f1 == 'R'"];
+const missingCloneQuietControls = cloneQuietControls.filter(
+  (control) => !avrMain.includes(control),
+);
+if (missingCloneQuietControls.length > 0) {
+  process.stderr.write(
+    `Firmware contract check failed: AVR clone quiet control lacks ${missingCloneQuietControls.join(", ")}\n`,
+  );
+  process.exit(1);
+}
+
+if (
+  !avrMain.includes("g_clone_sync_report_armed") ||
+  !avrMain.includes("g_clone_sync_report_ready") ||
+  !avrMain.includes("g_clone_sync_epoch")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: clone sync is not armed in the RTC ISR and serviced in foreground\n",
+  );
+  process.exit(1);
+}
+
+const rtcIsr = avrMain.match(/ISR\(PORTA_PORT_vect\)\s*\{([\s\S]*?)\n\}/);
+if (!rtcIsr || /lb_send_msg\s*\(/.test(rtcIsr[1])) {
+  process.stderr.write(
+    "Firmware contract check failed: RTC ISR performs Linkbus transmission\n",
+  );
+  process.exit(1);
+}
+
+if (!/if\s*\(\s*g_report_seconds\s*&&\s*!g_clone_quiet\s*\)/.test(avrMain)) {
+  process.stderr.write(
+    "Firmware contract check failed: ordinary time reports are not suppressed during clone quiet mode\n",
+  );
+  process.exit(1);
+}
+
+const quietGatedReports = [
+  "g_last_error_code && !g_clone_quiet",
+  "g_last_status_code && !g_clone_quiet",
+  "g_check_for_next_event && !g_clone_quiet",
+];
+const missingQuietGates = quietGatedReports.filter((gate) => !avrMain.includes(gate));
+if (missingQuietGates.length > 0) {
+  process.stderr.write(
+    `Firmware contract check failed: clone quiet mode lacks ${missingQuietGates.join(", ")} gate(s)\n`,
+  );
+  process.exit(1);
+}
+
+if (!/while\s*\(\s*\(lb_buff = nextFullLBRxBuffer\(\)\)\s*\)\s*\{\s*bool send_ack = true;/.test(avrMain)) {
+  process.stderr.write(
+    "Firmware contract check failed: Linkbus ACK decision is not reset for every received frame\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS clone quiet mode arms at an RTC edge and transmits only from foreground\n");
+
+if (
+  !/bool\s+ds3231_set_date_time\s*\(/.test(ds3231Header) ||
+  !/bool\s+ds3231_set_date_time\s*\(/.test(ds3231) ||
+  !avrMain.includes('sprintf(g_tempStr, "C,%lu"')
+) {
+  process.stderr.write(
+    "Firmware contract check failed: clone time write does not expose write/readback verification\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS clone time writes require RTC write success and emit an epoch readback\n");
