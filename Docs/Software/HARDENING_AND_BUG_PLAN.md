@@ -261,7 +261,9 @@ The root `README.md` remains user-facing and is not the location for these devel
 - A source-contract regression failed red because first-time initialization used the dword writer, spanning the field and two bytes of the following reserved guard.
 - Commit `4dbd90f` changes only that initialization call to the word writer.
 - The full Mac suite passes green; two exact builds are deterministic and warning-free, text decreases by four bytes, EEPROM initialization remains byte-identical, and the schema remains 274 bytes.
-- Exact Windows and deliberate target initialization/guard-sentinel verification remain open.
+- Connected-target fault injection passed: invalid initialization plus `A5 5A C3 3C` in `Guard4_15` produced the 500 mW default while preserving all sentinel bytes.
+- The exact latest flash, complete original EEPROM, and all fuses were independently restored and verified byte-for-byte.
+- Exact Windows verification remains open.
 - Evidence: [EEPROM_RF_POWER_INITIALIZATION_WIDTH_2026-07-12.md](Evidence/EEPROM_RF_POWER_INITIALIZATION_WIDTH_2026-07-12.md).
 
 **R6 layout characterization checkpoint:**

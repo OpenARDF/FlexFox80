@@ -59,6 +59,32 @@ Compared with the preceding fixed-enum-width Mac build, text decreased by four b
 ## Remaining verification
 
 - Obtain exact Windows same-source build and host-contract evidence.
-- Program the test unit only through the proven erase/program/restore workflow.
-- Deliberately invalidate a copied EEPROM initialization flag with sentinel bytes in the beginning of `Guard4_15`, boot once, and prove first-time initialization writes the default RF power without changing those sentinel bytes.
-- Restore and verify the complete preserved unit EEPROM immediately after the fault-injection test.
+
+## Connected-target fault injection
+
+The dummy-loaded AVR128DA48 test unit was programmed with the exact `4dbd90f` Release HEX through the proven erase/program/EEPROM-restore workflow. Independent readback before injection established:
+
+- programmed flash binary SHA-256: `fc68d76d524cf5a8f0fa95c101ce7a1e1d3281708151e3c74727048c9e4c207e`;
+- original 512-byte EEPROM SHA-256: `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401`;
+- original 16-byte fuse SHA-256: `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126`.
+
+An ignored copied EEPROM image was then prepared with only these deliberate changes:
+
+- initialization flag at offsets 0–1: `00 00`;
+- all four `Guard4_15` bytes at offsets 159–162: `A5 5A C3 3C`.
+
+The existing RF value at offsets 157–158 remained 3000 mW (`B8 0B`). The injection image SHA-256 was `45b79b8b39bc11c8f2cb6c539a204ffcf88d2fc0db3c6aa67dcfc8b00345c036`.
+
+After writing and verifying that complete image, the target was released to boot once. Complete EEPROM readback proved:
+
+```text
+initialization flag = 0x0108
+RF power            = 500 mW
+Guard4_15           = A5 5A C3 3C
+```
+
+The initialization routine therefore wrote the correct two-byte default and did not change any byte of the adjacent guard. This directly exercises the corrected target instruction path; the old dword writer would have overwritten the first two sentinel bytes.
+
+The complete original EEPROM was then restored and verified. Final independent reads were byte-identical to the intended `4dbd90f` flash, the original 512-byte EEPROM, and the original 16 fuse bytes using the hashes above.
+
+The only remaining slice-specific verification is the exact Windows same-source build and host-contract run.
