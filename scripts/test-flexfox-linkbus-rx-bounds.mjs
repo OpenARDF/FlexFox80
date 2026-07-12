@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const baseUrl = new URL(process.env.FLEXFOX_URL ?? "http://73.73.73.73/");
-const timeoutMs = Number.parseInt(process.env.FLEXFOX_LINKBUS_TEST_TIMEOUT_MS ?? "5000", 10);
+const timeoutMs = Number.parseInt(process.env.FLEXFOX_LINKBUS_TEST_TIMEOUT_MS ?? "15000", 10);
 const malformedFrames = ["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;"];
 const recoveryQuery = "$TEM?";
 
@@ -70,6 +70,13 @@ function waitForNextTemperature(previousCount) {
   });
 }
 
+async function requestFreshTemperature() {
+  const previousCount = temperatureCount;
+  const received = waitForNextTemperature(previousCount);
+  socket.send(`PASS,${recoveryQuery}`);
+  await received;
+}
+
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.once(signal, () => {
     closeSocket();
@@ -121,14 +128,15 @@ try {
     "initial live AVR temperature and battery replies",
   );
 
+  await requestFreshTemperature();
+  console.log("PASS raw pass-through temperature query returns a fresh AVR reply");
+
   for (const frame of malformedFrames) {
     socket.send(`PASS,${frame}`);
     await new Promise((resolve) => setTimeout(resolve, 200));
 
-    const previousCount = temperatureCount;
-    const recovered = waitForNextTemperature(previousCount);
-    socket.send(`PASS,${recoveryQuery}`);
-    await recovered;
+    console.log(`WAIT ESP will retry the intentionally unanswered frame before sending ${recoveryQuery}`);
+    await requestFreshTemperature();
     console.log(`PASS parser recovered after rejecting ${frame}`);
   }
 

@@ -287,7 +287,8 @@ The root `README.md` remains user-facing and is not the location for these devel
 - Direct host regressions cover the final valid byte and field, NUL reservation, both overflow boundaries, invalid indices, and zero capacity.
 - The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, and text grows by 52 bytes.
 - The dummy-loaded test unit now runs the exact corrected flash; independent flash, complete EEPROM, and fuse readbacks match the intended and preserved bytes.
-- Exact Windows and controlled connected-target malformed-frame verification remain open.
+- Controlled oversized-field and fourth-field target tests were rejected without acknowledgment; after the ESP's existing retry cycle, fresh read-only temperature queries proved next-frame resynchronization in both cases.
+- Exact Windows verification remains open.
 - Evidence: [LINKBUS_RX_BOUNDS_2026-07-12.md](Evidence/LINKBUS_RX_BOUNDS_2026-07-12.md).
 
 **R6 layout characterization checkpoint:**

@@ -2,7 +2,7 @@
 
 ## Status
 
-Mac red-green, direct boundary, repository, exact AVR Release build, and connected-target programming evidence is complete. Exact Windows and connected-target malformed-frame verification remain open.
+Mac red-green, direct boundary, repository, exact AVR Release build, connected-target programming, and malformed-frame recovery evidence is complete. Exact Windows verification remains open.
 
 ## Confirmed defect
 
@@ -76,9 +76,22 @@ Avrdude verified all 41,088 input flash bytes twice. Independent post-operation 
 | Restored EEPROM | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | byte-identical |
 | Preserved fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | byte-identical |
 
-The first constrained Linkbus test attempt timed out at HTTP after the programming session, before its WebSocket opened or any malformed frame was sent. This matches the known Moto/DroidTether association loss after extended Atmel-ICE activity and is not counted as a firmware result.
+The first constrained Linkbus test attempt timed out at HTTP after the programming session, before its WebSocket opened or any malformed frame was sent. This matched the known Moto/DroidTether association loss after extended Atmel-ICE activity and was not counted as a firmware result.
+
+After restoring the transport, an initial five-second recovery assertion failed after the first malformed frame. A strengthened harness first proved that raw `PASS,$TEM?` produced a fresh AVR temperature reply before sending malformed input. The same short timeout still failed afterward, while a fresh read-only WebSocket probe immediately succeeded.
+
+Source tracing then established that the ESP intentionally waits three seconds and retries an unanswered Linkbus message twice before releasing the next queued message. Rejected malformed frames correctly produce no AVR acknowledgment, so the existing ESP policy delays the queued recovery query by approximately nine seconds. The harness timeout was increased to 15 seconds without changing firmware, test frames, or recovery query.
+
+The final target run passed:
+
+1. HTTP 200 and WebSocket connection succeeded.
+2. Initial live `TEMP,33.0C` and `BAT,12.2V` replies established the AVR path.
+3. A baseline raw `PASS,$TEM?` produced a fresh `TEMP,33.0C` reply.
+4. The oversized first field `$ZZZ,ABCDEFGHIJKLMNOPQRSTU;` was intentionally unanswered through the ESP retry cycle; a following `$TEM?` produced a fresh reply.
+5. The fourth-field frame `$ZZZ,A,B,C,D;` was intentionally unanswered through the ESP retry cycle; a following `$TEM?` produced a fresh reply.
+
+`ZZZ` is not a recognized AVR message ID. Neither malformed frame maps to configuration, RF, clock, EEPROM, reset, event, or WiFi control. The test therefore proves both field-boundary rejection and next-start-marker resynchronization on the programmed AVR while also characterizing the ESP's existing unanswered-message latency.
 
 ## Remaining verification
 
 - Obtain exact Windows same-source builds and the full Windows host-contract run.
-- Send controlled oversized-field and fourth-field frames that do not map to a configuration or RF command, then prove a following read-only temperature query succeeds.
