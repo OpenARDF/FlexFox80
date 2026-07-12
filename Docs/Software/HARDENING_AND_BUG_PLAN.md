@@ -180,7 +180,8 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [x] The supported WiFi-to-AVR path is traced from ESP soft AP and HTTP/WebSocket commands through Linkbus and AVR replies; a read-only Mac probe is available through `just wifi-probe`.
 - [x] Run the AVR wrapper with exact-version Mac and Windows inputs. The accumulated `3bc10a5` snapshot builds deterministically and warning-free on both hosts; HEX, EEPROM, resource totals, and the 274-byte layout match.
 - [x] The Release/Debug persisted-enum ABI mismatch is removed: explicit `uint16_t` storage, a source-layout regression, an AVR compile-time assertion, and an exact Mac linker map all preserve the deployed 274-byte EEPROM schema.
-- [ ] Pin the ESP8266 build only after retrieving the known-good Arduino core, board-option, WebSockets, and filesystem-tool versions.
+- [x] The operator-identified Adafruit setup procedure recovers the Feather HUZZAH board definition, 80 MHz CPU, 115200 upload, 4 MB/1 MB filesystem layout, erase/debug/lwIP selections, and serial programming procedure; Windows historical source recovers `arduinoWebSockets` 2.1.0.
+- [ ] Pin the ESP8266 build after recovering or deliberately qualifying the ESP8266 core and LittleFS tooling, then confirm the reconstructed board options in a clean build.
 
 **Checkpoint A2 — Build baseline ready:**
 
@@ -413,7 +414,7 @@ Each item is a separate implementation slice unless two changes cannot be tested
 - `Event::setTxAssignment()` finds the colon in the documented `"role:slot"` value, but extracts the role with `substring(0, c - 1)` instead of ending at `c`.
 - A one-digit role such as `"1:0"` therefore produces an empty substring and resolves power/frequency using role zero; longer role indices lose their final digit.
 - Descriptive-name parsing elsewhere correctly uses `substring(0, c)`, making the mismatch locally unambiguous.
-- Production correction remains deferred until the known-good ESP8266 core, board options, WebSockets library, and filesystem tooling are pinned. Editing an ESP image that cannot be reproduced would violate Checkpoint A2.
+- Production correction remains deferred until the ESP8266 core and LittleFS tooling are recovered or deliberately qualified and the reconstructed board profile builds repeatably. Editing an ESP image that cannot be reproduced would violate Checkpoint A2.
 - The similarly collision-prone Serialbus ID enum is not currently reachable: `serial_Rx()` is an empty function. It should be handled as dead/incomplete-interface characterization, not opportunistically changed as though it were an active parser.
 
 **Checkpoint A4.n — Clear defect removed:**
@@ -641,6 +642,6 @@ For active `B-TIME-01`, measure the master and targets through the same read-onl
 
 The first deterministic AVR slice is documented in [AVR clone synchronization controls](Evidence/AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). Its exact build and target memory identity pass; live protocol assertions remain pending because the Moto lost its onward FlexFox route after programming. ESP integration must require a queued clock command, a matching clone-specific RTC readback, and fail-safe quiet-mode cleanup before this issue can be considered corrected.
 
-When Path A resumes, the next ordered defect is the confirmed ESP role-index extraction error, but implementation must wait for a reproducible ESP toolchain. Proceed by locating known-good ESP8266 core/board/library/filesystem versions or explicitly approving a newly pinned migration environment with its own compatibility qualification.
+When Path A resumes, the next ordered defect is the confirmed ESP role-index extraction error, but implementation must wait for a reproducible ESP toolchain. Proceed by locating the known-good ESP8266 core and LittleFS tooling or explicitly approving a newly pinned migration environment with its own compatibility qualification; the recovered Adafruit board profile and `arduinoWebSockets` 2.1.0 then provide the starting configuration.
 
 If ESP environment evidence remains unavailable, the next AVR path is numeric input rejection. That work must begin by defining invalid, negative, overflow, and partial-number behavior for time, interval, frequency, power, and aging fields; mature state-mutating behavior must not be guessed or changed as one broad cleanup.

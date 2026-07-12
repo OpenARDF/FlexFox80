@@ -58,6 +58,8 @@ The initial inventory and subsequent same-source checks are complete. Windows an
 
 ## ESP8266 status
 
-The ESP source identifies the Adafruit Huzzah ESP8266 and depends on the ESP8266 Arduino core, LittleFS, and `arduinoWebSockets`. Historical source evidence identifies a vendored `arduinoWebSockets` 2.1.0 dependency, and the project operator confirms an 80 MHz ESP8266 CPU clock. The exact known-good core, remaining board options, filesystem, and upload-tool versions are not yet recovered. Pinning guessed values for those remaining fields would create a new build, not reproduce the mature product.
+The ESP source identifies the Adafruit Huzzah ESP8266 and depends on the ESP8266 Arduino core, LittleFS, and `arduinoWebSockets`. Historical source evidence identifies a vendored `arduinoWebSockets` 2.1.0 dependency. The project operator identified Adafruit's setup guide as the procedure used for FlexFox; it supplies the Feather HUZZAH board definition, 80 MHz CPU, 115200 upload speed, 4 MB flash with a 1 MB filesystem partition, Only Sketch erase, no debug output, disabled debug port, and lwIP v2 Lower Memory. See [Adafruit HUZZAH Arduino setup evidence](Evidence/ADAFRUIT_HUZZAH_ARDUINO_SETUP_2026-07-12.md).
 
-Mac-side source inspection and host tests may proceed, but the first pinned ESP build definition should wait for the Windows environment inventory or other known-good version evidence. Once supplied, Step A2 will add a clean `arduino-cli` build and filesystem-image workflow.
+The guide's historical screenshot labels the filesystem partition SPIFFS, while current source uses LittleFS. The exact known-good ESP8266 core and compatible LittleFS image/upload tooling remain unrecovered. Pinning guessed values for those remaining fields would create a new build, not reproduce the mature product.
+
+Mac-side source inspection and host tests may proceed. The first pinned ESP build definition should wait for the remaining core/LittleFS evidence or an explicit decision to qualify a new pinned migration baseline. Step A2 will then add a clean `arduino-cli` build and filesystem-image workflow using the recovered board and library profile.
