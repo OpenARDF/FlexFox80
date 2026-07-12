@@ -2,7 +2,7 @@
 
 ## Status
 
-Mac red-green, direct boundary, repository, and exact AVR Release build evidence is complete. Exact Windows and connected-target malformed-frame verification remain open.
+Mac red-green, direct boundary, repository, exact AVR Release build, and connected-target programming evidence is complete. Exact Windows and connected-target malformed-frame verification remain open.
 
 ## Confirmed defect
 
@@ -59,8 +59,26 @@ Two consecutive final-source builds used AVR-GCC 7.3.0 and Atmel `AVR-Dx_DFP` 1.
 
 Compared with the preceding bounded text-send build, text grows by 52 bytes; data and BSS are unchanged. The EEPROM initializer remains byte-identical.
 
+## Connected-target programming
+
+The dummy-loaded AVR128DA48 test unit was programmed with the exact `3bc10a5` Release HEX through the proven chip-erase, flash-write/verify, and complete EEPROM-restore/verify workflow.
+
+Fresh pre-write captures matched the preserved unit baseline:
+
+- EEPROM, 512 bytes: `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401`;
+- fuses, 16 bytes: `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126`.
+
+Avrdude verified all 41,088 input flash bytes twice. Independent post-operation reads then proved:
+
+| Memory | Expected SHA-256 | Post-read SHA-256 | Result |
+| --- | --- | --- | --- |
+| Programmed flash bytes | `fd81309f8beb34abc49122c0c8777760f167f818366c9f950b6fb48d8a77cb1d` | `fd81309f8beb34abc49122c0c8777760f167f818366c9f950b6fb48d8a77cb1d` | byte-identical |
+| Restored EEPROM | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | byte-identical |
+| Preserved fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | byte-identical |
+
+The first constrained Linkbus test attempt timed out at HTTP after the programming session, before its WebSocket opened or any malformed frame was sent. This matches the known Moto/DroidTether association loss after extended Atmel-ICE activity and is not counted as a firmware result.
+
 ## Remaining verification
 
 - Obtain exact Windows same-source builds and the full Windows host-contract run.
-- Program the connected dummy-loaded test unit through the proven flash/EEPROM-preservation workflow.
-- Send controlled oversized-field and fourth-field frames that do not map to a configuration or RF command, then prove a following valid version query succeeds.
+- Send controlled oversized-field and fourth-field frames that do not map to a configuration or RF command, then prove a following read-only temperature query succeeds.
