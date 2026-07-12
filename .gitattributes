@@ -2,6 +2,7 @@
 
 # Repository policy files
 /.gitattributes text eol=lf
+/.gitleaksignore text eol=lf
 /.gitignore text eol=lf
 /.editorconfig text eol=lf
 /Justfile text eol=lf

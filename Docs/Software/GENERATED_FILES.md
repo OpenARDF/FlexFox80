@@ -52,6 +52,8 @@ The repository currently tracks historical Debug output and IDE state, including
 - `Debug/makedep.mk`
 - `Debug/src/` build products
 
+The tracked KiCad `fp-info-cache` is also generated cache data. Its 2022 history contains a vendor PDF URL whose `hkey` query parameter triggers the generic API-key detector. `.gitleaksignore` suppresses only that exact historical fingerprint; it does not suppress the file, query parameters, or generic-key rule broadly.
+
 These are generated artifacts, not hand-maintained source. Adding ignore rules does not remove already tracked files. Do not untrack them until Step A2 supplies a reproducible build and a dedicated cleanup commit is reviewed.
 
 Generated release images should eventually be published as release assets with hashes rather than committed as ordinary source.
@@ -81,7 +83,7 @@ The web assets and example event files are runtime inputs, not generated build o
 
 ## Documentation and workflow files
 
-Files under `Docs/Software/`, plus future `.gitattributes`, `.editorconfig`, `Justfile`, and repository scripts, are hand-maintained sources of truth. Keep the root `README.md` user-facing unless a user-visible release or product instruction requires a change.
+Files under `Docs/Software/`, plus `.gitattributes`, `.editorconfig`, `Justfile`, and repository scripts, are hand-maintained sources of truth. Keep the root `README.md` user-facing unless a user-visible release or product instruction requires a change.
 
 ## Safe cleanup sequence
 

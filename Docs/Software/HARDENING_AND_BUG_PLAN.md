@@ -1,6 +1,6 @@
 # FlexFox80 Hardening and Bug Plan
 
-**Plan status:** Step A1 is in progress on `Development_AVR128DA48`; no firmware hardening changes have begun.
+**Plan status:** Step A1 is complete on `Development_AVR128DA48`; Step A2 is next and no firmware hardening changes have begun.
 
 ## Purpose
 
@@ -96,13 +96,22 @@ The root `README.md` remains user-facing and is not the location for these devel
 
 **Checkpoint A1 — Governance ready:**
 
-- [ ] Branch roles are explicitly approved and documented.
-- [ ] The workflow states which branch is safe for active hardening.
-- [ ] Existing KiCad or other unrelated changes can remain present without entering software commits.
-- [ ] Line-ending rules are proven not to create mass source churn.
-- [ ] Generated-file cleanup, if proposed, has a reviewed dry-run file list.
-- [ ] Routine commands have names and expected outcomes, even if the cross-platform build implementation continues in Step 2.
-- [ ] Another thread can read the workflow and correctly explain how to start, verify, commit, and hand off a change.
+- [x] Branch roles are explicitly approved and documented.
+- [x] The workflow states which branch is safe for active hardening.
+- [x] Existing KiCad or other unrelated changes can remain present without entering software commits.
+- [x] Line-ending rules were checked across the tracked tree; only `linkbus.cpp` required a dedicated behavior-neutral normalization.
+- [x] Generated-file cleanup is explicitly deferred until Step A2; the current policy reports the 60 tracked generated/IDE artifacts without removing them.
+- [x] Routine Step A1 commands have names and expected outcomes; AVR and ESP builds fail clearly as deferred rather than claiming verification.
+- [x] Another thread can read the workflow and correctly explain how to start, verify, commit, and hand off a change.
+
+**Step A1 evidence:**
+
+- `Development_AVR128DA48` was created from and initially matched `AVR128DA48`, then published with upstream tracking.
+- Branch, release, generated-file, staging, and handoff policies are documented under `Docs/Software/`.
+- `.gitattributes`, `.editorconfig`, and selective `.gitignore` rules protect source and manufacturing assets without importing unsafe global `*.lib` or `*.zip` rules.
+- `just check` runs the repository doctor, Markdown link validation, ignore/attribute safeguards, KiCad JSON parsing, and diff hygiene.
+- `just secrets` completes successfully on the current checkout.
+- Firmware builds and generated-artifact cleanup remain Step A2 work.
 
 **Stop condition:** No firmware edits begin until the branch-role decision and narrow-commit policy are settled.
 
