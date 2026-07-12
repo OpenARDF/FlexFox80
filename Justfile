@@ -24,10 +24,9 @@ check: doctor docs-check policy-check
 secrets:
     gitleaks detect --source . --no-banner --redact
 
-# Step A2 will replace this explicit boundary with a pinned AVR Release build.
+# Build the AVR Release firmware with the pinned compiler/device pack.
 avr-build:
-    @echo "AVR build wrapper is not configured yet; complete Step A2 before firmware changes."
-    @exit 2
+    node ./scripts/build-avr-release.mjs
 
 # Step A2 will replace this explicit boundary with a pinned ESP8266 build.
 esp-build:

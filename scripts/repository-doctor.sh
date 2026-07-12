@@ -33,5 +33,9 @@ if [ "$missing" -ne 0 ]; then
 	exit 1
 fi
 
-printf '%s\n' "AVR build: deferred until Step A2 pins the compiler and device pack"
+if [ -n "${AVR_TOOLCHAIN_ROOT:-}" ] && [ -n "${AVR_DFP_ROOT:-}" ]; then
+	printf '%s\n' "AVR build: environment roots set; run just avr-build to validate versions and build"
+else
+	printf '%s\n' "AVR build: wrapper ready; AVR_TOOLCHAIN_ROOT and AVR_DFP_ROOT are not set"
+fi
 printf '%s\n' "ESP build: deferred until Step A2 pins the board core and libraries"

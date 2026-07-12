@@ -11,6 +11,7 @@ This directory documents the current software architecture on the `AVR128DA48` b
 - [Development workflow](CODEX_WORKFLOW.md) defines everyday branch, verification, staging, commit, integration, and handoff rules.
 - [Release workflow](RELEASE_WORKFLOW.md) defines current branch roles, integration gates, release evidence, and the future AVR128DA48 transition to `main`.
 - [Source and generated-file boundaries](GENERATED_FILES.md) classifies product source, generated-derived files, IDE/build output, ESP assets, and CAD/manufacturing files.
+- [Build environment](BUILD_ENVIRONMENT.md) defines Mac and Windows roles, the portable AVR Release wrapper, evidence classes, and the reference-environment handoff checklist.
 
 ## Scope and status
 

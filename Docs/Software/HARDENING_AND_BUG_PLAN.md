@@ -133,6 +133,14 @@ The root `README.md` remains user-facing and is not the location for these devel
 - A method to compare a no-behavior-change build with the known deployed artifact when exact reproduction is possible.
 - CI or a documented reason why a particular hardware-dependent verification remains local.
 
+**Step A2 progress:**
+
+- [x] The repository now has a platform-neutral AVR Release wrapper derived from the checked-in Microchip Studio configuration. It requires AVR-GCC 7.3.0 and `AVR-Dx_DFP` 1.9.103 for reference-build status and labels an explicitly allowed version mismatch as exploratory.
+- [x] macOS is defined as the primary development environment and the preserved Windows Microchip Studio 7 installation as the release-equivalence and programming reference.
+- [x] The exact Windows evidence request is documented, including deterministic-build, resource, hash, programmer, and ESP dependency information.
+- [ ] Run and compare the AVR wrapper on a native Mac toolchain and the preserved Windows reference toolchain.
+- [ ] Pin the ESP8266 build only after retrieving the known-good Arduino core, board-option, WebSockets, and filesystem-tool versions.
+
 **Checkpoint A2 — Build baseline ready:**
 
 - [ ] A clean checkout can build both processors from documented commands.
