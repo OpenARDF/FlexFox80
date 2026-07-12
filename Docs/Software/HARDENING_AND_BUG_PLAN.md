@@ -198,7 +198,8 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [x] A dependency-light host test harness invoked by `just test`, with failures that identify the behavioral contract and input case.
 - [x] An initial passing characterization slice for the AVR circular buffer covering empty/full state, FIFO order, wraparound, overwrite, and reset without changing firmware behavior.
 - [x] A source-contract regression captures the AVR compiler's required `g_fox` extent after deterministic Windows builds exposed a declaration mismatch.
-- A separate red-green defect slice for documented LIFO `pop()` behavior and allocation/zero-capacity handling if the characterization demonstrates a mismatch.
+- [x] A red-green defect slice demonstrates and corrects documented LIFO `pop()` behavior; exact target-build verification remains required.
+- Separate red-green slices for allocation and zero-capacity handling if characterization demonstrates a mismatch.
 - Host-side tests or testable adapters for:
   - Linkbus framing, parsing, and resynchronization;
   - event-file parsing and validation;

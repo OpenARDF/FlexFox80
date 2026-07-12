@@ -100,6 +100,21 @@ void reset_clears_data_and_busy_state()
   EXPECT(buffer.get() == '\0');
 }
 
+void pop_returns_entries_in_lifo_order()
+{
+  CircularStringBuff buffer(4);
+
+  buffer.put('a');
+  buffer.put('b');
+  buffer.put('c');
+
+  EXPECT(buffer.pop() == 'C');
+  EXPECT(buffer.pop() == 'B');
+  EXPECT(buffer.pop() == 'A');
+  EXPECT(buffer.pop() == '\0');
+  EXPECT(buffer.empty());
+}
+
 void run(const char *name, void (*test)())
 {
   const int failuresBefore = failures;
@@ -123,6 +138,7 @@ int main()
   run("full_buffer_overwrites_oldest_entry", full_buffer_overwrites_oldest_entry);
   run("indices_wrap_without_changing_fifo_order", indices_wrap_without_changing_fifo_order);
   run("reset_clears_data_and_busy_state", reset_clears_data_and_busy_state);
+  run("pop_returns_entries_in_lifo_order", pop_returns_entries_in_lifo_order);
 
   if (failures != 0)
   {

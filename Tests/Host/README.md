@@ -22,9 +22,10 @@ The first slice compiles the production AVR `CircularStringBuff.cpp` unchanged a
 - uppercase storage and FIFO retrieval;
 - full-buffer state and oldest-entry overwrite;
 - index wraparound;
-- reset and busy-state behavior.
+- reset and busy-state behavior;
+- documented LIFO `pop()` behavior, including wrap to the last occupied index.
 
-The documented LIFO `pop()` contract, zero-capacity construction, and allocation-failure behavior are intentionally not asserted in this passing infrastructure commit. They are candidate red-green defect slices and must begin with recorded pre-fix evidence.
+Zero-capacity construction and allocation-failure behavior are intentionally not asserted yet. They are candidate red-green defect slices and must begin with recorded pre-fix evidence.
 
 ## Limits
 

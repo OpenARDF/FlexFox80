@@ -124,16 +124,16 @@ char CircularStringBuff::pop()
 	  return ('\0');
   }
 
-  /*Read data and decrement the head (we now have one more free space) */
-  char val = buf_[head_];
-  if(head_) 
+  /*Decrement the head and read the last inserted item (we now have one more free space) */
+  if (head_)
   {
-	  head_--;
+    head_--;
   }
   else
   {
-	  head_ = (max_size_-1);
+    head_ = (max_size_ - 1);
   }
+  char val = buf_[head_];
   
   full_ = false;
 
