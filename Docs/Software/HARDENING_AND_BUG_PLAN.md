@@ -323,7 +323,8 @@ The root `README.md` remains user-facing and is not the location for these devel
 - The configured 100-byte production buffer and all nonzero-capacity, FIFO, LIFO, overwrite, reset, busy-state, allocation, and public-interface behavior remain unchanged.
 - The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, text grows by 22 bytes, and data/BSS are unchanged.
 - The dummy-loaded test unit now runs the exact corrected flash; independent flash, complete EEPROM, and fuse readbacks match the intended and preserved bytes.
-- The post-program read-only WiFi probe remains open after the known Moto/DroidTether association loss; nonzero allocation failure remains a separate slice.
+- The post-program read-only WiFi probe passes with live AVR temperature/battery, version, identity, master-state, and synchronization replies.
+- This slice has no remaining verification checkpoint; nonzero allocation failure remains separate.
 - Evidence: [CIRCULAR_BUFFER_ZERO_CAPACITY_2026-07-12.md](Evidence/CIRCULAR_BUFFER_ZERO_CAPACITY_2026-07-12.md).
 
 **R6 layout characterization checkpoint:**

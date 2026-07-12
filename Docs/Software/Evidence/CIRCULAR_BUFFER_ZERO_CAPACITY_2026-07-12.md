@@ -2,7 +2,7 @@
 
 ## Status
 
-The red-green host regression, repository checks, deterministic exact Mac AVR Release builds, and connected-target programming evidence are complete. The post-program WiFi probe remains open because the Moto/DroidTether route lost association during Atmel-ICE activity. Routine Windows duplication is not required under the established parity policy.
+The red-green host regression, repository checks, deterministic exact Mac AVR Release builds, connected-target programming, and post-program WiFi evidence are complete. Routine Windows duplication is not required under the established parity policy.
 
 ## Confirmed defect
 
@@ -76,8 +76,13 @@ Avrdude verified all 41,204 input flash bytes twice. Independent post-operation 
 | Restored EEPROM | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | byte-identical |
 | Preserved fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | byte-identical |
 
-The first read-only WiFi probe after programming timed out at HTTP before opening a WebSocket or sending any message. This matches the known Moto/DroidTether association loss after Atmel-ICE programming and is not counted as a firmware result.
+The first read-only WiFi probe after programming timed out at HTTP before opening a WebSocket or sending any message. This matched the known Moto/DroidTether association loss after Atmel-ICE programming and is not counted as a firmware result.
 
-## Remaining verification
+After the Moto was re-associated and DroidTether restarted, `just wifi-probe` passed with:
 
-- Reconnect the Moto/DroidTether route and confirm the ordinary nonzero-capacity path remains healthy through the existing read-only WiFi probe.
+- HTTP 200 and WebSocket connectivity;
+- live AVR `TEMP,29.0C` and `BAT,12.1V` replies;
+- the expected `Tx_7C2D69ED` SSID and module MAC address;
+- ESP/AVR versions `2.0,0.200`, `MASTER,0`, and continuing clock synchronization.
+
+The ordinary configured 100-byte buffer path and AVR communications therefore remain healthy on the programmed target. No verification remains open for this slice.
