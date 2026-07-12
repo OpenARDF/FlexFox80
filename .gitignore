@@ -10,4 +10,4 @@
 *.eep
 *.lss
 *.srec
-
+.DS_Store
