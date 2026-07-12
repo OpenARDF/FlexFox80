@@ -39,6 +39,14 @@ const linkbusPath = join(
   "src",
   "linkbus.cpp",
 );
+const linkbusHeaderPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "include",
+  "linkbus.h",
+);
 const serialbusPath = join(
   repoRoot,
   "Software",
@@ -60,6 +68,7 @@ const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
 const wifiProbe = readFileSync(wifiProbePath, "utf8");
 const linkbusBoundsTest = readFileSync(linkbusBoundsTestPath, "utf8");
 const linkbus = readFileSync(linkbusPath, "utf8");
+const linkbusHeader = readFileSync(linkbusHeaderPath, "utf8");
 const serialbus = readFileSync(serialbusPath, "utf8");
 const driverIsr = readFileSync(driverIsrPath, "utf8");
 const declaration = source.match(/extern\s+volatile\s+Fox_t\s+g_fox\s*\[\s*([^\]]+?)\s*\]\s*;/);
@@ -253,8 +262,49 @@ if (missingLinkbusRxGuards.length > 0) {
 
 process.stdout.write("PASS Linkbus receive parser guards ID length, field count, and field length\n");
 
+if (!/enum\s+LBMessageID\s*:\s*uint32_t/.test(linkbusHeader)) {
+  process.stderr.write("Firmware contract check failed: Linkbus message IDs are not collision-free uint32_t values\n");
+  process.exit(1);
+}
+const canonicalLinkbusIds = [
+  "LB_MESSAGE_BAND = LINKBUS_ID3('B', 'N', 'D')",
+  "LB_MESSAGE_TX_MOD = LINKBUS_ID3('M', 'O', 'D')",
+  "LB_MESSAGE_VER = LINKBUS_ID3('V', 'E', 'R')",
+  "LB_MESSAGE_BAT = LINKBUS_ID3('B', 'A', 'T')",
+  "LB_MESSAGE_TEMP = LINKBUS_ID3('T', 'E', 'M')",
+  "LB_MESSAGE_SET_FREQ = LINKBUS_ID3('F', 'R', 'E')",
+  "LB_MESSAGE_CLOCK = LINKBUS_ID3('T', 'I', 'M')",
+  "LB_MESSAGE_STARTFINISH = LINKBUS_ID2('S', 'F')",
+  "LB_MESSAGE_PERM = LINKBUS_ID3('P', 'R', 'M')",
+  "LB_MESSAGE_TX_POWER = LINKBUS_ID3('P', 'O', 'W')",
+  "LB_MESSAGE_SET_STATION_ID = LINKBUS_ID2('I', 'D')",
+  "LB_MESSAGE_SET_PATTERN = LINKBUS_ID2('P', 'A')",
+  "LB_MESSAGE_CODE_SPEED = LINKBUS_ID3('S', 'P', 'D')",
+  "LB_MESSAGE_TIME_INTERVAL = LINKBUS_ID1('T')",
+  "LB_MESSAGE_ESP_COMM = LINKBUS_ID3('E', 'S', 'P')",
+  "LB_MESSAGE_GO = LINKBUS_ID2('G', 'O')",
+  "LB_MESSAGE_KEY = LINKBUS_ID3('K', 'E', 'Y')",
+  "LB_MESSAGE_RESET = LINKBUS_ID3('R', 'S', 'T')",
+  "LB_MESSAGE_WIFI = LINKBUS_ID2('W', 'I')",
+];
+const missingCanonicalLinkbusIds = canonicalLinkbusIds.filter(
+  (definition) => !linkbusHeader.includes(definition),
+);
+if (missingCanonicalLinkbusIds.length > 0) {
+  process.stderr.write(
+    `Firmware contract check failed: ${missingCanonicalLinkbusIds.length} Linkbus ID definition(s) do not preserve their wire bytes\n`,
+  );
+  process.exit(1);
+}
+if (!driverIsr.includes("linkbus_rx_id_append")) {
+  process.stderr.write("Firmware contract check failed: Linkbus receive parser lacks collision-free ID accumulation\n");
+  process.exit(1);
+}
+
+process.stdout.write("PASS Linkbus message IDs use collision-free byte encoding\n");
+
 const expectedMalformedFrames =
-  '["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;", "$AZRX?"]';
+  '["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;", "$AZRX?", "$TYR?"]';
 if (!linkbusBoundsTest.includes(`const malformedFrames = ${expectedMalformedFrames};`)) {
   process.stderr.write("Firmware contract check failed: Linkbus live test malformed frames changed\n");
   process.exit(1);

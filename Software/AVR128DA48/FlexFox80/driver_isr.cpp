@@ -331,7 +331,7 @@ void linkbus_Rx(uint8_t rx_char)
 				{
 					if(linkbus_rx_id_can_append(id_len, LINKBUS_MAX_MSG_ID_LENGTH))
 					{
-						tempMsg_ID = tempMsg_ID * 10 + rx_char;
+						tempMsg_ID = linkbus_rx_id_append(tempMsg_ID, rx_char);
 						id_len++;
 					}
 					else

@@ -2,7 +2,7 @@
 
 const baseUrl = new URL(process.env.FLEXFOX_URL ?? "http://73.73.73.73/");
 const timeoutMs = Number.parseInt(process.env.FLEXFOX_LINKBUS_TEST_TIMEOUT_MS ?? "15000", 10);
-const malformedFrames = ["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;", "$AZRX?"];
+const malformedFrames = ["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;", "$AZRX?", "$TYR?"];
 const recoveryQuery = "$TEM?";
 const minimumUnansweredDelayMs = 6000;
 

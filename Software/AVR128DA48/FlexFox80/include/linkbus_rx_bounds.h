@@ -8,6 +8,11 @@ inline bool linkbus_rx_id_can_append(uint8_t id_length, uint8_t maximum_id_lengt
 	return id_length < maximum_id_length;
 }
 
+inline uint32_t linkbus_rx_id_append(uint32_t id, uint8_t character)
+{
+	return (id << 8) | character;
+}
+
 inline bool linkbus_rx_field_can_terminate(
 	uint8_t field_index,
 	uint8_t field_length,

@@ -24,6 +24,25 @@ void expect(bool condition, const char* test_name)
 
 int main()
 {
+	const uint32_t key_id = linkbus_rx_id_append(
+		linkbus_rx_id_append(linkbus_rx_id_append(0, 'K'), 'E'), 'Y');
+	const uint32_t key_alias = linkbus_rx_id_append(
+		linkbus_rx_id_append(linkbus_rx_id_append(0, 'I'), 'Y'), 'Y');
+	const uint32_t reset_id = linkbus_rx_id_append(
+		linkbus_rx_id_append(linkbus_rx_id_append(0, 'R'), 'S'), 'T');
+	const uint32_t reset_alias = linkbus_rx_id_append(
+		linkbus_rx_id_append(linkbus_rx_id_append(0, 'R'), 'T'), 'J');
+	const uint32_t go_id = linkbus_rx_id_append(linkbus_rx_id_append(0, 'G'), 'O');
+	const uint32_t go_alias = linkbus_rx_id_append(linkbus_rx_id_append(0, 'F'), 'Y');
+
+	expect(
+		key_id == 0x4B4559 && reset_id == 0x525354 && go_id == 0x474F,
+		"message_ids_preserve_wire_characters");
+
+	expect(
+		key_id != key_alias && reset_id != reset_alias && go_id != go_alias,
+		"legacy_decimal_aliases_are_distinct");
+
 	expect(
 		linkbus_rx_id_can_append(0, 3) && linkbus_rx_id_can_append(2, 3) &&
 			!linkbus_rx_id_can_append(3, 3),

@@ -100,40 +100,44 @@
  *
  */
 
-enum LBMessageID : uint16_t
+#define LINKBUS_ID1(a) ((uint32_t)(uint8_t)(a))
+#define LINKBUS_ID2(a, b) ((LINKBUS_ID1(a) << 8) | LINKBUS_ID1(b))
+#define LINKBUS_ID3(a, b, c) ((LINKBUS_ID2(a, b) << 8) | LINKBUS_ID1(c))
+
+enum LBMessageID : uint32_t
 {
 	LB_MESSAGE_EMPTY = 0,
 
 	/* LEGACY MESSAGES */
-	LB_MESSAGE_BAND = 'B' * 100 + 'N' * 10 + 'D',      /* $BND,; / $BND? / !BND,; // Set band; field1 = RadioBand */
-	LB_MESSAGE_TX_MOD = 'M' * 100 + 'O' * 10 + 'D',    /* Sets 2m modulation format to AM or CW */
+	LB_MESSAGE_BAND = LINKBUS_ID3('B', 'N', 'D'),      /* $BND,; / $BND? / !BND,; // Set band; field1 = RadioBand */
+	LB_MESSAGE_TX_MOD = LINKBUS_ID3('M', 'O', 'D'),    /* Sets 2m modulation format to AM or CW */
 	
 	/* INFORMATIONAL MESSAGES */
-	LB_MESSAGE_VER = 'V' * 100 + 'E' * 10 + 'R',		/* Request current software version number */
-	LB_MESSAGE_BAT = 'B' * 100 + 'A' * 10 + 'T',       /* Battery charge data */
-	LB_MESSAGE_TEMP = 'T' * 100 + 'E' * 10 + 'M',      /* Temperature  data */
+	LB_MESSAGE_VER = LINKBUS_ID3('V', 'E', 'R'),		/* Request current software version number */
+	LB_MESSAGE_BAT = LINKBUS_ID3('B', 'A', 'T'),       /* Battery charge data */
+	LB_MESSAGE_TEMP = LINKBUS_ID3('T', 'E', 'M'),      /* Temperature  data */
 
 	/*	DUAL-BAND TX MESSAGE FAMILY (FUNCTIONAL MESSAGING) */
-	LB_MESSAGE_SET_FREQ = 'F' * 100 + 'R' * 10 + 'E',  /* $FRE,Fhz; / $FRE,FHz? / !FRE,; // Set/request current frequency */
-	LB_MESSAGE_CLOCK = 'T' * 100 + 'I' * 10 + 'M',		/* Sets/reads the real-time clock */
-	LB_MESSAGE_STARTFINISH = 'S' * 10 + 'F',			/* Sets the start and finish times */
-	LB_MESSAGE_PERM = 'P' * 100 + 'R' * 10 + 'M',		/* Saves most settings to EEPROM "perm" */
-	LB_MESSAGE_TX_POWER = 'P' * 100 + 'O' * 10 + 'W',	/* Sets transmit power level */
+	LB_MESSAGE_SET_FREQ = LINKBUS_ID3('F', 'R', 'E'),  /* $FRE,Fhz; / $FRE,FHz? / !FRE,; // Set/request current frequency */
+	LB_MESSAGE_CLOCK = LINKBUS_ID3('T', 'I', 'M'),		/* Sets/reads the real-time clock */
+	LB_MESSAGE_STARTFINISH = LINKBUS_ID2('S', 'F'),		/* Sets the start and finish times */
+	LB_MESSAGE_PERM = LINKBUS_ID3('P', 'R', 'M'),		/* Saves most settings to EEPROM "perm" */
+	LB_MESSAGE_TX_POWER = LINKBUS_ID3('P', 'O', 'W'),	/* Sets transmit power level */
 #ifdef DONOTUSE
-	LB_MESSAGE_DRIVE_LEVEL = 'D' * 100 + 'R' * 10 + 'I', /*  Adjust 2m drive level */
+	LB_MESSAGE_DRIVE_LEVEL = LINKBUS_ID3('D', 'R', 'I'), /*  Adjust 2m drive level */
 #endif // DONOTUSE
-	LB_MESSAGE_SET_STATION_ID = 'I' * 10 + 'D',        /* Sets amateur radio callsign text */
-	LB_MESSAGE_SET_PATTERN = 'P' * 10 + 'A',           /* Sets unique transmit pattern */
-	LB_MESSAGE_CODE_SPEED = 'S' * 100 + 'P' * 10 + 'D', /* Sets id and pattern code speeds */
-	LB_MESSAGE_TIME_INTERVAL = 'T',					/* Sets on-air, off-air, delay, and ID time intervals */
-	LB_MESSAGE_ESP_COMM = 'E' * 100 + 'S' * 10 + 'P',  /* Communications with ESP8266 controller */
-	LB_MESSAGE_GO = 'G' * 10 + 'O',					/* Start transmitting now without delay */
+	LB_MESSAGE_SET_STATION_ID = LINKBUS_ID2('I', 'D'), /* Sets amateur radio callsign text */
+	LB_MESSAGE_SET_PATTERN = LINKBUS_ID2('P', 'A'),    /* Sets unique transmit pattern */
+	LB_MESSAGE_CODE_SPEED = LINKBUS_ID3('S', 'P', 'D'), /* Sets id and pattern code speeds */
+	LB_MESSAGE_TIME_INTERVAL = LINKBUS_ID1('T'),		/* Sets on-air, off-air, delay, and ID time intervals */
+	LB_MESSAGE_ESP_COMM = LINKBUS_ID3('E', 'S', 'P'),  /* Communications with ESP8266 controller */
+	LB_MESSAGE_GO = LINKBUS_ID2('G', 'O'),				/* Start transmitting now without delay */
 
 	/* UTILITY MESSAGES */
-	LB_MESSAGE_KEY = 'K' * 100 + 'E' * 10 + 'Y',		/* Key down/up */
-	LB_MESSAGE_RESET = 'R' * 100 + 'S' * 10 + 'T',		/* Processor reset */
-	LB_MESSAGE_WIFI = 'W' * 10 + 'I',					/* Enable/disable WiFi */
-	LB_INVALID_MESSAGE = MAX_UINT16					/* This value must never overlap a valid message ID */
+	LB_MESSAGE_KEY = LINKBUS_ID3('K', 'E', 'Y'),		/* Key down/up */
+	LB_MESSAGE_RESET = LINKBUS_ID3('R', 'S', 'T'),		/* Processor reset */
+	LB_MESSAGE_WIFI = LINKBUS_ID2('W', 'I'),			/* Enable/disable WiFi */
+	LB_INVALID_MESSAGE = 0xFFFFFFFFUL					/* This value must never overlap a valid message ID */
 };
 
 #define LB_MESSAGE_CLOCK_LABEL "TIM"
