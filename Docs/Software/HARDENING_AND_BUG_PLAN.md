@@ -408,6 +408,14 @@ The first live routed probe is complete: the Mac retained its normal WiFi/defaul
 
 Each item is a separate implementation slice unless two changes cannot be tested independently.
 
+**Confirmed deferred ESP role-assignment defect:**
+
+- `Event::setTxAssignment()` finds the colon in the documented `"role:slot"` value, but extracts the role with `substring(0, c - 1)` instead of ending at `c`.
+- A one-digit role such as `"1:0"` therefore produces an empty substring and resolves power/frequency using role zero; longer role indices lose their final digit.
+- Descriptive-name parsing elsewhere correctly uses `substring(0, c)`, making the mismatch locally unambiguous.
+- Production correction remains deferred until the known-good ESP8266 core, board options, WebSockets library, and filesystem tooling are pinned. Editing an ESP image that cannot be reproduced would violate Checkpoint A2.
+- The similarly collision-prone Serialbus ID enum is not currently reachable: `serial_Rx()` is an empty function. It should be handled as dead/incomplete-interface characterization, not opportunistically changed as though it were an active parser.
+
 **Checkpoint A4.n — Clear defect removed:**
 
 - [ ] A pre-fix test demonstrates the defect and its expected red failure is recorded.
@@ -587,14 +595,14 @@ Use a small internal issue table or tracker with these fields:
 
 | ID | Path | Severity | Owner subsystem | Reproduction | Evidence | Blocked by | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| R1 | A | High | AVR Linkbus | Direct field-boundary regression; exact Mac build | Static review and focused red-green evidence | A3/A4 | In progress |
+| R1 | A | High | AVR Linkbus | Direct bounds, length, collision, and target regressions; exact Mac builds | Static review and focused red-green/target evidence | — | Complete |
 | R2 | A/B | High | AVR RTC | Hardware fault test needed | Static review | A2/A5 | Planned |
 | R3 | A | High | AVR recovery | Directly visible | Static review | A5 | Planned |
 | R4 | A | Medium | ESP event files | Pending fixture | Static review | A3 | Planned |
 | R5 | A/B | High | Cross-processor timing input | Pending fixture | Static review | A3 | Planned |
 | R6 | A | High | AVR EEPROM | I2C counter and enum ABI regressions; 65-field layout protected | Static review, focused red-green evidence, and exact Mac build | A3/A4 | In progress |
-| R7 | A | High | AVR text output | Direct boundary regression; exact Mac build | Static review and focused red-green evidence | A3/A4 | In progress |
-| R8 | A/B | Medium | ESP role assignment | Pending Event test | Static review | A3 | Planned |
+| R7 | A | High | AVR text output | Direct boundary regression; exact Mac build and target probe | Static review and focused red-green evidence | — | Complete |
+| R8 | A/B | Medium | ESP role assignment | Concrete `"1:0"` extraction defect; Event test pending | Static review and cross-method comparison | A2 ESP pinning | Confirmed, deferred |
 | R9 | A/B | High | ESP WebSocket/AVR bridge | Open AP plus unrestricted `PASS` forwarding | Static end-to-end trace; safe probe contract | A3/A4 | Characterized |
 
 Specific field bugs should be added with distinct `B-` identifiers. At each Path A checkpoint:
@@ -622,4 +630,6 @@ Path B bug intake can begin immediately, but implementation should normally wait
 
 ## Next action
 
-Continue characterization-first TDD one bounded defect at a time. The next slice should establish a failing regression before changing production code, preserve deployed storage and protocol compatibility, pass `just check`, and receive exact Windows AVR build verification whenever executable firmware changes. Keep allocation/zero-capacity buffer behavior separate from EEPROM-width work; do not combine opportunistic fixes.
+The bounded AVR Linkbus, text-copy, EEPROM-width, and allocation slices are complete through connected-target evidence. The next ordered defect is the confirmed ESP role-index extraction error, but implementation must wait for a reproducible ESP toolchain. Proceed by locating known-good ESP8266 core/board/library/filesystem versions or explicitly approving a newly pinned migration environment with its own compatibility qualification.
+
+If ESP environment evidence remains unavailable, the next AVR path is numeric input rejection. That work must begin by defining invalid, negative, overflow, and partial-number behavior for time, interval, frequency, power, and aging fields; mature state-mutating behavior must not be guessed or changed as one broad cleanup.
