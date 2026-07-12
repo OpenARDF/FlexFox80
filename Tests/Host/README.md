@@ -32,6 +32,14 @@ The bounded text-copy regression compiles the same inline helper used by Linkbus
 - rejection of oversized input without emitting a partial protocol frame;
 - rejection of null pointers and zero-capacity destinations.
 
+The Linkbus receive-boundary regression compiles the same guards used by the USART receive parser and covers:
+
+- the final payload byte in the first and third fields;
+- reserved space for each field's terminating NUL;
+- rejection of writes to the message-ID position or a fourth field;
+- safe termination of a maximum-length third field;
+- rejection of a fourth comma-delimited field and zero-capacity buffers.
+
 Zero-capacity construction and allocation-failure behavior are intentionally not asserted yet. They are candidate red-green defect slices and must begin with recorded pre-fix evidence.
 
 ## Limits

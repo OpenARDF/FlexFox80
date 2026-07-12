@@ -46,12 +46,20 @@ const serialbusPath = join(
   "src",
   "serialbus.cpp",
 );
+const driverIsrPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "driver_isr.cpp",
+);
 const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
 const wifiProbe = readFileSync(wifiProbePath, "utf8");
 const linkbus = readFileSync(linkbusPath, "utf8");
 const serialbus = readFileSync(serialbusPath, "utf8");
+const driverIsr = readFileSync(driverIsrPath, "utf8");
 const declaration = source.match(/extern\s+volatile\s+Fox_t\s+g_fox\s*\[\s*([^\]]+?)\s*\]\s*;/);
 
 if (!declaration) {
@@ -223,3 +231,21 @@ if (unboundedTextSends.length > 0) {
 }
 
 process.stdout.write("PASS text send helpers copy literal data within destination bounds\n");
+
+const requiredLinkbusRxGuards = [
+  "linkbus_rx_field_can_terminate",
+  "linkbus_rx_can_start_next_field",
+  "linkbus_rx_field_can_append",
+];
+const missingLinkbusRxGuards = requiredLinkbusRxGuards.filter(
+  (guard) => !driverIsr.includes(guard),
+);
+
+if (missingLinkbusRxGuards.length > 0) {
+  process.stderr.write(
+    `Firmware contract check failed: Linkbus receive parser lacks ${missingLinkbusRxGuards.join(", ")} bounds guard(s)\n`,
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS Linkbus receive parser guards field count and field length\n");

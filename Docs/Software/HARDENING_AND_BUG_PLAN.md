@@ -278,6 +278,17 @@ The root `README.md` remains user-facing and is not the location for these devel
 - Exact Windows verification remains open.
 - Evidence: [BOUNDED_TEXT_SEND_2026-07-12.md](Evidence/BOUNDED_TEXT_SEND_2026-07-12.md).
 
+**Completed Mac defect slice — Linkbus receive field bounds:**
+
+- The USART receive parser wrote field bytes without checking the 21-byte field width or three-field table extent.
+- A source contract failed red because all three required append, termination, and next-field guards were absent.
+- Inline guards now preserve the valid 20-byte payload and three-field limits while rejecting an oversized field or fourth field before any out-of-bounds write.
+- Rejected frames remain unpublished and the existing start-marker logic resynchronizes at the next `$` or `!` frame.
+- Direct host regressions cover the final valid byte and field, NUL reservation, both overflow boundaries, invalid indices, and zero capacity.
+- The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, and text grows by 52 bytes.
+- Exact Windows and controlled connected-target malformed-frame verification remain open.
+- Evidence: [LINKBUS_RX_BOUNDS_2026-07-12.md](Evidence/LINKBUS_RX_BOUNDS_2026-07-12.md).
+
 **R6 layout characterization checkpoint:**
 
 - A host-side AVR-width model now checks all 65 `EE_prom` member offsets against `EE_var_t`.
@@ -516,7 +527,7 @@ Use a small internal issue table or tracker with these fields:
 
 | ID | Path | Severity | Owner subsystem | Reproduction | Evidence | Blocked by | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| R1 | A | High | AVR Linkbus | Pending harness | Static review | A3 | Planned |
+| R1 | A | High | AVR Linkbus | Direct field-boundary regression; exact Mac build | Static review and focused red-green evidence | A3/A4 | In progress |
 | R2 | A/B | High | AVR RTC | Hardware fault test needed | Static review | A2/A5 | Planned |
 | R3 | A | High | AVR recovery | Directly visible | Static review | A5 | Planned |
 | R4 | A | Medium | ESP event files | Pending fixture | Static review | A3 | Planned |

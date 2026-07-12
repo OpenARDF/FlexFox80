@@ -38,6 +38,7 @@
 #include <ctype.h> /* toupper() */
 #include <string.h>
 #include "linkbus.h"
+#include "linkbus_rx_bounds.h"
 #include "serialbus.h"
 #include "usart_basic.h"
 #include "morse.h"
@@ -267,36 +268,59 @@ void linkbus_Rx(uint8_t rx_char)
 		{
 			if(!escapeNext && ((rx_char == ',') || (rx_char == ';') || (rx_char == '?')))   /* new field = ,; end of message = ; */
 			{
-				/* if(field_index == 0) // message ID received */
+				bool malformed = false;
 				if(field_index > 0)
 				{
-					buff->fields[field_index - 1][field_len] = 0;
-				}
-
-				field_index++;
-				field_len = 0;
-
-				if(rx_char == ';')
-				{
-					if(charIndex > LINKBUS_MIN_MSG_LENGTH)
+					if(linkbus_rx_field_can_terminate(field_index, field_len,
+						LINKBUS_MAX_MSG_NUMBER_OF_FIELDS, LINKBUS_MAX_MSG_FIELD_LENGTH))
 					{
-						buff->id = (LBMessageID)tempMsg_ID;
+						buff->fields[field_index - 1][field_len] = 0;
 					}
-					receiving_msg = false;
-				}
-				else if(rx_char == '?')
-				{
-					buff->type = LINKBUS_MSG_QUERY;
-					if(charIndex >= LINKBUS_MIN_MSG_LENGTH)
+					else
 					{
-						buff->id = (LBMessageID)tempMsg_ID;
+						malformed = true;
 					}
-					receiving_msg = false;
 				}
 
-				if(!receiving_msg)
+				if((rx_char == ',') &&
+					!linkbus_rx_can_start_next_field(field_index, LINKBUS_MAX_MSG_NUMBER_OF_FIELDS))
 				{
-					buff = 0;
+					malformed = true;
+				}
+
+				if(malformed)
+				{
+					buff->id = LB_MESSAGE_EMPTY;
+					receiving_msg = false;
+					buff = NULL;
+				}
+				else
+				{
+					field_index++;
+					field_len = 0;
+
+					if(rx_char == ';')
+					{
+						if(charIndex > LINKBUS_MIN_MSG_LENGTH)
+						{
+							buff->id = (LBMessageID)tempMsg_ID;
+						}
+						receiving_msg = false;
+					}
+					else if(rx_char == '?')
+					{
+						buff->type = LINKBUS_MSG_QUERY;
+						if(charIndex >= LINKBUS_MIN_MSG_LENGTH)
+						{
+							buff->id = (LBMessageID)tempMsg_ID;
+						}
+						receiving_msg = false;
+					}
+
+					if(!receiving_msg)
+					{
+						buff = 0;
+					}
 				}
 			}
 			else
@@ -307,7 +331,17 @@ void linkbus_Rx(uint8_t rx_char)
 				}
 				else
 				{
-					buff->fields[field_index - 1][field_len++] = rx_char;
+					if(linkbus_rx_field_can_append(field_index, field_len,
+						LINKBUS_MAX_MSG_NUMBER_OF_FIELDS, LINKBUS_MAX_MSG_FIELD_LENGTH))
+					{
+						buff->fields[field_index - 1][field_len++] = rx_char;
+					}
+					else
+					{
+						buff->id = LB_MESSAGE_EMPTY;
+						receiving_msg = false;
+						buff = NULL;
+					}
 				}
 				
 				escapeNext = false;
