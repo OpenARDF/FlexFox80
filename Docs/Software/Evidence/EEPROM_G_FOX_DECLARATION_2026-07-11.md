@@ -30,9 +30,13 @@ Firmware contract check failed: g_fox extent is EVENT_NUMBER_OF_EVENTS-1; expect
 
 The external declaration now uses `EVENT_NUMBER_OF_EVENTS`. The production array contents, indexing, EEPROM schema, and runtime control flow are unchanged.
 
-## Green evidence and remaining gate
+## Green and target evidence
 
 - `node scripts/check-firmware-contracts.mjs` passes.
 - `just test` passes with sanitizers enabled.
 - `just check` passes on macOS.
-- An exact Windows AVR Release rebuild is still required to confirm that the three warnings disappear and to record post-fix size and artifact hashes before this slice is considered target-verified.
+- Two clean exact Windows AVR Release rebuilds using AVR-GCC 7.3.0 and Atmel `AVR-Dx_DFP` 1.9.103 completed with zero warnings; the three array-bounds warnings disappeared and no new warning appeared.
+- AVR size remained `text=40170`, `data=1106`, and `bss=1137`.
+- Both post-fix builds were deterministic, and their ELF, HEX, EEP, LSS, MAP, and SREC hashes all matched the pre-fix baseline. This confirms that correcting the declaration removed compiler diagnostics without changing generated firmware artifacts.
+
+The exact target-build results are recorded in [WINDOWS_G_FOX_VERIFICATION_2026-07-12.md](WINDOWS_G_FOX_VERIFICATION_2026-07-12.md). This defect slice is target-verified.

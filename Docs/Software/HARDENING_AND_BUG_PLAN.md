@@ -218,11 +218,20 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [ ] Boundary and malformed cases are represented even when the current result is undesirable.
 - [ ] Known mature timing examples have golden traces.
 - [ ] Test failures clearly distinguish an intended behavior change from accidental regression.
-- [ ] At least one defect has complete recorded red-green evidence without leaving the development branch in a failing state.
+- [x] At least one defect has complete recorded red-green evidence without leaving the development branch in a failing state. The `g_fox` declaration correction removed three deterministic AVR warnings while producing byte-identical target artifacts.
 - [ ] Host tests explicitly cover relevant AVR-width boundaries rather than assuming the host ABI matches the target.
 - [ ] Tests run through one repository command.
 
 **Bug reassessment:** Attempt to encode each reported bug as a failing test or trace. Bugs that cannot yet be represented receive an explicit hardware/logging requirement.
+
+**Completed A3.1 defect slice — `g_fox` declaration extent:**
+
+- The exact Windows baseline reproducibly emitted three array-bounds warnings for the blind-ARDF entry.
+- A source-contract regression failed red against the four-element external declaration.
+- The external declaration was corrected to cover all `EVENT_NUMBER_OF_EVENTS` entries without changing the array definition, enum, EEPROM schema, or runtime flow.
+- Mac host and repository gates passed green.
+- Two exact post-fix Windows AVR Release builds completed with zero warnings, unchanged size, deterministic artifacts, and hashes identical to the pre-fix baseline.
+- Evidence: [EEPROM_G_FOX_DECLARATION_2026-07-11.md](Evidence/EEPROM_G_FOX_DECLARATION_2026-07-11.md) and [WINDOWS_G_FOX_VERIFICATION_2026-07-12.md](Evidence/WINDOWS_G_FOX_VERIFICATION_2026-07-12.md).
 
 ### Step 4: Remove clear, locally bounded defects
 
