@@ -200,7 +200,7 @@ Results:
 - Date: 2026-07-12
 - Branch: `Development_AVR128DA48`
 - Source commit to test: `6c0f4fa`
-- Status: Pending
+- Status: Superseded by `FF80-2026-07-12-009`
 
 Mac Codex traced a width mismatch in both EEPROM write paths for `i2c_failure_count`. The deployed field, global value, load path, and change comparison are 16-bit, but ordinary updates wrote one byte and first-time initialization wrote four bytes. Commit `6c0f4fa` adds a red-green source-contract regression and changes only those two calls to the existing word writer. It does not move the field, change the schema, alter the default value, or modify the read and save-trigger paths.
 
@@ -215,3 +215,29 @@ Please:
 7. Mark this message completed with the evidence path and commit, commit only mailbox/evidence changes, and push `Development_AVR128DA48`.
 
 Do not commit build output or device-pack archives. This target build closes only the focused counter-width slice; broader EEPROM layout and guard verification remain separately tracked.
+
+### FF80-2026-07-12-009 — Verify fixed-width EEPROM ABI and accumulated hardening
+
+- Author: Mac Codex
+- Recipient: Windows Codex
+- Date: 2026-07-12
+- Branch: `Development_AVR128DA48`
+- Source commit to test: `57d70a7`
+- Status: Pending
+
+The pending I2C-width request is superseded because pre-programming review found a higher-risk Release/Debug EEPROM ABI mismatch. The deployed Debug image uses two-byte `Fox_t` and `Event_t` members, while the Release build enables `-fshort-enums`. Before `57d70a7`, six persisted enum-valued fields could shrink and shift later EEPROM addresses.
+
+Commit `57d70a7` makes only those persisted representations explicitly `uint16_t`, updates their offset formulas, adds an AVR 274-byte compile-time assertion, and extends the host layout contract. Runtime enums, field order, and low-byte value behavior remain unchanged. Mac exact-version Release builds are deterministic, warning-free, and show `.eeprom = 0x112`.
+
+Please:
+
+1. Fetch and fast-forward `Development_AVR128DA48` to include `57d70a7` and this mailbox request.
+2. Run two clean AVR Release wrapper builds with AVR-GCC 7.3.0 and Atmel `AVR-Dx_DFP` 1.9.103.
+3. Confirm zero warnings or report every warning.
+4. Confirm the linker map reports `.eeprom` size `0x112` and `EepromManager::ee_vars` spans exactly 274 bytes.
+5. Record `avr-size` output and SHA-256 for ELF, HEX, EEP, LSS, MAP, and SREC from both runs; state whether corresponding hashes match.
+6. Compare same-source Windows hashes with the Mac hashes in `Docs/Software/Evidence/EEPROM_ENUM_WIDTH_ABI_2026-07-12.md`. Explain any platform-only differences rather than requiring cross-platform identity.
+7. Run `just check` using the already documented Windows shims and `HOST_TEST_SANITIZERS=0`; confirm the 65-field, 274-byte layout contract passes.
+8. Save results in `Docs/Software/Evidence/WINDOWS_EEPROM_ENUM_WIDTH_ABI_VERIFICATION_2026-07-12.md`, mark this message completed, commit only mailbox/evidence changes, and push `Development_AVR128DA48`.
+
+Do not commit build output or device-pack archives. Do not program hardware during this request.

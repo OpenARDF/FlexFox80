@@ -177,6 +177,7 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [x] Two exact Windows AVR Release wrapper runs at `4d17bab` were deterministic across all requested artifacts and established the initial size/hash baseline. They also exposed three repeatable `g_fox` declaration bounds warnings for test-first investigation.
 - [x] The Mac can identify and read the attached AVR128DA48 through Atmel-ICE without writing it. The connected unit's flash verifies exactly against the tracked `33e64e0` Debug HEX, and repeatable EEPROM/fuse captures now provide deployed-state evidence for R6.
 - [x] Run the AVR wrapper with exact-version Mac and Windows inputs. Two Mac runs at `0429c2a` are deterministic, warning-free, and match Windows resource totals; same-source Windows artifact comparison for the I2C slice remains pending.
+- [x] The Release/Debug persisted-enum ABI mismatch is removed: explicit `uint16_t` storage, a source-layout regression, an AVR compile-time assertion, and an exact Mac linker map all preserve the deployed 274-byte EEPROM schema.
 - [ ] Pin the ESP8266 build only after retrieving the known-good Arduino core, board-option, WebSockets, and filesystem-tool versions.
 
 **Checkpoint A2 — Build baseline ready:**
@@ -263,8 +264,10 @@ The root `README.md` remains user-facing and is not the location for these devel
 
 - A host-side AVR-width model now checks all 65 `EE_prom` member offsets against `EE_var_t`.
 - The current declaration is confirmed as a 274-byte layout, matching the checked-in reference map.
+- The layout test also requires fixed-width storage and offset expressions for all six persisted enum-valued fields.
+- The exact Release build enables short enums, but its linker map remains 274 bytes and the AVR compile fails if the structure drifts.
 - The test protects deployed offsets; a real-device EEPROM image is now captured separately, while guard-content interpretation and validation remain open work.
-- Evidence: [EEPROM_LAYOUT_CONTRACT_2026-07-12.md](Evidence/EEPROM_LAYOUT_CONTRACT_2026-07-12.md).
+- Evidence: [EEPROM_LAYOUT_CONTRACT_2026-07-12.md](Evidence/EEPROM_LAYOUT_CONTRACT_2026-07-12.md) and [EEPROM_ENUM_WIDTH_ABI_2026-07-12.md](Evidence/EEPROM_ENUM_WIDTH_ABI_2026-07-12.md).
 
 **R6 deployed-image checkpoint:**
 
@@ -473,7 +476,7 @@ Use a small internal issue table or tracker with these fields:
 | R3 | A | High | AVR recovery | Directly visible | Static review | A5 | Planned |
 | R4 | A | Medium | ESP event files | Pending fixture | Static review | A3 | Planned |
 | R5 | A/B | High | Cross-processor timing input | Pending fixture | Static review | A3 | Planned |
-| R6 | A | High | AVR EEPROM | I2C counter width regression; full layout test pending | Static review and focused red-green evidence | A3 | In progress |
+| R6 | A | High | AVR EEPROM | I2C counter and enum ABI regressions; 65-field layout protected | Static review, focused red-green evidence, and exact Mac build | A3/A4 | In progress |
 | R7 | A | High | AVR text output | Pending boundary test | Static review | A3 | Planned |
 | R8 | A/B | Medium | ESP role assignment | Pending Event test | Static review | A3 | Planned |
 

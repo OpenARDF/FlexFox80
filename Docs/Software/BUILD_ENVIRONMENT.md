@@ -25,13 +25,17 @@ The checked-in `avr8-gnu-toolchain-3.7.0.1796-win32.any.x86_64.zip.update` archi
 
 The exact archived macOS compiler runs through Rosetta, and the historical Atmel `AVR-Dx_DFP` 1.9.103 pack has now been retrieved from the official archive. Two exact Mac Release builds are deterministic, warning-free, and match the established Windows resource totals. See the initial [Mac build environment evidence](Evidence/MAC_BUILD_ENVIRONMENT_2026-07-11.md) and completed [Mac AVR reference-build evidence](Evidence/MAC_AVR_REFERENCE_BUILD_2026-07-12.md).
 
+### EEPROM ABI gate
+
+The deployed Debug image stores six enum-valued configuration members with a two-byte representation, while the Release configuration correctly enables `-fshort-enums`. Those persisted members therefore use explicit `uint16_t` storage rather than compiler-dependent enum types. Every reference Release build must pass the repository layout contract, the AVR compile-time 274-byte assertion, and show a `.eeprom` size of `0x112` in the linker map. A 268-byte Release layout is incompatible with retained deployed EEPROM and must not be flashed. See [EEPROM enum-width ABI evidence](Evidence/EEPROM_ENUM_WIDTH_ABI_2026-07-12.md).
+
 ## Mac Atmel-ICE target access
 
 The preserved Atmel-ICE and an AVR128DA48 FlexFox can be accessed from this Mac with Homebrew avrdude. Run `just avr-probe` for a no-write identity and voltage probe. The command enters UPDI programming mode and may briefly reset a running transmitter even though `-n` prevents writes.
 
 The first live probe confirmed the expected debugger serial and AVR128DA48 signature and captured read-only flash, EEPROM, and fuse evidence. See [Mac Atmel-ICE target evidence](Evidence/MAC_ATMEL_ICE_TARGET_EVIDENCE_2026-07-12.md). Raw device images remain under the ignored `Software/AVR128DA48/tmp/` tree and must not be committed.
 
-Target visibility does not by itself authorize programming. Flash, erase, fuse, lock-bit, and EEPROM writes require an explicitly selected artifact and the applicable hardware test plan.
+The connected FlexFox is authorized as a writable test unit. Before the first write, preserve its current flash, EEPROM, and fuses; select an exact, schema-compatible artifact; and define the rollback and applicable hardware test plan. Do not alter fuses or lock bits unless a separate test explicitly requires it.
 
 ## Windows reference-environment handoff
 

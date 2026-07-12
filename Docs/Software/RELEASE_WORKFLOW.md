@@ -46,6 +46,7 @@ A firmware release from `AVR128DA48` requires:
 - SHA-256 hashes for release artifacts;
 - protocol compatibility verification;
 - the applicable automated regression suite;
+- an AVR linker map showing the deployed 274-byte (`0x112`) EEPROM schema, with the fixed-width layout contract and AVR compile-time assertion passing;
 - the versioned hardware checklist, including approved skips;
 - rollback artifacts and flashing instructions;
 - user-readable release notes.
@@ -101,5 +102,6 @@ After the transition:
 - Do not force-push `main` or `AVR128DA48` without a separately reviewed recovery plan.
 - Do not overwrite `main` merely to simplify branch names.
 - Do not publish Debug artifacts as a release substitute.
+- Do not flash an AVR Release image over retained deployed EEPROM if its `.eeprom` object is not exactly 274 bytes (`0x112`).
 - Do not combine branch migration, artifact cleanup, and firmware behavior changes in one commit or integration.
 - Do not skip hardware safety checks silently.

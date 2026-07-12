@@ -9,6 +9,8 @@
 
 This build includes the I2C failure-count width correction from `6c0f4fa`. It does not include a later RF power width correction.
 
+> **Follow-up:** This historical baseline predates the fixed-width persisted-enum correction in `57d70a7`. Its Release configuration could produce a 268-byte EEPROM object and must not be flashed over retained deployed EEPROM. Use the corrected 274-byte evidence in [EEPROM_ENUM_WIDTH_ABI_2026-07-12.md](EEPROM_ENUM_WIDTH_ABI_2026-07-12.md) for programming decisions.
+
 ## Exact build inputs
 
 ### AVR-GCC
