@@ -120,7 +120,7 @@ const struct EE_prom EEMEM EepromManager::ee_vars
 };
 
 bool g_isMaster = UNUSED_VAR;
-extern volatile Fox_t g_fox[EVENT_NUMBER_OF_EVENTS-1];
+extern volatile Fox_t g_fox[EVENT_NUMBER_OF_EVENTS];
 extern volatile int8_t g_utc_offset;
 extern uint8_t g_unlockCode[];
 extern Frequency_Hz g_rtty_offset;
@@ -853,4 +853,3 @@ bool EepromManager::readNonVols(void)
 		
 		return(err);
 	}
-

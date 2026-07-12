@@ -20,6 +20,7 @@ policy-check:
 # Build and run dependency-light host characterization tests.
 test:
     ./scripts/run-host-tests.sh
+    node ./scripts/check-firmware-contracts.mjs
 
 # Run all currently available non-firmware checks and host tests.
 check: doctor docs-check policy-check test

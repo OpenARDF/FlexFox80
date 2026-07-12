@@ -174,6 +174,7 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [x] The repository now has a platform-neutral AVR Release wrapper derived from the checked-in Microchip Studio configuration. It requires AVR-GCC 7.3.0 and `AVR-Dx_DFP` 1.9.103 for reference-build status and labels an explicitly allowed version mismatch as exploratory.
 - [x] macOS is defined as the primary development environment and the preserved Windows Microchip Studio 7 installation as the release-equivalence and programming reference.
 - [x] The exact Windows evidence request is documented, including deterministic-build, resource, hash, programmer, and ESP dependency information.
+- [x] Two exact Windows AVR Release wrapper runs at `4d17bab` were deterministic across all requested artifacts and established the initial size/hash baseline. They also exposed three repeatable `g_fox` declaration bounds warnings for test-first investigation.
 - [ ] Run and compare the AVR wrapper on a native Mac toolchain and the preserved Windows reference toolchain.
 - [ ] Pin the ESP8266 build only after retrieving the known-good Arduino core, board-option, WebSockets, and filesystem-tool versions.
 
@@ -196,6 +197,7 @@ The root `README.md` remains user-facing and is not the location for these devel
 
 - [x] A dependency-light host test harness invoked by `just test`, with failures that identify the behavioral contract and input case.
 - [x] An initial passing characterization slice for the AVR circular buffer covering empty/full state, FIFO order, wraparound, overwrite, and reset without changing firmware behavior.
+- [x] A source-contract regression captures the AVR compiler's required `g_fox` extent after deterministic Windows builds exposed a declaration mismatch.
 - A separate red-green defect slice for documented LIFO `pop()` behavior and allocation/zero-capacity handling if the characterization demonstrates a mismatch.
 - Host-side tests or testable adapters for:
   - Linkbus framing, parsing, and resynchronization;

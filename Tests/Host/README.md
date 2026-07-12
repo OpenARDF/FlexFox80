@@ -12,6 +12,8 @@ just test
 
 The runner writes executables only under the ignored `Software/AVR128DA48/tmp/host-tests/` directory.
 
+`just test` also runs dependency-free source-contract checks for firmware declarations whose target-compiler interpretation is safety-relevant. These checks supplement compilation; they do not replace it.
+
 ## Current characterization boundary
 
 The first slice compiles the production AVR `CircularStringBuff.cpp` unchanged and covers behavior already relied upon by its FIFO users:
