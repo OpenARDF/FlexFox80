@@ -2,7 +2,7 @@
 
 ## Status
 
-The red-green host regression, repository checks, and deterministic exact Mac AVR Release builds are complete. Connected-target programming remains open. Routine Windows duplication is not required under the established parity policy.
+The red-green host regression, repository checks, deterministic exact Mac AVR Release builds, and connected-target programming evidence are complete. The post-program WiFi probe remains open. Routine Windows duplication is not required under the established parity policy.
 
 ## Confirmed defect
 
@@ -53,7 +53,23 @@ Two consecutive builds used AVR-GCC 7.3.0 and Atmel `AVR-Dx_DFP` 1.9.103. Both c
 
 Compared with the preceding zero-capacity build, text grows by eight bytes. Data and BSS are unchanged, and the EEPROM initializer remains byte-identical.
 
+## Connected-target programming
+
+The dummy-loaded AVR128DA48 test unit was programmed with the exact `3de7d17` Release HEX through the proven chip-erase, flash-write/verify, and complete EEPROM-restore/verify workflow.
+
+Fresh pre-write captures matched the preserved unit baseline:
+
+- EEPROM, 512 bytes: `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401`;
+- fuses, 16 bytes: `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126`.
+
+Avrdude verified all 41,212 input flash bytes twice. Independent post-operation reads then proved:
+
+| Memory | Expected SHA-256 | Post-read SHA-256 | Result |
+| --- | --- | --- | --- |
+| Programmed flash bytes | `1c724a502df6efb558e7fb20a8eb9ac326b1ab3be0c24cfeae94b9632f647b37` | `1c724a502df6efb558e7fb20a8eb9ac326b1ab3be0c24cfeae94b9632f647b37` | byte-identical |
+| Restored EEPROM | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | byte-identical |
+| Preserved fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | byte-identical |
+
 ## Remaining verification
 
-- Program the exact Release HEX on the dummy-loaded test unit using the established complete EEPROM preservation and verification workflow.
 - Confirm normal startup and the successful 100-byte allocation path through the existing read-only WiFi probe.

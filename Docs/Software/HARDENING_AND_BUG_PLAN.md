@@ -333,7 +333,8 @@ The root `README.md` remains user-facing and is not the location for these devel
 - Failed allocation now normalizes capacity to zero and reuses the separately tested disabled-buffer behavior.
 - Successful nonzero allocation, the configured 100-byte buffer, FIFO/LIFO behavior, overwrite, reset, busy state, and public interfaces remain unchanged.
 - The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, text grows by eight bytes, and data/BSS are unchanged.
-- Connected-target programming and a post-program read-only probe remain open.
+- The dummy-loaded test unit now runs the exact corrected flash; independent flash, complete EEPROM, and fuse readbacks match the intended and preserved bytes.
+- The post-program read-only WiFi probe remains open.
 - Evidence: [CIRCULAR_BUFFER_ALLOCATION_FAILURE_2026-07-12.md](Evidence/CIRCULAR_BUFFER_ALLOCATION_FAILURE_2026-07-12.md).
 
 **R6 layout characterization checkpoint:**
