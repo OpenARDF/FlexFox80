@@ -295,6 +295,14 @@ The root `README.md` remains user-facing and is not the location for these devel
 - Live execution awaits Mac association with the FlexFox SSID while internet connectivity is provided separately or temporarily relinquished.
 - Procedure: [WIFI_AVR_ACCESS.md](WIFI_AVR_ACCESS.md).
 
+**WiFi command-boundary hardening candidate:**
+
+- The default soft AP is open, and any associated WebSocket client can submit `PASS,<text>` for unrestricted forwarding to the AVR Linkbus.
+- The forwarded surface includes benign queries as well as EEPROM-affecting configuration, reset, immediate transmission, manual keying, and WiFi-shutdown commands.
+- Existing `/test.html` and `/radio.html` behavior depends on raw pass-through, so removing it or requiring authentication is a compatibility and field-workflow decision rather than a safe opportunistic edit.
+- Before changing it, characterize every legitimate direct command, define an allow-list and authorization model, preserve a recovery path, and verify that malformed or incomplete messages cannot leave RF keyed or communications disabled.
+- The initial Mac probe is independently constrained by a source contract and does not use `PASS`.
+
 ### Step 4: Remove clear, locally bounded defects
 
 **Goal:** Correct defects whose unsafe behavior is directly demonstrated, using one narrow change at a time.
@@ -498,6 +506,7 @@ Use a small internal issue table or tracker with these fields:
 | R6 | A | High | AVR EEPROM | I2C counter and enum ABI regressions; 65-field layout protected | Static review, focused red-green evidence, and exact Mac build | A3/A4 | In progress |
 | R7 | A | High | AVR text output | Pending boundary test | Static review | A3 | Planned |
 | R8 | A/B | Medium | ESP role assignment | Pending Event test | Static review | A3 | Planned |
+| R9 | A/B | High | ESP WebSocket/AVR bridge | Open AP plus unrestricted `PASS` forwarding | Static end-to-end trace; safe probe contract | A3/A4 | Characterized |
 
 Specific field bugs should be added with distinct `B-` identifiers. At each Path A checkpoint:
 
