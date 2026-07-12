@@ -604,7 +604,7 @@ Use a small internal issue table or tracker with these fields:
 | R7 | A | High | AVR text output | Direct boundary regression; exact Mac build and target probe | Static review and focused red-green evidence | — | Complete |
 | R8 | A/B | Medium | ESP role assignment | Concrete `"1:0"` extraction defect; Event test pending | Static review and cross-method comparison | A2 ESP pinning | Confirmed, deferred |
 | R9 | A/B | High | ESP WebSocket/AVR bridge | Open AP plus unrestricted `PASS` forwarding | Static end-to-end trace; safe probe contract | A3/A4 | Characterized |
-| B-TIME-01 | B | High | ESP/Linkbus/AVR RTC | Rare field outlier; read-only multi-unit time series pending | Confirmed false-success paths and attached-unit phase baseline | Unit identities and repeat measurements | Investigating |
+| B-TIME-01 | B | High | ESP/Linkbus/AVR RTC | Rare field outlier; read-only multi-unit time series pending | Confirmed false-success paths; 33/33 controlled RTC writes passed; post-set phase remained about 0.8–1.5 s | Field unit identities and repeat measurements | Investigating |
 
 Specific field bugs should be added with distinct `B-` identifiers. At each Path A checkpoint:
 

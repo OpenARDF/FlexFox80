@@ -31,6 +31,7 @@ const driverInitHeaderPath = join(
 );
 const wifiProbePath = join(repoRoot, "scripts", "probe-flexfox-wifi.mjs");
 const clockObserverPath = join(repoRoot, "scripts", "observe-flexfox-clock.mjs");
+const clockSyncTestPath = join(repoRoot, "scripts", "test-flexfox-clock-sync.mjs");
 const linkbusBoundsTestPath = join(repoRoot, "scripts", "test-flexfox-linkbus-rx-bounds.mjs");
 const linkbusPath = join(
   repoRoot,
@@ -76,6 +77,7 @@ const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
 const wifiProbe = readFileSync(wifiProbePath, "utf8");
 const clockObserver = readFileSync(clockObserverPath, "utf8");
+const clockSyncTest = readFileSync(clockSyncTestPath, "utf8");
 const linkbusBoundsTest = readFileSync(linkbusBoundsTestPath, "utf8");
 const linkbus = readFileSync(linkbusPath, "utf8");
 const linkbusHeader = readFileSync(linkbusHeaderPath, "utf8");
@@ -248,6 +250,18 @@ if (
 }
 
 process.stdout.write("PASS WiFi clock observer sends heartbeat only\n");
+
+if (
+  !clockSyncTest.includes('process.env.FLEXFOX_ALLOW_CLOCK_SET !== "1"') ||
+  !clockSyncTest.includes('const message = `SYNC,${iso}`;') ||
+  clockSyncTest.includes("PASS,") ||
+  [...clockSyncTest.matchAll(/socket\.send\(([^)]+)\)/g)].length !== 3
+) {
+  process.stderr.write("Firmware contract check failed: clock sync test safety boundary changed\n");
+  process.exit(1);
+}
+
+process.stdout.write("PASS WiFi clock sync test requires opt-in and sends only time/heartbeat\n");
 
 const unsafeTextSends = [
   ["Linkbus", linkbus],

@@ -46,12 +46,33 @@ spread_ms=286
 
 A negative offset means the FlexFox-reported epoch was ahead of the Mac clock. This unidentified bench unit was therefore approximately 2.05 seconds ahead during the completed observation. The 286 ms spread is small relative to a multi-second field error and supports using repeated medians to compare units. This is a baseline only; it is not evidence that the attached unit was the field outlier.
 
+## Controlled RTC-write series
+
+The attached dummy-loaded test unit is not one of the ten field units, so its original absolute offset cannot be compared with that group. It can, however, qualify the clock-setting mechanism. `just wifi-clock-sync-test` exercises the same browser `SYNC,<ISO timestamp>` path while requiring the explicit `FLEXFOX_ALLOW_CLOCK_SET=1` opt-in.
+
+A later failed write would be invisible if every trial requested already-correct time. The test therefore uses a distinctive repeating `+8 seconds`, `-8 seconds`, and current-time sequence. It waits until the AVR's returned epoch matches each requested signature before continuing, restores current Mac time at the end or on a handled failure, and checks the restored phase. It sends no event, EEPROM, RF, or raw pass-through commands.
+
+Completed evidence:
+
+| Run | Verified writes | First returned report matched | Final current-time receive offset |
+| --- | ---: | ---: | ---: |
+| Qualification | 3/3 | 3/3 | median 794 ms; range 752–944 ms |
+| Batch 1 | 10/10 | 10/10 | median 1437 ms; range 1432–1789 ms |
+| Batch 2 | 10/10 | 10/10 | median 856 ms; range 841–903 ms |
+| Batch 3 | 10/10 | 10/10 | median 1516 ms; range 1377–1726 ms |
+
+Primary result: **33/33 requested RTC writes were visible in the first matching returned epoch; no failed write was observed.** A quiet five-sample observation after all signature traffic cleared reported a 1444 ms median offset and 227 ms spread, confirming that the test left the unit on current time.
+
+Rapid alternating writes also demonstrated that previously emitted `SYNC` broadcasts can arrive after a later clock change. An interrupted long run briefly produced non-monotonic observer epochs from those queued signatures before current-time reports settled. Clone verification must therefore correlate a response with the requested value rather than treating any subsequent clock message as proof.
+
+This result shows that the normal ESP-to-AVR/RTC write mechanism is repeatably functional on this unit. It does not remove the confirmed false-success paths, prove a rare I2C failure impossible, exercise the master/slave clone state machine, or explain multi-day unit-specific drift. It shifts the next experiment toward an actual clone followed immediately by readback, plus aging/drift measurements on the field outlier.
+
 ## Ranked hypotheses and discriminating evidence
 
 | Rank | Hypothesis | Why it fits | Observation that distinguishes it |
 | --- | --- | --- | --- |
-| 1 | RTC clock write failed but clone proceeded | Both ESP ACK handling and AVR I2C error reporting can falsely complete | Target is already far off immediately after a nominal clone; RTC readback disagrees with master's transmitted time |
-| 2 | One RTC drifts faster because of oscillator quality or aging-register difference | One outlier after several days fits unit-specific drift; aging is queryable but is not cloned, and EEPROM `g_clock_calibration` is stored but not applied to the DS3231 | Unit begins close after setting, then offset changes approximately linearly; aging value differs from peers |
+| 1 | One RTC drifts faster because of oscillator quality or aging-register difference | One outlier after several days fits unit-specific drift; aging is queryable but is not cloned, and EEPROM `g_clock_calibration` is stored but not applied to the DS3231 | Unit begins close after setting, then offset changes approximately linearly; aging value differs from peers |
+| 2 | RTC clock write failed but clone proceeded | Both ESP ACK handling and AVR I2C error reporting can falsely complete, although 33/33 controlled writes passed on the bench unit | Target is already far off immediately after a nominal clone; RTC readback disagrees with master's transmitted time |
 | 3 | Whole-second truncation and transport phase | Confirmed in both master-clone and cellphone paths | Stable initial error generally within about one second; repeated setting produces different sub-second phase |
 | 4 | AVR system time loses a DS3231 square-wave tick after RTC setting | Event cycle countdown is driven by the one-second interrupt; a discrete missed tick could shift schedule while RTC remains correct | RTC readback remains correct while broadcast/system schedule jumps by an integer second |
 | 5 | Master time was wrong | All targets inherit the master epoch | Most or all targets share a similar absolute offset rather than one target becoming an outlier |

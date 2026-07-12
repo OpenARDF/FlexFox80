@@ -88,6 +88,15 @@ just wifi-clock-observe
 
 The observer sends only the `!&` heartbeat every five seconds and samples the ESP's `SYNC,<epoch>` broadcasts from the AVR. The five-second interval is required by the deployed module's approximately ten-second WebSocket inactivity timeout; a 30-second interval does not preserve one continuous observation. It reports the Mac receive time, target epoch, median offset, and sample spread. A positive offset means the target-reported epoch is behind the Mac; a negative offset means it is ahead. Absolute offset includes WebSocket and USB-tunnel latency, so compare unit medians only through the same network path. See the [wireless time synchronization investigation](Evidence/WIRELESS_TIME_SYNC_INVESTIGATION_2026-07-12.md) for the protocol limitations and multi-unit measurement plan.
 
+On an explicitly authorized dummy-loaded test unit, qualify RTC writes with:
+
+```text
+FLEXFOX_CLOCK_SYNC_DRY_RUN=1 just wifi-clock-sync-test
+FLEXFOX_ALLOW_CLOCK_SET=1 FLEXFOX_CLOCK_SYNC_TRIALS=10 just wifi-clock-sync-test
+```
+
+This state-changing test alternates distinctive `+8`, `-8`, and current-time signatures so each RTC write can be distinguished from the previous value. It requires every signature in the AVR's returned epochs and restores current Mac time after the series or a handled failure. Run it only when brief schedule changes are acceptable. It does not change event files, EEPROM configuration, or RF settings.
+
 Useful overrides:
 
 ```text
@@ -142,5 +151,24 @@ The DroidTether `utun` number can change between sessions. Identify the active i
 - DroidTether must not install a competing default route.
 
 In the first successful session, the default route remained on `en0` through `10.0.4.1`, while only `73.73.73.73` used `utun6`.
+
+### DroidTether diagnostics learned on the Moto
+
+Before starting DroidTether, the Moto must actually expose the RNDIS USB function. With Android debugging available, verify:
+
+```text
+adb shell getprop sys.usb.state
+```
+
+The value should include `rndis` (the proven state was `rndis,adb`). A value of only `adb` exposes the Android Debug Bridge interface `ff/42/01`, not RNDIS. DroidTether v0.8.7's broad known-Motorola fallback can misclassify that ADB interface as RNDIS and then misleadingly time out waiting for `INIT_CMPLT`. Confirm the phone's **USB tethering** switch remains enabled before diagnosing the Mac route.
+
+Do not assume a fixed DroidTether client subnet. The Moto has assigned both `10.154.x.x` and `10.75.18.x` leases in successful sessions. Locate the newly created `utun` carrying an IPv4 address, then install the `73.73.73.73` host route through that interface. A helper that recognizes only `10.154.x.x` can stop a fully successful RNDIS/DHCP session and falsely report that no tunnel was created.
+
+A successful path has four separate proofs:
+
+1. the RNDIS handshake reaches data mode;
+2. DHCP configures an IPv4 address on the new `utun`;
+3. `route -n get 73.73.73.73` names that `utun`, not `en0`;
+4. `just wifi-probe` returns HTTP, ESP identity, temperature, and battery data.
 
 Do not change macOS routing, Internet Sharing, the FlexFox AP address, or the ESP firmware merely to make the first smoke test convenient. First prove the default direct path, then document any repeatable dual-network arrangement separately.

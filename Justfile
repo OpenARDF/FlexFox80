@@ -51,6 +51,10 @@ wifi-monitor:
 wifi-clock-observe:
     node ./scripts/observe-flexfox-clock.mjs
 
+# Exercise RTC setting on an explicitly authorized dummy-loaded test unit.
+wifi-clock-sync-test:
+    node ./scripts/test-flexfox-clock-sync.mjs
+
 # Qualify fixed Linkbus parser bounds and ID-alias rejection using read-only recovery.
 wifi-linkbus-bounds-test:
     node ./scripts/test-flexfox-linkbus-rx-bounds.mjs
