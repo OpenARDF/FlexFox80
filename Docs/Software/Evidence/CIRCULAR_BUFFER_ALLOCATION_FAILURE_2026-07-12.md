@@ -2,7 +2,7 @@
 
 ## Status
 
-The red-green host regression, repository checks, deterministic exact Mac AVR Release builds, and connected-target programming evidence are complete. The post-program WiFi probe remains open. Routine Windows duplication is not required under the established parity policy.
+The red-green host regression, repository checks, deterministic exact Mac AVR Release builds, connected-target programming, and post-program WiFi evidence are complete. Routine Windows duplication is not required under the established parity policy.
 
 ## Confirmed defect
 
@@ -70,6 +70,6 @@ Avrdude verified all 41,212 input flash bytes twice. Independent post-operation 
 | Restored EEPROM | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | byte-identical |
 | Preserved fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | byte-identical |
 
-## Remaining verification
+The post-program `just wifi-probe` passed with HTTP 200, WebSocket connectivity, live `TEMP,31.0C` and `BAT,12.1V` AVR replies, the expected SSID and MAC address, ESP/AVR versions `2.0,0.200`, `MASTER,0`, and continuing clock synchronization. This proves normal startup, successful construction of the configured 100-byte buffer, and the ordinary WiFi-to-AVR path on the programmed image.
 
-- Confirm normal startup and the successful 100-byte allocation path through the existing read-only WiFi probe.
+No verification remains open for this slice.
