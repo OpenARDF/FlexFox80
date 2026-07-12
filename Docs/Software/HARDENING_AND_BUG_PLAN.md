@@ -1,6 +1,6 @@
 # FlexFox80 Hardening and Bug Plan
 
-**Plan status:** Step A1 is complete on `Development_AVR128DA48`; Step A2 is in progress, characterization-first TDD is the approved hardening method, and no firmware hardening changes have begun.
+**Plan status:** Step A1 is complete on `Development_AVR128DA48`; the exact AVR build is reproducible on Mac and Windows while ESP8266 pinning remains open in Step A2; characterization-first TDD and narrow firmware hardening slices are active.
 
 ## Purpose
 
@@ -176,7 +176,7 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [x] The exact Windows evidence request is documented, including deterministic-build, resource, hash, programmer, and ESP dependency information.
 - [x] Two exact Windows AVR Release wrapper runs at `4d17bab` were deterministic across all requested artifacts and established the initial size/hash baseline. They also exposed three repeatable `g_fox` declaration bounds warnings for test-first investigation.
 - [x] The Mac can identify and read the attached AVR128DA48 through Atmel-ICE without writing it. The connected unit's flash verifies exactly against the tracked `33e64e0` Debug HEX, and repeatable EEPROM/fuse captures now provide deployed-state evidence for R6.
-- [ ] Run and compare the AVR wrapper on a native Mac toolchain and the preserved Windows reference toolchain.
+- [x] Run the AVR wrapper with exact-version Mac and Windows inputs. Two Mac runs at `0429c2a` are deterministic, warning-free, and match Windows resource totals; same-source Windows artifact comparison for the I2C slice remains pending.
 - [ ] Pin the ESP8266 build only after retrieving the known-good Arduino core, board-option, WebSockets, and filesystem-tool versions.
 
 **Checkpoint A2 — Build baseline ready:**

@@ -23,7 +23,7 @@ The wrapper accepts Windows `.exe` tools and native Unix tools. It rejects compi
 
 The checked-in `avr8-gnu-toolchain-3.7.0.1796-win32.any.x86_64.zip.update` archive contains a Windows toolchain and cannot provide native macOS executables. Its retention and eventual replacement should be decided only after both environments reproduce the firmware.
 
-The exact archived macOS compiler has been verified to start through Rosetta. See [Mac build environment evidence](Evidence/MAC_BUILD_ENVIRONMENT_2026-07-11.md) for its identity, hashes, and the remaining historical device-pack boundary.
+The exact archived macOS compiler runs through Rosetta, and the historical Atmel `AVR-Dx_DFP` 1.9.103 pack has now been retrieved from the official archive. Two exact Mac Release builds are deterministic, warning-free, and match the established Windows resource totals. See the initial [Mac build environment evidence](Evidence/MAC_BUILD_ENVIRONMENT_2026-07-11.md) and completed [Mac AVR reference-build evidence](Evidence/MAC_AVR_REFERENCE_BUILD_2026-07-12.md).
 
 ## Mac Atmel-ICE target access
 
