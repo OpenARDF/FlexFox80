@@ -181,9 +181,9 @@ bool linkbus_start_tx(void)
 	if(success) /* message will be lost if transmit is busy */
 	{
 		linkbus_tx_active = true;
-		
+
 		if(g_linkbus_usart_number == USART_4)
-		{	
+		{
 			USART4_enable_tx();
 		}
 		else
@@ -200,14 +200,14 @@ void linkbus_end_tx(void)
 	if(linkbus_tx_active)
 	{
 		if(g_linkbus_usart_number == USART_0)
-		{	
+		{
 			USART4.CTRLA &= ~(1 << USART_DREIE_bp); /* Transmit Data Register Empty Interrupt Enable: disable */
 		}
 		else
 		{
 			USART1.CTRLA &= ~(1 << USART_DREIE_bp); /* Transmit Data Register Empty Interrupt Enable: disable */
 		}
-		
+
 		linkbus_tx_active = false;
 	}
 }
@@ -215,7 +215,7 @@ void linkbus_end_tx(void)
 void linkbus_reset_rx(void)
 {
 		if(g_linkbus_usart_number == USART_0)
-		{	
+		{
 			if(USART4.CTRLB & (1 << USART_RXEN_bp))   /* perform only if rx is currently enabled */
 			{
 				USART4.CTRLB &= ~(1 << USART_RXEN_bp);
@@ -237,17 +237,17 @@ void linkbus_reset_rx(void)
 /* configure the pins and initialize the registers */
 // void USART0_initialization(uint32_t baud)
 // {
-// 
+//
 // 	// Set Rx pin direction to input
 // 	PA1_set_dir(PORT_DIR_IN);
-// 	PA1_set_pull_mode(PORT_PULL_OFF);
-// 
+// 	PA1_set_pull_mode(PORT_PULL_OFF);
+//
 // 	// Set Tx pin direction to output
 // 	PA0_set_dir(PORT_DIR_OUT);
 // 	PA0_set_level(HIGH);
-// 
+//
 // 	USART0_init(baud);
-// }
+// }
 
 /* configure the pins and initialize the registers */
 void USART1_initialization(uint32_t baud)
@@ -298,7 +298,7 @@ void linkbus_init(uint32_t baud, USART_Number_t usart)
 		{
 			USART1_initialization(baud);
 		}
-		
+
 		g_linkbus_usart_number = usart;
 	}
 
@@ -312,14 +312,14 @@ void linkbus_disable(void)
 	g_bus_disabled = true;
 
 	if(g_linkbus_usart_number == USART_4)
-	{	
+	{
 		USART4_disable();
 	}
 	else
 	{
 		USART1_disable();
 	}
-	
+
 	linkbus_end_tx();
 	memset(rx_buffer, 0, sizeof(rx_buffer));
 
@@ -336,7 +336,7 @@ void linkbus_enable(void)
 	g_bus_disabled = false;
 
 	if(g_linkbus_usart_number == USART_4)
-	{	
+	{
 		USART4_enable();
 	}
 	else
