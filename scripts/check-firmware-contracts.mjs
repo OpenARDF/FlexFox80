@@ -62,6 +62,14 @@ const driverIsrPath = join(
   "FlexFox80",
   "driver_isr.cpp",
 );
+const goertzelPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "src",
+  "Goertzel.cpp",
+);
 const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
@@ -71,6 +79,7 @@ const linkbus = readFileSync(linkbusPath, "utf8");
 const linkbusHeader = readFileSync(linkbusHeaderPath, "utf8");
 const serialbus = readFileSync(serialbusPath, "utf8");
 const driverIsr = readFileSync(driverIsrPath, "utf8");
+const goertzel = readFileSync(goertzelPath, "utf8");
 const declaration = source.match(/extern\s+volatile\s+Fox_t\s+g_fox\s*\[\s*([^\]]+?)\s*\]\s*;/);
 
 if (!declaration) {
@@ -87,6 +96,19 @@ if (declaredExtent !== "EVENT_NUMBER_OF_EVENTS") {
 }
 
 process.stdout.write("PASS g_fox declaration covers every Event_t value\n");
+
+if (
+  !goertzel.includes("int testData[MAXN];") ||
+  goertzel.includes("malloc(") ||
+  goertzel.includes("free(")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: fixed-size Goertzel samples still depend on fallible heap allocation\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS Goertzel sample storage is fixed at its existing maximum\n");
 
 const i2cFailureField = header.match(/\buint16_t\s+i2c_failure_count\s*;/);
 if (!i2cFailureField) {

@@ -338,6 +338,15 @@ The root `README.md` remains user-facing and is not the location for these devel
 - This slice has no remaining verification checkpoint.
 - Evidence: [CIRCULAR_BUFFER_ALLOCATION_FAILURE_2026-07-12.md](Evidence/CIRCULAR_BUFFER_ALLOCATION_FAILURE_2026-07-12.md).
 
+**Mac defect slice — fixed Goertzel sample storage:**
+
+- The fixed-range 100–209 sample detector allocated its buffer during static initialization, then dereferenced it without an allocation-failure path.
+- A source contract failed red while `Goertzel.cpp` still used `malloc()` and `free()` for its fixed maximum.
+- The single global sample buffer is now a `MAXN` array; the deployed 201-sample setting and all signal-processing operations remain unchanged.
+- The full Mac suite passes green; two exact builds are deterministic and warning-free, text decreases by 42 bytes, EEPROM output is unchanged, and the conservative live-SRAM increase is at most 16 bytes before removed allocator metadata.
+- Connected-target programming and a post-program read-only probe remain open; ADC/tone-input qualification stays in the broader functional hardware gate.
+- Evidence: [GOERTZEL_FIXED_STORAGE_2026-07-12.md](Evidence/GOERTZEL_FIXED_STORAGE_2026-07-12.md).
+
 **R6 layout characterization checkpoint:**
 
 - A host-side AVR-width model now checks all 65 `EE_prom` member offsets against `EE_var_t`.

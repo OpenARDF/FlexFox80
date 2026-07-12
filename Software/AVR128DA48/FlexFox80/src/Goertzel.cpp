@@ -37,18 +37,16 @@ volatile int _index = 0;
 volatile bool _samplesReady = false;
 int highValueCount = 0;
 
-int* testData;
+int testData[MAXN];
 
 Goertzel::Goertzel(float N, float sampling_frequency)
 {
 	_SAMPLING_FREQUENCY = sampling_frequency;   /*on 16mhz, ~8928.57142857143, on 8mhz ~44444 */
 	_N = CLAMP(100, N, MAXN);
-	testData = (int*)malloc(_N * sizeof(int));
 }
 
 Goertzel::~Goertzel()
 {
-	free(testData);
 }
 
 void Goertzel::Flush(void)
