@@ -2,7 +2,7 @@
 
 ## Status
 
-The red-green source contract, repository checks, deterministic exact Mac AVR Release builds, and connected-target programming evidence are complete. The post-program WiFi probe remains open after the known Moto/DroidTether association loss. Routine Windows duplication is not required under the established parity policy.
+The red-green source contract, repository checks, deterministic exact Mac AVR Release builds, connected-target programming, and post-program WiFi evidence are complete. Routine Windows duplication is not required under the established parity policy.
 
 ## Confirmed defect
 
@@ -66,10 +66,8 @@ Avrdude verified all 41,170 input flash bytes twice. Independent post-operation 
 | Restored EEPROM | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | byte-identical |
 | Preserved fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | byte-identical |
 
-The first read-only WiFi probe after programming timed out at HTTP before opening a WebSocket or sending any message. This matches the known Moto/DroidTether association loss after Atmel-ICE activity and is not counted as a firmware result.
+The first read-only WiFi probe after programming timed out at HTTP before opening a WebSocket or sending any message. This matched the known Moto/DroidTether association loss after Atmel-ICE activity and is not counted as a firmware result.
 
-## Remaining verification
+After reconnecting the Moto/DroidTether route, `just wifi-probe` passed with HTTP 200, WebSocket connectivity, live `TEMP,31.0C` and `BAT,12.1V` AVR replies, the expected SSID and MAC address, ESP/AVR versions `2.0,0.200`, `MASTER,0`, and continuing synchronization. This proves normal startup and the ordinary foreground/WiFi-to-AVR path on the programmed fixed-storage image.
 
-- Reconnect the Moto/DroidTether route.
-- Confirm normal startup and WiFi-to-AVR communications with the read-only probe.
-- A future controlled ADC/tone-input test remains part of the broader functional hardware gate; this slice does not claim frequency-detection qualification.
+No implementation checkpoint remains open for this slice. A future controlled ADC/tone-input test remains part of the broader functional hardware gate; this slice does not claim frequency-detection qualification.
