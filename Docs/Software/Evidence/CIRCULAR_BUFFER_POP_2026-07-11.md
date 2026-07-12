@@ -21,9 +21,11 @@ The implementation read `buf_[head_]` before moving `head_` backward. `head_` de
 
 `pop()` now moves `head_` backward with the existing wraparound logic and then reads `buf_[head_]`. No allocation, FIFO `get()`, overwrite, reset, busy-state, or public-interface logic changed.
 
-## Green evidence and remaining gate
+## Green evidence
 
 - The LIFO regression passes with AddressSanitizer and UndefinedBehaviorSanitizer enabled.
 - All prior circular-buffer characterization remains green.
 - `just check` passes on macOS.
-- An exact Windows AVR Release rebuild is required to record compiler warnings, resource usage, and artifact hashes before target verification is complete.
+- Two clean exact Windows AVR Release builds completed with zero warnings, unchanged resource usage, and deterministic matching artifacts between runs.
+- The Windows `just check` run passed, including the LIFO regression and all prior circular-buffer characterization.
+- Exact target-build results and hashes are recorded in [WINDOWS_CIRCULAR_BUFFER_POP_VERIFICATION_2026-07-12.md](WINDOWS_CIRCULAR_BUFFER_POP_VERIFICATION_2026-07-12.md).

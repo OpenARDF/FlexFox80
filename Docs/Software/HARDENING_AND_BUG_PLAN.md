@@ -198,7 +198,7 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [x] A dependency-light host test harness invoked by `just test`, with failures that identify the behavioral contract and input case.
 - [x] An initial passing characterization slice for the AVR circular buffer covering empty/full state, FIFO order, wraparound, overwrite, and reset without changing firmware behavior.
 - [x] A source-contract regression captures the AVR compiler's required `g_fox` extent after deterministic Windows builds exposed a declaration mismatch.
-- [x] A red-green defect slice demonstrates and corrects documented LIFO `pop()` behavior; exact target-build verification remains required.
+- [x] A red-green defect slice demonstrates and corrects documented LIFO `pop()` behavior, with deterministic exact Windows target-build verification.
 - Separate red-green slices for allocation and zero-capacity handling if characterization demonstrates a mismatch.
 - Host-side tests or testable adapters for:
   - Linkbus framing, parsing, and resynchronization;
@@ -233,6 +233,15 @@ The root `README.md` remains user-facing and is not the location for these devel
 - Mac host and repository gates passed green.
 - Two exact post-fix Windows AVR Release builds completed with zero warnings, unchanged size, deterministic artifacts, and hashes identical to the pre-fix baseline.
 - Evidence: [EEPROM_G_FOX_DECLARATION_2026-07-11.md](Evidence/EEPROM_G_FOX_DECLARATION_2026-07-11.md) and [WINDOWS_G_FOX_VERIFICATION_2026-07-12.md](Evidence/WINDOWS_G_FOX_VERIFICATION_2026-07-12.md).
+
+**Completed A3.2 defect slice — circular-buffer `pop()` ordering:**
+
+- A focused host regression failed red because `pop()` read the next write position instead of the last occupied position.
+- The minimal correction moves the existing head decrement before the read; FIFO, wraparound, overwrite, reset, busy-state, allocation, and public-interface behavior were not changed.
+- Mac host tests passed with AddressSanitizer and UndefinedBehaviorSanitizer enabled, and the full repository check passed.
+- Two exact Windows AVR Release builds completed with zero warnings, unchanged size, deterministic artifacts, and the expected executable-artifact differences from the prior baseline.
+- The full Windows host suite passed with the documented LIFO regression and existing characterization tests.
+- Evidence: [CIRCULAR_BUFFER_POP_2026-07-11.md](Evidence/CIRCULAR_BUFFER_POP_2026-07-11.md) and [WINDOWS_CIRCULAR_BUFFER_POP_VERIFICATION_2026-07-12.md](Evidence/WINDOWS_CIRCULAR_BUFFER_POP_VERIFICATION_2026-07-12.md).
 
 ### Step 4: Remove clear, locally bounded defects
 
@@ -463,4 +472,4 @@ Path B bug intake can begin immediately, but implementation should normally wait
 
 ## Next action
 
-Continue the A2 Windows reference-environment handoff while beginning an infrastructure-only A3 slice on macOS: add a dependency-light host harness, expose it as `just test`, and characterize the AVR circular buffer without changing production behavior. Commit the passing harness separately. Then add the documented `pop()` contract as a focused red test, preserve the pre-fix failure evidence, and evaluate the smallest correction as a separate defect slice. Do not begin firmware fixes until their required build and verification gates are available.
+Continue characterization-first TDD one bounded defect at a time. The next slice should establish a failing regression before changing production code, preserve deployed storage and protocol compatibility, pass `just check`, and receive exact Windows AVR build verification whenever executable firmware changes. Keep allocation/zero-capacity buffer behavior separate from EEPROM-width work; do not combine opportunistic fixes.
