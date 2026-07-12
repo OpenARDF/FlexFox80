@@ -1,6 +1,6 @@
 # FlexFox80 Hardening and Bug Plan
 
-**Plan status:** Step A1 is complete on `Development_AVR128DA48`; Step A2 is next and no firmware hardening changes have begun.
+**Plan status:** Step A1 is complete on `Development_AVR128DA48`; Step A2 is in progress, characterization-first TDD is the approved hardening method, and no firmware hardening changes have begun.
 
 ## Purpose
 
@@ -25,6 +25,42 @@ This is the operational roadmap. [SAFE_HARDENING_STRATEGY.md](SAFE_HARDENING_STR
 8. Generated or vendor-managed files are not reformatted or reorganized as part of normal source work.
 9. A failed or unavailable verification step is reported; it is not silently treated as passed.
 10. Every completed milestone ends with an updated evidence record and bug-list reassessment.
+
+## Test-driven hardening policy
+
+FlexFox80 was not originally developed with TDD, so the project will use **characterization-first TDD** for mature behavior and conventional red-green-refactor TDD for new behavior. The objective is regression control around the highest-risk seams, not a retrospective coverage percentage.
+
+### Existing mature behavior
+
+1. State the contract or observed behavior that must remain stable.
+2. Add a characterization test, golden fixture, protocol trace, or repeatable hardware procedure that passes on the current implementation.
+3. Include awkward or undesirable current behavior when changing it is not part of the approved slice; labeling a behavior does not silently approve changing it.
+4. Refactor only after the relevant characterization remains green.
+
+### Confirmed bugs and clear defects
+
+1. Add the narrowest automated or repeatable test that reproduces the failure.
+2. Run it against the pre-fix implementation and record that it fails for the expected reason: **red**.
+3. Apply the smallest owning-subsystem change that makes it pass: **green**.
+4. Re-run neighboring characterization, build, protocol, resource, and hardware gates.
+5. Refactor only when useful and only while all applicable tests remain green.
+
+The failing test and production fix normally belong to the same focused fix commit so the branch remains usable. Test-infrastructure changes that pass independently should be committed before the first production fix. A deliberately failing test may be preserved temporarily only on an explicitly identified diagnostic branch or in recorded pre-fix evidence; it must not leave `Development_AVR128DA48` red.
+
+### New behavior
+
+New testable behavior uses ordinary red-green-refactor TDD. Define the public contract and boundary cases in tests before adding the implementation. New hardware-facing behavior additionally requires a safe bench test or instrumentation plan before implementation.
+
+### Test layers and limits
+
+- **Host unit tests:** Pure calculations, parsers, buffers, state transitions, and serializers. These should be fast, deterministic, dependency-light, and runnable through `just test`.
+- **Golden and protocol tests:** Checked-in event fixtures, Linkbus messages, malformed inputs, cross-processor compatibility, and timing traces.
+- **Build tests:** Pinned AVR and ESP builds, warnings, resource usage, and artifact identity.
+- **Hardware-in-the-loop tests:** RTC, I2C, EEPROM interruption, ISR timing, reset/watchdog, sleep/wake, antenna interlock, and RF behavior into a dummy load.
+
+Host tests do not replace target verification. In particular, host `int`, pointer, alignment, floating-point, and timing behavior may differ from the AVR ABI. Firmware-facing tests must use fixed-width types where the contract depends on width, preserve explicit AVR boundary cases, and be corroborated by the pinned AVR build or target tests as appropriate.
+
+Do not reorganize ISR, RF, persistence, or sleep/wake code merely to increase testability or coverage. Introduce the smallest seam needed for a demonstrated behavior, prefer proven existing helpers, and keep the production path shared between tests and firmware so a parallel test-only implementation cannot drift.
 
 ## Resolved provisional branch model
 
@@ -152,12 +188,15 @@ The root `README.md` remains user-facing and is not the location for these devel
 
 **Bug reassessment:** Compare reported bugs with compiler warnings, stale artifacts, version mismatches, and processor-to-processor firmware compatibility.
 
-### Step 3: Create characterization and regression infrastructure
+### Step 3: Establish characterization-first TDD infrastructure
 
-**Goal:** Capture current mature behavior before changing it.
+**Goal:** Make test-first behavior the routine hardening workflow and capture current mature behavior before changing it.
 
 **Deliverables:**
 
+- A dependency-light host test harness invoked by `just test`, with failures that identify the behavioral contract and input case.
+- An initial passing characterization slice for the AVR circular buffer covering empty/full state, FIFO order, wraparound, overwrite, and reset without changing firmware behavior.
+- A separate red-green defect slice for documented LIFO `pop()` behavior and allocation/zero-capacity handling if the characterization demonstrates a mismatch.
 - Host-side tests or testable adapters for:
   - Linkbus framing, parsing, and resynchronization;
   - event-file parsing and validation;
@@ -177,6 +216,8 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [ ] Boundary and malformed cases are represented even when the current result is undesirable.
 - [ ] Known mature timing examples have golden traces.
 - [ ] Test failures clearly distinguish an intended behavior change from accidental regression.
+- [ ] At least one defect has complete recorded red-green evidence without leaving the development branch in a failing state.
+- [ ] Host tests explicitly cover relevant AVR-width boundaries rather than assuming the host ABI matches the target.
 - [ ] Tests run through one repository command.
 
 **Bug reassessment:** Attempt to encode each reported bug as a failing test or trace. Bugs that cannot yet be represented receive an explicit hardware/logging requirement.
@@ -199,8 +240,9 @@ Each item is a separate implementation slice unless two changes cannot be tested
 
 **Checkpoint A4.n — Clear defect removed:**
 
-- [ ] A pre-fix test demonstrates the defect.
+- [ ] A pre-fix test demonstrates the defect and its expected red failure is recorded.
 - [ ] The fix changes only the intended behavior.
+- [ ] The focused regression is green after the fix.
 - [ ] Existing valid protocol, event, timing, and RF-safety tests remain green.
 - [ ] Resource usage remains within the recorded budget.
 - [ ] Cross-processor compatibility is verified where applicable.
@@ -397,8 +439,8 @@ Specific field bugs should be added with distinct `B-` identifiers. At each Path
 The recommended order is:
 
 1. **A1 — Git and workflow policy.** Confirm branch roles and establish safe repository controls.
-2. **A2 — Reproducible AVR and ESP builds.** Know exactly what is being tested and deployed.
-3. **A3 — Characterization tests.** Capture protocol, event, timing, and persistence behavior.
+2. **A2 — Reproducible AVR and ESP builds.** Know exactly what is being tested and deployed. A3 host-harness work that does not change firmware may proceed in parallel.
+3. **A3 — Characterization-first TDD.** Establish `just test`, capture protocol, event, timing, and persistence behavior, and prove the first red-green defect slice.
 4. **A4.1 and A4.2 — Linkbus bounds and bounded output.** Address the clearest memory-safety risks first.
 5. **A4.3 through A4.6 — Remaining bounded defects.** Role parsing, event integrity, numeric validation, and EEPROM widths.
 6. **A5 — RTC/watchdog/fault recovery.** Proceed only after builds and core tests are dependable.
@@ -409,4 +451,4 @@ Path B bug intake can begin immediately, but implementation should normally wait
 
 ## Next action
 
-Start Step 1 with a policy-only change set. It should propose the exact FlexFox80 branch roles, workflow files, ignore/attribute rules, generated-file classification, and repository commands. Review that proposal and its dry-run file effects before untracking artifacts, renormalizing files, adding build dependencies, merging branches, or changing firmware.
+Continue the A2 Windows reference-environment handoff while beginning an infrastructure-only A3 slice on macOS: add a dependency-light host harness, expose it as `just test`, and characterize the AVR circular buffer without changing production behavior. Commit the passing harness separately. Then add the documented `pop()` contract as a focused red test, preserve the pre-fix failure evidence, and evaluate the smallest correction as a separate defect slice. Do not begin firmware fixes until their required build and verification gates are available.
