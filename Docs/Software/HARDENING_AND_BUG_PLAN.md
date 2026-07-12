@@ -327,6 +327,15 @@ The root `README.md` remains user-facing and is not the location for these devel
 - This slice has no remaining verification checkpoint; nonzero allocation failure remains separate.
 - Evidence: [CIRCULAR_BUFFER_ZERO_CAPACITY_2026-07-12.md](Evidence/CIRCULAR_BUFFER_ZERO_CAPACITY_2026-07-12.md).
 
+**Mac defect slice — circular-buffer allocation failure:**
+
+- A sanitizer-forced nonzero allocation failure failed red because the object retained the requested capacity and `put()` wrote through the null allocation.
+- Failed allocation now normalizes capacity to zero and reuses the separately tested disabled-buffer behavior.
+- Successful nonzero allocation, the configured 100-byte buffer, FIFO/LIFO behavior, overwrite, reset, busy state, and public interfaces remain unchanged.
+- The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, text grows by eight bytes, and data/BSS are unchanged.
+- Connected-target programming and a post-program read-only probe remain open.
+- Evidence: [CIRCULAR_BUFFER_ALLOCATION_FAILURE_2026-07-12.md](Evidence/CIRCULAR_BUFFER_ALLOCATION_FAILURE_2026-07-12.md).
+
 **R6 layout characterization checkpoint:**
 
 - A host-side AVR-width model now checks all 65 `EE_prom` member offsets against `EE_var_t`.

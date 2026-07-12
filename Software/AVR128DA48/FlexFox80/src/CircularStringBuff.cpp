@@ -26,7 +26,7 @@
 CircularStringBuff::CircularStringBuff(size_t size)
 {
   buf_ = (char*)malloc(size);
-  max_size_ = size;
+  max_size_ = buf_ ? size : 0;
   head_ = 0;
   tail_ = 0;
   full_ = false;

@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <iostream>
+#include <limits>
 
 namespace {
 
@@ -131,6 +132,22 @@ void zero_capacity_buffer_rejects_input()
   EXPECT(buffer.pop() == '\0');
 }
 
+void allocation_failure_disables_buffer()
+{
+  CircularStringBuff buffer(std::numeric_limits<size_t>::max());
+
+  EXPECT(buffer.capacity() == 0);
+  EXPECT(buffer.size() == 0);
+  EXPECT(buffer.empty());
+  EXPECT(buffer.full());
+
+  buffer.put('a');
+
+  EXPECT(buffer.size() == 0);
+  EXPECT(buffer.get() == '\0');
+  EXPECT(buffer.pop() == '\0');
+}
+
 void run(const char *name, void (*test)())
 {
   const int failuresBefore = failures;
@@ -156,6 +173,7 @@ int main()
   run("reset_clears_data_and_busy_state", reset_clears_data_and_busy_state);
   run("pop_returns_entries_in_lifo_order", pop_returns_entries_in_lifo_order);
   run("zero_capacity_buffer_rejects_input", zero_capacity_buffer_rejects_input);
+  run("allocation_failure_disables_buffer", allocation_failure_disables_buffer);
 
   if (failures != 0)
   {

@@ -28,7 +28,8 @@ printf '%s\n' "Host compiler: $($cxx --version | head -n 1)"
 	"$repo_root/Tests/Host/avr_circular_buffer_characterization_test.cpp" \
 	-o "$build_dir/avr-circular-buffer-tests"
 
-"$build_dir/avr-circular-buffer-tests"
+ASAN_OPTIONS="${ASAN_OPTIONS:+$ASAN_OPTIONS:}allocator_may_return_null=1" \
+	"$build_dir/avr-circular-buffer-tests"
 
 # shellcheck disable=SC2086 # Flags are intentionally expanded into individual compiler arguments.
 "$cxx" $common_flags $sanitizer_flags \
