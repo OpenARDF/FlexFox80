@@ -118,8 +118,9 @@ This is the only specific `arduinoWebSockets` version recovered.
 3. Selected FQBN and non-default board options:
    - Not found.
    - Source/README evidence identifies the target board as Adafruit HUZZAH ESP8266 Breakout.
+   - After this discovery pass, the project operator confirmed that FlexFox uses an `80 MHz` ESP8266 CPU clock. This is operator-supplied configuration evidence, not a value recovered from the inspected Windows profile or build cache.
    - No cached FlexFox/ARDF `build.options.json`, compile database, or preferences file proving FQBN or options was found.
-   - CPU frequency, flash layout, debug level, lwIP variant, erase behavior, upload speed, port, and programmer values remain unrecovered.
+   - Flash layout, debug level, lwIP variant, erase behavior, upload speed, port, and programmer values remain unrecovered.
 
 4. `arduinoWebSockets` version, source, and path:
    - Found vendored library version `2.1.0`.
@@ -177,6 +178,7 @@ Search terms and artifacts included `ARDF_Transmitter`, `RDP_WiFi_Firmware`, `es
 Windows recovered enough evidence to identify the historical ESP8266 target and WebSockets dependency:
 
 - Target: Adafruit HUZZAH ESP8266 Breakout.
+- CPU clock: `80 MHz` (operator-confirmed after the Windows discovery pass).
 - Historical IDE requirement: Arduino IDE `1.8.2 or later`.
 - WebSockets dependency: vendored `arduinoWebSockets` `2.1.0`.
 
