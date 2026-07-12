@@ -273,7 +273,8 @@ The root `README.md` remains user-facing and is not the location for these devel
 - One shared bounded helper now copies percent characters literally, preserves exact-fit NUL termination, and rejects oversized input without queuing a partial protocol frame.
 - Direct host regressions cover percent sequences, the maximum accepted length, oversized rejection without destination mutation, and invalid arguments.
 - The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, and text grows by 30 bytes.
-- Exact Windows and connected-target Linkbus verification remain open.
+- The dummy-loaded test unit now runs the exact corrected flash; independent flash, complete EEPROM, and fuse readbacks match the intended and preserved bytes.
+- Exact Windows and post-program live Linkbus verification remain open.
 - Evidence: [BOUNDED_TEXT_SEND_2026-07-12.md](Evidence/BOUNDED_TEXT_SEND_2026-07-12.md).
 
 **R6 layout characterization checkpoint:**

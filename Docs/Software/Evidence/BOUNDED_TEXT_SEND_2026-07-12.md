@@ -2,7 +2,7 @@
 
 ## Status
 
-Mac red-green, repository, host-boundary, and exact AVR Release build evidence is complete. Exact Windows and connected-target Linkbus verification remain open.
+Mac red-green, repository, host-boundary, exact AVR Release build, and connected-target programming evidence is complete. Exact Windows verification and post-program live Linkbus probing remain open.
 
 ## Confirmed defect
 
@@ -60,8 +60,26 @@ Two consecutive final-source builds used AVR-GCC 7.3.0 and Atmel `AVR-Dx_DFP` 1.
 
 Compared with commit `4dbd90f`, text grows by 30 bytes; data and BSS are unchanged. The EEPROM initializer is byte-identical.
 
+## Connected-target programming
+
+The dummy-loaded AVR128DA48 test unit was programmed with the exact `b543f3f` Release HEX through the proven chip-erase, flash-write/verify, and complete EEPROM-restore/verify workflow.
+
+Fresh pre-write captures matched the preserved unit baseline:
+
+- EEPROM, 512 bytes: `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401`;
+- fuses, 16 bytes: `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126`.
+
+Avrdude verified all 41,036 input flash bytes twice. Independent post-operation reads then proved:
+
+| Memory | Expected SHA-256 | Post-read SHA-256 | Result |
+| --- | --- | --- | --- |
+| Programmed flash bytes | `dc518c591970e7e7913a10865306632fbea311773c2c4071877b676ed471eb14` | `dc518c591970e7e7913a10865306632fbea311773c2c4071877b676ed471eb14` | byte-identical |
+| Restored EEPROM | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | byte-identical |
+| Preserved fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | byte-identical |
+
+The first post-program WiFi probe timed out at HTTP while the Mac host route still pointed to DroidTether `utun6`. This matches the earlier transport symptom when the Moto was no longer associated with the FlexFox access point; it is not counted as a firmware failure. Live query/reply verification remains pending until that association is restored.
+
 ## Remaining verification
 
 - Obtain exact Windows same-source builds and the full Windows host-contract run.
-- Program the connected dummy-loaded test unit through the proven flash/EEPROM-preservation workflow.
 - Confirm the normal WiFi-to-AVR query/reply path still returns temperature, battery, version, and identity data.
