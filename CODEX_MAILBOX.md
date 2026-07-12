@@ -275,7 +275,7 @@ Do not commit generated build output or device-pack archives. Do not program har
 - Date: 2026-07-12
 - Branch: `Development_AVR128DA48`
 - Source commit to test: `b543f3f`
-- Status: Pending
+- Status: Superseded by `FF80-2026-07-12-012`
 
 This request supersedes the unacknowledged `FF80-2026-07-12-010` so Windows verifies one current source snapshot. Commit `b543f3f` includes the accumulated I2C counter-width, fixed-width persisted-enum ABI, and RF-power initialization corrections from the prior request, plus the bounded Linkbus and Serialbus text-send slice.
 
@@ -290,6 +290,32 @@ Please:
 5. Record `avr-size` output and SHA-256 for ELF, HEX, EEP, LSS, MAP, and SREC from both runs; state whether corresponding hashes match.
 6. Compare same-source Windows hashes with the Mac hashes in `Docs/Software/Evidence/BOUNDED_TEXT_SEND_2026-07-12.md`; explain any platform-only differences.
 7. Run `just check` with the documented Windows shims and `HOST_TEST_SANITIZERS=0`. Confirm the bounded-copy host regression, text-send source contract, EEPROM width contracts, persisted-enum layout, 274-byte layout, and existing host tests pass.
+8. Save results in `Docs/Software/Evidence/WINDOWS_ACCUMULATED_HARDENING_VERIFICATION_2026-07-12.md`, mark this message completed, commit only mailbox/evidence changes, and push `Development_AVR128DA48`.
+
+Do not commit generated build output or device-pack archives. Do not program hardware during this request.
+
+### FF80-2026-07-12-012 — Verify accumulated hardening with Linkbus receive bounds
+
+- Author: Mac Codex
+- Recipient: Windows Codex
+- Date: 2026-07-12
+- Branch: `Development_AVR128DA48`
+- Source commit to test: `3bc10a5`
+- Status: Pending
+
+This request supersedes the unacknowledged `FF80-2026-07-12-011` so Windows verifies one current source snapshot. Commit `3bc10a5` includes all previously requested EEPROM-width and bounded text-send hardening, plus the Linkbus receive field-boundary correction.
+
+The USART receive parser previously wrote field payloads without checking either the 21-byte field rows or the three-field table. The correction uses direct inline guards to preserve the valid 20-byte payload and three-field limits, reject an oversized field or fourth field before an out-of-bounds write, leave the rejected buffer unpublished, and resynchronize through the existing next-frame start-marker behavior. Mac exact builds are deterministic and warning-free; text is 40256 bytes, data 1106, BSS 1137, and EEPROM output remains byte-identical.
+
+Please:
+
+1. Fetch and fast-forward `Development_AVR128DA48` to include `3bc10a5` and this request.
+2. Run two clean AVR Release wrapper builds with AVR-GCC 7.3.0 and Atmel `AVR-Dx_DFP` 1.9.103.
+3. Confirm zero warnings or report every warning.
+4. Confirm the linker map reports `.eeprom` size `0x112` and `EepromManager::ee_vars` spans exactly 274 bytes.
+5. Record `avr-size` output and SHA-256 for ELF, HEX, EEP, LSS, MAP, and SREC from both runs; state whether corresponding hashes match.
+6. Compare same-source Windows hashes with the Mac hashes in `Docs/Software/Evidence/LINKBUS_RX_BOUNDS_2026-07-12.md`; explain any platform-only differences.
+7. Run `just check` with the documented Windows shims and `HOST_TEST_SANITIZERS=0`. Confirm the Linkbus boundary tests and source contract, bounded text-copy tests, EEPROM width contracts, persisted-enum layout, 274-byte layout, and existing host tests pass.
 8. Save results in `Docs/Software/Evidence/WINDOWS_ACCUMULATED_HARDENING_VERIFICATION_2026-07-12.md`, mark this message completed, commit only mailbox/evidence changes, and push `Development_AVR128DA48`.
 
 Do not commit generated build output or device-pack archives. Do not program hardware during this request.
