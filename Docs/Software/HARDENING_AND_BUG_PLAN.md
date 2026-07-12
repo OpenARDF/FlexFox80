@@ -258,6 +258,13 @@ The root `README.md` remains user-facing and is not the location for these devel
 - The candidate is documented but intentionally not changed while the preceding I2C width slice awaits exact Windows target verification.
 - Evidence: [EEPROM_RF_POWER_INITIALIZATION_WIDTH_2026-07-12.md](Evidence/EEPROM_RF_POWER_INITIALIZATION_WIDTH_2026-07-12.md).
 
+**R6 layout characterization checkpoint:**
+
+- A host-side AVR-width model now checks all 65 `EE_prom` member offsets against `EE_var_t`.
+- The current declaration is confirmed as a 274-byte layout, matching the checked-in reference map.
+- The test protects deployed offsets while keeping guard-content validation and real-device EEPROM capture as explicit remaining work.
+- Evidence: [EEPROM_LAYOUT_CONTRACT_2026-07-12.md](Evidence/EEPROM_LAYOUT_CONTRACT_2026-07-12.md).
+
 ### Step 4: Remove clear, locally bounded defects
 
 **Goal:** Correct defects whose unsafe behavior is directly demonstrated, using one narrow change at a time.

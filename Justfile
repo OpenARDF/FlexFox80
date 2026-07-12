@@ -21,6 +21,7 @@ policy-check:
 test:
     ./scripts/run-host-tests.sh
     node ./scripts/check-firmware-contracts.mjs
+    node ./scripts/check-eeprom-layout.mjs
 
 # Run all currently available non-firmware checks and host tests.
 check: doctor docs-check policy-check test
