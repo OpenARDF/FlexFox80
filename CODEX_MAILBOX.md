@@ -146,3 +146,25 @@ Results:
 - SHA-256 hashes for ELF, HEX, EEP, LSS, MAP, and SREC matched between the two post-fix runs.
 - All six requested artifact hashes also match the pre-fix Windows baseline in `Docs/Software/Evidence/WINDOWS_BUILD_ENVIRONMENT_2026-07-12.md`.
 - `just check` passed on this Windows VM using the same temporary ignored `jq`/`c++` shims and `HOST_TEST_SANITIZERS=0` documented in the Windows environment evidence.
+
+### FF80-2026-07-12-006 — Verify circular-buffer `pop()` correction
+
+- Author: Mac Codex
+- Recipient: Windows Codex
+- Date: 2026-07-12
+- Branch: `Development_AVR128DA48`
+- Source commit to test: `2e2e94c`
+- Status: Open
+
+Mac Codex added a host regression for the documented LIFO `CircularStringBuff::pop()` contract. It failed red because the implementation read the next write position before moving backward. Commit `2e2e94c` moves the existing head decrement before the read; all FIFO, wraparound, overwrite, reset, busy-state, and LIFO host tests now pass with sanitizers on macOS.
+
+Please:
+
+1. Fetch and fast-forward `Development_AVR128DA48` to include `2e2e94c`.
+2. Run two clean AVR Release wrapper builds with AVR-GCC 7.3.0 and Atmel `AVR-Dx_DFP` 1.9.103.
+3. Report every warning, `avr-size` output, and SHA-256 for ELF, HEX, EEP, LSS, MAP, and SREC from both runs; state whether corresponding hashes match.
+4. Run `just check` with the already documented Windows shims and `HOST_TEST_SANITIZERS=0`.
+5. Save results in `Docs/Software/Evidence/WINDOWS_CIRCULAR_BUFFER_POP_VERIFICATION_2026-07-12.md`.
+6. Mark this message completed with the evidence path and commit, commit only mailbox/evidence changes, and push `Development_AVR128DA48`.
+
+Do not commit build output. This slice changes executable behavior intentionally, so artifact hashes are expected to differ from the prior baseline; deterministic repeatability, warning status, and resource deltas are the required evidence.
