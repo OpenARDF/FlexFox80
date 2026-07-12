@@ -2,7 +2,7 @@
 
 ## Status
 
-The red-green source contract, repository checks, and deterministic exact Mac AVR Release builds are complete. Connected-target programming remains open. Routine Windows duplication is not required under the established parity policy.
+The red-green source contract, repository checks, deterministic exact Mac AVR Release builds, and connected-target programming evidence are complete. The post-program WiFi probe remains open after the known Moto/DroidTether association loss. Routine Windows duplication is not required under the established parity policy.
 
 ## Confirmed defect
 
@@ -49,8 +49,27 @@ Compared with the preceding build, text decreases by 42 bytes and BSS grows by 4
 
 Static data plus BSS is 2,666 bytes of the AVR128DA48's 16 KiB SRAM. EEPROM output remains byte-identical.
 
+## Connected-target programming
+
+The dummy-loaded AVR128DA48 test unit was programmed with the exact `ffed775` Release HEX through the proven chip-erase, flash-write/verify, and complete EEPROM-restore/verify workflow.
+
+Fresh pre-write captures matched the preserved unit baseline:
+
+- EEPROM, 512 bytes: `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401`;
+- fuses, 16 bytes: `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126`.
+
+Avrdude verified all 41,170 input flash bytes twice. Independent post-operation reads then proved:
+
+| Memory | Expected SHA-256 | Post-read SHA-256 | Result |
+| --- | --- | --- | --- |
+| Programmed flash bytes | `03f268fcbba8f8cd388b9418be04acc1ea7fcbbb550e32b363a64ec90618a2d7` | `03f268fcbba8f8cd388b9418be04acc1ea7fcbbb550e32b363a64ec90618a2d7` | byte-identical |
+| Restored EEPROM | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | byte-identical |
+| Preserved fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | byte-identical |
+
+The first read-only WiFi probe after programming timed out at HTTP before opening a WebSocket or sending any message. This matches the known Moto/DroidTether association loss after Atmel-ICE activity and is not counted as a firmware result.
+
 ## Remaining verification
 
-- Program the exact Release HEX on the dummy-loaded test unit using the established complete EEPROM preservation and verification workflow.
+- Reconnect the Moto/DroidTether route.
 - Confirm normal startup and WiFi-to-AVR communications with the read-only probe.
 - A future controlled ADC/tone-input test remains part of the broader functional hardware gate; this slice does not claim frequency-detection qualification.

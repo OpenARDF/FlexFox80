@@ -344,7 +344,8 @@ The root `README.md` remains user-facing and is not the location for these devel
 - A source contract failed red while `Goertzel.cpp` still used `malloc()` and `free()` for its fixed maximum.
 - The single global sample buffer is now a `MAXN` array; the deployed 201-sample setting and all signal-processing operations remain unchanged.
 - The full Mac suite passes green; two exact builds are deterministic and warning-free, text decreases by 42 bytes, EEPROM output is unchanged, and the conservative live-SRAM increase is at most 16 bytes before removed allocator metadata.
-- Connected-target programming and a post-program read-only probe remain open; ADC/tone-input qualification stays in the broader functional hardware gate.
+- The dummy-loaded test unit now runs the exact corrected flash; independent flash, complete EEPROM, and fuse readbacks match the intended and preserved bytes.
+- The post-program read-only WiFi probe remains open after the known Moto/DroidTether association loss; ADC/tone-input qualification stays in the broader functional hardware gate.
 - Evidence: [GOERTZEL_FIXED_STORAGE_2026-07-12.md](Evidence/GOERTZEL_FIXED_STORAGE_2026-07-12.md).
 
 **R6 layout characterization checkpoint:**
