@@ -1,6 +1,6 @@
 # FlexFox80 Hardening and Bug Plan
 
-**Plan status:** Proposed; Step A1 is next and no firmware hardening changes have begun.
+**Plan status:** Step A1 is in progress on `Development_AVR128DA48`; no firmware hardening changes have begun.
 
 ## Purpose
 
@@ -26,7 +26,7 @@ This is the operational roadmap. [SAFE_HARDENING_STRATEGY.md](SAFE_HARDENING_STR
 9. A failed or unavailable verification step is reported; it is not silently treated as passed.
 10. Every completed milestone ends with an updated evidence record and bug-list reassessment.
 
-## Branch and release question that must be resolved first
+## Resolved provisional branch model
 
 The present repository does not have the same branch model as SignalSlinger:
 
@@ -36,20 +36,11 @@ The present repository does not have the same branch model as SignalSlinger:
 - `AVR128DA48` has substantial development history not reachable from the current `main` tip.
 - the source layout differs between the two branches.
 
-Therefore, Step 1 must not simply rename or merge branches. The project owner must confirm whether:
+The project has adopted this provisional model:
 
-1. `main` is intended to be the stable/release branch and `AVR128DA48` the active development branch;
-2. `AVR128DA48` is a permanent hardware-generation branch that should remain independent;
-3. a new development branch should be created from `AVR128DA48`; or
-4. `main` should eventually be reconciled with `AVR128DA48` through a separately reviewed migration.
-
-No branch synchronization is part of this plan until that decision is recorded.
-
-**Recommended provisional model:**
-
-- Leave `main` unchanged while its historical role and different source layout are audited.
+- Leave `main` unchanged while its historical role and different source layout are audited and while the AVR128DA48 line is hardened.
 - Treat `AVR128DA48` as the current integration/release baseline for this hardware generation.
-- Create a dedicated development branch from `AVR128DA48` for the hardening program after the project owner approves its name and role.
+- Use `Development_AVR128DA48`, created from `AVR128DA48`, as the active hardening and bug-development branch.
 - Use narrow topic branches for safety-critical or independently reviewable slices when they materially improve isolation.
 - Merge into the AVR128DA48 integration branch only after the applicable checkpoint passes; reconcile to `main` only through a separately planned and reviewed operation.
 
