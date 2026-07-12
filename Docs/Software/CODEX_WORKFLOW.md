@@ -27,6 +27,16 @@ Use the repository-root [Codex mailbox](../../CODEX_MAILBOX.md) for cross-machin
 - Never resolve a mailbox push conflict with a force-push. Fetch and preserve both agents' messages.
 - Polling the mailbox means fetching `origin` and reviewing new commits on `origin/Development_AVR128DA48`; do not assume the local file is current.
 
+Exact same-source Windows parity has now been demonstrated for the accumulated `3bc10a5` hardening snapshot and the adjacent `912d24b` Linkbus message-ID correction. In both cases Windows and Mac produced matching resource totals, Intel HEX, EEPROM output, and EEPROM layout; host-sensitive ELF, map, listing, and S-record representations were deterministic on each host and the differences were explained.
+
+Routine hardening slices therefore do not require a separate Windows mailbox round trip when the pinned Mac wrapper reports the exact AVR-GCC 7.3.0 and `AVR-Dx_DFP` 1.9.103 versions, produces deterministic warning-free builds, passes the full repository suite, and the applicable Mac target test passes. Request fresh Windows verification when:
+
+- the AVR compiler, device pack, build flags, linker behavior, or wrapper changes;
+- Mac output is nondeterministic, warning-bearing, or differs unexpectedly from the established resource/layout baseline;
+- a change is sensitive to host paths, generated project behavior, Microchip Studio, or Windows-only tooling;
+- a hardening release candidate reaches the cross-platform release gate;
+- a specific failure can be reproduced only in the preserved Windows environment.
+
 ## Commit and push policy
 
 - Commit and push only when the user requests it or grants continuing authorization that clearly includes repository follow-through.

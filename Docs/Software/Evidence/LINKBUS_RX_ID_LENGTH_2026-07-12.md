@@ -2,7 +2,7 @@
 
 ## Status
 
-Mac red-green, direct boundary, repository, exact AVR Release build, connected-target programming, and overlength-ID rejection evidence is complete. Exact Windows verification remains open.
+Mac red-green, direct boundary, repository, exact AVR Release build, connected-target programming, overlength-ID rejection, and exact Windows verification are complete.
 
 ## Confirmed defect
 
@@ -88,6 +88,6 @@ After restoring the Moto/DroidTether route, the expanded target test passed:
 
 The harness requires at least six seconds of unanswered delay for each malformed frame. This directly distinguishes rejection plus the ESP's existing retry policy from an acknowledged aliased command or query.
 
-## Remaining verification
+## Windows verification
 
-- Obtain exact Windows same-source builds and the full Windows host-contract run.
+Two exact Windows builds at source commit `912d24b` completed deterministically with zero warnings. Windows and Mac resource totals, HEX, and EEPROM outputs match; the EEPROM layout remains exactly 274 bytes; and the full Windows host suite passed the message-ID boundary regression and accumulated contracts. See [Windows Linkbus message-ID length verification](WINDOWS_LINKBUS_RX_ID_LENGTH_VERIFICATION_2026-07-12.md).

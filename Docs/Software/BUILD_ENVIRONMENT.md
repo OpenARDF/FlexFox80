@@ -54,6 +54,8 @@ The Windows Codex environment can provide high-value evidence without becoming t
 
 The report should be added under `Docs/Software/Evidence/` in a later narrow commit, accompanied only by small text logs or hashes. Do not commit a second set of binaries or rewrite the historical tracked Debug directory.
 
+The initial inventory and subsequent same-source checks are complete. Windows and Mac exact builds at `3bc10a5` and `912d24b` matched resource totals, Intel HEX, EEPROM output, and the 274-byte EEPROM layout, while host-sensitive artifact differences were deterministic and explained. Ordinary hardening work now uses the exact Mac wrapper plus host and target gates; repeat Windows builds are reserved for toolchain/build-system changes, unexplained divergence, Windows-specific behavior, and release-candidate qualification. See [Windows accumulated hardening verification](Evidence/WINDOWS_ACCUMULATED_HARDENING_VERIFICATION_2026-07-12.md) and [Windows Linkbus message-ID verification](Evidence/WINDOWS_LINKBUS_RX_ID_LENGTH_VERIFICATION_2026-07-12.md).
+
 ## ESP8266 status
 
 The ESP source identifies the Adafruit Huzzah ESP8266 and depends on the ESP8266 Arduino core, LittleFS, and `arduinoWebSockets`. The exact known-good core, library, board-option, filesystem, and upload-tool versions are not recorded in the repository. Pinning guessed current versions would create a new build, not reproduce the mature product.

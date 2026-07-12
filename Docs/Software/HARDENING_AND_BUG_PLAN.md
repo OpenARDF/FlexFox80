@@ -301,7 +301,7 @@ The root `README.md` remains user-facing and is not the location for these devel
 - The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, text grows by 22 bytes, and BSS grows by one byte.
 - The dummy-loaded test unit now runs the exact corrected flash; independent flash, complete EEPROM, and fuse readbacks match the intended and preserved bytes.
 - The read-only `$AZRX?` target reproducer remains unanswered through the ESP retry cycle instead of aliasing `VER`; a following temperature query proves next-frame resynchronization.
-- Exact Windows verification remains open.
+- Two exact Windows builds at `912d24b` are deterministic and warning-free; HEX, EEPROM, size, layout, and all requested host contracts match the Mac evidence.
 - Evidence: [LINKBUS_RX_ID_LENGTH_2026-07-12.md](Evidence/LINKBUS_RX_ID_LENGTH_2026-07-12.md).
 
 **R6 layout characterization checkpoint:**
