@@ -178,6 +178,12 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
+if (process.argv.includes("--show-offsets")) {
+  for (const field of fields) {
+    process.stdout.write(`${field.offset}\t${field.size}\t${field.name}\n`);
+  }
+}
+
 process.stdout.write(
   `PASS all ${fields.length} EEPROM field offsets match the 274-byte AVR layout\n`,
 );

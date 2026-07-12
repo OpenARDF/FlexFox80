@@ -34,6 +34,11 @@ secrets:
 avr-build:
     node ./scripts/build-avr-release.mjs
 
+# Read the attached AVR identity through Atmel-ICE without programming it.
+# Entering UPDI programming mode may briefly reset a running transmitter.
+avr-probe:
+    avrdude -c atmelice_updi -p 128da48 -P usb -n -v
+
 # Step A2 will replace this explicit boundary with a pinned ESP8266 build.
 esp-build:
     @echo "ESP8266 build wrapper is not configured yet; complete Step A2 before firmware changes."

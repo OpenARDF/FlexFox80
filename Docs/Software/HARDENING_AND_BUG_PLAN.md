@@ -175,6 +175,7 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [x] macOS is defined as the primary development environment and the preserved Windows Microchip Studio 7 installation as the release-equivalence and programming reference.
 - [x] The exact Windows evidence request is documented, including deterministic-build, resource, hash, programmer, and ESP dependency information.
 - [x] Two exact Windows AVR Release wrapper runs at `4d17bab` were deterministic across all requested artifacts and established the initial size/hash baseline. They also exposed three repeatable `g_fox` declaration bounds warnings for test-first investigation.
+- [x] The Mac can identify and read the attached AVR128DA48 through Atmel-ICE without writing it. The connected unit's flash verifies exactly against the tracked `33e64e0` Debug HEX, and repeatable EEPROM/fuse captures now provide deployed-state evidence for R6.
 - [ ] Run and compare the AVR wrapper on a native Mac toolchain and the preserved Windows reference toolchain.
 - [ ] Pin the ESP8266 build only after retrieving the known-good Arduino core, board-option, WebSockets, and filesystem-tool versions.
 
@@ -262,8 +263,15 @@ The root `README.md` remains user-facing and is not the location for these devel
 
 - A host-side AVR-width model now checks all 65 `EE_prom` member offsets against `EE_var_t`.
 - The current declaration is confirmed as a 274-byte layout, matching the checked-in reference map.
-- The test protects deployed offsets while keeping guard-content validation and real-device EEPROM capture as explicit remaining work.
+- The test protects deployed offsets; a real-device EEPROM image is now captured separately, while guard-content interpretation and validation remain open work.
 - Evidence: [EEPROM_LAYOUT_CONTRACT_2026-07-12.md](Evidence/EEPROM_LAYOUT_CONTRACT_2026-07-12.md).
+
+**R6 deployed-image checkpoint:**
+
+- Two read-only avrdude EEPROM captures from the connected `33e64e0` FlexFox are byte-identical.
+- The live image confirms field-address access but contains unexplained late-layout values, including erased bytes in the unused I2C counter despite a current initialization flag.
+- The observation does not yet prove whether initialization, preserved EEPROM history, or another write-path behavior produced those bytes; no device data was changed.
+- Evidence: [MAC_ATMEL_ICE_TARGET_EVIDENCE_2026-07-12.md](Evidence/MAC_ATMEL_ICE_TARGET_EVIDENCE_2026-07-12.md).
 
 ### Step 4: Remove clear, locally bounded defects
 

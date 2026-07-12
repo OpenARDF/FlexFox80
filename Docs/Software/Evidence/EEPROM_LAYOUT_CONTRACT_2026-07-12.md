@@ -14,6 +14,8 @@ R6 requires EEPROM width corrections without moving deployed offsets. A host-sid
 - requires each enum address to equal its corresponding structure-member offset; and
 - requires the aggregate layout to remain 274 bytes (`0x112`), matching the checked-in reference map's `.eeprom` size for `EepromManager::ee_vars`.
 
+The checked-in AVR ELF's DWARF independently records the same 274-byte structure and target member offsets, including `rf_power` at `0x9D`, `guard4_15` at `0x9F`, `guard4_32` at `0x10C`, and `i2c_failure_count` at `0x110`. Run the checker with `--show-offsets` when a human-readable field/size/offset table is needed.
+
 The check runs through `just test` and therefore through `just check`.
 
 ## Result
@@ -28,5 +30,5 @@ This is a passing characterization test, not a defect correction. It creates a m
 
 - It does not validate the contents of guard words; current firmware does not check them.
 - It does not replace an exact AVR build or a captured EEPROM image from deployed hardware.
-- The checked-in `.eep` file is build output for the static initializer, not evidence of a unit's persisted runtime state.
+- The checked-in `.eep` file is build output for the static initializer, not evidence of a unit's persisted runtime state. A real image has now been captured separately, but it is intentionally ignored because it may contain unit-specific configuration.
 - Any intentional schema migration must update this contract only alongside a separately reviewed compatibility and recovery plan.

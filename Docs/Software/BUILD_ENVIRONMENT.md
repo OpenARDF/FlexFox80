@@ -25,6 +25,14 @@ The checked-in `avr8-gnu-toolchain-3.7.0.1796-win32.any.x86_64.zip.update` archi
 
 The exact archived macOS compiler has been verified to start through Rosetta. See [Mac build environment evidence](Evidence/MAC_BUILD_ENVIRONMENT_2026-07-11.md) for its identity, hashes, and the remaining historical device-pack boundary.
 
+## Mac Atmel-ICE target access
+
+The preserved Atmel-ICE and an AVR128DA48 FlexFox can be accessed from this Mac with Homebrew avrdude. Run `just avr-probe` for a no-write identity and voltage probe. The command enters UPDI programming mode and may briefly reset a running transmitter even though `-n` prevents writes.
+
+The first live probe confirmed the expected debugger serial and AVR128DA48 signature and captured read-only flash, EEPROM, and fuse evidence. See [Mac Atmel-ICE target evidence](Evidence/MAC_ATMEL_ICE_TARGET_EVIDENCE_2026-07-12.md). Raw device images remain under the ignored `Software/AVR128DA48/tmp/` tree and must not be committed.
+
+Target visibility does not by itself authorize programming. Flash, erase, fuse, lock-bit, and EEPROM writes require an explicitly selected artifact and the applicable hardware test plan.
+
 ## Windows reference-environment handoff
 
 The Windows Codex environment can provide high-value evidence without becoming the primary development environment. Requests and replies travel through the repository-root [Codex mailbox](../../CODEX_MAILBOX.md). It should run read-only discovery first and commit no generated IDE output. The requested report should include:
