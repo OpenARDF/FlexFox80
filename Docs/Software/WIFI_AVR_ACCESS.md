@@ -1,0 +1,107 @@
+# FlexFox WiFi-to-AVR Access
+
+## Purpose
+
+FlexFox does not currently expose a supported wired serial console. Normal interactive access is:
+
+```text
+Mac browser or probe -> ESP8266 access point -> HTTP/WebSocket -> 9600-baud Linkbus -> AVR128DA48
+```
+
+Atmel-ICE remains the programming and low-level readback path. WiFi is the supported path for observing and controlling the running product.
+
+## Network endpoint
+
+The ESP8266 starts a soft access point in AP+station mode:
+
+- ordinary SSID: `Tx_` followed by the final four bytes of the ESP access-point MAC address;
+- master SSID: `Tx_Master`;
+- default password: empty (open network);
+- ESP address and gateway: `73.73.73.73`;
+- subnet: `255.255.255.0`;
+- HTTP: port 80;
+- WebSocket: port 81.
+
+The access-point address is configurable in running ESP state, so `73.73.73.73` is the source default rather than proof of a particular unit's current value.
+
+The HTTP root offers these checked-in pages:
+
+- `/events.html` — event configuration;
+- `/test.html` — engineering controls and direct-message field;
+- `/radio.html` — live radio controls;
+- file upload, download, and deletion pages.
+
+Opening one of the main pages creates `ws://<page-host>:81/`. The WebSocket server starts when a station joins the ESP access point.
+
+## Message path
+
+Browser messages are textual commands such as `SSID` or `SW_VERSIONS`. The ESP handles some locally and translates others into Linkbus frames queued for the AVR. Linkbus uses a 9600-baud UART, acknowledges commands, and retries a pending message after an ACK timeout.
+
+Examples:
+
+| Browser command | ESP behavior | AVR effect |
+| --- | --- | --- |
+| `SSID` | Reports the ESP access-point name | None |
+| `MAC` | Reports the connected client's MAC address | None |
+| `SW_VERSIONS` | Reports ESP version and cached AVR version | None |
+| `MASTER` | Reports current ESP master/slave state when no value is supplied | None |
+| WebSocket connect | Queues `$TEM?` and `$BAT?` | Reads temperature and battery voltage |
+| `PASS,$TIM?` | Queues the raw Linkbus query | Reads RTC time and refreshes AVR system time from the RTC |
+
+The ESP translates AVR replies back to WebSocket messages including `TEMP`, `BAT`, `SYNC`, `ERR_CODE`, `STATUS`, and `POWER`.
+
+## Read-only Mac probe
+
+After joining the FlexFox SSID, run:
+
+```text
+just wifi-probe
+```
+
+The probe uses Node's built-in HTTP and WebSocket clients. It:
+
+1. verifies the root HTTP page;
+2. opens the port-81 WebSocket;
+3. sends only `SSID`, `MAC`, `SW_VERSIONS`, `MASTER`, and the `!&` heartbeat;
+4. waits for the ESP's automatic live AVR temperature and battery requests;
+5. fails unless both ESP identity replies and live AVR replies are observed.
+
+It does not synchronize the clock, change settings, load or execute an event, key the transmitter, save EEPROM, shut off WiFi, or use raw pass-through.
+
+Useful overrides:
+
+```text
+FLEXFOX_PROBE_DRY_RUN=1 just wifi-probe
+FLEXFOX_URL=http://73.73.73.73/ FLEXFOX_PROBE_TIMEOUT_MS=15000 just wifi-probe
+```
+
+## Safety classification
+
+### Safe initial observations
+
+- HTTP root and static page retrieval;
+- `SSID`, `MAC`, `SW_VERSIONS`, and query-only `MASTER`;
+- the automatic temperature and battery queries sent at WebSocket connection;
+- WebSocket heartbeat `!&`.
+
+### State-changing operations
+
+- `SYNC` writes the AVR RTC;
+- callsign, pattern, frequency, power, modulation, speed, and event commands change live configuration;
+- `CLEAR`, `PREP`, `EXECUTE`, and `MASTER,<value>` change event or ESP state;
+- `WIFI_OFF` can remove the active access path.
+
+### RF-active or hazardous operations
+
+- `XMIT` begins immediate transmission when interlocks permit;
+- `KEY_DOWN` and raw `$KEY,[;` key the transmitter;
+- `/radio.html` exposes keying and arbitrary manual Morse input;
+- `PASS,<text>` forwards arbitrary text to the AVR Linkbus without command allow-listing.
+
+The current bench unit is connected to a dummy load, but RF-active commands still require an explicit test objective, expected response, stop command, and independent observation. Do not use `PASS` during initial connectivity testing.
+
+## Mac networking
+
+The Mac must associate its WiFi interface with the FlexFox access point. Because that network normally has no internet route, internet access for Codex, Git, and documentation lookup must use another interface if simultaneous connectivity is needed. A Bluetooth internet path is being investigated separately.
+
+Do not change macOS routing, Internet Sharing, the FlexFox AP address, or the ESP firmware merely to make the first smoke test convenient. First prove the default direct path, then document any repeatable dual-network arrangement separately.

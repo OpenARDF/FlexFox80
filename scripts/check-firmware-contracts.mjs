@@ -29,9 +29,11 @@ const driverInitHeaderPath = join(
   "include",
   "driver_init.h",
 );
+const wifiProbePath = join(repoRoot, "scripts", "probe-flexfox-wifi.mjs");
 const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
+const wifiProbe = readFileSync(wifiProbePath, "utf8");
 const declaration = source.match(/extern\s+volatile\s+Fox_t\s+g_fox\s*\[\s*([^\]]+?)\s*\]\s*;/);
 
 if (!declaration) {
@@ -101,3 +103,36 @@ if (/^\s*#include\s*[<"][^>"\r\n]*\\[^>"\r\n]*[>"]/m.test(driverInitHeader)) {
 }
 
 process.stdout.write("PASS generated driver include paths are host-portable\n");
+
+const safeRequestsMatch = wifiProbe.match(/const\s+safeRequests\s*=\s*\[([^\]]+)\]/);
+if (!safeRequestsMatch) {
+  process.stderr.write("Firmware contract check failed: WiFi probe safe request list was not found\n");
+  process.exit(1);
+}
+
+const safeRequests = [...safeRequestsMatch[1].matchAll(/["']([^"']+)["']/g)].map(
+  (match) => match[1],
+);
+const expectedSafeRequests = ["SSID", "MAC", "SW_VERSIONS", "MASTER"];
+if (JSON.stringify(safeRequests) !== JSON.stringify(expectedSafeRequests)) {
+  process.stderr.write(
+    `Firmware contract check failed: WiFi probe requests are ${safeRequests.join(", ")}; expected ${expectedSafeRequests.join(", ")}\n`,
+  );
+  process.exit(1);
+}
+
+const socketSendExpressions = [...wifiProbe.matchAll(/socket\.send\(([^)]+)\)/g)].map((match) =>
+  match[1].replace(/\s+/g, ""),
+);
+const allowedSendExpressions = new Set(['"!&"', "request"]);
+const unsafeSendExpressions = socketSendExpressions.filter(
+  (expression) => !allowedSendExpressions.has(expression),
+);
+if (unsafeSendExpressions.length > 0) {
+  process.stderr.write(
+    `Firmware contract check failed: WiFi probe has unapproved sends: ${unsafeSendExpressions.join(", ")}\n`,
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS WiFi smoke probe remains read-only\n");

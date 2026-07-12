@@ -177,6 +177,7 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [x] Two exact Windows AVR Release wrapper runs at `4d17bab` were deterministic across all requested artifacts and established the initial size/hash baseline. They also exposed three repeatable `g_fox` declaration bounds warnings for test-first investigation.
 - [x] The Mac can identify and read the attached AVR128DA48 through Atmel-ICE without writing it. The connected unit's flash verifies exactly against the tracked `33e64e0` Debug HEX, and repeatable EEPROM/fuse captures now provide deployed-state evidence for R6.
 - [x] The connected test unit has been programmed with the exact `57d70a7` Release image. Independent readback matches the intended flash, the complete original EEPROM was restored byte-for-byte, and all fuse bytes remain unchanged.
+- [x] The supported WiFi-to-AVR path is traced from ESP soft AP and HTTP/WebSocket commands through Linkbus and AVR replies; a read-only Mac probe is available through `just wifi-probe`.
 - [x] Run the AVR wrapper with exact-version Mac and Windows inputs. Two Mac runs at `0429c2a` are deterministic, warning-free, and match Windows resource totals; same-source Windows artifact comparison for the I2C slice remains pending.
 - [x] The Release/Debug persisted-enum ABI mismatch is removed: explicit `uint16_t` storage, a source-layout regression, an AVR compile-time assertion, and an exact Mac linker map all preserve the deployed 274-byte EEPROM schema.
 - [ ] Pin the ESP8266 build only after retrieving the known-good Arduino core, board-option, WebSockets, and filesystem-tool versions.
@@ -284,6 +285,15 @@ The root `README.md` remains user-facing and is not the location for these devel
 - Independent post-operation reads are byte-identical to the intended flash and preserved EEPROM/fuse baselines.
 - Functional RF, RTC, communications, and timing qualification remain open.
 - Evidence: [MAC_AVR_PROGRAMMING_2026-07-12.md](Evidence/MAC_AVR_PROGRAMMING_2026-07-12.md).
+
+**WiFi hardware-observation checkpoint:**
+
+- FlexFox has no supported wired serial console; runtime access is through the ESP8266 soft AP and its HTTP/WebSocket-to-Linkbus bridge.
+- The built-in WebSocket connection requests live AVR temperature and battery values without changing configuration.
+- A dependency-free Mac probe sends only identity queries and heartbeat traffic, then requires both ESP and live AVR replies.
+- Raw `PASS`, RF keying, transmission, clock synchronization, configuration, event, and WiFi-shutdown commands are excluded from the initial probe.
+- Live execution awaits Mac association with the FlexFox SSID while internet connectivity is provided separately or temporarily relinquished.
+- Procedure: [WIFI_AVR_ACCESS.md](WIFI_AVR_ACCESS.md).
 
 ### Step 4: Remove clear, locally bounded defects
 

@@ -39,6 +39,10 @@ avr-build:
 avr-probe:
     avrdude -c atmelice_updi -p 128da48 -P usb -n -v
 
+# Probe the running FlexFox through its read-only WiFi/WebSocket path.
+wifi-probe:
+    node ./scripts/probe-flexfox-wifi.mjs
+
 # Step A2 will replace this explicit boundary with a pinned ESP8266 build.
 esp-build:
     @echo "ESP8266 build wrapper is not configured yet; complete Step A2 before firmware changes."
