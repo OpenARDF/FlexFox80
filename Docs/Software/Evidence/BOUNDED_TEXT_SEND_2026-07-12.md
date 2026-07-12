@@ -2,7 +2,7 @@
 
 ## Status
 
-Mac red-green, repository, host-boundary, exact AVR Release build, and connected-target programming evidence is complete. Exact Windows verification and post-program live Linkbus probing remain open.
+Mac red-green, repository, host-boundary, exact AVR Release build, connected-target programming, and post-program live Linkbus evidence is complete. Exact Windows verification remains open.
 
 ## Confirmed defect
 
@@ -77,9 +77,17 @@ Avrdude verified all 41,036 input flash bytes twice. Independent post-operation 
 | Restored EEPROM | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | byte-identical |
 | Preserved fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | byte-identical |
 
-The first post-program WiFi probe timed out at HTTP while the Mac host route still pointed to DroidTether `utun6`. This matches the earlier transport symptom when the Moto was no longer associated with the FlexFox access point; it is not counted as a firmware failure. Live query/reply verification remains pending until that association is restored.
+The first post-program WiFi probe timed out at HTTP while the Mac host route still pointed to DroidTether `utun6`. The Moto/DroidTether path was restarted without changing the firmware or device state. The next probe then passed:
+
+- HTTP 200 from `http://73.73.73.73/`;
+- WebSocket connection to `ws://73.73.73.73:81/`;
+- live AVR `TEMP,30.0C` and `BAT,12.3V` replies;
+- ESP identity `SSID,Tx_7C2D69ED` and `MAC,1A:0D:BB:2E:2C:4C`;
+- combined versions `SW_VERSIONS,2.0,0.200` and `MASTER,0`;
+- continuing `SYNC` and battery broadcasts beyond the ESP's approximately ten-second socket timeout while the five-second read-only heartbeat monitor ran.
+
+The transport-only timeout is therefore not counted as a firmware failure. Normal WiFi-to-AVR query/reply behavior is qualified on the programmed image without issuing configuration, RF, clock-set, reset, or EEPROM-changing commands.
 
 ## Remaining verification
 
 - Obtain exact Windows same-source builds and the full Windows host-contract run.
-- Confirm the normal WiFi-to-AVR query/reply path still returns temperature, battery, version, and identity data.

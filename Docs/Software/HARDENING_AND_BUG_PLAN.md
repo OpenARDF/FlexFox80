@@ -274,7 +274,8 @@ The root `README.md` remains user-facing and is not the location for these devel
 - Direct host regressions cover percent sequences, the maximum accepted length, oversized rejection without destination mutation, and invalid arguments.
 - The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, and text grows by 30 bytes.
 - The dummy-loaded test unit now runs the exact corrected flash; independent flash, complete EEPROM, and fuse readbacks match the intended and preserved bytes.
-- Exact Windows and post-program live Linkbus verification remain open.
+- The post-program read-only WiFi probe and sustained heartbeat passed with live AVR temperature/battery, version, identity, master-state, and synchronization replies.
+- Exact Windows verification remains open.
 - Evidence: [BOUNDED_TEXT_SEND_2026-07-12.md](Evidence/BOUNDED_TEXT_SEND_2026-07-12.md).
 
 **R6 layout characterization checkpoint:**
