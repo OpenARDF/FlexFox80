@@ -27,7 +27,7 @@ The exact archived macOS compiler has been verified to start through Rosetta. Se
 
 ## Windows reference-environment handoff
 
-The Windows Codex environment can provide high-value evidence without becoming the primary development environment. Ask it to run read-only discovery first and commit no generated IDE output. The requested report should include:
+The Windows Codex environment can provide high-value evidence without becoming the primary development environment. Requests and replies travel through the repository-root [Codex mailbox](../../CODEX_MAILBOX.md). It should run read-only discovery first and commit no generated IDE output. The requested report should include:
 
 1. Microchip Studio 7 exact version and installation path.
 2. `avr-g++.exe -dumpversion` and the enclosing toolchain directory.

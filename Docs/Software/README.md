@@ -13,6 +13,7 @@ This directory documents the current software architecture on the `AVR128DA48` b
 - [Source and generated-file boundaries](GENERATED_FILES.md) classifies product source, generated-derived files, IDE/build output, ESP assets, and CAD/manufacturing files.
 - [Build environment](BUILD_ENVIRONMENT.md) defines Mac and Windows roles, the portable AVR Release wrapper, evidence classes, and the reference-environment handoff checklist.
 - [Mac build environment evidence](Evidence/MAC_BUILD_ENVIRONMENT_2026-07-11.md) records the verified archived compiler and the remaining historical device-pack requirement.
+- The repository-root [Codex mailbox](../../CODEX_MAILBOX.md) carries committed Mac/Windows requests and replies; durable results belong under `Evidence/`.
 
 ## Scope and status
 

@@ -17,6 +17,16 @@
 
 Pre-existing changes belong to the user. Do not alter, discard, stage, or publish them unless the user explicitly includes them in the task.
 
+## Mac and Windows coordination
+
+Use the repository-root [Codex mailbox](../../CODEX_MAILBOX.md) for cross-machine requests and replies. Both agents communicate by fetching, editing that file, committing the mailbox/evidence update, and pushing `Development_AVR128DA48`.
+
+- Preserve unacknowledged messages from the other agent.
+- Put durable results under `Docs/Software/Evidence/`; the mailbox is the coordination channel, not the only record.
+- Transfer toolchains, device packs, firmware images, and other large binaries outside Git. Record filenames, byte sizes, and SHA-256 hashes so the transfer can be verified.
+- Never resolve a mailbox push conflict with a force-push. Fetch and preserve both agents' messages.
+- Polling the mailbox means fetching `origin` and reviewing new commits on `origin/Development_AVR128DA48`; do not assume the local file is current.
+
 ## Commit and push policy
 
 - Commit and push only when the user requests it or grants continuing authorization that clearly includes repository follow-through.
