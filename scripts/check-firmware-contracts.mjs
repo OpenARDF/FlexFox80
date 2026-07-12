@@ -251,7 +251,7 @@ if (missingLinkbusRxGuards.length > 0) {
   process.exit(1);
 }
 
-process.stdout.write("PASS Linkbus receive parser guards field count and field length\n");
+process.stdout.write("PASS Linkbus receive parser guards ID length, field count, and field length\n");
 
 const expectedMalformedFrames =
   '["$ZZZ,ABCDEFGHIJKLMNOPQRSTU;", "$ZZZ,A,B,C,D;", "$AZRX?"]';
@@ -280,4 +280,4 @@ if (
   process.exit(1);
 }
 
-process.stdout.write("PASS Linkbus live test remains limited to malformed ZZZ frames and read-only recovery\n");
+process.stdout.write("PASS Linkbus live test remains limited to approved malformed frames and read-only recovery\n");

@@ -23,11 +23,11 @@ The ordinary update path compared a 16-bit value but wrote only its low byte. Th
 
 No field type, enum offset, structure order, guard position, read path, default value, or save trigger changed. This correction makes both writes match the already deployed 16-bit schema.
 
-## Green evidence and remaining gate
+## Green evidence
 
 - The new source-contract regression passes.
 - All existing AVR circular-buffer characterization remains green with AddressSanitizer and UndefinedBehaviorSanitizer enabled.
 - `just check` passes on macOS.
-- Exact Windows AVR Release builds remain required to record warnings, resource usage, deterministic artifact hashes, and the expected executable delta before this firmware slice is target-verified.
+- Two exact Windows AVR Release builds of the accumulated `3bc10a5` snapshot completed deterministically with zero warnings, the expected 274-byte EEPROM layout, matching Mac HEX/EEPROM outputs and resource totals, and a passing full host-contract suite. See [Windows accumulated hardening verification](WINDOWS_ACCUMULATED_HARDENING_VERIFICATION_2026-07-12.md).
 
 This focused correction does not close the broader EEPROM-layout and guard-validation work tracked as R6.

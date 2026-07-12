@@ -2,7 +2,7 @@
 
 ## Status
 
-Mac red-green, direct boundary, repository, exact AVR Release build, connected-target programming, and malformed-frame recovery evidence is complete. Exact Windows verification remains open.
+Mac red-green, direct boundary, repository, exact AVR Release build, connected-target programming, malformed-frame recovery, and exact Windows verification are complete.
 
 ## Confirmed defect
 
@@ -92,6 +92,6 @@ The final target run passed:
 
 `ZZZ` is not a recognized AVR message ID. Neither malformed frame maps to configuration, RF, clock, EEPROM, reset, event, or WiFi control. The test therefore proves both field-boundary rejection and next-start-marker resynchronization on the programmed AVR while also characterizing the ESP's existing unanswered-message latency.
 
-## Remaining verification
+## Windows verification
 
-- Obtain exact Windows same-source builds and the full Windows host-contract run.
+Two exact Windows builds at source commit `3bc10a5` completed deterministically with zero warnings. Windows and Mac resource totals, HEX, and EEPROM outputs match, and the full Windows host suite passed the Linkbus receive-boundary regression and source contract. See [Windows accumulated hardening verification](WINDOWS_ACCUMULATED_HARDENING_VERIFICATION_2026-07-12.md).

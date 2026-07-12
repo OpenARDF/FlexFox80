@@ -178,7 +178,7 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [x] The Mac can identify and read the attached AVR128DA48 through Atmel-ICE without writing it. The connected unit's flash verifies exactly against the tracked `33e64e0` Debug HEX, and repeatable EEPROM/fuse captures now provide deployed-state evidence for R6.
 - [x] The connected test unit has been programmed with the exact `57d70a7` Release image. Independent readback matches the intended flash, the complete original EEPROM was restored byte-for-byte, and all fuse bytes remain unchanged.
 - [x] The supported WiFi-to-AVR path is traced from ESP soft AP and HTTP/WebSocket commands through Linkbus and AVR replies; a read-only Mac probe is available through `just wifi-probe`.
-- [x] Run the AVR wrapper with exact-version Mac and Windows inputs. Two Mac runs at `0429c2a` are deterministic, warning-free, and match Windows resource totals; same-source Windows artifact comparison for the I2C slice remains pending.
+- [x] Run the AVR wrapper with exact-version Mac and Windows inputs. The accumulated `3bc10a5` snapshot builds deterministically and warning-free on both hosts; HEX, EEPROM, resource totals, and the 274-byte layout match.
 - [x] The Release/Debug persisted-enum ABI mismatch is removed: explicit `uint16_t` storage, a source-layout regression, an AVR compile-time assertion, and an exact Mac linker map all preserve the deployed 274-byte EEPROM schema.
 - [ ] Pin the ESP8266 build only after retrieving the known-good Arduino core, board-option, WebSockets, and filesystem-tool versions.
 
@@ -247,12 +247,12 @@ The root `README.md` remains user-facing and is not the location for these devel
 - The full Windows host suite passed with the documented LIFO regression and existing characterization tests.
 - Evidence: [CIRCULAR_BUFFER_POP_2026-07-11.md](Evidence/CIRCULAR_BUFFER_POP_2026-07-11.md) and [WINDOWS_CIRCULAR_BUFFER_POP_VERIFICATION_2026-07-12.md](Evidence/WINDOWS_CIRCULAR_BUFFER_POP_VERIFICATION_2026-07-12.md).
 
-**In-progress bounded defect slice — I2C failure-count EEPROM width:**
+**Completed defect slice — I2C failure-count EEPROM width:**
 
 - The EEPROM field, global value, load path, and change comparison are all 16-bit.
 - A source-contract regression failed red because ordinary saves wrote one byte and first-time initialization wrote four bytes.
 - Both write paths now use the existing word writer without changing the deployed field type or offset.
-- Mac host and repository gates pass green; exact Windows AVR build verification remains required before the slice is closed.
+- Mac host and repository gates pass green; the accumulated exact Windows build and host-contract run pass at `3bc10a5`.
 - Evidence: [EEPROM_I2C_FAILURE_COUNT_WIDTH_2026-07-12.md](Evidence/EEPROM_I2C_FAILURE_COUNT_WIDTH_2026-07-12.md).
 
 **Completed Mac defect slice — RF power initialization width:**
@@ -263,7 +263,7 @@ The root `README.md` remains user-facing and is not the location for these devel
 - The full Mac suite passes green; two exact builds are deterministic and warning-free, text decreases by four bytes, EEPROM initialization remains byte-identical, and the schema remains 274 bytes.
 - Connected-target fault injection passed: invalid initialization plus `A5 5A C3 3C` in `Guard4_15` produced the 500 mW default while preserving all sentinel bytes.
 - The exact latest flash, complete original EEPROM, and all fuses were independently restored and verified byte-for-byte.
-- Exact Windows verification remains open.
+- The accumulated exact Windows build and host-contract run pass at `3bc10a5`.
 - Evidence: [EEPROM_RF_POWER_INITIALIZATION_WIDTH_2026-07-12.md](Evidence/EEPROM_RF_POWER_INITIALIZATION_WIDTH_2026-07-12.md).
 
 **Completed Mac defect slice — bounded Linkbus and Serialbus text sends:**
@@ -275,7 +275,7 @@ The root `README.md` remains user-facing and is not the location for these devel
 - The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, and text grows by 30 bytes.
 - The dummy-loaded test unit now runs the exact corrected flash; independent flash, complete EEPROM, and fuse readbacks match the intended and preserved bytes.
 - The post-program read-only WiFi probe and sustained heartbeat passed with live AVR temperature/battery, version, identity, master-state, and synchronization replies.
-- Exact Windows verification remains open.
+- The accumulated exact Windows build and host-contract run pass at `3bc10a5`.
 - Evidence: [BOUNDED_TEXT_SEND_2026-07-12.md](Evidence/BOUNDED_TEXT_SEND_2026-07-12.md).
 
 **Completed Mac defect slice — Linkbus receive field bounds:**
@@ -288,8 +288,19 @@ The root `README.md` remains user-facing and is not the location for these devel
 - The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, and text grows by 52 bytes.
 - The dummy-loaded test unit now runs the exact corrected flash; independent flash, complete EEPROM, and fuse readbacks match the intended and preserved bytes.
 - Controlled oversized-field and fourth-field target tests were rejected without acknowledgment; after the ESP's existing retry cycle, fresh read-only temperature queries proved next-frame resynchronization in both cases.
-- Exact Windows verification remains open.
+- Two exact Windows builds at `3bc10a5` are deterministic and warning-free; HEX, EEPROM, size, layout, and all requested host contracts match the Mac evidence.
 - Evidence: [LINKBUS_RX_BOUNDS_2026-07-12.md](Evidence/LINKBUS_RX_BOUNDS_2026-07-12.md).
+
+**Completed Mac defect slice — Linkbus message-ID length:**
+
+- Linkbus IDs are defined as one to three characters, but the receive parser previously accumulated unlimited ID bytes and truncated the result to the 16-bit command enum.
+- Concrete four-character aliases reach valid handlers: `AOSU` aliases `KEY`, `AWVZ` aliases `RST`, and read-only reproducer `AZRX` aliases `VER`.
+- A source contract failed red because the parser had no ID-length guard.
+- The parser now rejects a fourth ID byte before accumulation while preserving every valid one-to-three-character ID.
+- Direct host coverage protects the boundary, and the constrained target test distinguishes rejection from the pre-fix immediate `VER` alias response.
+- The full Mac suite passes green; two exact builds are deterministic and warning-free, EEPROM output is unchanged, text grows by 22 bytes, and BSS grows by one byte.
+- Exact Windows and connected-target alias verification remain open.
+- Evidence: [LINKBUS_RX_ID_LENGTH_2026-07-12.md](Evidence/LINKBUS_RX_ID_LENGTH_2026-07-12.md).
 
 **R6 layout characterization checkpoint:**
 

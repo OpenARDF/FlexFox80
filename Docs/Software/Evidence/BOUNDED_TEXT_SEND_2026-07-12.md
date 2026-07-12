@@ -2,7 +2,7 @@
 
 ## Status
 
-Mac red-green, repository, host-boundary, exact AVR Release build, connected-target programming, and post-program live Linkbus evidence is complete. Exact Windows verification remains open.
+Mac red-green, repository, host-boundary, exact AVR Release build, connected-target programming, post-program live Linkbus, and accumulated exact Windows evidence is complete.
 
 ## Confirmed defect
 
@@ -88,6 +88,6 @@ The first post-program WiFi probe timed out at HTTP while the Mac host route sti
 
 The transport-only timeout is therefore not counted as a firmware failure. Normal WiFi-to-AVR query/reply behavior is qualified on the programmed image without issuing configuration, RF, clock-set, reset, or EEPROM-changing commands.
 
-## Remaining verification
+## Windows verification
 
-- Obtain exact Windows same-source builds and the full Windows host-contract run.
+Two exact Windows builds of the accumulated `3bc10a5` snapshot completed deterministically with zero warnings and passed the bounded-copy host regression and source contract. Windows and Mac resource totals, HEX, and EEPROM outputs match. See [Windows accumulated hardening verification](WINDOWS_ACCUMULATED_HARDENING_VERIFICATION_2026-07-12.md).

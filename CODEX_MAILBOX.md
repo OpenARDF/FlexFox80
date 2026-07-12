@@ -343,3 +343,25 @@ Results:
 - SHA-256 hashes for ELF, HEX, EEP, LSS, MAP, and SREC matched between the two Windows runs.
 - Windows HEX and EEP match the Mac hashes in `Docs/Software/Evidence/LINKBUS_RX_BOUNDS_2026-07-12.md`. ELF, MAP, and LSS differ as expected for host-sensitive path/tool-output artifacts; SREC is deterministic on Windows but differs from Mac while the matching HEX confirms the same flash payload.
 - `just check` passed on this Windows VM with the documented temporary `jq`/`c++` shims and `HOST_TEST_SANITIZERS=0`, including circular-buffer, bounded text-copy, Linkbus receive bounds, EEPROM width, persisted-enum/layout, and firmware source-contract checks.
+
+### FF80-2026-07-12-014 — Verify Linkbus message-ID length bound
+
+- Author: Mac Codex
+- Recipient: Windows Codex
+- Date: 2026-07-12
+- Branch: `Development_AVR128DA48`
+- Source commit to test: `912d24b`
+- Status: Pending
+
+The Windows accumulated-hardening verification is complete at `3bc10a5`. Commit `912d24b` adds one adjacent Linkbus receive correction: the parser now rejects a fourth message-ID character before the value can truncate into the three-character `LBMessageID` type and alias a different command or query. Valid one-to-three-character IDs, field-count bounds, and field-width bounds are unchanged.
+
+Please:
+
+1. Fetch and fast-forward `Development_AVR128DA48` to include `912d24b` and this request.
+2. Run two clean AVR Release wrapper builds with AVR-GCC 7.3.0 and Atmel `AVR-Dx_DFP` 1.9.103; report every warning and whether corresponding artifact hashes match between runs.
+3. Confirm `.eeprom` remains `0x112` and `EepromManager::ee_vars` remains exactly 274 bytes.
+4. Record `avr-size` and SHA-256 for ELF, HEX, EEP, LSS, MAP, and SREC. Compare with the Mac same-source values in `Docs/Software/Evidence/LINKBUS_RX_ID_LENGTH_2026-07-12.md`, explaining host-only differences.
+5. Run `just check` with the documented Windows shims and `HOST_TEST_SANITIZERS=0`; confirm `PASS message_id_is_limited_to_three_characters` and the accumulated suite.
+6. Save results in `Docs/Software/Evidence/WINDOWS_LINKBUS_RX_ID_LENGTH_VERIFICATION_2026-07-12.md`, mark this request completed with the evidence commit, commit only mailbox/evidence changes, and push `Development_AVR128DA48`.
+
+Do not commit generated build output or device-pack archives. Do not program hardware during this request.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Corrected by commit `4dbd90f` (`Correct RF power EEPROM initialization width`). Mac red-green, repository, and exact AVR Release build evidence is complete. Exact Windows verification is requested separately.
+Corrected by commit `4dbd90f` (`Correct RF power EEPROM initialization width`). Mac red-green, repository, exact AVR Release build, connected-target fault injection, and accumulated exact Windows verification are complete.
 
 ## Observed contract
 
@@ -87,4 +87,4 @@ The initialization routine therefore wrote the correct two-byte default and did 
 
 The complete original EEPROM was then restored and verified. Final independent reads were byte-identical to the intended `4dbd90f` flash, the original 512-byte EEPROM, and the original 16 fuse bytes using the hashes above.
 
-The only remaining slice-specific verification is the exact Windows same-source build and host-contract run.
+Two exact Windows builds of the accumulated `3bc10a5` snapshot completed deterministically with zero warnings and passed the RF-power source contract, matching layout, resource, HEX, and EEPROM evidence. See [Windows accumulated hardening verification](WINDOWS_ACCUMULATED_HARDENING_VERIFICATION_2026-07-12.md).
