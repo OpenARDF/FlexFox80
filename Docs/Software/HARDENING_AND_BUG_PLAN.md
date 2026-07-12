@@ -243,6 +243,14 @@ The root `README.md` remains user-facing and is not the location for these devel
 - The full Windows host suite passed with the documented LIFO regression and existing characterization tests.
 - Evidence: [CIRCULAR_BUFFER_POP_2026-07-11.md](Evidence/CIRCULAR_BUFFER_POP_2026-07-11.md) and [WINDOWS_CIRCULAR_BUFFER_POP_VERIFICATION_2026-07-12.md](Evidence/WINDOWS_CIRCULAR_BUFFER_POP_VERIFICATION_2026-07-12.md).
 
+**In-progress bounded defect slice — I2C failure-count EEPROM width:**
+
+- The EEPROM field, global value, load path, and change comparison are all 16-bit.
+- A source-contract regression failed red because ordinary saves wrote one byte and first-time initialization wrote four bytes.
+- Both write paths now use the existing word writer without changing the deployed field type or offset.
+- Mac host and repository gates pass green; exact Windows AVR build verification remains required before the slice is closed.
+- Evidence: [EEPROM_I2C_FAILURE_COUNT_WIDTH_2026-07-12.md](Evidence/EEPROM_I2C_FAILURE_COUNT_WIDTH_2026-07-12.md).
+
 ### Step 4: Remove clear, locally bounded defects
 
 **Goal:** Correct defects whose unsafe behavior is directly demonstrated, using one narrow change at a time.
@@ -443,7 +451,7 @@ Use a small internal issue table or tracker with these fields:
 | R3 | A | High | AVR recovery | Directly visible | Static review | A5 | Planned |
 | R4 | A | Medium | ESP event files | Pending fixture | Static review | A3 | Planned |
 | R5 | A/B | High | Cross-processor timing input | Pending fixture | Static review | A3 | Planned |
-| R6 | A | High | AVR EEPROM | Pending layout test | Static review | A3 | Planned |
+| R6 | A | High | AVR EEPROM | I2C counter width regression; full layout test pending | Static review and focused red-green evidence | A3 | In progress |
 | R7 | A | High | AVR text output | Pending boundary test | Static review | A3 | Planned |
 | R8 | A/B | Medium | ESP role assignment | Pending Event test | Static review | A3 | Planned |
 

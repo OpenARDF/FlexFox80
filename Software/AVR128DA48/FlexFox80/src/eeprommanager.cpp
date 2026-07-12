@@ -566,7 +566,7 @@ void EepromManager::updateEEPROMVar(EE_var_t v, void* val)
 		{
 			if(*(uint16_t*)val != eeprom_read_word(&(EepromManager::ee_vars.i2c_failure_count)))
 			{
-				avr_eeprom_write_byte(I2C_failure_count, *(uint8_t*)val);
+				avr_eeprom_write_word(I2C_failure_count, *(uint16_t*)val);
 			}
 		}
 		break;
@@ -844,7 +844,7 @@ bool EepromManager::readNonVols(void)
 			avr_eeprom_write_byte(Days_to_run, g_days_to_run);
 			
 			g_i2c_failure_count = 0;
-			avr_eeprom_write_dword(I2C_failure_count, g_i2c_failure_count);
+			avr_eeprom_write_word(I2C_failure_count, g_i2c_failure_count);
 			
 			/* Done */
 

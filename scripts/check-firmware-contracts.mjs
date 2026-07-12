@@ -13,7 +13,16 @@ const eepromManagerPath = join(
   "src",
   "eeprommanager.cpp",
 );
+const eepromManagerHeaderPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "include",
+  "eeprommanager.h",
+);
 const source = readFileSync(eepromManagerPath, "utf8");
+const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const declaration = source.match(/extern\s+volatile\s+Fox_t\s+g_fox\s*\[\s*([^\]]+?)\s*\]\s*;/);
 
 if (!declaration) {
@@ -30,3 +39,47 @@ if (declaredExtent !== "EVENT_NUMBER_OF_EVENTS") {
 }
 
 process.stdout.write("PASS g_fox declaration covers every Event_t value\n");
+
+const i2cFailureField = header.match(/\buint16_t\s+i2c_failure_count\s*;/);
+if (!i2cFailureField) {
+  process.stderr.write(
+    "Firmware contract check failed: i2c_failure_count is not declared as uint16_t\n",
+  );
+  process.exit(1);
+}
+
+const i2cFailureUpdateCase = source.match(
+  /case\s+I2C_failure_count\s*:\s*\{([\s\S]*?)\}\s*break\s*;/,
+);
+if (!i2cFailureUpdateCase) {
+  process.stderr.write(
+    "Firmware contract check failed: I2C_failure_count update case was not found\n",
+  );
+  process.exit(1);
+}
+
+const failures = [];
+if (
+  !/avr_eeprom_write_word\s*\(\s*I2C_failure_count\s*,\s*\*\s*\(\s*uint16_t\s*\*\s*\)\s*val\s*\)/.test(
+    i2cFailureUpdateCase[1],
+  )
+) {
+  failures.push("I2C_failure_count update does not write its full uint16_t value");
+}
+
+if (
+  !/g_i2c_failure_count\s*=\s*0\s*;\s*avr_eeprom_write_word\s*\(\s*I2C_failure_count\s*,\s*g_i2c_failure_count\s*\)/.test(
+    source,
+  )
+) {
+  failures.push("I2C_failure_count initialization does not write its uint16_t width");
+}
+
+if (failures.length > 0) {
+  for (const failure of failures) {
+    process.stderr.write(`Firmware contract check failed: ${failure}\n`);
+  }
+  process.exit(1);
+}
+
+process.stdout.write("PASS I2C failure count writes preserve the uint16_t EEPROM width\n");
