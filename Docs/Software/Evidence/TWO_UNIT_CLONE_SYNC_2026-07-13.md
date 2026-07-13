@@ -2,7 +2,7 @@
 
 **Path:** B-TIME-01
 
-**Status:** Edge-aligned boot fix passes exact programming and reset qualification on both units; corrected end-to-end clone/readback passes with a repeatable 0.48–0.51-second target lag
+**Status:** Edge-aligned boot fix passes exact programming and reset qualification on both units; first two corrected clone/readback trials pass with 0.48–0.55-second target lags
 
 ## Objective
 
@@ -70,6 +70,8 @@ Source review identified a mechanism consistent with the measurements. After `rt
 
 The clone following the master reset crossed the exact RTC readback gate but stopped after six of nine event files for more than one minute. Resetting the target caused one additional file to appear before that interrupted session ended, after which a new clone attempt began automatically and completed all nine files plus normal `SLAVE,NMF`, schedule evaluation, and `SLAVE,0` cleanup. This is separate robustness evidence: the successful retry protects against permanent loss, but the stalled session did not demonstrate timely autonomous recovery and should be investigated independently from clock phase.
 
+The operator estimates that a clone requires a retry approximately 5–10% of the time in ordinary use. This is an experience-based incidence estimate rather than a controlled sample rate. The retry is easy and the failure is annoying rather than operationally blocking, so it is tracked separately as medium-severity `B-CLONE-02`; it does not block the `B-TIME-01` timing qualification. The first two corrected clone attempts both transferred all nine files and cleaned up normally, which is useful but not enough to refute an intermittent 5–10% tail.
+
 ## TDD correction and target hardware qualification
 
 A firmware source contract was added first and failed against the immediate boot read/set sequence. The minimal correction replaces only that boot sequence with the existing `syncSystemTimeToRTC()` helper, which waits for the next RTC edge, reads the RTC, and sets AVR system time. Clone protocol, ordinary clock writes, ISR contents, event scheduling, EEPROM, and ESP firmware are unchanged.
@@ -136,6 +138,15 @@ Relative to the master, the target lag was 479 and 506 ms by medians and 514.42 
 
 The operator then had to reset the master to wake its WiFi before reconnecting the Moto. Its closing 12-sample series measured +685.5 ms median, +669.17 ms mean, 61.47 ms sample standard deviation, +590 ms minimum, +747 ms maximum, and 157 ms spread. The reset changed the master median by only -7.5 ms from its immediate post-clone series. This is an additional post-clone challenge of the corrected boot path and did not reproduce the pre-fix approximately one-second reset shift.
 
+A second corrected clone was then initiated from that reset-qualified master. It again crossed the exact target RTC-readback gate, transferred all nine files with `CHECK,1013` and `EOF`, emitted normal `SLAVE,NMF` / schedule evaluation / `SLAVE,0` cleanup, and resumed clock reports. Its paired same-path series were:
+
+| Unit/series | Samples | Median offset | Mean offset | Sample standard deviation | Minimum | Maximum | Spread |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Master, corrected clone 2 | 12 | +683.5 ms | +726.17 ms | 145.51 ms | +622 ms | +1148 ms | 526 ms |
+| Target, corrected clone 2 | 12 | +1231.5 ms | +1245.67 ms | 79.18 ms | +1176 ms | +1448 ms | 272 ms |
+
+The second clone's target lag was 548 ms by medians and 519.50 ms by means. One +1148 ms master receipt widened its mean, standard deviation, and spread, but its median stayed within 10 ms of the first corrected clone's +693 ms master median. Across the first two corrected clones, the paired median target lags were 479 and 548 ms; including the first target's immediate repeat comparison gives 479, 506, and 548 ms. No comparison contains an additional integral-second error. Both corrected file transfers completed normally, although two passes cannot refute the operator-estimated 5–10% `B-CLONE-02` retry rate.
+
 ## What this proves
 
 - Two complete clone attempts reached the exact clone-specific RTC readback gate and completed normal cleanup.
@@ -150,16 +161,16 @@ The operator then had to reset the master to wake its WiFi before reconnecting t
 - Candidate flash, restored EEPROM, and untouched fuses were independently verified byte-for-byte on the dummy-loaded target.
 - Candidate flash, migrated configured EEPROM, and untouched fuses were independently verified byte-for-byte on the master.
 - With both corrected images installed, a fresh clone crossed the exact target RTC-readback gate, transferred all nine files, and completed normal cleanup.
-- The corrected target relationship repeated at 479–506 ms behind the master by medians, with target medians only 27 ms apart.
+- The first two corrected clones produced paired target lags of 479–548 ms by medians, with no integral-second outlier.
 - A post-clone master reset changed its median by only -7.5 ms and did not restore the former whole-second quantization.
 
 ## Residual risk and next measurement
 
-This is one corrected clone plus the earlier pre-correction clone series. It does not yet establish the distribution across many corrected clones, directly timestamp the two physical RTC edges, exercise every disconnect/error cleanup path, or explain a unit that diverges after several days.
+This is two corrected clones plus the earlier pre-correction clone series. It does not yet establish the distribution across many corrected clones, directly timestamp the two physical RTC edges, exercise every disconnect/error cleanup path, or explain a unit that diverges after several days.
 
 Next:
 
-1. repeat corrected clones to characterize their phase distribution and failure tail;
-2. investigate the interrupted six-file transfer as a separate cleanup/timeout defect;
-3. retain 24-hour and multi-day drift observations and compare RTC aging values before changing calibration;
-4. do not close B-TIME-01 until repeated clone and drift evidence exclude an unacceptable tail.
+1. retain 24-hour and multi-day drift observations and compare RTC aging values before changing calibration;
+2. add corrected-clone trials when convenient to broaden the immediate phase distribution;
+3. investigate medium-severity `B-CLONE-02` as a separate cleanup/timeout defect without blocking timing qualification;
+4. do not close B-TIME-01 until drift and broader clone evidence exclude an unacceptable tail.

@@ -2,7 +2,7 @@
 
 ## Status
 
-The installed master passes its startup/SSID, HTTP, WebSocket, live AVR telemetry, preserved-role, and clone quiet/one-shot/resume gates. Its AVR now runs the edge-aligned boot correction; the candidate flash, migrated configured EEPROM, and unchanged fuses are independently verified byte-for-byte. The post-program boot plus five resets stayed within a 39.5 ms median range with no integral-second state change. A corrected master-target clone then crossed the exact RTC-readback gate, transferred all nine files, cleaned up normally, and placed the target approximately 0.48–0.51 seconds behind the master. A post-clone master reset changed its median by only -7.5 ms. Repeated clone and drift measurements remain pending.
+The installed master passes its startup/SSID, HTTP, WebSocket, live AVR telemetry, preserved-role, and clone quiet/one-shot/resume gates. Its AVR now runs the edge-aligned boot correction; the candidate flash, migrated configured EEPROM, and unchanged fuses are independently verified byte-for-byte. The post-program boot plus five resets stayed within a 39.5 ms median range with no integral-second state change. Two corrected master-target clones then crossed the exact RTC-readback gate, transferred all nine files, cleaned up normally, and placed the target approximately 0.48–0.55 seconds behind the master. A post-clone master reset changed its median by only -7.5 ms. Longer-term drift measurements remain pending.
 
 ## ESP8266 preservation and programming
 
@@ -163,6 +163,8 @@ After both AVRs received the edge-aligned image, a fresh clone crossed the exact
 
 The post-clone master median was +693.0 ms. Two target series measured +1172.0 and +1199.0 ms, placing the target 479 and 506 ms behind the master by medians. Their corresponding mean differences were 514.42 and 493.42 ms. The operator then reset the master to wake its WiFi; its closing series measured +685.5 ms median, only -7.5 ms from its pre-reset value, with a +669.17 ms mean and 61.47 ms sample standard deviation. This independently exercises the corrected boot path after cloning and shows no integral-second reset shift.
 
-Repeated clone phase-spread, physical edge/transmission timing, cleanup-failure, and multi-day drift measurements remain open.
+A second corrected clone also transferred all nine files, completed normal cleanup, and resumed clock reports. Its paired master/target medians were +683.5 and +1231.5 ms, a 548 ms target lag; the corresponding means differed by 519.50 ms. Across the first two corrected clones, paired median lags were 479–548 ms and no integral-second outlier occurred.
+
+Larger-sample clone phase-spread, physical edge/transmission timing, cleanup-failure, and multi-day drift measurements remain open.
 
 The field synchronization bug is not yet described as fixed.
