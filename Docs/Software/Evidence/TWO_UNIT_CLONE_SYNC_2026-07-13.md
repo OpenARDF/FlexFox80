@@ -2,7 +2,7 @@
 
 **Path:** B-TIME-01
 
-**Status:** End-to-end clone/readback passes; reset-dependent one-second AVR system-time quantization reproduced on both units; edge-aligned boot fix built but not yet hardware-qualified
+**Status:** End-to-end clone/readback passes; reset-dependent one-second AVR system-time quantization reproduced on both units; edge-aligned boot fix passes target programming and five-reset qualification
 
 ## Objective
 
@@ -70,11 +70,32 @@ Source review identified a mechanism consistent with the measurements. After `rt
 
 The clone following the master reset crossed the exact RTC readback gate but stopped after six of nine event files for more than one minute. Resetting the target caused one additional file to appear before that interrupted session ended, after which a new clone attempt began automatically and completed all nine files plus normal `SLAVE,NMF`, schedule evaluation, and `SLAVE,0` cleanup. This is separate robustness evidence: the successful retry protects against permanent loss, but the stalled session did not demonstrate timely autonomous recovery and should be investigated independently from clock phase.
 
-## TDD correction awaiting hardware qualification
+## TDD correction and target hardware qualification
 
 A firmware source contract was added first and failed against the immediate boot read/set sequence. The minimal correction replaces only that boot sequence with the existing `syncSystemTimeToRTC()` helper, which waits for the next RTC edge, reads the RTC, and sets AVR system time. Clone protocol, ordinary clock writes, ISR contents, event scheduling, EEPROM, and ESP firmware are unchanged.
 
-The contract then passed, and the exact pinned Mac AVR-GCC 7.3.0 / AVR-Dx_DFP 1.9.103 Release build completed with zero warnings and the required unchanged 274-byte EEPROM image. Hardware programming and repeated reset-phase measurements remain mandatory before this image is treated as qualified.
+The contract then passed, and two exact pinned Mac AVR-GCC 7.3.0 / AVR-Dx_DFP 1.9.103 Release builds completed with zero warnings and identical artifacts. The 274-byte EEPROM image remained unchanged. The Release HEX SHA-256 is `130147e4182a30897a170c16481530ddb37ebd419271ac33c3df35316cbf853b`.
+
+The Atmel-ICE identified the powered dummy-loaded target as AVR128DA48 signature `1E 97 08` at 3.26 V. Fresh pre-write flash, complete EEPROM, and fuse captures were byte-identical to the target's prior clone-sync qualification. Programming used an explicit erase, wrote and verified the candidate flash twice, restored and verified all 512 EEPROM bytes twice, and did not write fuses. Independent post-operation reads established:
+
+| Memory | Expected SHA-256 | Independent readback SHA-256 | Result |
+| --- | --- | --- | --- |
+| Candidate flash binary | `629b6b5ce564da965ba9977fae6d0653ac74b1e100980859452a7888a35a85ab` | `629b6b5ce564da965ba9977fae6d0653ac74b1e100980859452a7888a35a85ab` | byte-identical |
+| Preserved EEPROM | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | `b9a912cf6dd81c9a7ca73c9a098efcf37bc1e12ee44e60ee45d65a7fa9844401` | byte-identical |
+| Preserved fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | byte-identical |
+
+The programmed target then passed HTTP, WebSocket, target role, identity, temperature, battery, and live AVR clock probes. Its post-program boot and five subsequent Atmel-ICE-induced AVR resets each received 12 ordinary clock reports through the same observation path:
+
+| Boot | Median offset | Mean offset | Sample standard deviation | Minimum | Maximum | Spread |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Post-program baseline | +1217.5 ms | +1249.33 ms | 86.88 ms | +1148 ms | +1448 ms | 300 ms |
+| Reset 1 | +1201.0 ms | +1223.58 ms | 77.87 ms | +1174 ms | +1459 ms | 285 ms |
+| Reset 2 | +1227.0 ms | +1230.67 ms | 48.47 ms | +1178 ms | +1336 ms | 158 ms |
+| Reset 3 | +1269.5 ms | +1267.25 ms | 86.73 ms | +1144 ms | +1464 ms | 320 ms |
+| Reset 4 | +1229.0 ms | +1287.67 ms | 142.07 ms | +1152 ms | +1594 ms | 442 ms |
+| Reset 5 | +1188.5 ms | +1230.17 ms | 126.56 ms | +1143 ms | +1596 ms | 453 ms |
+
+Across the six boot medians, the mean was +1222.08 ms, the median was +1222.25 ms, the sample standard deviation was 27.98 ms, and the complete range was 81 ms. No reset produced an integral-second state change. The 81 ms range is more than twelve times smaller than the pre-fix target's 1029.5 ms reset shift and is small relative to individual WebSocket/tunnel receipt spread. This qualifies the edge-aligned boot correction on the target for the reproduced defect; it does not yet qualify the master or explain all contributors to the field outlier.
 
 ## What this proves
 
@@ -85,6 +106,8 @@ The contract then passed, and the exact pinned Mac AVR-GCC 7.3.0 / AVR-Dx_DFP 1.
 - The previously demonstrated multi-second WebSocket delivery tails must not be interpreted as RTC phase without follow-up edges or physical timing evidence.
 - Resetting either AVR can change its reported/system phase by approximately one whole second while leaving the RTC and communications operational.
 - A correct clone RTC readback alone did not remove that boot-induced system-time quantization.
+- With the edge-aligned boot candidate, five target resets plus the post-program boot remained within an 81 ms median range and showed no whole-second state change.
+- Candidate flash, restored EEPROM, and untouched fuses were independently verified byte-for-byte on the dummy-loaded target.
 
 ## Residual risk and next measurement
 
@@ -92,9 +115,9 @@ This is one measured final target state after two back-to-back clone attempts. I
 
 Next:
 
-1. program the edge-aligned boot candidate on the dummy-loaded target after confirming the Atmel-ICE is attached to that unit;
-2. repeat resets at varied phases and require a stable median rather than the observed one-second state changes;
+1. preserve and program the edge-aligned boot candidate on the master;
+2. repeat the master reset-phase gate before using it as a clone source;
 3. qualify a master/target clone with both AVRs running the corrected image;
 4. investigate the interrupted six-file transfer as a separate cleanup/timeout defect;
 5. retain 24-hour and multi-day drift observations and compare RTC aging values before changing calibration;
-6. do not close B-TIME-01 until reset, repeated clone phase, and drift evidence exclude an unacceptable tail.
+6. do not close B-TIME-01 until corrected two-unit clone and drift evidence exclude an unacceptable tail.
