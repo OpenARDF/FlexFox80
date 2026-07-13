@@ -4,7 +4,7 @@
 
 **Scope:** AVR128DA48 system-clock reads, RTC-edge handling, interrupt latency, and shared schedule state
 
-**Status:** Static review complete; highest-priority recovery passes host, exact-build, and focused target forced-delay gates
+**Status:** Static review complete; highest-priority recovery passes host, exact-build, and focused target forced-delay gates; first atomic schedule-state slice passes source and exact-build gates
 
 ## Reason for this review
 
@@ -62,6 +62,8 @@ The two normal-priority ISRs do not preempt each other, but either can interrupt
 
 The clone one-shot epoch is a useful positive example: `serviceCloneSyncReport()` copies `g_clone_sync_epoch` inside a critical section before using it in foreground.
 
+**Implementation status:** Foreground stores to `g_event_start_epoch` and `g_event_finish_epoch` now use small interrupt-masked helpers. Paths that establish both event bounds use one paired transaction. The interrupt bodies and event comparisons are unchanged. The red/green contract, ownership review, generated assembly, and exact-build evidence are recorded in [AVR event-epoch atomic stores](AVR_EVENT_EPOCH_ATOMIC_STORES_2026-07-13.md). Connected-target verification remains the next gate before proceeding to `g_time_to_wake_up` as a separate slice.
+
 ### 3. High robustness risk: RTC synchronization waits forever and represents an edge with one bit
 
 `syncSystemTimeToRTC()` clears `g_seconds_transition`, spins until the RTC ISR sets it, reads the RTC, and calls `set_system_time()`.
@@ -100,11 +102,11 @@ No ISR or RF behavior should be reorganized from static reasoning alone. The nex
 2. **Measure the normal path.** Instrument RTC-edge arrival, RTC-handler entry, `TCB0` entry/exit, and Si5351 transaction duration on the dummy-loaded unit. Establish normal and worst observed latency before changing priorities or RF keying.
 3. **Reproduce the fault path safely.** Force Si5351 NACK/timeout behavior with RF inhibited and confirm whether RTC edge count and AVR system time lose seconds. Preserve reset cause and error state.
 4. **Separate edge capture from slow work.** The current candidate completes the counted-edge portion using the already-running Level-1 timeout timer and leaves RF keying unchanged. Do not transmit or perform general I2C from the higher-priority sampler. Hardware fault injection remains the gate.
-5. **Make 32-bit transfers explicit.** Introduce small atomic snapshot/update helpers and apply start/finish configuration as a coherent transaction before enabling the event.
+5. **Make 32-bit transfers explicit.** The first slice now makes foreground event start/finish stores atomic and applies paired bounds as one transaction. Complete its focused target gate, then treat `g_time_to_wake_up` and `g_on_the_air` separately because their ownership differs.
 6. **Add boundary tests.** Exercise `start-1`, `start`, `start+1`, `finish-1`, `finish`, and `finish+1` using one supplied `now` value.
 7. **Bound RTC synchronization.** Test missing square wave, I2C timeout, an intervening edge during readback, and success at the expected edge before changing `syncSystemTimeToRTC()`.
 8. **Repeat hardware timing gates.** Re-run corrected reset and clone qualification, plus classic, Sprint, foxoring, beacon, ID, sleep/wake, and event-finish traces.
 
 ## Priority decision
 
-Long-duration drift and aging-register work remains bookmarked. The RTC edge-loss recovery is now source- and target-verified, with broader product regression retained for A8. The next AVR timing-hardening slice is explicit atomic transfer of shared schedule values. These changes target rare discrete jitter and whole-second loss, which are better aligned with the observed failure class than expected short-term oscillator drift.
+Long-duration drift and aging-register work remains bookmarked. The RTC edge-loss recovery is source- and target-verified, with broader product regression retained for A8. The first atomic schedule-state slice now protects foreground event start/finish stores and passes its source and exact-build gates. Its focused connected-target gate is next; after that, `g_time_to_wake_up` is the next separately owned value to characterize. These changes target rare discrete jitter and whole-second loss, which are better aligned with the observed failure class than expected short-term oscillator drift.

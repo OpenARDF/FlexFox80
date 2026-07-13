@@ -24,6 +24,7 @@
 
 #include "defs.h"
 #include "eeprommanager.h"
+#include "event_time_state.h"
 #include "serialbus.h"
 #include "i2c.h"
 #include "transmitter.h"
@@ -640,8 +641,9 @@ bool EepromManager::readNonVols(void)
 		g_fox[EVENT_SPRINT] = (Fox_t)(CLAMP(BEACON, eeprom_read_byte((uint8_t*)&(EepromManager::ee_vars.fox_setting_sprint)), SPRINT_F5));
 		g_fox[EVENT_FOXORING] = (Fox_t)(CLAMP(BEACON, eeprom_read_byte((uint8_t*)&(EepromManager::ee_vars.fox_setting_foxoring)), FOXORING_FOX3));
 		g_fox[EVENT_BLIND_ARDF] = (Fox_t)(CLAMP(BEACON, eeprom_read_byte((uint8_t*)&(EepromManager::ee_vars.fox_setting_blind)), FOX_5));
-		g_event_start_epoch = eeprom_read_dword(&(EepromManager::ee_vars.event_start_epoch));
-		g_event_finish_epoch = eeprom_read_dword(&(EepromManager::ee_vars.event_finish_epoch));
+		time_t event_start_epoch = eeprom_read_dword(&(EepromManager::ee_vars.event_start_epoch));
+		time_t event_finish_epoch = eeprom_read_dword(&(EepromManager::ee_vars.event_finish_epoch));
+		setEventEpochs(event_start_epoch, event_finish_epoch);
 		g_utc_offset = (int8_t)eeprom_read_byte(&(EepromManager::ee_vars.utc_offset));
 
 		char c;
@@ -765,10 +767,9 @@ bool EepromManager::readNonVols(void)
 			g_frequency_beacon = EEPROM_FREQUENCY_BEACON_DEFAULT;
 			avr_eeprom_write_dword(Frequency_Beacon, g_frequency_beacon);
 
-			g_event_start_epoch = EEPROM_START_EPOCH_DEFAULT;
+			setEventEpochs(EEPROM_START_EPOCH_DEFAULT, EEPROM_FINISH_EPOCH_DEFAULT);
 			avr_eeprom_write_dword(Event_start_epoch, g_event_start_epoch);
 
-			g_event_finish_epoch = EEPROM_FINISH_EPOCH_DEFAULT;
 			avr_eeprom_write_dword(Event_finish_epoch, g_event_finish_epoch);
 
 			g_utc_offset = EEPROM_UTC_OFFSET_DEFAULT;

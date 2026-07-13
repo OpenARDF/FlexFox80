@@ -565,6 +565,45 @@ if (
 
 process.stdout.write("PASS delayed RTC edges are counted and replayed\n");
 
+const eventStartAssignments = avrMain.match(/\bg_event_start_epoch\s*=/g) || [];
+const eventFinishAssignments = avrMain.match(/\bg_event_finish_epoch\s*=/g) || [];
+const eepromEventAssignments =
+  source.match(/\bg_event_(?:start|finish)_epoch\s*=/g) || [];
+const atomicStartSetter = avrMain.match(
+  /void\s+setEventStartEpoch\s*\(\s*time_t\s+value\s*\)\s*\{([^{}]*)\}/,
+);
+const atomicFinishSetter = avrMain.match(
+  /void\s+setEventFinishEpoch\s*\(\s*time_t\s+value\s*\)\s*\{([^{}]*)\}/,
+);
+const atomicPairSetter = avrMain.match(
+  /void\s+setEventEpochs\s*\(\s*time_t\s+start\s*,\s*time_t\s+finish\s*\)\s*\{([^{}]*)\}/,
+);
+
+if (
+  eventStartAssignments.length !== 3 ||
+  eventFinishAssignments.length !== 3 ||
+  eepromEventAssignments.length !== 0 ||
+  !atomicStartSetter ||
+  !atomicFinishSetter ||
+  !atomicPairSetter ||
+  !/ENTER_CRITICAL[\s\S]*g_event_start_epoch\s*=\s*value[\s\S]*EXIT_CRITICAL/.test(
+    atomicStartSetter[1] ?? "",
+  ) ||
+  !/ENTER_CRITICAL[\s\S]*g_event_finish_epoch\s*=\s*value[\s\S]*EXIT_CRITICAL/.test(
+    atomicFinishSetter[1] ?? "",
+  ) ||
+  !/ENTER_CRITICAL[\s\S]*g_event_start_epoch\s*=\s*start[\s\S]*g_event_finish_epoch\s*=\s*finish[\s\S]*EXIT_CRITICAL/.test(
+    atomicPairSetter[1] ?? "",
+  )
+) {
+  process.stderr.write(
+    "Firmware contract check failed: foreground event epoch stores are not atomic to ISR readers\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS event epoch stores are atomic to ISR readers\n");
+
 if (!/if\s*\(\s*g_report_seconds\s*&&\s*!g_clone_quiet\s*\)/.test(avrMain)) {
   process.stderr.write(
     "Firmware contract check failed: ordinary time reports are not suppressed during clone quiet mode\n",

@@ -23,6 +23,7 @@
 #include "linkbus.h"
 #include "huzzah.h"
 #include "CircularStringBuff.h"
+#include "event_time_state.h"
 
 #include <cpuint.h>
 #include <ccp.h>
@@ -184,6 +185,28 @@ bool g_use_rtc_for_startstop = false;
 volatile bool g_enable_manual_transmissions = false;
 volatile bool g_enable_LED_enunciations = true;
 volatile uint16_t g_delay_before_powerup_xmsn = 0;
+
+void setEventStartEpoch(time_t value)
+{
+	ENTER_CRITICAL(event_start_epoch_store);
+	g_event_start_epoch = value;
+	EXIT_CRITICAL(event_start_epoch_store);
+}
+
+void setEventFinishEpoch(time_t value)
+{
+	ENTER_CRITICAL(event_finish_epoch_store);
+	g_event_finish_epoch = value;
+	EXIT_CRITICAL(event_finish_epoch_store);
+}
+
+void setEventEpochs(time_t start, time_t finish)
+{
+	ENTER_CRITICAL(event_epochs_store);
+	g_event_start_epoch = start;
+	g_event_finish_epoch = finish;
+	EXIT_CRITICAL(event_epochs_store);
+}
 
 /***********************************************************************
  * Private Function Prototypes
@@ -1572,8 +1595,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 // 							bool repeat = true;
 // 							makeMorse(g_messages_text[PATTERN_TEXT], &repeat, NULL);
 // 							g_code_throttle = throttleValue(g_pattern_codespeed);
-							g_event_start_epoch = 1;                     /* have it start a long time ago */
-							g_event_finish_epoch = MAX_TIME;             /* run for a long long time */
+							setEventEpochs(1, MAX_TIME);                 /* run from a long time ago to a long time from now */
 							g_on_air_seconds = 9999;                    /* on period is very long */
 							g_off_air_seconds = 0;                      /* off period is very short */
 							g_on_the_air = 9999;                        /*  start out transmitting */
@@ -1644,7 +1666,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 
 					if(mtime != g_event_start_epoch)
 					{
-						g_event_start_epoch = mtime;
+						setEventStartEpoch(mtime);
 //						syncSystemTimeToRTC();    /* update system clock */
 						new_event_parameter_count++;
 					}
@@ -1662,7 +1684,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 
 						if(mtime != g_event_finish_epoch)
 						{
-							g_event_finish_epoch = mtime;
+							setEventFinishEpoch(mtime);
 							new_event_parameter_count++;
 						}
 						
@@ -2677,11 +2699,12 @@ void setupForFox(Fox_t fox, EventAction_t action)
 		
 		if(result == ERROR_CODE_NO_ERROR)
 		{
-			g_event_start_epoch = now;
-			if(g_event_start_epoch > g_event_finish_epoch)
+			time_t finish = g_event_finish_epoch;
+			if(now > finish)
 			{
-				g_event_finish_epoch = g_event_start_epoch + DAY;
+				finish = now + DAY;
 			}
+			setEventEpochs(now, finish);
 		}
 		
 		SC status = STATUS_CODE_IDLE;
