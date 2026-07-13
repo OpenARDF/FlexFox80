@@ -43,6 +43,7 @@ The master emitted `ERR_CODE,247` before the first transfer. Code 247 is the def
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Master | 12 | -322.5 ms | -317.25 ms | 50.44 ms | -389 ms | -217 ms | 172 ms |
 | Target | 12 | +214.5 ms | +247.25 ms | 102.93 ms | +156 ms | +554 ms | 398 ms |
+| Target repeat, four minutes later | 12 | +224.5 ms | +229.67 ms | 57.88 ms | +156 ms | +364 ms | 208 ms |
 
 The target-minus-master difference was:
 
@@ -51,12 +52,13 @@ The target-minus-master difference was:
 
 A larger observer offset means the reported FlexFox epoch is later relative to the Mac receipt timestamp. Under this common path, the target was therefore approximately 0.54–0.56 seconds behind the master's second boundary. That is consistent with the expected approximately half-second phase relationship after writing the DS3231 seconds register and is far from the field symptom of more than three seconds.
 
-One target observation arrived at +554 ms while the other eleven were between +156 and +266 ms. This increases the linear spread but does not indicate a persistent RTC shift; the median remains the appropriate summary for this non-real-time observation path.
+One target observation arrived at +554 ms while the other eleven were between +156 and +266 ms. The repeat series' median changed by only 10 ms, its maximum was +364 ms, and its spread fell to 208 ms. The +554 ms sample therefore did not represent a persistent RTC shift; the median remains the appropriate summary for this non-real-time observation path. The repeat target median is approximately 547 ms behind the earlier master median.
 
 ## What this proves
 
 - Two complete clone attempts reached the exact clone-specific RTC readback gate and completed normal cleanup.
 - The final target state was not immediately displaced from the master by multiple seconds.
+- Two target observations four minutes apart reproduced the target median within 10 ms.
 - The observed approximately half-second target relationship is compatible with the established DS3231 write/edge phase model.
 - The previously demonstrated multi-second WebSocket delivery tails must not be interpreted as RTC phase without follow-up edges or physical timing evidence.
 
