@@ -2,7 +2,7 @@
 
 ## Status
 
-The installed master passes its startup/SSID, HTTP, WebSocket, live AVR telemetry, preserved-role, and clone quiet/one-shot/resume gates. Its AVR flash, migrated EEPROM, and unchanged fuses are independently verified byte-for-byte. Two complete master-target clone handshakes then crossed the exact target RTC-readback gate and completed normally. The first sequential same-path comparison placed the target approximately 0.54–0.56 seconds behind the master; repeated phase and drift measurements remain pending.
+The installed master passes its startup/SSID, HTTP, WebSocket, live AVR telemetry, preserved-role, and clone quiet/one-shot/resume gates. Its AVR now runs the edge-aligned boot correction; the candidate flash, migrated configured EEPROM, and unchanged fuses are independently verified byte-for-byte. The post-program boot plus five resets stayed within a 39.5 ms median range with no integral-second state change. Both corrected units therefore pass their reset-phase gates. A corrected master-target clone and repeated phase/drift measurements remain pending.
 
 ## ESP8266 preservation and programming
 
@@ -120,12 +120,45 @@ The bounded `wifi-clone-control-test` then passed:
 
 The control test does not write RTC, EEPROM, event, RF, or filesystem state.
 
+## Edge-aligned AVR boot upgrade and reset qualification
+
+The reset-isolation experiment subsequently showed that the earlier master image could acquire a nearly one-second AVR system-time phase shift across reset even though its RTC and communications remained operational. Commit `730b63109eb5212bde8320b9720fe13d135c6206` replaces the arbitrary-phase boot RTC read/set sequence with the existing next-edge `syncSystemTimeToRTC()` helper. It does not change the square-wave ISR, clone protocol, ordinary clock writes, event scheduling, EEPROM schema, or ESP firmware.
+
+Two pinned AVR-GCC 7.3.0 / AVR-Dx_DFP 1.9.103 Release builds completed with zero warnings and identical output:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| Release HEX | `130147e4182a30897a170c16481530ddb37ebd419271ac33c3df35316cbf853b` |
+| EEPROM initializer | `c8dc188f9317e79d57b2852dc509c41481951eb974b68baa1e34f53d7cef7906` |
+| Expected raw flash | `629b6b5ce564da965ba9977fae6d0653ac74b1e100980859452a7888a35a85ab` |
+
+Fresh pre-write reads matched the already-qualified master state: raw flash `878cc77f088ac89c4424fe0c83fed3527856550914e907b074507f1fdf29d72e`, configured EEPROM `5ad612a6aa41ae86de821ba4b701a7072aaeebb942747e2562040d08c22d610c`, and fuses `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126`. Programming used an explicit erase, wrote and verified the candidate flash twice, restored and verified all 512 EEPROM bytes twice, and did not write fuses. Independent post-operation reads established:
+
+| Memory | Expected SHA-256 | Independent readback SHA-256 | Result |
+| --- | --- | --- | --- |
+| Candidate flash binary | `629b6b5ce564da965ba9977fae6d0653ac74b1e100980859452a7888a35a85ab` | `629b6b5ce564da965ba9977fae6d0653ac74b1e100980859452a7888a35a85ab` | byte-identical |
+| Migrated configured EEPROM | `5ad612a6aa41ae86de821ba4b701a7072aaeebb942747e2562040d08c22d610c` | `5ad612a6aa41ae86de821ba4b701a7072aaeebb942747e2562040d08c22d610c` | byte-identical |
+| Preserved fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | byte-identical |
+
+The reprogrammed master returned as `Tx_Master`, ESP MAC `22:C8:8E:CF:AB:84`, software `2.0,0.200`, and `MASTER,1`, with passing HTTP, WebSocket, temperature, battery, and live clock reports. Its post-program boot and five subsequent Atmel-ICE-induced AVR resets each received 12 ordinary clock reports through the same observation path:
+
+| Boot | Median offset | Mean offset | Sample standard deviation | Minimum | Maximum | Spread |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Post-program baseline | +649.5 ms | +667.50 ms | 71.02 ms | +601 ms | +859 ms | 258 ms |
+| Reset 1 | +639.0 ms | +668.42 ms | 65.87 ms | +593 ms | +791 ms | 198 ms |
+| Reset 2 | +649.5 ms | +664.92 ms | 71.42 ms | +593 ms | +817 ms | 224 ms |
+| Reset 3 | +678.5 ms | +694.83 ms | 86.17 ms | +592 ms | +898 ms | 306 ms |
+| Reset 4 | +665.5 ms | +687.42 ms | 78.60 ms | +609 ms | +899 ms | 290 ms |
+| Reset 5 | +644.5 ms | +671.67 ms | 106.86 ms | +592 ms | +988 ms | 396 ms |
+
+Across the six boot medians, the mean was +654.42 ms, the median was +649.5 ms, the sample standard deviation was 14.75 ms, and the complete range was 39.5 ms. No reset produced an integral-second state change. Together with the target's 81 ms six-boot range, this qualifies the edge-aligned correction against the reproduced reset defect on both units. Individual report spreads still include the non-real-time WiFi/tunnel observation path and are not physical RTC-edge timestamps.
+
 ## Two-unit qualification
 
-The updated master and target completed two end-to-end clone cycles after two operator-requested target resets. Each cycle reached event-file transfer and normal slave release, which is unreachable in the updated target state machine unless the clone-specific RTC epoch readback exactly matches the requested epoch and the Linkbus ACK completes without NAK or timeout.
+Before the edge-aligned boot correction, the updated clone-control master and target completed two end-to-end clone cycles after two operator-requested target resets. Each cycle reached event-file transfer and normal slave release, which is unreachable in the updated target state machine unless the clone-specific RTC epoch readback exactly matches the requested epoch and the Linkbus ACK completes without NAK or timeout.
 
 A 12-sample read-only series from each unit through the same Moto/DroidTether path found the target approximately 537 ms behind the master by medians and 564.5 ms by means. This passes the first immediate multi-second-outlier check and is consistent with the expected half-second DS3231 write/edge relationship. See [Two-unit clone synchronization qualification](TWO_UNIT_CLONE_SYNC_2026-07-13.md) for raw statistics, limits, and next measurements.
 
-Repeated clone phase-spread, physical edge/transmission timing, cleanup-failure, and multi-day drift measurements remain open.
+The next gate is a fresh clone with both AVRs running the edge-aligned image. Repeated clone phase-spread, physical edge/transmission timing, cleanup-failure, and multi-day drift measurements remain open.
 
 The field synchronization bug is not yet described as fixed.

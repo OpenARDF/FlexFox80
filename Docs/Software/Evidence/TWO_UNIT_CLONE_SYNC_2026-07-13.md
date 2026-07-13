@@ -2,7 +2,7 @@
 
 **Path:** B-TIME-01
 
-**Status:** End-to-end clone/readback passes; reset-dependent one-second AVR system-time quantization reproduced on both units; edge-aligned boot fix passes target programming and five-reset qualification
+**Status:** End-to-end clone/readback passes; reset-dependent one-second AVR system-time quantization reproduced; edge-aligned boot fix passes exact programming and five-reset qualification on both units
 
 ## Objective
 
@@ -95,7 +95,24 @@ The programmed target then passed HTTP, WebSocket, target role, identity, temper
 | Reset 4 | +1229.0 ms | +1287.67 ms | 142.07 ms | +1152 ms | +1594 ms | 442 ms |
 | Reset 5 | +1188.5 ms | +1230.17 ms | 126.56 ms | +1143 ms | +1596 ms | 453 ms |
 
-Across the six boot medians, the mean was +1222.08 ms, the median was +1222.25 ms, the sample standard deviation was 27.98 ms, and the complete range was 81 ms. No reset produced an integral-second state change. The 81 ms range is more than twelve times smaller than the pre-fix target's 1029.5 ms reset shift and is small relative to individual WebSocket/tunnel receipt spread. This qualifies the edge-aligned boot correction on the target for the reproduced defect; it does not yet qualify the master or explain all contributors to the field outlier.
+Across the six boot medians, the mean was +1222.08 ms, the median was +1222.25 ms, the sample standard deviation was 27.98 ms, and the complete range was 81 ms. No reset produced an integral-second state change. The 81 ms range is more than twelve times smaller than the pre-fix target's 1029.5 ms reset shift and is small relative to individual WebSocket/tunnel receipt spread. This qualifies the edge-aligned boot correction on the target for the reproduced defect; it does not by itself explain all contributors to the field outlier.
+
+## Master hardware qualification
+
+The same candidate was then installed on the master after fresh reads reproduced its qualified prior flash, migrated configured EEPROM, and fuse hashes. Programming used an explicit erase, wrote and verified the candidate flash twice, restored and verified the complete configured EEPROM twice, did not write fuses, and ended with independent byte-identical reads of the candidate raw flash `629b6b5ce564da965ba9977fae6d0653ac74b1e100980859452a7888a35a85ab`, master EEPROM `5ad612a6aa41ae86de821ba4b701a7072aaeebb942747e2562040d08c22d610c`, and preserved fuses `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126`.
+
+The programmed master passed its role/identity, HTTP, WebSocket, temperature, battery, and live-clock probes. Its post-program boot and five subsequent Atmel-ICE-induced resets produced these 12-sample results:
+
+| Boot | Median offset | Mean offset | Sample standard deviation | Minimum | Maximum | Spread |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Post-program baseline | +649.5 ms | +667.50 ms | 71.02 ms | +601 ms | +859 ms | 258 ms |
+| Reset 1 | +639.0 ms | +668.42 ms | 65.87 ms | +593 ms | +791 ms | 198 ms |
+| Reset 2 | +649.5 ms | +664.92 ms | 71.42 ms | +593 ms | +817 ms | 224 ms |
+| Reset 3 | +678.5 ms | +694.83 ms | 86.17 ms | +592 ms | +898 ms | 306 ms |
+| Reset 4 | +665.5 ms | +687.42 ms | 78.60 ms | +609 ms | +899 ms | 290 ms |
+| Reset 5 | +644.5 ms | +671.67 ms | 106.86 ms | +592 ms | +988 ms | 396 ms |
+
+Across the master boot medians, the mean was +654.42 ms, the median was +649.5 ms, the sample standard deviation was 14.75 ms, and the complete range was 39.5 ms. No reset produced an integral-second state change. The edge-aligned correction therefore passes the reproduced reset-defect gate on both the target and master, with boot-median ranges of 81 ms and 39.5 ms respectively. See [Master clone-synchronization firmware upgrade](MASTER_CLONE_SYNC_UPGRADE_2026-07-13.md) for the master preservation and programming history.
 
 ## What this proves
 
@@ -107,7 +124,9 @@ Across the six boot medians, the mean was +1222.08 ms, the median was +1222.25 m
 - Resetting either AVR can change its reported/system phase by approximately one whole second while leaving the RTC and communications operational.
 - A correct clone RTC readback alone did not remove that boot-induced system-time quantization.
 - With the edge-aligned boot candidate, five target resets plus the post-program boot remained within an 81 ms median range and showed no whole-second state change.
+- With the same candidate, five master resets plus the post-program boot remained within a 39.5 ms median range and showed no whole-second state change.
 - Candidate flash, restored EEPROM, and untouched fuses were independently verified byte-for-byte on the dummy-loaded target.
+- Candidate flash, migrated configured EEPROM, and untouched fuses were independently verified byte-for-byte on the master.
 
 ## Residual risk and next measurement
 
@@ -115,9 +134,8 @@ This is one measured final target state after two back-to-back clone attempts. I
 
 Next:
 
-1. preserve and program the edge-aligned boot candidate on the master;
-2. repeat the master reset-phase gate before using it as a clone source;
-3. qualify a master/target clone with both AVRs running the corrected image;
-4. investigate the interrupted six-file transfer as a separate cleanup/timeout defect;
-5. retain 24-hour and multi-day drift observations and compare RTC aging values before changing calibration;
-6. do not close B-TIME-01 until corrected two-unit clone and drift evidence exclude an unacceptable tail.
+1. qualify a master/target clone with both AVRs running the corrected image;
+2. compare both units immediately without resetting the target after cloning;
+3. investigate the interrupted six-file transfer as a separate cleanup/timeout defect;
+4. retain 24-hour and multi-day drift observations and compare RTC aging values before changing calibration;
+5. do not close B-TIME-01 until corrected two-unit clone and drift evidence exclude an unacceptable tail.

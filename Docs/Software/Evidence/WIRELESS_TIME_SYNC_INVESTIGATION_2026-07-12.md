@@ -4,7 +4,7 @@
 
 **Path:** B-TIME-01
 
-**Status:** Investigation active; clone/readback controls pass, reset-dependent one-second AVR system-time quantization is reproduced, and the edge-aligned fix passes target five-reset qualification
+**Status:** Investigation active; clone/readback controls pass, reset-dependent one-second AVR system-time quantization is reproduced, and the edge-aligned fix passes five-reset qualification on both units
 
 ## Observed field symptom
 
@@ -143,4 +143,4 @@ Do not change the mature clock path until the measurements discriminate the fail
 - validate event checksums independently of clock synchronization;
 - decide explicitly whether aging calibration belongs to hardware identity or should be part of a clone.
 
-The first product change began with a failing source contract and is recorded in [AVR clone synchronization controls](AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). The ESP controls and hardware-compatible pinned build are recorded in [ESP clone synchronization controls](ESP_CLONE_SYNC_CONTROLS_2026-07-12.md). The [two-unit clone synchronization qualification](TWO_UNIT_CLONE_SYNC_2026-07-13.md) produced exact-readback-gated clone completions and repeatable target relationships approximately 0.54–0.57 seconds behind the master. It then reproduced near-one-second reset-dependent AVR system-time shifts on both units. A TDD correction aligns boot system time at an RTC edge; the programmed target's post-program boot and five resets remained within an 81 ms median range with no integral-second state change. Master qualification, corrected two-unit clone phase, and multi-day drift measurements remain the active product gates.
+The first product change began with a failing source contract and is recorded in [AVR clone synchronization controls](AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). The ESP controls and hardware-compatible pinned build are recorded in [ESP clone synchronization controls](ESP_CLONE_SYNC_CONTROLS_2026-07-12.md). The [two-unit clone synchronization qualification](TWO_UNIT_CLONE_SYNC_2026-07-13.md) produced exact-readback-gated clone completions and repeatable target relationships approximately 0.54–0.57 seconds behind the master. It then reproduced near-one-second reset-dependent AVR system-time shifts on both units. A TDD correction aligns boot system time at an RTC edge. The programmed target's post-program boot and five resets remained within an 81 ms median range; the programmed master's equivalent six-boot range was 39.5 ms. Neither produced an integral-second state change. Corrected two-unit clone phase and multi-day drift measurements remain the active product gates.
