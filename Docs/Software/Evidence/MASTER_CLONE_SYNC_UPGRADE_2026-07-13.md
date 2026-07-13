@@ -2,7 +2,7 @@
 
 ## Status
 
-The installed master passes its startup/SSID, HTTP, WebSocket, live AVR telemetry, preserved-role, and clone quiet/one-shot/resume gates. Its AVR flash, migrated EEPROM, and unchanged fuses are independently verified byte-for-byte. Complete master-target cloning and physical inter-unit phase measurement remain pending.
+The installed master passes its startup/SSID, HTTP, WebSocket, live AVR telemetry, preserved-role, and clone quiet/one-shot/resume gates. Its AVR flash, migrated EEPROM, and unchanged fuses are independently verified byte-for-byte. Two complete master-target clone handshakes then crossed the exact target RTC-readback gate and completed normally. The first sequential same-path comparison placed the target approximately 0.54–0.56 seconds behind the master; repeated phase and drift measurements remain pending.
 
 ## ESP8266 preservation and programming
 
@@ -120,8 +120,12 @@ The bounded `wifi-clone-control-test` then passed:
 
 The control test does not write RTC, EEPROM, event, RF, or filesystem state.
 
-## Remaining qualification
+## Two-unit qualification
 
-The remaining product gate is the complete master-target clone handshake followed by repeated physical inter-unit phase-spread measurement.
+The updated master and target completed two end-to-end clone cycles after two operator-requested target resets. Each cycle reached event-file transfer and normal slave release, which is unreachable in the updated target state machine unless the clone-specific RTC epoch readback exactly matches the requested epoch and the Linkbus ACK completes without NAK or timeout.
+
+A 12-sample read-only series from each unit through the same Moto/DroidTether path found the target approximately 537 ms behind the master by medians and 564.5 ms by means. This passes the first immediate multi-second-outlier check and is consistent with the expected half-second DS3231 write/edge relationship. See [Two-unit clone synchronization qualification](TWO_UNIT_CLONE_SYNC_2026-07-13.md) for raw statistics, limits, and next measurements.
+
+Repeated clone phase-spread, physical edge/transmission timing, cleanup-failure, and multi-day drift measurements remain open.
 
 The field synchronization bug is not yet described as fixed.

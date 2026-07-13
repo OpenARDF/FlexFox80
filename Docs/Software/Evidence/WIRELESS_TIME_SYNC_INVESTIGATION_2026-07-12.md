@@ -4,7 +4,7 @@
 
 **Path:** B-TIME-01
 
-**Status:** Investigation active; AVR and ESP controls implemented; compatible build and single-unit live controls pass; full two-unit clone pending
+**Status:** Investigation active; AVR/ESP controls and first two-unit clone/readback qualification pass; repeated phase and drift series pending
 
 ## Observed field symptom
 
@@ -143,4 +143,4 @@ Do not change the mature clock path until the measurements discriminate the fail
 - validate event checksums independently of clock synchronization;
 - decide explicitly whether aging calibration belongs to hardware identity or should be part of a clone.
 
-The first product change began with a failing source contract and is recorded in [AVR clone synchronization controls](AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). The ESP controls and hardware-compatible pinned build are recorded in [ESP clone synchronization controls](ESP_CLONE_SYNC_CONTROLS_2026-07-12.md). The remaining product gate is end-to-end qualification with a second updated unit.
+The first product change began with a failing source contract and is recorded in [AVR clone synchronization controls](AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). The ESP controls and hardware-compatible pinned build are recorded in [ESP clone synchronization controls](ESP_CLONE_SYNC_CONTROLS_2026-07-12.md). The first [two-unit clone synchronization qualification](TWO_UNIT_CLONE_SYNC_2026-07-13.md) produced two exact-readback-gated clone completions and an immediate target relationship approximately 0.54–0.56 seconds behind the master. Repeated clone phase and multi-day drift measurements remain the active product gate.
