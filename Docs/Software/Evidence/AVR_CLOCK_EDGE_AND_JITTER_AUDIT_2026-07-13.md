@@ -4,7 +4,7 @@
 
 **Scope:** AVR128DA48 system-clock reads, RTC-edge handling, interrupt latency, and shared schedule state
 
-**Status:** Static review complete; highest-priority recovery candidate passes host and exact-build gates, with target verification pending
+**Status:** Static review complete; highest-priority recovery passes host, exact-build, and focused target forced-delay gates
 
 ## Reason for this review
 
@@ -46,7 +46,7 @@ Consequences:
 
 This mechanism can produce whole-second error without a bad RTC write, checksum failure, or long-term oscillator drift. It also explains why auditing only call sites of `time()` would miss the most consequential path.
 
-**Candidate status:** Host tests cover ISR/sampler order, coalesced edges, counter wrap, and sleep restart. Firmware contracts and an exact zero-warning AVR build pass. Hardware delay/fault injection remains required before this finding is closed.
+**Implementation status:** Host tests cover ISR/sampler order, coalesced edges, counter wrap, and sleep restart. Firmware contracts and an exact zero-warning AVR build pass. An isolated target image then held the normal-priority ISR for approximately 3.004 seconds while Level-1 sampling continued; the AVR clock caught up without a persistent whole-second offset. Focused evidence is in [AVR RTC edge target verification](AVR_RTC_EDGE_TARGET_VERIFICATION_2026-07-13.md).
 
 ### 2. High: several 32-bit schedule values cross foreground/ISR boundaries without atomic transfer
 
@@ -107,4 +107,4 @@ No ISR or RF behavior should be reorganized from static reasoning alone. The nex
 
 ## Priority decision
 
-Long-duration drift and aging-register work remains bookmarked. The RTC edge-loss candidate is now source-verified; its next gate is dummy-loaded target verification and delayed-ISR fault injection. After that gate, the next AVR timing-hardening slice is explicit atomic transfer of shared schedule values. These changes target rare discrete jitter and whole-second loss, which are better aligned with the observed failure class than expected short-term oscillator drift.
+Long-duration drift and aging-register work remains bookmarked. The RTC edge-loss recovery is now source- and target-verified, with broader product regression retained for A8. The next AVR timing-hardening slice is explicit atomic transfer of shared schedule values. These changes target rare discrete jitter and whole-second loss, which are better aligned with the observed failure class than expected short-term oscillator drift.

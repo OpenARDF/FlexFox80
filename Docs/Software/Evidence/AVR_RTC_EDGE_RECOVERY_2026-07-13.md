@@ -4,7 +4,7 @@
 
 **Baseline:** `db66786` (`Document AVR clock-edge timing risks`)
 
-**Status:** Source, host-test, firmware-contract, exact-build, programming, and readback gates pass; functional target verification remains open
+**Status:** Source, host-test, firmware-contract, exact-build, and focused target forced-delay gates pass
 
 ## Defect addressed
 
@@ -72,6 +72,8 @@ c874f9fec70bd5d03afae7dd4249bee3dab9ec08baf7664fc269e18d782aed6e  FlexFox80.lss
 092044ed11c6d048409d106b9eb47f3172ba199445442a7ac0640ca2598e134f  FlexFox80.srec
 ```
 
-## Remaining gate
+## Target gate result
 
-This evidence does not claim a reproduced field root cause or completed hardware qualification. The candidate is now installed on the dummy-loaded test unit with byte-identical flash readback, restored EEPROM, and unchanged fuses, as recorded in [AVR RTC edge target verification](AVR_RTC_EDGE_TARGET_VERIFICATION_2026-07-13.md). Before R10 is complete, verify ordinary boot/sleep/RTC/WiFi behavior and inject or emulate a normal-priority delay spanning multiple RTC edges. The acceptance condition is that AVR system time advances by every observed RTC edge without weakening RF-safe behavior.
+The dummy-loaded target passed ordinary WiFi/AVR clock progression and an isolated approximately 3.004-second normal-priority ISR blockage. The first post-block report caught up four epoch seconds, normal two-second progression resumed, and the post-test receive-offset median moved only -79 ms. Production flash was then restored with byte-identical independent readback, complete EEPROM restoration, and unchanged fuses. Details and limitations are recorded in [AVR RTC edge target verification](AVR_RTC_EDGE_TARGET_VERIFICATION_2026-07-13.md).
+
+This focused gate verifies the edge-recovery mechanism but does not claim that this mechanism caused the field outlier. Broader sleep/wake, RF-pattern, event, and long-duration regression remains in A8; electrical Si5351/I2C fault-safety work remains in A5.
