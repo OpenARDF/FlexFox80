@@ -4,7 +4,7 @@
 
 **Baseline:** `db66786` (`Document AVR clock-edge timing risks`)
 
-**Status:** Source, host-test, firmware-contract, and exact-build gates pass; target verification remains open
+**Status:** Source, host-test, firmware-contract, exact-build, programming, and readback gates pass; functional target verification remains open
 
 ## Defect addressed
 
@@ -74,4 +74,4 @@ c874f9fec70bd5d03afae7dd4249bee3dab9ec08baf7664fc269e18d782aed6e  FlexFox80.lss
 
 ## Remaining gate
 
-This evidence does not claim a reproduced field root cause or completed hardware qualification. Before R10 is complete, program the dummy-loaded test unit without changing its EEPROM or fuses, verify ordinary boot/sleep/RTC/WiFi behavior, and inject or emulate a normal-priority delay spanning multiple RTC edges. The acceptance condition is that AVR system time advances by every observed RTC edge without weakening RF-safe behavior.
+This evidence does not claim a reproduced field root cause or completed hardware qualification. The candidate is now installed on the dummy-loaded test unit with byte-identical flash readback, restored EEPROM, and unchanged fuses, as recorded in [AVR RTC edge target verification](AVR_RTC_EDGE_TARGET_VERIFICATION_2026-07-13.md). Before R10 is complete, verify ordinary boot/sleep/RTC/WiFi behavior and inject or emulate a normal-priority delay spanning multiple RTC edges. The acceptance condition is that AVR system time advances by every observed RTC edge without weakening RF-safe behavior.
