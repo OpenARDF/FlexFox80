@@ -51,7 +51,7 @@ A firmware release from `AVR128DA48` requires:
 - rollback artifacts and flashing instructions;
 - user-readable release notes.
 
-Checked-in Debug artifacts remain historical evidence, not proof of a current release build. Use the pinned AVR wrapper and ESP migration-candidate wrapper for current build evidence, and preserve the explicit gap between the mature restored ESP image and the hardware-rejected migration candidate.
+Checked-in Debug artifacts remain historical evidence, not proof of a current release build. Use the pinned AVR and hardware-compatible ESP development wrappers for current build evidence, and preserve the exact mature ESP rollback image outside Git. Full release status still requires two-unit clone and broader hardware qualification.
 
 ## Release identity
 

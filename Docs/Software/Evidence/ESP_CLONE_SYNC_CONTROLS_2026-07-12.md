@@ -4,7 +4,7 @@
 
 **Path:** B-TIME-01
 
-**Status:** Source contracts and pinned ESP build pass; combined migration image failed startup and was rolled back before clone testing
+**Status:** Source contracts, compatible pinned build, standalone startup, installed WiFi/AVR path, and single-unit controls pass; full two-unit clone pending
 
 ## Expected behavior
 
@@ -39,7 +39,7 @@ The existing sketch used `WebSocketsServer::isRunning()`, which is not part of t
 
 - The dependency-light firmware contract requires the quiet/ready/edge/write/readback sequence, NAK handling, cleanup controls, and source-owned WebSocket lifecycle state.
 - All host tests and the EEPROM-layout contract pass.
-- ESP8266 core 3.1.2 plus WebSockets 2.7.2 compiles the full sketch with zero warnings under the operator-confirmed Adafruit HUZZAH profile.
-- Independent builds produce the same 512,448-byte firmware binary with SHA-256 `87e46f71595522434985f585ea543af075b034f6293e6e116f60cd53f6df257d`.
+- ESP8266 core 2.7.4 plus WebSockets 2.3.6 compiles the full sketch with zero warnings under the operator-confirmed Adafruit HUZZAH profile.
+- Independent builds produce the same 503,392-byte firmware binary with SHA-256 `3b6b5ad8e20d9662c9ee833f9c8072b955b27f61d895cc9dde95a3d13f4a796e`.
 
-The combined migration image was flashed with the old filesystem preserved, but after installation it produced no SSID and abnormal slow LED cycling. The complete pre-change image was restored and independently verified. Do not attribute the failure specifically to these clone changes until characterization separates them from the ESP8266 core/WebSockets migration and filesystem compatibility. Do not describe the field bug as fixed until a standalone smoke test and live master-target clone test demonstrate quieting, next-edge delivery, exact readback, resume, and repeatable phase spread.
+Initial images built with ESP8266 cores 3.1.2 and 3.0.2 repeatedly reset even with pre-clone source. Core 2.7.4/WebSockets 2.3.6 starts normally with both pre-clone and clone-sync source, isolating the failure from these changes. The installed compatible image passes HTTP, WebSocket, live AVR telemetry, quiet suppression, one next-edge report, one-shot retention, and explicit resume. Do not describe the field bug as fixed until a second updated unit completes the full master-target handshake, target RTC write/readback, cleanup failures, and repeated phase-spread measurements.

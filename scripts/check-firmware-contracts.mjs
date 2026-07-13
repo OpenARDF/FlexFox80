@@ -32,6 +32,7 @@ const driverInitHeaderPath = join(
 const wifiProbePath = join(repoRoot, "scripts", "probe-flexfox-wifi.mjs");
 const clockObserverPath = join(repoRoot, "scripts", "observe-flexfox-clock.mjs");
 const clockSyncTestPath = join(repoRoot, "scripts", "test-flexfox-clock-sync.mjs");
+const cloneControlTestPath = join(repoRoot, "scripts", "test-flexfox-clone-controls.mjs");
 const linkbusBoundsTestPath = join(repoRoot, "scripts", "test-flexfox-linkbus-rx-bounds.mjs");
 const linkbusPath = join(
   repoRoot,
@@ -115,6 +116,7 @@ const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
 const wifiProbe = readFileSync(wifiProbePath, "utf8");
 const clockObserver = readFileSync(clockObserverPath, "utf8");
 const clockSyncTest = readFileSync(clockSyncTestPath, "utf8");
+const cloneControlTest = readFileSync(cloneControlTestPath, "utf8");
 const linkbusBoundsTest = readFileSync(linkbusBoundsTestPath, "utf8");
 const linkbus = readFileSync(linkbusPath, "utf8");
 const linkbusHeader = readFileSync(linkbusHeaderPath, "utf8");
@@ -304,6 +306,23 @@ if (
 }
 
 process.stdout.write("PASS WiFi clock sync test requires opt-in and sends only time/heartbeat\n");
+
+if (
+  !cloneControlTest.includes('process.env.FLEXFOX_CLONE_CONTROL_TEST === "1"') ||
+  !cloneControlTest.includes('quiet: "$ESP,C;"') ||
+  !cloneControlTest.includes('edge: "$ESP,S;"') ||
+  !cloneControlTest.includes('resume: "$ESP,R;"') ||
+  !cloneControlTest.includes("if (quietRequested && socket?.readyState === WebSocket.OPEN)") ||
+  cloneControlTest.includes("$TIM,") ||
+  (cloneControlTest.includes("SYNC,") && !cloneControlTest.includes('startsWith("SYNC,")'))
+) {
+  process.stderr.write(
+    "Firmware contract check failed: clone-control live test is not opt-in, bounded, and fail-safe\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS WiFi clone-control test is opt-in and fail-safe\n");
 
 const unsafeTextSends = [
   ["Linkbus", linkbus],

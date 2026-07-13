@@ -20,9 +20,9 @@ const tempRoot = join(repoRoot, "Software", "Huzzah", "tmp");
 const arduinoRoot = resolve(process.env.ESP_ARDUINO_DATA_ROOT || join(tempRoot, "arduino"));
 const outputRoot = join(tempRoot, "esp-build");
 const configPath = join(arduinoRoot, "arduino-cli.yaml");
-const coreVersion = "3.1.2";
-const webSocketsVersion = "2.7.2";
-const littleFsToolVersion = "3.1.0-gcc10.3-e5f9fec";
+const coreVersion = "2.7.4";
+const webSocketsVersion = "2.3.6";
+const littleFsToolVersion = "2.5.0-4-fe5bb56";
 const packageUrl = "https://arduino.esp8266.com/stable/package_esp8266com_index.json";
 const fqbn = "esp8266:esp8266:huzzah:baud=115200,xtal=80,eesz=4M1M,dbg=Disabled,lvl=None____,ip=lm2f,wipe=none";
 const filesystemSize = 0x0fa000;
@@ -174,7 +174,7 @@ const artifacts = artifactNames.map((file) => {
 });
 const cliVersion = run(arduinoCli, ["version"], { quiet: true }).stdout.trim();
 const evidence = {
-  status: "repeatable-migration-candidate-build",
+  status: "hardware-compatible-development-build",
   cliVersion,
   core: `esp8266:esp8266@${coreVersion}`,
   library: `WebSockets@${webSocketsVersion}`,

@@ -4,7 +4,7 @@
 
 **Device:** Standalone Adafruit HUZZAH ESP8266 breakout historically used for FlexFox programming
 
-**Status:** Migration candidate rejected on hardware; exact pre-change 4 MB image restored and independently verified
+**Status:** Core compatibility isolated; core-2.7.4 clone-sync firmware installed and single-unit protocol qualified; exact rollback retained
 
 ## Device identity
 
@@ -39,7 +39,7 @@ a03834d378a3b39b70e22839a0f3bf276fb8145a86340efe72c57d9cc1e800f6
 
 An independent `verify_flash 0x0 <backup>` operation compared all 4 MB against the device and returned `verify OK (digest matched)` before programming. The rollback image is intentionally ignored and is not committed to Git.
 
-## Programmed artifact
+## Initial rejected artifact
 
 The repeatable migration-candidate firmware from `just esp-build` was programmed at address `0x0`:
 
@@ -58,9 +58,9 @@ After the board reset, a separate manual bootloader entry and `verify_flash 0x0 
 verify OK (digest matched)
 ```
 
-## Remaining qualification
+## Initial qualification checklist
 
-The standalone HUZZAH must be installed on the dummy-loaded FlexFox containing the already-qualified AVR clone-sync firmware. Live testing must then prove:
+The initial plan required installation on the dummy-loaded FlexFox and the following live evidence. The later sections record which checks now pass and which still need a second unit:
 
 - ordinary broadcasts stop on both master and target during cloning;
 - the master emits its one-shot synchronization report after the next RTC edge;
@@ -84,4 +84,37 @@ After reinstallation, the original LED behavior and FlexFox SSID returned and th
 
 The operator also clarified that a HUZZAH does not need to be installed on the FlexFox to test basic ESP startup: after leaving programming mode, pressing RESET lets the standalone board boot and advertise its SSID. It cannot communicate with the AVR until installed. Every future ESP candidate must therefore pass this standalone reset/SSID smoke gate before installation.
 
-The ESP8266 core 3.1.2/WebSockets 2.7.2 candidate is hardware-rejected until a characterization build isolates the regression. The mature pre-change image remains the operational baseline.
+## Core/library characterization matrix
+
+Each candidate used the preserved mature filesystem and the pre-clone source plus only the source-owned WebSocket lifecycle shim unless noted otherwise. Basic startup was tested standalone by pressing RESET and observing LED behavior and SSID advertisement.
+
+| ESP8266 core | WebSockets | Source | Standalone result |
+| --- | --- | --- | --- |
+| 3.1.2 | 2.7.2 | Pre-clone | Repeated resets, abnormal LEDs, no SSID |
+| 3.0.2 | 2.3.6 | Pre-clone | Repeated resets, abnormal LEDs, no SSID |
+| 2.7.4 | 2.3.6 | Pre-clone | Normal LEDs and SSID |
+| 2.7.4 | 2.3.6 | Clone-sync source | Normal LEDs and SSID |
+
+The 3.1.2 pre-clone serial trace repeatedly emitted `$ESP,0;` and rebooted about every ten seconds while standalone. That rules out the AVR, installation, and clone-sync source as causes of the 3.x failure. Core 2.7.4/WebSockets 2.3.6 is the pinned hardware-compatible environment.
+
+## Final installed candidate
+
+The complete clone-sync source built under core 2.7.4/WebSockets 2.3.6 produced:
+
+| Property | Value |
+| --- | --- |
+| Size | 503,392 bytes |
+| SHA-256 | `3b6b5ad8e20d9662c9ee833f9c8072b955b27f61d895cc9dde95a3d13f4a796e` |
+| Address | `0x00000000` |
+
+The write hash and a separate `verify_flash` operation passed. Standalone LEDs and SSID were normal. After installation on the dummy-loaded FlexFox, `just wifi-probe` passed HTTP, WebSocket, preserved SSID/settings, ESP/AVR identity, temperature, battery, and time traffic.
+
+The opt-in single-unit clone-control test then proved:
+
+- ordinary time reports were active before quiet mode;
+- `$ESP,C;` suppressed ordinary time reports;
+- `$ESP,S;` produced exactly one next-RTC-edge report;
+- no second report appeared while quiet remained active;
+- `$ESP,R;` restored normal time reports.
+
+The preserved mature 4 MB image remains the rollback baseline. Full master-target cloning still requires a second updated FlexFox.

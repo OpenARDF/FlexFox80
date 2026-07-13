@@ -39,8 +39,8 @@ The guide's historical Tools-menu screenshot labels the one-megabyte filesystem 
 
 Do not substitute a SPIFFS image workflow for the current LittleFS source merely because the guide screenshot uses that older label. The core version and compatible LittleFS image command remain required before Checkpoint A2 can close.
 
-## Repeatable Mac migration candidate
+## Repeatable Mac hardware-compatible profile
 
-The recovered configuration has now been implemented in the pinned `just esp-build` workflow using ESP8266 core 3.1.2, FQBN `esp8266:esp8266:huzzah`, WebSockets 2.7.2, and the core-bundled LittleFS image tool. The sketch builds cleanly and repeatably to the same flashable binary on Mac. See [Mac ESP8266 build baseline](MAC_ESP8266_BUILD_BASELINE_2026-07-12.md).
+The recovered configuration has now been implemented in the pinned `just esp-build` workflow using ESP8266 core 2.7.4, FQBN `esp8266:esp8266:huzzah`, WebSockets 2.3.6, and the core-bundled LittleFS image tool. The sketch builds cleanly and repeatably to the same flashable binary on Mac. See [Mac ESP8266 build baseline](MAC_ESP8266_BUILD_BASELINE_2026-07-12.md).
 
-This is not a qualified hardware baseline: the first installed image failed to provide an SSID and was rolled back exactly. Historical WebSockets 2.1.0 cannot compile the checked-in source, and 2.1.1 is incompatible with the selected current core. The repeatable candidate remains useful for controlled characterization that separates toolchain/library/filesystem migration from source behavior.
+Hardware characterization rejected ESP8266 cores 3.1.2 and 3.0.2 because pre-clone source repeatedly reset standalone and produced no SSID. Core 2.7.4/WebSockets 2.3.6 passed standalone startup with pre-clone and clone-sync source, then passed installed WiFi/AVR and single-unit clone-control tests. Historical WebSockets 2.1.0 still cannot compile the checked-in source, so the selected pair is a qualified development environment rather than a claim about exact historical versions.

@@ -1,6 +1,6 @@
 # FlexFox80 Hardening and Bug Plan
 
-**Plan status:** Step A1 is complete on `Development_AVR128DA48`; the exact AVR build is reproducible on Mac and Windows, the pinned ESP8266 migration build is repeatable but hardware-rejected pending characterization, and characterization-first TDD plus narrow firmware hardening slices are active.
+**Plan status:** Step A1 is complete on `Development_AVR128DA48`; the exact AVR build is reproducible on Mac and Windows, the pinned ESP8266 core-2.7.4/WebSockets-2.3.6 build is hardware-compatible, and characterization-first TDD plus narrow firmware hardening slices are active.
 
 ## Purpose
 
@@ -181,8 +181,8 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [x] Run the AVR wrapper with exact-version Mac and Windows inputs. The accumulated `3bc10a5` snapshot builds deterministically and warning-free on both hosts; HEX, EEPROM, resource totals, and the 274-byte layout match.
 - [x] The Release/Debug persisted-enum ABI mismatch is removed: explicit `uint16_t` storage, a source-layout regression, an AVR compile-time assertion, and an exact Mac linker map all preserve the deployed 274-byte EEPROM schema.
 - [x] The operator-identified Adafruit setup procedure recovers the Feather HUZZAH board definition, 80 MHz CPU, 115200 upload, 4 MB/1 MB filesystem layout, erase/debug/lwIP selections, and serial programming procedure; Windows historical source recovers `arduinoWebSockets` 2.1.0.
-- [x] The operator-confirmed Adafruit profile is implemented as a repeatable migration-candidate build using ESP8266 core 3.1.2, WebSockets 2.7.2, and the core-bundled LittleFS tool. The complete sketch builds warning-free and deterministically, but the first hardware image failed startup/SSID service and was rolled back exactly.
-- [x] The historical WebSockets boundary is explicit: 2.1.0 lacks APIs used by the checked-in source, 2.1.1 fails against the selected core's BearSSL API, and an untracked `isRunning()` extension was replaced with source-owned lifecycle state.
+- [x] Hardware characterization rejected core 3.1.2/WebSockets 2.7.2 and core 3.0.2/WebSockets 2.3.6 after pre-clone images repeatedly reset standalone. Core 2.7.4/WebSockets 2.3.6 passes standalone startup with pre-clone and clone-sync source, installed WiFi/AVR probing, and single-unit clone controls.
+- [x] The historical WebSockets boundary is explicit: 2.1.0 lacks APIs used by the checked-in source, later current releases are incompatible with older cores, and an untracked `isRunning()` extension was replaced with source-owned lifecycle state.
 
 **Checkpoint A2 — Build baseline ready:**
 
@@ -191,7 +191,7 @@ The root `README.md` remains user-facing and is not the location for these devel
 - [x] Warnings are captured and triaged rather than hidden.
 - [x] Baseline resource and artifact hashes are recorded.
 - [x] Build outputs are written beneath ignored processor-specific temporary trees.
-- [x] AVR deployed/source identity is established; the preserved mature ESP image is explicitly separated from the repeatable but hardware-rejected migration candidate.
+- [x] AVR deployed/source identity is established; the preserved mature ESP image remains an exact rollback separate from the hardware-compatible development build.
 
 **Bug reassessment:** Compare reported bugs with compiler warnings, stale artifacts, version mismatches, and processor-to-processor firmware compatibility.
 
@@ -606,7 +606,7 @@ Use a small internal issue table or tracker with these fields:
 | R7 | A | High | AVR text output | Direct boundary regression; exact Mac build and target probe | Static review and focused red-green evidence | — | Complete |
 | R8 | A/B | Medium | ESP role assignment | Concrete `"1:0"` extraction defect; Event test pending | Static review and cross-method comparison | A2 ESP pinning | Confirmed, deferred |
 | R9 | A/B | High | ESP WebSocket/AVR bridge | Open AP plus unrestricted `PASS` forwarding | Static end-to-end trace; safe probe contract | A3/A4 | Characterized |
-| B-TIME-01 | B | High | ESP/Linkbus/AVR RTC | Rare field outlier; read-only multi-unit time series pending | AVR quiet/edge/readback controls built; combined ESP migration candidate failed startup and was rolled back | Isolate ESP core/library/filesystem versus clone-source startup behavior, then repeat standalone smoke gate | Implementing |
+| B-TIME-01 | B | High | ESP/Linkbus/AVR RTC | Rare field outlier; read-only multi-unit time series pending | AVR and ESP controls built; core compatibility isolated; installed quiet/edge/resume passes | Update a second unit, run full clone/readback/cleanup and repeated phase measurements | Implementing |
 
 Specific field bugs should be added with distinct `B-` identifiers. At each Path A checkpoint:
 
@@ -641,8 +641,8 @@ The active diversion is Path B issue `B-TIME-01`, the rare wireless clone/time-c
 
 For active `B-TIME-01`, measure the master and targets through the same read-only WiFi path, preserving unit identity, elapsed time since setting, median offset, observation spread, and RTC aging value before changing calibration. Determine whether an outlier is wrong immediately after cloning, drifts gradually, or jumps by integral seconds.
 
-The deterministic AVR slice is documented in [AVR clone synchronization controls](Evidence/AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). [ESP clone synchronization controls](Evidence/ESP_CLONE_SYNC_CONTROLS_2026-07-12.md) now quiet both AVRs, wait for the master's next-edge report, queue the target write, require an exact clone-specific RTC readback, and resume reports on cleanup. The pinned Mac ESP build passes compile gates, but the installed candidate produced no SSID and abnormal slow LED cycling. The exact preserved 4 MB image was restored and independently verified as documented in [Mac ESP8266 programming evidence](Evidence/MAC_ESP8266_PROGRAMMING_2026-07-12.md). Next, build characterization candidates that separate toolchain/library/filesystem migration from clone-source changes, and require standalone SSID service before installation.
+The deterministic AVR slice is documented in [AVR clone synchronization controls](Evidence/AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). [ESP clone synchronization controls](Evidence/ESP_CLONE_SYNC_CONTROLS_2026-07-12.md) now quiet both AVRs, wait for the master's next-edge report, queue the target write, require an exact clone-specific RTC readback, and resume reports on cleanup. Characterization isolated ESP startup compatibility to core 2.7.4/WebSockets 2.3.6; the clone-sync image passes standalone startup, installed WiFi/AVR probing, and live quiet/one-shot-edge/resume. Next, update a second unit and exercise the complete master-target RTC write/readback and repeated phase spread.
 
-When Path A resumes, the next ordered defect is the confirmed ESP role-index extraction error. The repeatable toolchain removes the compile blocker but not the hardware-qualification blocker; no production ESP correction should use this migration profile until startup compatibility is understood.
+When Path A resumes, the next ordered defect is the confirmed ESP role-index extraction error. The hardware-compatible pinned toolchain removes its former build/startup blocker, but implementation remains behind completion or an explicit re-bookmarking of the active clone-time investigation.
 
 The next AVR path is numeric input rejection. That work must begin by defining invalid, negative, overflow, and partial-number behavior for time, interval, frequency, power, and aging fields; mature state-mutating behavior must not be guessed or changed as one broad cleanup.

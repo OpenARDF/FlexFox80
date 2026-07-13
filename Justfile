@@ -59,6 +59,10 @@ wifi-clock-sync-test:
 wifi-linkbus-bounds-test:
     node ./scripts/test-flexfox-linkbus-rx-bounds.mjs
 
+# Qualify clone quiet/edge/resume controls on an authorized dummy-loaded unit.
+wifi-clone-control-test:
+    node ./scripts/test-flexfox-clone-controls.mjs
+
 # Build the ESP8266 sketch and LittleFS image with the qualified pinned profile.
 esp-build:
     node ./scripts/build-esp8266.mjs

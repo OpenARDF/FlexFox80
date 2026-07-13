@@ -4,7 +4,7 @@
 
 **Path:** B-TIME-01
 
-**Status:** Investigation active; deterministic AVR protocol slice implemented and built; live clone qualification pending
+**Status:** Investigation active; AVR and ESP controls implemented; compatible build and single-unit live controls pass; full two-unit clone pending
 
 ## Observed field symptom
 
@@ -67,6 +67,14 @@ Rapid alternating writes also demonstrated that previously emitted `SYNC` broadc
 
 This result shows that the normal ESP-to-AVR/RTC write mechanism is repeatably functional on this unit. It does not remove the confirmed false-success paths, prove a rare I2C failure impossible, exercise the master/slave clone state machine, or explain multi-day unit-specific drift. It shifts the next experiment toward an actual clone followed immediately by readback, plus aging/drift measurements on the field outlier.
 
+## Single-unit clone-control qualification
+
+The clone-sync ESP image was built with the hardware-compatible ESP8266 core 2.7.4/WebSockets 2.3.6 profile, programmed with the mature filesystem preserved, and verified first on the standalone HUZZAH startup gate. After installation on the dummy-loaded FlexFox, HTTP, WebSocket, and live AVR telemetry all passed.
+
+The opt-in `just wifi-clone-control-test` then exercised only the AVR clone-control frames through the deployed WiFi path. It observed ordinary clock reports before the test, verified that `$ESP,C;` suppressed them, verified that `$ESP,S;` produced exactly one report at the next RTC edge while quiet, and verified that `$ESP,R;` restored ordinary reports. The test sends a resume command during handled cleanup if quiet mode remains active. It does not write RTC, EEPROM, event, RF, or filesystem state.
+
+This confirms the control primitives on one installed unit. It does not exercise the ESP master/target state machines, the target RTC write and exact clone readback, disconnect/error cleanup on both units, or inter-unit phase spread. Those require a second FlexFox with the matching AVR and ESP changes.
+
 ## Ranked hypotheses and discriminating evidence
 
 | Rank | Hypothesis | Why it fits | Observation that distinguishes it |
@@ -110,4 +118,4 @@ Do not change the mature clock path until the measurements discriminate the fail
 - validate event checksums independently of clock synchronization;
 - decide explicitly whether aging calibration belongs to hardware identity or should be part of a clone.
 
-The first product change began with a failing source contract and is recorded in [AVR clone synchronization controls](AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). ESP changes remain gated on a pinned, reproducible ESP8266 build environment and end-to-end clone qualification.
+The first product change began with a failing source contract and is recorded in [AVR clone synchronization controls](AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). The ESP controls and hardware-compatible pinned build are recorded in [ESP clone synchronization controls](ESP_CLONE_SYNC_CONTROLS_2026-07-12.md). The remaining product gate is end-to-end qualification with a second updated unit.

@@ -1,22 +1,22 @@
-# Mac ESP8266 Qualified Build Baseline
+# Mac ESP8266 Hardware-Compatible Development Baseline
 
 **Date:** 2026-07-12
 
 **Scope:** Checkpoint A2 and ESP integration for `B-TIME-01`
 
-**Status:** Repeatable compile baseline established; resulting migration image later rejected by hardware startup test
+**Status:** Pinned build, standalone startup, installed WiFi/AVR path, and single-unit clone controls pass
 
 ## Decision boundary
 
-The Adafruit HUZZAH setup procedure is the authoritative board-configuration source for FlexFox. The exact historical ESP8266 core and deployed ESP binary were not recovered. This evidence establishes a repeatable migration-candidate build; it does not claim byte identity with firmware on mature field units or hardware qualification.
+The Adafruit HUZZAH setup procedure is the authoritative board-configuration source for FlexFox. The exact historical ESP8266 core was not recovered, but the mature standalone board's full flash was preserved and used as the rollback baseline. Characterization rejected ESP8266 core 3.x and established a hardware-compatible pinned development build. It does not claim byte identity with mature field firmware or full master-target clone qualification.
 
 The isolated Mac profile uses:
 
 - Arduino IDE 2.3.5 with bundled Arduino CLI 1.2.0;
-- ESP8266 Arduino core 3.1.2;
+- ESP8266 Arduino core 2.7.4;
 - board FQBN `esp8266:esp8266:huzzah`;
-- WebSockets 2.7.2;
-- the core-bundled `mklittlefs` package `3.1.0-gcc10.3-e5f9fec`;
+- WebSockets 2.3.6;
+- the core-bundled `mklittlefs` package `2.5.0-4-fe5bb56`;
 - 80 MHz CPU, 115200 baud, 4 MB flash with the 1 MB filesystem layout, disabled debug port, no debug level, lwIP v2 Lower Memory, and Only Sketch erase.
 
 The complete FQBN used by the wrapper is:
@@ -31,10 +31,12 @@ The historical Windows recovery found a vendored WebSockets 2.1.0 tree, but the 
 
 A source-owned WebSocket-server lifecycle flag replaces that untracked extension. This is a compatibility correction, not a change to the intended start/close behavior.
 
-Two dependency trials then established the pin:
+Dependency and hardware trials established the pin:
 
 - WebSockets 2.1.1 supplies the missing public methods but fails against ESP8266 core 3.1.2 because it calls the removed `WiFiClientSecure::verify()` API.
-- WebSockets 2.7.2 compiles the complete sketch without warnings after the lifecycle correction.
+- WebSockets 2.7.2 compiles with core 3.1.2, but both pre-clone and clone-sync source repeatedly reset on the standalone HUZZAH and never advertised an SSID.
+- Core 3.0.2 with WebSockets 2.3.6 also compiled but failed the same standalone startup gate.
+- Core 2.7.4 with WebSockets 2.3.6 passed first with pre-clone source and then with the complete clone-sync source.
 
 ## Build results
 
@@ -42,14 +44,14 @@ Two independent clean compiles produced the same firmware binary:
 
 | Measurement | Result |
 | --- | --- |
-| Firmware binary size | 512,448 bytes |
-| Firmware SHA-256 | `87e46f71595522434985f585ea543af075b034f6293e6e116f60cd53f6df257d` |
-| Global/static RAM | 40,320 / 80,192 bytes (50%) |
-| IRAM | 61,139 / 65,536 bytes (93%) |
-| Flash code | 470,548 / 1,048,576 bytes (44%) |
+| Firmware binary size | 503,392 bytes |
+| Firmware SHA-256 | `3b6b5ad8e20d9662c9ee833f9c8072b955b27f61d895cc9dde95a3d13f4a796e` |
+| Global/static RAM | 39,704 / 81,920 bytes (48%) |
+| IRAM | 27,612 / 32,768 bytes (84%) |
+| Flash code | 462,388 bytes IROM; 499,232 bytes total sketch use (47%) |
 | Compiler warnings | 0 |
 
-IRAM headroom is only 4,397 bytes. Future ESP work must keep resource comparison as a required gate and avoid broad library or debug-option changes.
+IRAM headroom is 5,156 bytes. Future ESP work must keep resource comparison as a required gate and avoid broad library or debug-option changes.
 
 ELF and map hashes vary with the build directory; the flashable `.bin` was identical across independent build directories. LittleFS images are exactly 1,024,000 bytes (`0xFA000`), matching the selected partition boundaries. Repeated image creation can change the image hash while the checked-in data tree is unchanged, so the wrapper records each generated image hash but does not claim deterministic filesystem bytes.
 
@@ -67,8 +69,7 @@ Outputs and `build-evidence.json` are written under ignored `Software/Huzzah/tmp
 
 ## Hardware result and remaining qualification
 
-- Preserve or read back a known field ESP image if a reliable comparison path becomes available.
-- The standalone HUZZAH backup/programming/rollback path is qualified, but this migration image failed to start normally after installation and was rolled back exactly. See [Mac ESP8266 programming evidence](MAC_ESP8266_PROGRAMMING_2026-07-12.md).
-- Build a characterization matrix that separates the core/library migration from the clone-sync source changes and old-filesystem compatibility.
-- Require a standalone reset/SSID smoke test before installing any future candidate.
-- Run the clone quiet/edge/write/readback protocol on connected hardware, then compare multiple clone operations for phase spread.
+- The standalone HUZZAH backup/programming/rollback path is qualified; see [Mac ESP8266 programming evidence](MAC_ESP8266_PROGRAMMING_2026-07-12.md).
+- The final candidate passed standalone reset/SSID, independent flash verification, installed HTTP/WebSocket/AVR identity and telemetry, and live quiet/one-shot-edge/resume controls.
+- Require a standalone reset/SSID smoke test before installing every future candidate.
+- A second updated FlexFox is still required to exercise the complete master-target clone handshake, target RTC write/readback, cleanup failures, and repeated phase spread.
