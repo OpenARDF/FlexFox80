@@ -60,8 +60,9 @@ Completed evidence:
 | Batch 1 | 10/10 | 10/10 | median 1437 ms; range 1432–1789 ms |
 | Batch 2 | 10/10 | 10/10 | median 856 ms; range 841–903 ms |
 | Batch 3 | 10/10 | 10/10 | median 1516 ms; range 1377–1726 ms |
+| Batch 4, compatible clone-sync firmware | 30/30 | 29/30 | median 953 ms; range 904–1059 ms |
 
-Primary result: **33/33 requested RTC writes were visible in the first matching returned epoch; no failed write was observed.** A quiet five-sample observation after all signature traffic cleared reported a 1444 ms median offset and 227 ms spread, confirming that the test left the unit on current time.
+Primary result: **63/63 requested RTC writes were verified; no failed write was observed.** In Batch 4, one previously queued report arrived before the requested signature in trial 5, which then matched on its second report. The other 62 writes matched on the first report. A five-sample observation after Batch 4 signature traffic cleared reported a 975 ms median offset, 870–1407 ms range, and 537 ms spread, confirming that the test left the unit on current time.
 
 Rapid alternating writes also demonstrated that previously emitted `SYNC` broadcasts can arrive after a later clock change. An interrupted long run briefly produced non-monotonic observer epochs from those queued signatures before current-time reports settled. Clone verification must therefore correlate a response with the requested value rather than treating any subsequent clock message as proof.
 
