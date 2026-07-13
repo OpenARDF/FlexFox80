@@ -4,7 +4,7 @@
 
 **Path:** B-TIME-01
 
-**Status:** Source contracts and pinned ESP build pass; ESP deployment and live clone test pending
+**Status:** Source contracts and pinned ESP build pass; combined migration image failed startup and was rolled back before clone testing
 
 ## Expected behavior
 
@@ -42,4 +42,4 @@ The existing sketch used `WebSocketsServer::isRunning()`, which is not part of t
 - ESP8266 core 3.1.2 plus WebSockets 2.7.2 compiles the full sketch with zero warnings under the operator-confirmed Adafruit HUZZAH profile.
 - Independent builds produce the same 512,448-byte firmware binary with SHA-256 `87e46f71595522434985f585ea543af075b034f6293e6e116f60cd53f6df257d`.
 
-No ESP flash or LittleFS write has been performed. Do not describe the field bug as fixed until a preserved/rollback-capable ESP programming procedure and live master-target clone test demonstrate quieting, next-edge delivery, exact readback, resume, and repeatable phase spread.
+The combined migration image was flashed with the old filesystem preserved, but after installation it produced no SSID and abnormal slow LED cycling. The complete pre-change image was restored and independently verified. Do not attribute the failure specifically to these clone changes until characterization separates them from the ESP8266 core/WebSockets migration and filesystem compatibility. Do not describe the field bug as fixed until a standalone smoke test and live master-target clone test demonstrate quieting, next-edge delivery, exact readback, resume, and repeatable phase spread.

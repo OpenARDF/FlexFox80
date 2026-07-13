@@ -174,7 +174,7 @@ const artifacts = artifactNames.map((file) => {
 });
 const cliVersion = run(arduinoCli, ["version"], { quiet: true }).stdout.trim();
 const evidence = {
-  status: "qualified-migration-baseline",
+  status: "repeatable-migration-candidate-build",
   cliVersion,
   core: `esp8266:esp8266@${coreVersion}`,
   library: `WebSockets@${webSocketsVersion}`,

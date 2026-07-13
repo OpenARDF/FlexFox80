@@ -4,7 +4,7 @@
 
 **Device:** Standalone Adafruit HUZZAH ESP8266 breakout historically used for FlexFox programming
 
-**Status:** Firmware programmed and independently verified; existing filesystem preserved; FlexFox installation and live test pending
+**Status:** Migration candidate rejected on hardware; exact pre-change 4 MB image restored and independently verified
 
 ## Device identity
 
@@ -41,7 +41,7 @@ An independent `verify_flash 0x0 <backup>` operation compared all 4 MB against t
 
 ## Programmed artifact
 
-The qualified migration firmware from `just esp-build` was programmed at address `0x0`:
+The repeatable migration-candidate firmware from `just esp-build` was programmed at address `0x0`:
 
 | Property | Value |
 | --- | --- |
@@ -68,4 +68,20 @@ The standalone HUZZAH must be installed on the dummy-loaded FlexFox containing t
 - both sides resume ordinary reports after success and failure cleanup;
 - repeated clone operations have acceptably small phase spread.
 
-The firmware is not yet a field-qualified release merely because the standalone flash verification passed.
+## Hardware startup regression and rollback
+
+After installation on the dummy-loaded FlexFox, the migration candidate did not provide an SSID. Both HUZZAH LEDs remained on for roughly five seconds and off for roughly five seconds, instead of the prior rapid paired blinking. The routed read-only WiFi probe timed out. No clone or configuration command reached the unit.
+
+This is a hardware startup regression. The observation does not yet distinguish an ESP8266-core/library compatibility problem, an old-filesystem mount problem, or a Linkbus/startup interaction. Compilation and flash verification alone were insufficient qualification.
+
+The HUZZAH was removed and the complete preserved 4 MB image was restored at address `0x0`. `esptool` verified the write hash, and a separate manual bootloader entry plus full-image `verify_flash` returned:
+
+```text
+verify OK (digest matched)
+```
+
+After reinstallation, the original LED behavior and FlexFox SSID returned and the unit appeared to function normally.
+
+The operator also clarified that a HUZZAH does not need to be installed on the FlexFox to test basic ESP startup: after leaving programming mode, pressing RESET lets the standalone board boot and advertise its SSID. It cannot communicate with the AVR until installed. Every future ESP candidate must therefore pass this standalone reset/SSID smoke gate before installation.
+
+The ESP8266 core 3.1.2/WebSockets 2.7.2 candidate is hardware-rejected until a characterization build isolates the regression. The mature pre-change image remains the operational baseline.

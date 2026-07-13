@@ -39,8 +39,8 @@ The guide's historical Tools-menu screenshot labels the one-megabyte filesystem 
 
 Do not substitute a SPIFFS image workflow for the current LittleFS source merely because the guide screenshot uses that older label. The core version and compatible LittleFS image command remain required before Checkpoint A2 can close.
 
-## Qualified Mac implementation
+## Repeatable Mac migration candidate
 
-The recovered configuration has now been implemented in the pinned `just esp-build` workflow using ESP8266 core 3.1.2, FQBN `esp8266:esp8266:huzzah`, WebSockets 2.7.2, and the core-bundled LittleFS image tool. The sketch builds cleanly and repeatably to the same flashable binary on Mac. See [Mac ESP8266 qualified build baseline](MAC_ESP8266_BUILD_BASELINE_2026-07-12.md).
+The recovered configuration has now been implemented in the pinned `just esp-build` workflow using ESP8266 core 3.1.2, FQBN `esp8266:esp8266:huzzah`, WebSockets 2.7.2, and the core-bundled LittleFS image tool. The sketch builds cleanly and repeatably to the same flashable binary on Mac. See [Mac ESP8266 build baseline](MAC_ESP8266_BUILD_BASELINE_2026-07-12.md).
 
-The core/library combination is a deliberately qualified migration baseline because the precise historical tool versions and deployed artifact remain unavailable. Historical WebSockets 2.1.0 cannot compile the checked-in source, and 2.1.1 is incompatible with the qualified current core. This distinction preserves the mature product's provenance boundary while permitting testable ESP changes.
+This is not a qualified hardware baseline: the first installed image failed to provide an SSID and was rolled back exactly. Historical WebSockets 2.1.0 cannot compile the checked-in source, and 2.1.1 is incompatible with the selected current core. The repeatable candidate remains useful for controlled characterization that separates toolchain/library/filesystem migration from source behavior.

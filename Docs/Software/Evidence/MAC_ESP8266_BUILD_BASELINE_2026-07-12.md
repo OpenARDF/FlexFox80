@@ -4,11 +4,11 @@
 
 **Scope:** Checkpoint A2 and ESP integration for `B-TIME-01`
 
-**Status:** Clean Mac build and LittleFS-image workflow qualified; no ESP was flashed
+**Status:** Repeatable compile baseline established; resulting migration image later rejected by hardware startup test
 
 ## Decision boundary
 
-The Adafruit HUZZAH setup procedure is the authoritative board-configuration source for FlexFox. The exact historical ESP8266 core and deployed ESP binary were not recovered. This evidence therefore qualifies a new pinned migration baseline; it does not claim byte identity with firmware on mature field units.
+The Adafruit HUZZAH setup procedure is the authoritative board-configuration source for FlexFox. The exact historical ESP8266 core and deployed ESP binary were not recovered. This evidence establishes a repeatable migration-candidate build; it does not claim byte identity with firmware on mature field units or hardware qualification.
 
 The isolated Mac profile uses:
 
@@ -65,8 +65,10 @@ The wrapper installs the exact core and WebSockets dependency into the ignored `
 
 Outputs and `build-evidence.json` are written under ignored `Software/Huzzah/tmp/esp-build/`. The wrapper builds the sketch and LittleFS image only; it never uploads either artifact.
 
-## Remaining qualification
+## Hardware result and remaining qualification
 
 - Preserve or read back a known field ESP image if a reliable comparison path becomes available.
-- The standalone HUZZAH backup and firmware-only programming path is now qualified; see [Mac ESP8266 programming evidence](MAC_ESP8266_PROGRAMMING_2026-07-12.md). LittleFS replacement remains deliberately unperformed.
+- The standalone HUZZAH backup/programming/rollback path is qualified, but this migration image failed to start normally after installation and was rolled back exactly. See [Mac ESP8266 programming evidence](MAC_ESP8266_PROGRAMMING_2026-07-12.md).
+- Build a characterization matrix that separates the core/library migration from the clone-sync source changes and old-filesystem compatibility.
+- Require a standalone reset/SSID smoke test before installing any future candidate.
 - Run the clone quiet/edge/write/readback protocol on connected hardware, then compare multiple clone operations for phase spread.
