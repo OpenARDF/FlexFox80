@@ -2,7 +2,7 @@
 
 ## Status
 
-The installed master passes its startup/SSID, HTTP, WebSocket, live AVR telemetry, preserved-role, and clone quiet/one-shot/resume gates. Its AVR now runs the edge-aligned boot correction; the candidate flash, migrated configured EEPROM, and unchanged fuses are independently verified byte-for-byte. The post-program boot plus five resets stayed within a 39.5 ms median range with no integral-second state change. Both corrected units therefore pass their reset-phase gates. A corrected master-target clone and repeated phase/drift measurements remain pending.
+The installed master passes its startup/SSID, HTTP, WebSocket, live AVR telemetry, preserved-role, and clone quiet/one-shot/resume gates. Its AVR now runs the edge-aligned boot correction; the candidate flash, migrated configured EEPROM, and unchanged fuses are independently verified byte-for-byte. The post-program boot plus five resets stayed within a 39.5 ms median range with no integral-second state change. A corrected master-target clone then crossed the exact RTC-readback gate, transferred all nine files, cleaned up normally, and placed the target approximately 0.48–0.51 seconds behind the master. A post-clone master reset changed its median by only -7.5 ms. Repeated clone and drift measurements remain pending.
 
 ## ESP8266 preservation and programming
 
@@ -159,6 +159,10 @@ Before the edge-aligned boot correction, the updated clone-control master and ta
 
 A 12-sample read-only series from each unit through the same Moto/DroidTether path found the target approximately 537 ms behind the master by medians and 564.5 ms by means. This passes the first immediate multi-second-outlier check and is consistent with the expected half-second DS3231 write/edge relationship. See [Two-unit clone synchronization qualification](TWO_UNIT_CLONE_SYNC_2026-07-13.md) for raw statistics, limits, and next measurements.
 
-The next gate is a fresh clone with both AVRs running the edge-aligned image. Repeated clone phase-spread, physical edge/transmission timing, cleanup-failure, and multi-day drift measurements remain open.
+After both AVRs received the edge-aligned image, a fresh clone crossed the exact RTC-readback gate and transferred all nine event files with their existing `CHECK,1013` records and `EOF` markers. It then emitted `SLAVE,NMF`, `SUE,No events scheduled to run`, `SLAVE,0`, and resumed ordinary clock reports. The earlier six-file stall did not recur in this attempt.
+
+The post-clone master median was +693.0 ms. Two target series measured +1172.0 and +1199.0 ms, placing the target 479 and 506 ms behind the master by medians. Their corresponding mean differences were 514.42 and 493.42 ms. The operator then reset the master to wake its WiFi; its closing series measured +685.5 ms median, only -7.5 ms from its pre-reset value, with a +669.17 ms mean and 61.47 ms sample standard deviation. This independently exercises the corrected boot path after cloning and shows no integral-second reset shift.
+
+Repeated clone phase-spread, physical edge/transmission timing, cleanup-failure, and multi-day drift measurements remain open.
 
 The field synchronization bug is not yet described as fixed.

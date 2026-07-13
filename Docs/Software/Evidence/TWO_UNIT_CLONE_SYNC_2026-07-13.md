@@ -2,7 +2,7 @@
 
 **Path:** B-TIME-01
 
-**Status:** End-to-end clone/readback passes; reset-dependent one-second AVR system-time quantization reproduced; edge-aligned boot fix passes exact programming and five-reset qualification on both units
+**Status:** Edge-aligned boot fix passes exact programming and reset qualification on both units; corrected end-to-end clone/readback passes with a repeatable 0.48–0.51-second target lag
 
 ## Objective
 
@@ -114,6 +114,28 @@ The programmed master passed its role/identity, HTTP, WebSocket, temperature, ba
 
 Across the master boot medians, the mean was +654.42 ms, the median was +649.5 ms, the sample standard deviation was 14.75 ms, and the complete range was 39.5 ms. No reset produced an integral-second state change. The edge-aligned correction therefore passes the reproduced reset-defect gate on both the target and master, with boot-median ranges of 81 ms and 39.5 ms respectively. See [Master clone-synchronization firmware upgrade](MASTER_CLONE_SYNC_UPGRADE_2026-07-13.md) for the master preservation and programming history.
 
+## Corrected two-unit clone qualification
+
+With both AVRs running the edge-aligned image, one operator-requested target reset initiated a fresh clone while the master observer remained connected. The transfer reached all nine event files:
+
+- `Classic80m-Set1-1.event` through `Classic80m-Set1-3.event`;
+- `Classic80m-Set2-1.event` through `Classic80m-Set2-3.event`;
+- `Classic80m-Set3-1.event` through `Classic80m-Set3-3.event`.
+
+Every file ended with its existing `CHECK,1013` record and `EOF`. The session then emitted `SLAVE,NMF`, `SUE,No events scheduled to run`, and `SLAVE,0`, after which ordinary clock reports resumed. File transfer remains unreachable until the target's clone-specific RTC epoch readback exactly matches the requested epoch and the ordinary Linkbus ACK clears. The corrected clone therefore crossed the intended clock gate and completed normal cleanup. The earlier six-file stall did not recur in this attempt, but one passing retry does not close that separate robustness observation.
+
+Without resetting the target after cloning, the same Moto/DroidTether observer collected one master series and two target series:
+
+| Unit/series | Samples | Median offset | Mean offset | Sample standard deviation | Minimum | Maximum | Spread |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Master, immediately after clone | 12 | +693.0 ms | +704.00 ms | 80.06 ms | +594 ms | +846 ms | 252 ms |
+| Target, first series | 12 | +1172.0 ms | +1218.42 ms | 99.89 ms | +1139 ms | +1471 ms | 332 ms |
+| Target, repeat | 12 | +1199.0 ms | +1197.42 ms | 43.17 ms | +1139 ms | +1262 ms | 123 ms |
+
+Relative to the master, the target lag was 479 and 506 ms by medians and 514.42 and 493.42 ms by means. The two target medians differ by only 27 ms. The isolated +1471 ms target receipt did not persist in the repeat series, whose entire spread was 123 ms. These data are consistent with the intended approximately half-second DS3231 write/edge relationship and contain no additional integral-second state error.
+
+The operator then had to reset the master to wake its WiFi before reconnecting the Moto. Its closing 12-sample series measured +685.5 ms median, +669.17 ms mean, 61.47 ms sample standard deviation, +590 ms minimum, +747 ms maximum, and 157 ms spread. The reset changed the master median by only -7.5 ms from its immediate post-clone series. This is an additional post-clone challenge of the corrected boot path and did not reproduce the pre-fix approximately one-second reset shift.
+
 ## What this proves
 
 - Two complete clone attempts reached the exact clone-specific RTC readback gate and completed normal cleanup.
@@ -127,15 +149,17 @@ Across the master boot medians, the mean was +654.42 ms, the median was +649.5 m
 - With the same candidate, five master resets plus the post-program boot remained within a 39.5 ms median range and showed no whole-second state change.
 - Candidate flash, restored EEPROM, and untouched fuses were independently verified byte-for-byte on the dummy-loaded target.
 - Candidate flash, migrated configured EEPROM, and untouched fuses were independently verified byte-for-byte on the master.
+- With both corrected images installed, a fresh clone crossed the exact target RTC-readback gate, transferred all nine files, and completed normal cleanup.
+- The corrected target relationship repeated at 479–506 ms behind the master by medians, with target medians only 27 ms apart.
+- A post-clone master reset changed its median by only -7.5 ms and did not restore the former whole-second quantization.
 
 ## Residual risk and next measurement
 
-This is one measured final target state after two back-to-back clone attempts. It does not yet establish the distribution across repeated clones, directly timestamp the two physical RTC edges, exercise every disconnect/error cleanup path, or explain a unit that diverges after several days.
+This is one corrected clone plus the earlier pre-correction clone series. It does not yet establish the distribution across many corrected clones, directly timestamp the two physical RTC edges, exercise every disconnect/error cleanup path, or explain a unit that diverges after several days.
 
 Next:
 
-1. qualify a master/target clone with both AVRs running the corrected image;
-2. compare both units immediately without resetting the target after cloning;
-3. investigate the interrupted six-file transfer as a separate cleanup/timeout defect;
-4. retain 24-hour and multi-day drift observations and compare RTC aging values before changing calibration;
-5. do not close B-TIME-01 until corrected two-unit clone and drift evidence exclude an unacceptable tail.
+1. repeat corrected clones to characterize their phase distribution and failure tail;
+2. investigate the interrupted six-file transfer as a separate cleanup/timeout defect;
+3. retain 24-hour and multi-day drift observations and compare RTC aging values before changing calibration;
+4. do not close B-TIME-01 until repeated clone and drift evidence exclude an unacceptable tail.
