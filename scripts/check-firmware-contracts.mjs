@@ -500,6 +500,23 @@ if (!rtcIsr || /lb_send_msg\s*\(/.test(rtcIsr[1])) {
   process.exit(1);
 }
 
+const rtcBootSuccess = avrMain.match(
+  /if\s*\(\s*code\s*==\s*ERROR_CODE_RTC_NONRESPONSIVE\s*\)\s*\{[\s\S]*?\}\s*else\s*\{([\s\S]*?)g_event_scheduled\s*=\s*eventScheduled\(\)\s*;\s*\}/,
+);
+if (
+  !rtcBootSuccess ||
+  !rtcBootSuccess[1].includes("syncSystemTimeToRTC()") ||
+  rtcBootSuccess[1].includes("ds3231_get_epoch") ||
+  rtcBootSuccess[1].includes("set_system_time")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: AVR boot does not align system time to an RTC edge\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS AVR boot aligns system time to an RTC edge\n");
+
 if (!/if\s*\(\s*g_report_seconds\s*&&\s*!g_clone_quiet\s*\)/.test(avrMain)) {
   process.stderr.write(
     "Firmware contract check failed: ordinary time reports are not suppressed during clone quiet mode\n",

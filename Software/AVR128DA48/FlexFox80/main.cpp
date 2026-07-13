@@ -1025,12 +1025,7 @@ int main(void)
 	}
 	else
 	{
-		EC result;
-		time_t current_epoch = ds3231_get_epoch(&result);
-		if(result == ERROR_CODE_NO_ERROR)
-		{
-			set_system_time(current_epoch);
-		}
+		syncSystemTimeToRTC();
 		g_event_scheduled = eventScheduled();
 	}
 	

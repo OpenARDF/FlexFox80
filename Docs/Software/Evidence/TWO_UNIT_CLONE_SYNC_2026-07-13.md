@@ -2,7 +2,7 @@
 
 **Path:** B-TIME-01
 
-**Status:** First end-to-end master/target clone and immediate phase comparison pass; repeated phase and drift series remain open
+**Status:** End-to-end clone/readback passes; reset-dependent one-second AVR system-time quantization reproduced on both units; edge-aligned boot fix built but not yet hardware-qualified
 
 ## Objective
 
@@ -54,6 +54,28 @@ A larger observer offset means the reported FlexFox epoch is later relative to t
 
 One target observation arrived at +554 ms while the other eleven were between +156 and +266 ms. The repeat series' median changed by only 10 ms, its maximum was +364 ms, and its spread fell to 208 ms. The +554 ms sample therefore did not represent a persistent RTC shift; the median remains the appropriate summary for this non-real-time observation path. The repeat target median is approximately 547 ms behind the earlier master median.
 
+## Reset-dependent one-second shift
+
+A subsequent trial reset the master, repeated its baseline, cloned the target again, and then reset only the target with the master powered off. No clock command or clone occurred between the target's pre-reset and post-reset observations.
+
+The master median moved from the original -322.5 ms to +606 ms and then +619 ms in two post-reset series. The persistent reset-associated change was therefore approximately +928.5 to +941.5 ms. After cloning from that reset master, the target measured +1179 ms median, +1215.58 ms mean, 100.24 ms sample standard deviation, +1114 ms minimum, +1402 ms maximum, and 288 ms spread. Its relationship to the reset master remained the expected approximately 560–573 ms lag.
+
+After resetting only the target, its 12-sample result was +149.5 ms median, +186.50 ms mean, 116.58 ms sample standard deviation, +105 ms minimum, +523 ms maximum, and 418 ms spread. The target median changed by **-1029.5 ms**, and its mean changed by **-1029.08 ms**, without an intervening time write. The first connection attempts after the reset timed out while the Moto path was re-establishing, but the target then passed HTTP, WebSocket, identity, temperature, battery, and clock probes normally.
+
+The same near-one-second reset-dependent behavior has therefore been reproduced independently on both AVR units. Observation-path delay can widen individual samples, but it cannot plausibly explain a persistent approximately one-second median change confined to a device reset.
+
+Source review identified a mechanism consistent with the measurements. After `rtc_init()` enables the DS3231 square wave, boot immediately read the RTC and called `set_system_time()` at an arbitrary phase. The next square-wave ISR then called `system_tick()`. Depending on whether the RTC register transition occurred before or after that immediate read, AVR system time could acquire a whole extra second relative to the RTC edge. Clone one-shot reports and schedule decisions use AVR system time, so an otherwise correct RTC can expose this quantization.
+
+## Transfer interruption observation
+
+The clone following the master reset crossed the exact RTC readback gate but stopped after six of nine event files for more than one minute. Resetting the target caused one additional file to appear before that interrupted session ended, after which a new clone attempt began automatically and completed all nine files plus normal `SLAVE,NMF`, schedule evaluation, and `SLAVE,0` cleanup. This is separate robustness evidence: the successful retry protects against permanent loss, but the stalled session did not demonstrate timely autonomous recovery and should be investigated independently from clock phase.
+
+## TDD correction awaiting hardware qualification
+
+A firmware source contract was added first and failed against the immediate boot read/set sequence. The minimal correction replaces only that boot sequence with the existing `syncSystemTimeToRTC()` helper, which waits for the next RTC edge, reads the RTC, and sets AVR system time. Clone protocol, ordinary clock writes, ISR contents, event scheduling, EEPROM, and ESP firmware are unchanged.
+
+The contract then passed, and the exact pinned Mac AVR-GCC 7.3.0 / AVR-Dx_DFP 1.9.103 Release build completed with zero warnings and the required unchanged 274-byte EEPROM image. Hardware programming and repeated reset-phase measurements remain mandatory before this image is treated as qualified.
+
 ## What this proves
 
 - Two complete clone attempts reached the exact clone-specific RTC readback gate and completed normal cleanup.
@@ -61,6 +83,8 @@ One target observation arrived at +554 ms while the other eleven were between +1
 - Two target observations four minutes apart reproduced the target median within 10 ms.
 - The observed approximately half-second target relationship is compatible with the established DS3231 write/edge phase model.
 - The previously demonstrated multi-second WebSocket delivery tails must not be interpreted as RTC phase without follow-up edges or physical timing evidence.
+- Resetting either AVR can change its reported/system phase by approximately one whole second while leaving the RTC and communications operational.
+- A correct clone RTC readback alone did not remove that boot-induced system-time quantization.
 
 ## Residual risk and next measurement
 
@@ -68,8 +92,9 @@ This is one measured final target state after two back-to-back clone attempts. I
 
 Next:
 
-1. repeat clone-plus-immediate-observation trials and record target-minus-master median phase for every trial;
-2. retain the current target state for 24-hour and multi-day drift observations if practical;
-3. preserve and compare RTC aging values before changing calibration;
-4. use physical RTC-edge or transmission-phase instrumentation if the routed observer shows a persistent or integral-second outlier;
-5. do not close B-TIME-01 until the repeated phase distribution and drift evidence exclude an unacceptable tail.
+1. program the edge-aligned boot candidate on the dummy-loaded target after confirming the Atmel-ICE is attached to that unit;
+2. repeat resets at varied phases and require a stable median rather than the observed one-second state changes;
+3. qualify a master/target clone with both AVRs running the corrected image;
+4. investigate the interrupted six-file transfer as a separate cleanup/timeout defect;
+5. retain 24-hour and multi-day drift observations and compare RTC aging values before changing calibration;
+6. do not close B-TIME-01 until reset, repeated clone phase, and drift evidence exclude an unacceptable tail.

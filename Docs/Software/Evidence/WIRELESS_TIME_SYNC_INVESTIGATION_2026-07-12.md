@@ -4,7 +4,7 @@
 
 **Path:** B-TIME-01
 
-**Status:** Investigation active; AVR/ESP controls and first two-unit clone/readback qualification pass; repeated phase and drift series pending
+**Status:** Investigation active; clone/readback controls pass and reset-dependent one-second AVR system-time quantization is reproduced; edge-aligned boot fix awaits hardware qualification
 
 ## Observed field symptom
 
@@ -107,7 +107,7 @@ They do **not** prove that the field schedule outlier was only an observation ar
 | 1 | One RTC drifts faster because of oscillator quality or aging-register difference | One outlier after several days fits unit-specific drift; aging is queryable but is not cloned, and EEPROM `g_clock_calibration` is stored but not applied to the DS3231 | Unit begins close after setting, then offset changes approximately linearly; aging value differs from peers |
 | 2 | RTC clock write failed but clone proceeded | Both ESP ACK handling and AVR I2C error reporting can falsely complete, although 63/63 browser-path and 30/30 queued phase-test writes passed on the bench unit | Target is already far off immediately after a nominal clone; RTC readback disagrees with master's transmitted time |
 | 3 | Whole-second truncation and transport phase | Confirmed in both master-clone and cellphone paths | Stable initial error generally within about one second; repeated setting produces different sub-second phase |
-| 4 | AVR system time loses a DS3231 square-wave tick after RTC setting | Event cycle countdown is driven by the one-second interrupt; a discrete missed tick could shift schedule while RTC remains correct | RTC readback remains correct while broadcast/system schedule jumps by an integer second |
+| 4 | AVR system time gains or loses a DS3231 square-wave tick at boot | Reproduced on both master and target: separate resets changed their median reported phase by approximately one second; boot read the RTC at arbitrary phase and the next ISR unconditionally incremented system time | RTC remains correct while broadcast/system schedule jumps by an integer second after reset |
 | 5 | Master time was wrong | All targets inherit the master epoch | Most or all targets share a similar absolute offset rather than one target becoming an outlier |
 
 As scale checks, three seconds accumulated over three days is about 11.6 ppm; over five days it is about 6.9 ppm. Either is larger than the commonly expected error of a healthy, uncompensated temperature-compensated RTC, so a measured slope at that level would justify comparing aging values and RTC hardware among units.
@@ -143,4 +143,4 @@ Do not change the mature clock path until the measurements discriminate the fail
 - validate event checksums independently of clock synchronization;
 - decide explicitly whether aging calibration belongs to hardware identity or should be part of a clone.
 
-The first product change began with a failing source contract and is recorded in [AVR clone synchronization controls](AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). The ESP controls and hardware-compatible pinned build are recorded in [ESP clone synchronization controls](ESP_CLONE_SYNC_CONTROLS_2026-07-12.md). The first [two-unit clone synchronization qualification](TWO_UNIT_CLONE_SYNC_2026-07-13.md) produced two exact-readback-gated clone completions and an immediate target relationship approximately 0.54–0.56 seconds behind the master. Repeated clone phase and multi-day drift measurements remain the active product gate.
+The first product change began with a failing source contract and is recorded in [AVR clone synchronization controls](AVR_CLONE_SYNC_CONTROLS_2026-07-12.md). The ESP controls and hardware-compatible pinned build are recorded in [ESP clone synchronization controls](ESP_CLONE_SYNC_CONTROLS_2026-07-12.md). The [two-unit clone synchronization qualification](TWO_UNIT_CLONE_SYNC_2026-07-13.md) produced exact-readback-gated clone completions and repeatable target relationships approximately 0.54–0.57 seconds behind the master. It then reproduced near-one-second reset-dependent AVR system-time shifts on both units. A TDD correction now aligns boot system time at an RTC edge; hardware reset-series, repeated clone phase, and multi-day drift measurements remain the active product gates.
