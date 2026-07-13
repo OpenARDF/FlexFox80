@@ -12,7 +12,7 @@ The Adafruit HUZZAH setup procedure is the authoritative board-configuration sou
 
 The isolated Mac profile uses:
 
-- Arduino CLI 1.2.0 from Arduino IDE;
+- Arduino IDE 2.3.5 with bundled Arduino CLI 1.2.0;
 - ESP8266 Arduino core 3.1.2;
 - board FQBN `esp8266:esp8266:huzzah`;
 - WebSockets 2.7.2;
@@ -68,5 +68,5 @@ Outputs and `build-evidence.json` are written under ignored `Software/Huzzah/tmp
 ## Remaining qualification
 
 - Preserve or read back a known field ESP image if a reliable comparison path becomes available.
-- Define the serial bootloader wiring, backup, firmware upload, LittleFS upload, and rollback sequence before flashing the test unit.
+- The standalone HUZZAH backup and firmware-only programming path is now qualified; see [Mac ESP8266 programming evidence](MAC_ESP8266_PROGRAMMING_2026-07-12.md). LittleFS replacement remains deliberately unperformed.
 - Run the clone quiet/edge/write/readback protocol on connected hardware, then compare multiple clone operations for phase spread.

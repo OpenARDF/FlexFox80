@@ -64,4 +64,6 @@ The project operator confirmed Adafruit's setup guide as the procedure used to c
 
 The exact historical core and deployed ESP binary remain unrecovered, so this is explicitly a qualified migration baseline rather than historical byte-for-byte reproduction. WebSockets 2.1.0 recovered from historical Windows source cannot compile the checked-in firmware; 2.1.1 is incompatible with core 3.1.2; 2.7.2 builds cleanly after replacing one untracked `isRunning()` extension with source-owned lifecycle state. Two clean builds produced the same flashable `.bin`; see [Mac ESP8266 qualified build baseline](Evidence/MAC_ESP8266_BUILD_BASELINE_2026-07-12.md).
 
-Use Arduino IDE's normal board menu and serial-port workflow for interactive programming. Before the first test-unit ESP write, preserve any readable flash/filesystem state and document bootloader wiring, firmware and LittleFS offsets, rollback, and post-write clone verification.
+Use Arduino IDE's normal board menu and serial-port workflow for interactive programming. Before any additional ESP write, preserve readable flash/filesystem state and document bootloader wiring, image offsets, rollback, and the applicable post-write verification.
+
+The first standalone HUZZAH was preserved, programmed with the qualified firmware-only image, and independently verified through an FT232R adapter. Manual GPIO0/RESET bootloader entry, `--before no_reset`, and 115200 baud were required; its existing filesystem was retained. See [Mac ESP8266 programming evidence](Evidence/MAC_ESP8266_PROGRAMMING_2026-07-12.md).
