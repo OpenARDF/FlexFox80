@@ -147,6 +147,8 @@ A second corrected clone was then initiated from that reset-qualified master. It
 
 The second clone's target lag was 548 ms by medians and 519.50 ms by means. One +1148 ms master receipt widened its mean, standard deviation, and spread, but its median stayed within 10 ms of the first corrected clone's +693 ms master median. Across the first two corrected clones, the paired median target lags were 479 and 548 ms; including the first target's immediate repeat comparison gives 479, 506, and 548 ms. No comparison contains an additional integral-second error. Both corrected file transfers completed normally, although two passes cannot refute the operator-estimated 5–10% `B-CLONE-02` retry rate.
 
+The second-clone drift baseline is anchored to the master series collected at 2026-07-13 20:22 UTC and target series collected at 20:24 UTC. The AVR supports a read-only `$TIM,X?` query that returns `!TIM,X,<aging>;`, but the current ESP `TIM` handler attempts to parse every non-clone reply as a numeric epoch and does not broadcast the `X,<aging>` payload over WiFi. The actual DS3231 aging-register values therefore cannot be preserved through the installed WiFi path without another ESP instrumentation and reflash cycle. That work is deferred until drift evidence justifies its hardware risk; no aging value has been changed.
+
 ## What this proves
 
 - Two complete clone attempts reached the exact clone-specific RTC readback gate and completed normal cleanup.
@@ -170,7 +172,8 @@ This is two corrected clones plus the earlier pre-correction clone series. It do
 
 Next:
 
-1. retain 24-hour and multi-day drift observations and compare RTC aging values before changing calibration;
+1. retain 24-hour and multi-day drift observations from the 2026-07-13 20:22–20:24 UTC baseline;
 2. add corrected-clone trials when convenient to broaden the immediate phase distribution;
 3. investigate medium-severity `B-CLONE-02` as a separate cleanup/timeout defect without blocking timing qualification;
-4. do not close B-TIME-01 until drift and broader clone evidence exclude an unacceptable tail.
+4. expose and compare RTC aging values only if drift evidence justifies another ESP instrumentation/reflash cycle; do not change calibration first;
+5. do not close B-TIME-01 until drift and broader clone evidence exclude an unacceptable tail.
