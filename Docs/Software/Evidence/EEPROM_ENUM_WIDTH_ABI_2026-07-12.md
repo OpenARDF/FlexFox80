@@ -73,6 +73,8 @@ The executable grew by eight text bytes from the prior exact Mac reference build
 
 No AVR image may be flashed over retained deployed EEPROM unless its target build proves the 274-byte schema. The checked-in source contract, AVR `static_assert`, and linker-map size are complementary gates.
 
+Follow-up hardware evidence on 2026-07-13 showed that a configured master retained coherent data in the historical 268-byte Release layout. The tracked Debug ELF still proves that Debug's declared object was 274 bytes, but the currently installed flash does not by itself prove which ABI last wrote retained EEPROM. Before an upgrade, decode and validate the captured EEPROM layout; migrate a confirmed legacy image with the tested utility rather than restoring it unchanged. See [Master clone-synchronization firmware upgrade](MASTER_CLONE_SYNC_UPGRADE_2026-07-13.md).
+
 The fix is locally deterministic and schema-compatible, but the new executable is not yet hardware-qualified. Required follow-up is:
 
 1. exact Windows reference builds from `57d70a7` or a documented descendant;

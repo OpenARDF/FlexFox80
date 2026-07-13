@@ -20,6 +20,7 @@ policy-check:
 # Build and run dependency-light host characterization tests.
 test:
     ./scripts/run-host-tests.sh
+    node ./Tests/Host/eeprom_enum_layout_migration_test.mjs
     node ./scripts/check-firmware-contracts.mjs
     node ./scripts/check-eeprom-layout.mjs
 

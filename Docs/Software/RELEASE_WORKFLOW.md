@@ -79,14 +79,18 @@ Before replacing AVR firmware on a configured unit:
 
 1. read flash, the complete EEPROM address space, and all fuse bytes through the selected programmer;
 2. record hashes and repeat critical reads to establish a stable backup;
-3. confirm the selected image's 274-byte EEPROM ABI and inactive/safe boot configuration;
-4. erase and program flash using a procedure that supports required 0-to-1 transitions;
-5. restore the complete EEPROM backup when erase retention has not been independently proven;
-6. verify the input flash and EEPROM through the programmer;
-7. perform independent post-operation reads and compare flash, EEPROM, and fuses byte-for-byte;
-8. retain the prior flash image and raw unit-specific backup outside Git until functional qualification is complete.
+3. classify the captured EEPROM by validated field offsets; do not infer its ABI only from the installed flash image;
+4. if and only if the image validates as the historical 268-byte Release layout, migrate it with `node scripts/migrate-eeprom-enum-layout.mjs --from legacy-268 --input <backup> --output <new-image>`;
+5. confirm the selected image's 274-byte EEPROM ABI and inactive/safe boot configuration;
+6. erase and program flash using a procedure that supports required 0-to-1 transitions;
+7. restore the validated 274-byte EEPROM image when erase retention has not been independently proven;
+8. verify the input flash and EEPROM through the programmer;
+9. perform independent post-operation reads and compare flash, EEPROM, and fuses byte-for-byte;
+10. retain the prior flash image and raw unit-specific backup outside Git until functional qualification is complete.
 
 Do not rely on avrdude `-D` alone to preserve EEPROM while replacing arbitrary flash. Without an erase, required 0-to-1 transitions can leave a mixed image even though page writes were attempted. The first Mac procedure and recovery are recorded in [MAC_AVR_PROGRAMMING_2026-07-12.md](Evidence/MAC_AVR_PROGRAMMING_2026-07-12.md).
+
+Do not force a layout conversion when the plausibility gate rejects the raw EEPROM. Preserve the original image and diagnose it separately; a rejected image may be mixed, damaged, or from another historical layout.
 
 ## Future AVR128DA48 overwrite transition to main
 
