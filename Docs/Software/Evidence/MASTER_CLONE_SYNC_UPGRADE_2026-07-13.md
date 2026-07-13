@@ -2,7 +2,7 @@
 
 ## Status
 
-The standalone master HUZZAH passes its startup/SSID gate, and the master AVR flash, migrated EEPROM, and unchanged fuses are independently verified byte-for-byte. Reinstallation of the HUZZAH and installed WiFi/AVR qualification remain pending.
+The installed master passes its startup/SSID, HTTP, WebSocket, live AVR telemetry, preserved-role, and clone quiet/one-shot/resume gates. Its AVR flash, migrated EEPROM, and unchanged fuses are independently verified byte-for-byte. Complete master-target cloning and physical inter-unit phase measurement remain pending.
 
 ## ESP8266 preservation and programming
 
@@ -99,14 +99,29 @@ The AVR was explicitly erased, the Release flash was programmed, and the migrate
 | Migrated EEPROM | `5ad612a6aa41ae86de821ba4b701a7072aaeebb942747e2562040d08c22d610c` | `5ad612a6aa41ae86de821ba4b701a7072aaeebb942747e2562040d08c22d610c` | byte-identical |
 | Preserved fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | byte-identical |
 
+## Installed qualification
+
+With the HUZZAH reinstalled and the Mac routed only to `73.73.73.73` through the Moto/DroidTether tunnel, the repository's read-only WiFi probe reported:
+
+- HTTP 200 and a connected WebSocket;
+- SSID `Tx_Master`;
+- ESP MAC `22:C8:8E:CF:AB:84`;
+- software versions `2.0,0.200`;
+- `MASTER,1`;
+- live 30.0 C, 11.6 V, and two-second clock reports from the AVR.
+
+The bounded `wifi-clone-control-test` then passed:
+
+1. baseline clock reports active;
+2. ordinary reports suppressed in clone quiet mode;
+3. exactly one clock report emitted at the next RTC edge;
+4. no additional clock report while quiet;
+5. normal reports resumed after clone cleanup.
+
+The control test does not write RTC, EEPROM, event, RF, or filesystem state.
+
 ## Remaining qualification
 
-After the HUZZAH is reinstalled, the master must pass:
-
-1. normal boot and preserved SSID;
-2. HTTP/WebSocket reachability and live AVR telemetry;
-3. preserved master role and configuration readback;
-4. clone quiet/one-shot/resume controls;
-5. complete master-target clone handshake and repeated physical phase-spread measurement.
+The remaining product gate is the complete master-target clone handshake followed by repeated physical inter-unit phase-spread measurement.
 
 The field synchronization bug is not yet described as fixed.
