@@ -32,6 +32,7 @@ const driverInitHeaderPath = join(
 const wifiProbePath = join(repoRoot, "scripts", "probe-flexfox-wifi.mjs");
 const clockObserverPath = join(repoRoot, "scripts", "observe-flexfox-clock.mjs");
 const clockSyncTestPath = join(repoRoot, "scripts", "test-flexfox-clock-sync.mjs");
+const clockPhaseTestPath = join(repoRoot, "scripts", "test-flexfox-clock-phase.mjs");
 const cloneControlTestPath = join(repoRoot, "scripts", "test-flexfox-clone-controls.mjs");
 const linkbusBoundsTestPath = join(repoRoot, "scripts", "test-flexfox-linkbus-rx-bounds.mjs");
 const linkbusPath = join(
@@ -116,6 +117,7 @@ const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
 const wifiProbe = readFileSync(wifiProbePath, "utf8");
 const clockObserver = readFileSync(clockObserverPath, "utf8");
 const clockSyncTest = readFileSync(clockSyncTestPath, "utf8");
+const clockPhaseTest = readFileSync(clockPhaseTestPath, "utf8");
 const cloneControlTest = readFileSync(cloneControlTestPath, "utf8");
 const linkbusBoundsTest = readFileSync(linkbusBoundsTestPath, "utf8");
 const linkbus = readFileSync(linkbusPath, "utf8");
@@ -306,6 +308,25 @@ if (
 }
 
 process.stdout.write("PASS WiFi clock sync test requires opt-in and sends only time/heartbeat\n");
+
+if (
+  !clockPhaseTest.includes('process.env.FLEXFOX_CLOCK_PHASE_TEST === "1"') ||
+  !clockPhaseTest.includes('quiet: "$ESP,C;"') ||
+  !clockPhaseTest.includes('edge: "$ESP,S;"') ||
+  !clockPhaseTest.includes('resume: "$ESP,R;"') ||
+  !clockPhaseTest.includes('`$TIM,${iso},C;`') ||
+  !clockPhaseTest.includes("await bestEffortRestore") ||
+  !clockPhaseTest.includes("if (quietRequested && socket?.readyState === WebSocket.OPEN)") ||
+  clockPhaseTest.includes("$EVT,") ||
+  clockPhaseTest.includes("$RF,")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: clock-phase test is not opt-in, bounded, and fail-safe\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS WiFi clock-phase test is opt-in and fail-safe\n");
 
 if (
   !cloneControlTest.includes('process.env.FLEXFOX_CLONE_CONTROL_TEST === "1"') ||

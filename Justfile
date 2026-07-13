@@ -55,6 +55,10 @@ wifi-clock-observe:
 wifi-clock-sync-test:
     node ./scripts/test-flexfox-clock-sync.mjs
 
+# Separate RTC-edge phase from ordinary report latency on an authorized dummy-loaded unit.
+wifi-clock-phase-test:
+    node ./scripts/test-flexfox-clock-phase.mjs
+
 # Qualify fixed Linkbus parser bounds and ID-alias rejection using read-only recovery.
 wifi-linkbus-bounds-test:
     node ./scripts/test-flexfox-linkbus-rx-bounds.mjs

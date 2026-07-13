@@ -76,12 +76,36 @@ The opt-in `just wifi-clone-control-test` then exercised only the AVR clone-cont
 
 This confirms the control primitives on one installed unit. It does not exercise the ESP master/target state machines, the target RTC write and exact clone readback, disconnect/error cleanup on both units, or inter-unit phase spread. Those require a second FlexFox with the matching AVR and ESP changes.
 
+## One-unit edge-phase versus delivery characterization
+
+The 2.372-second matching report in Batch 4 raised a necessary question: did the RTC edge actually move by that amount, or did a correct report arrive late? The opt-in `just wifi-clock-phase-test` narrows that ambiguity without changing product firmware. It suppresses ordinary reports, samples baseline one-shot edges, sends queued `$TIM,<ISO>,C;` writes at 100 ms after a Mac second boundary, and requests three consecutive one-shot edges after every write. Current Mac time and normal reports are restored at the end or after a handled failure. Raw evidence is retained beneath the ignored ESP temporary tree.
+
+The completed 12-baseline/30-write run produced:
+
+| Population | Samples | Mean receipt error | Sample standard deviation | Circular phase mean | Circular phase standard deviation | At least 1 s |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Baseline one-shot edges, before writes | 12 | 814.8 ms | 208.0 ms | 734.3 ms | 127.0 ms | 2/12 |
+| First one-shot edge after each write | 30 | 842.6 ms | 279.7 ms | 789.6 ms | 125.7 ms | 3/30 |
+| Second and third edges after writes | 60 | 801.3 ms | 276.0 ms | 765.8 ms | 74.7 ms | 1/60 |
+
+All 30 writes produced the expected logical epoch: the first one-shot report was exactly the requested epoch plus one second. The circular first-edge phase mean shifted only 55.3 ms from baseline, and its circular spread was essentially unchanged. Multi-second delivery tails occurred independently of clock setting:
+
+- baseline reports reached 1.051 and 1.395 seconds before any test write;
+- write 19's correct first report arrived at 2.204 seconds, then its next two edges returned immediately to 796 and 717 ms;
+- write 29's second edge arrived at 2.825 seconds, then the following edge returned to 667 ms.
+
+The delayed write-19 report caused the next armed observation to skip an intermediate epoch, consistent with more than one second elapsing before the Mac could request another edge. These results prove that the WiFi/Linkbus/WebSocket/tunnel observation path has a transient multi-second delivery tail. They make the earlier 2.372-second receipt an unreliable proxy for RTC phase and show why matching a returned epoch alone cannot measure fractional synchronization.
+
+The final current-time restore returned an edge at 766 ms. A separate post-test probe confirmed normal identity, temperature, battery, and clock traffic; three read-only clock samples then reported a 753 ms median, 747–893 ms range, and 146 ms spread.
+
+They do **not** prove that the field schedule outlier was only an observation artifact: the field symptom concerned physical schedule coordination, and this single-unit path still cannot timestamp the RTC edge at generation independently of delivery. The remaining decisive test is repeated master-target cloning followed by physical inter-unit edge or transmission-phase comparison.
+
 ## Ranked hypotheses and discriminating evidence
 
 | Rank | Hypothesis | Why it fits | Observation that distinguishes it |
 | --- | --- | --- | --- |
 | 1 | One RTC drifts faster because of oscillator quality or aging-register difference | One outlier after several days fits unit-specific drift; aging is queryable but is not cloned, and EEPROM `g_clock_calibration` is stored but not applied to the DS3231 | Unit begins close after setting, then offset changes approximately linearly; aging value differs from peers |
-| 2 | RTC clock write failed but clone proceeded | Both ESP ACK handling and AVR I2C error reporting can falsely complete, although 33/33 controlled writes passed on the bench unit | Target is already far off immediately after a nominal clone; RTC readback disagrees with master's transmitted time |
+| 2 | RTC clock write failed but clone proceeded | Both ESP ACK handling and AVR I2C error reporting can falsely complete, although 63/63 browser-path and 30/30 queued phase-test writes passed on the bench unit | Target is already far off immediately after a nominal clone; RTC readback disagrees with master's transmitted time |
 | 3 | Whole-second truncation and transport phase | Confirmed in both master-clone and cellphone paths | Stable initial error generally within about one second; repeated setting produces different sub-second phase |
 | 4 | AVR system time loses a DS3231 square-wave tick after RTC setting | Event cycle countdown is driven by the one-second interrupt; a discrete missed tick could shift schedule while RTC remains correct | RTC readback remains correct while broadcast/system schedule jumps by an integer second |
 | 5 | Master time was wrong | All targets inherit the master epoch | Most or all targets share a similar absolute offset rather than one target becoming an outlier |

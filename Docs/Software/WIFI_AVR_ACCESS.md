@@ -97,6 +97,15 @@ FLEXFOX_ALLOW_CLOCK_SET=1 FLEXFOX_CLOCK_SYNC_TRIALS=10 just wifi-clock-sync-test
 
 This state-changing test alternates distinctive `+8`, `-8`, and current-time signatures so each RTC write can be distinguished from the previous value. It requires every signature in the AVR's returned epochs and restores current Mac time after the series or a handled failure. Run it only when brief schedule changes are acceptable. It does not change event files, EEPROM configuration, or RF settings.
 
+To distinguish persistent RTC-edge phase from transient report-delivery delay on the same authorized unit, run:
+
+```text
+FLEXFOX_CLOCK_PHASE_DRY_RUN=1 just wifi-clock-phase-test
+FLEXFOX_CLOCK_PHASE_TEST=1 just wifi-clock-phase-test
+```
+
+This characterization enters clone quiet mode, collects baseline one-shot RTC-edge reports, performs queued `$TIM,...,C;` writes at a controlled Mac phase, and collects three consecutive one-shot edges after every write. It records linear receipt delay and circular modulo-one-second phase statistics in ignored `Software/Huzzah/tmp/clock-phase-latest.json`. It restores current Mac time and requests normal-report resumption on completion or a handled failure. A delayed first report followed by normal later edges identifies a transient observation-path stall; a persistent phase change should remain visible in the following edges. The route still contributes latency, so final product qualification requires two physical units.
+
 Useful overrides:
 
 ```text
@@ -105,6 +114,7 @@ FLEXFOX_URL=http://73.73.73.73/ FLEXFOX_PROBE_TIMEOUT_MS=15000 just wifi-probe
 FLEXFOX_PROBE_DRY_RUN=1 just wifi-monitor
 FLEXFOX_CLOCK_DRY_RUN=1 just wifi-clock-observe
 FLEXFOX_CLOCK_SAMPLES=30 FLEXFOX_CLOCK_TIMEOUT_MS=120000 just wifi-clock-observe
+FLEXFOX_CLOCK_PHASE_BASELINE=12 FLEXFOX_CLOCK_PHASE_TRIALS=30 FLEXFOX_CLOCK_PHASE_EDGES_PER_WRITE=3 FLEXFOX_CLOCK_PHASE_TEST=1 just wifi-clock-phase-test
 ```
 
 ## Safety classification
