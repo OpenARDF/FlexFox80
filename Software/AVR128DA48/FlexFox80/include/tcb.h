@@ -35,6 +35,7 @@ extern "C" {
 int8_t TIMERB_init();
 bool util_delay_ms(uint32_t delayValue);
 int8_t TIMERB_sleep();
+uint8_t rtcElapsedEdges();
 
 #ifdef __cplusplus
 }

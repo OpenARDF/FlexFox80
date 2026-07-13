@@ -81,6 +81,14 @@ const avrMainPath = join(
   "FlexFox80",
   "main.cpp",
 );
+const tcbPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "src",
+  "tcb.cpp",
+);
 const ds3231Path = join(
   repoRoot,
   "Software",
@@ -126,6 +134,7 @@ const serialbus = readFileSync(serialbusPath, "utf8");
 const driverIsr = readFileSync(driverIsrPath, "utf8");
 const goertzel = readFileSync(goertzelPath, "utf8");
 const avrMain = readFileSync(avrMainPath, "utf8");
+const tcb = readFileSync(tcbPath, "utf8");
 const ds3231 = readFileSync(ds3231Path, "utf8");
 const ds3231Header = readFileSync(ds3231HeaderPath, "utf8");
 const espMain = readFileSync(espMainPath, "utf8");
@@ -516,6 +525,45 @@ if (
 }
 
 process.stdout.write("PASS AVR boot aligns system time to an RTC edge\n");
+
+if (
+  !/VPORTA\.INTFLAGS\s*=\s*x[\s\S]*rtcElapsedEdges\(\)/.test(rtcIsr[1]) ||
+  !/do\s*\{[\s\S]*system_tick\(\)[\s\S]*\}\s*while\s*\(\s*--elapsed_seconds\s*\)/.test(
+    rtcIsr[1],
+  )
+) {
+  process.stderr.write(
+    "Firmware contract check failed: RTC ISR does not preserve and replay coalesced edges\n",
+  );
+  process.exit(1);
+}
+
+if (
+  !/ISR\(TCB2_INT_vect\)[\s\S]*rtcEdgeTrackerObserve\s*\(\s*&g_rtc_edge_tracker\s*,\s*PORTA_get_pin_level\(RTC_SQW\)\s*\)/.test(
+    tcb,
+  ) ||
+  !/uint8_t\s+rtcElapsedEdges\(\)[\s\S]*TCB2\.INTCTRL\s*=\s*0[\s\S]*rtcEdgeTrackerObserve[\s\S]*rtcEdgeTrackerTake[\s\S]*TCB2\.INTCTRL\s*=\s*interrupt_control/.test(
+    tcb,
+  )
+) {
+  process.stderr.write(
+    "Firmware contract check failed: RTC edge observation is missing or not race-safe\n",
+  );
+  process.exit(1);
+}
+
+if (
+  !/g_clone_sync_report_armed\s*&&\s*\(\s*elapsed_seconds\s*==\s*1\s*\)/.test(
+    rtcIsr[1],
+  )
+) {
+  process.stderr.write(
+    "Firmware contract check failed: clone sync can report the oldest recovered RTC edge\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS delayed RTC edges are counted and replayed\n");
 
 if (!/if\s*\(\s*g_report_seconds\s*&&\s*!g_clone_quiet\s*\)/.test(avrMain)) {
   process.stderr.write(

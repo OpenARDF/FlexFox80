@@ -23,8 +23,12 @@
  */
 
 #include <tcb.h>
+#include <binio.h>
+#include <port.h>
+#include <rtc_edge_tracker.h>
 
 static uint32_t g_ms_counter = 0;
+static volatile RtcEdgeTracker g_rtc_edge_tracker = {};
 extern volatile uint16_t g_i2c0_timeout_ticks;
 extern volatile uint16_t g_serial_timeout_ticks;
 extern volatile uint16_t g_i2c1_timeout_ticks;
@@ -36,6 +40,8 @@ extern volatile uint16_t g_i2c1_timeout_ticks;
  */
 int8_t TIMERB_init()
 {
+rtcEdgeTrackerReset(&g_rtc_edge_tracker, PORTA_get_pin_level(RTC_SQW));
+
 TCB0.INTCTRL = 1 << TCB_CAPT_bp   /* Capture or Timeout: enabled */
 | 0 << TCB_OVF_bp; /* OverFlow Interrupt: disabled */
 
@@ -166,11 +172,27 @@ ISR(TCB2_INT_vect)
 {
 	if(TCB2.INTFLAGS & TCB_CAPT_bm)
 	{
+		rtcEdgeTrackerObserve(&g_rtc_edge_tracker, PORTA_get_pin_level(RTC_SQW));
 		if(g_i2c1_timeout_ticks) g_i2c1_timeout_ticks--;
 		if(g_i2c0_timeout_ticks) g_i2c0_timeout_ticks--;
 		if(g_serial_timeout_ticks) g_serial_timeout_ticks--;
 	}
 	TCB2.INTFLAGS = TCB_CAPT_bm | TCB_OVF_bm; /* Clear flags */
+}
+
+uint8_t rtcElapsedEdges()
+{
+	/*
+	 * Close the narrow PORT flag read/clear race by observing the live pin here.
+	 * Keep the shared tracker atomic with respect to the Level-1 TCB2 ISR; a TCB2
+	 * flag raised while masked remains pending and is serviced after re-enabling.
+	 */
+	uint8_t interrupt_control = TCB2.INTCTRL;
+	TCB2.INTCTRL = 0;
+	rtcEdgeTrackerObserve(&g_rtc_edge_tracker, PORTA_get_pin_level(RTC_SQW));
+	uint8_t elapsed = rtcEdgeTrackerTake(&g_rtc_edge_tracker);
+	TCB2.INTCTRL = interrupt_control;
+	return elapsed;
 }
 
 
@@ -219,4 +241,3 @@ int8_t TIMERB_sleep()
 
 	return 0;
 }
-

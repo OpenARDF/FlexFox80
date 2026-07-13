@@ -248,70 +248,75 @@ One-second counter based on RTC 1-second square wave output.
 ISR(PORTA_PORT_vect)
 {
 	uint8_t x = VPORTA.INTFLAGS;
+	VPORTA.INTFLAGS = x; /* Clear captured flags before slow work so a later edge remains pending. */
 	
     if(x & (1 << RTC_SQW)) /* Handle 1-second interrupt */
     {
-		system_tick();
+		uint8_t elapsed_seconds = rtcElapsedEdges();
 
-		if(g_clone_sync_report_armed)
+		do
 		{
-			g_clone_sync_epoch = time(NULL);
-			g_clone_sync_report_armed = false;
-			g_clone_sync_report_ready = true;
-		}
+			system_tick();
 
-		if(g_clone_quiet_timeout_seconds)
-		{
-			g_clone_quiet_timeout_seconds--;
-			if(!g_clone_quiet_timeout_seconds)
+			/* If edges were recovered, report the newest recovered second. */
+			if(g_clone_sync_report_armed && (elapsed_seconds == 1))
 			{
-				g_clone_quiet = false;
+				g_clone_sync_epoch = time(NULL);
 				g_clone_sync_report_armed = false;
-				g_clone_sync_report_ready = false;
+				g_clone_sync_report_ready = true;
 			}
-		}
 
-		if(g_on_the_air < 0)
-		{
-			g_on_the_air++;
-		}
-		else if(g_on_the_air > 0)
-		{
-			g_on_the_air--;
-		}
-		
-		g_seconds_transition = true;
-
-		if(g_sleeping)
-		{
-			if(g_sleepType == SLEEP_UNTIL_NEXT_XMSN)
-			{				
-				if((g_on_the_air > -6) || (g_time_to_wake_up <= time(null))) /* Always wake up at least 5 seconds before showtime */
+			if(g_clone_quiet_timeout_seconds)
+			{
+				g_clone_quiet_timeout_seconds--;
+				if(!g_clone_quiet_timeout_seconds)
 				{
-					g_go_to_sleep_now = false;
-					g_sleeping = false;
-					g_awakenedBy = AWAKENED_BY_CLOCK;
+					g_clone_quiet = false;
+					g_clone_sync_report_armed = false;
+					g_clone_sync_report_ready = false;
+				}
+			}
+
+			if(g_on_the_air < 0)
+			{
+				g_on_the_air++;
+			}
+			else if(g_on_the_air > 0)
+			{
+				g_on_the_air--;
+			}
+		
+			g_seconds_transition = true;
+
+			if(g_sleeping)
+			{
+				if(g_sleepType == SLEEP_UNTIL_NEXT_XMSN)
+				{
+					if((g_on_the_air > -6) || (g_time_to_wake_up <= time(null))) /* Always wake up at least 5 seconds before showtime */
+					{
+						g_go_to_sleep_now = false;
+						g_sleeping = false;
+						g_awakenedBy = AWAKENED_BY_CLOCK;
+					}
+				}
+				else
+				{
+					if(g_time_to_wake_up <= time(null))
+					{
+						g_go_to_sleep_now = false;
+						g_sleeping = false;
+						g_awakenedBy = AWAKENED_BY_CLOCK;
+						g_on_the_air = 0; /* This will cause this variable to be properly initialized in the fast interrupt */
+						g_timer_launched_new_event = true;
+					}
 				}
 			}
 			else
 			{
-				if(g_time_to_wake_up <= time(null))
-				{
-					g_go_to_sleep_now = false;
-					g_sleeping = false;
-					g_awakenedBy = AWAKENED_BY_CLOCK;			
-					g_on_the_air = 0; /* This will cause this variable to be properly initialized in the fast interrupt */
-					g_timer_launched_new_event = true;
-				}
+				handle_1sec_tasks();
 			}
-		}
-		else
-		{
-			handle_1sec_tasks();
-		}
+		} while(--elapsed_seconds);
 	}
-
-    VPORTA.INTFLAGS = 0xFF; /* Clear all PORTA interrupt flags */
 }
 
 

@@ -4,7 +4,7 @@
 
 **Scope:** AVR128DA48 system-clock reads, RTC-edge handling, interrupt latency, and shared schedule state
 
-**Status:** Static review complete; no production-code change in this slice
+**Status:** Static review complete; highest-priority recovery candidate passes host and exact-build gates, with target verification pending
 
 ## Reason for this review
 
@@ -19,6 +19,8 @@ There is no second ordinary `time()` call that independently rephases the system
 The most important remaining risk is earlier in the chain: **the RTC rising-edge interrupt can be blocked by retrying I2C work inside another normal-priority interrupt**. If that blockage spans more than one RTC edge, the port interrupt flag records only that an edge is pending; it does not count how many edges occurred. The eventual RTC handler calls `system_tick()` only once, permanently losing one or more seconds from AVR system time. That is a credible rare multi-second schedule-error mechanism and is materially more important than expected DS3231 drift over the currently relevant interval.
 
 This is source-supported risk, not yet a reproduced hardware root cause for the field outlier. It should be addressed through characterization and fault injection before changing the mature transmit path.
+
+A narrow recovery candidate now counts RTC rising edges from the already-running Level-1 timeout timer and replays the existing one-second handler for each elapsed edge. It does not reorganize RF keying or enable clocks during standby. Design and verification evidence is in [AVR RTC edge recovery](AVR_RTC_EDGE_RECOVERY_2026-07-13.md).
 
 ## Findings
 
@@ -43,6 +45,8 @@ Consequences:
 - all later `time()` reads are coherent but permanently behind by the number of lost ticks until the next explicit RTC resynchronization or reset.
 
 This mechanism can produce whole-second error without a bad RTC write, checksum failure, or long-term oscillator drift. It also explains why auditing only call sites of `time()` would miss the most consequential path.
+
+**Candidate status:** Host tests cover ISR/sampler order, coalesced edges, counter wrap, and sleep restart. Firmware contracts and an exact zero-warning AVR build pass. Hardware delay/fault injection remains required before this finding is closed.
 
 ### 2. High: several 32-bit schedule values cross foreground/ISR boundaries without atomic transfer
 
@@ -95,7 +99,7 @@ No ISR or RF behavior should be reorganized from static reasoning alone. The nex
 1. **Capture the current timing contract.** Add a source/call-graph regression that identifies every I2C-capable call reachable from `PORTA_PORT_vect` and `TCB0_INT_vect`. Record the current red result.
 2. **Measure the normal path.** Instrument RTC-edge arrival, RTC-handler entry, `TCB0` entry/exit, and Si5351 transaction duration on the dummy-loaded unit. Establish normal and worst observed latency before changing priorities or RF keying.
 3. **Reproduce the fault path safely.** Force Si5351 NACK/timeout behavior with RF inhibited and confirm whether RTC edge count and AVR system time lose seconds. Preserve reset cause and error state.
-4. **Separate edge capture from slow work.** Prefer a counted edge generation plus foreground service state. Do not simply transmit or perform general I2C from a higher-priority RTC ISR. RF key timing needs an explicit bounded design; moving all keying to an unbounded foreground loop would trade one failure for another.
+4. **Separate edge capture from slow work.** The current candidate completes the counted-edge portion using the already-running Level-1 timeout timer and leaves RF keying unchanged. Do not transmit or perform general I2C from the higher-priority sampler. Hardware fault injection remains the gate.
 5. **Make 32-bit transfers explicit.** Introduce small atomic snapshot/update helpers and apply start/finish configuration as a coherent transaction before enabling the event.
 6. **Add boundary tests.** Exercise `start-1`, `start`, `start+1`, `finish-1`, `finish`, and `finish+1` using one supplied `now` value.
 7. **Bound RTC synchronization.** Test missing square wave, I2C timeout, an intervening edge during readback, and success at the expected edge before changing `syncSystemTimeToRTC()`.
@@ -103,4 +107,4 @@ No ISR or RF behavior should be reorganized from static reasoning alone. The nex
 
 ## Priority decision
 
-Long-duration drift and aging-register work remains bookmarked. The next AVR timing-hardening slice should first characterize and remove the possibility that slow ISR work can lose RTC edges, then make shared schedule values atomic. These changes target rare discrete jitter and whole-second loss, which are better aligned with the observed failure class than expected short-term oscillator drift.
+Long-duration drift and aging-register work remains bookmarked. The RTC edge-loss candidate is now source-verified; its next gate is dummy-loaded target verification and delayed-ISR fault injection. After that gate, the next AVR timing-hardening slice is explicit atomic transfer of shared schedule values. These changes target rare discrete jitter and whole-second loss, which are better aligned with the observed failure class than expected short-term oscillator drift.
