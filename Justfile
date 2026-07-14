@@ -16,6 +16,7 @@ docs-check:
 # Verify ignore rules, attributes, JSON project files, and diff hygiene.
 policy-check:
     ./scripts/check-repository-policy.sh
+    node ./scripts/check-firmware-source-headers.mjs
 
 # Build and run dependency-light host characterization tests.
 test:

@@ -1,7 +1,7 @@
 /*
  *  MIT License
  *
- *  Copyright (c) 2022 DigitalConfections
+ *  Copyright (c) 2022-2026 DigitalConfections
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -20,57 +20,28 @@
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *  SOFTWARE.
+ */
+
+/*
+ * Si5351 frequency-synthesizer configuration and control.
  *
- * The Si5351 is an I2C configurable clock generator that is ideally suited for replacing crystals,
- * crystal oscillators, VCXOs, phase-locked loops (PLLs), and fanout buffers in cost-sensitive
- * applications. Based on a PLL/VCXO + high resolution MultiSynth fractional divider architecture,
- * the Si5351 can generate any frequency up to 200 MHz on each of its outputs with 0 ppm error.
- * http://www.silabs.com/documents/public/data-sheets/Si5351-B.pdf
+ * This deliberately small AVR library drives the three-output Si5351A MSOP10
+ * through I2C. It favors predictable execution and program size; callers remain
+ * responsible for passing combinations allowed by the device specification:
+ * https://www.skyworksinc.com/-/media/Skyworks/SL/documents/public/data-sheets/Si5351-B.pdf
  *
- * PURPOSE
- * This is a basic library for the Si5351 series of clock generator ICs from Silicon Labs for the avr-gcc development
- * environment. It supports controlling the Si5351 with an AVR microcontroller with a TWI peripheral module. It is
- * intentionally minimalistic in order to minimize program size and maximize execution speed. It is intended for use
- * in projects utilizing small processors with limited program memory, where the program author is responsible for
- * implementing any checks on the validity of parameters passed to the library functions.
+ * Frequency-setting overview:
  *
- * The following high-level description of the Si5351 frequency-setting algorithm is provided to help the user understand
- * the basic workings of the library, so that any needed modifications can be readily made.
+ * - CLK0 uses PLLA. Choose an even integer MultiSynth divider that places the
+ *   PLL VCO between 600 and 900 MHz, derive the PLL feedback ratio from the
+ *   crystal frequency, then program PLLA and CLK0.
+ * - CLK1 and CLK2 share PLLB. Their order of configuration can change the PLLB
+ *   VCO and therefore the accuracy of the other output.
+ * - Call si5351_set_vcoB_freq() before configuring CLK1 or CLK2 when both outputs
+ *   must derive from a specific shared VCO frequency.
  *
- * OVERVIEW
- * The algorithm used in this library starts with the desired output frequency, and works backwards through Synthesis
- * Stage 2 and Synthesis Stage 1, to determine the necessary Si5351 register settings.
- *
- * STEPS (Output CLK0)
- *
- * 1. Choose a desired CLK0 output frequency (Fout) in Hz.
- * 2. Find an even integer Multisynth Divider Ratio (a_msd) that multiplies Fout to obtain a value between 600 MHz and 900 MHz. Set b_msd = 0,
- *    and c_msd = 1. Note: a_msd has a valid range of all even integers between 4 and 900; we are choosing to exclude all odd and fractional solutions.
- * 3. Calculate the VCO frequency (Fvco) in Hz where Fvco = a_msd x Fout.
- * 4. Find values for the Feedback Multisynth Divider Equation (a_fmd, b_fmd, c_fmd) that will multiply the crystal oscillator frequency (Fxtal)
- *    to obtain Fvco = Fxtal x (a_fmd + (b_fmd/c_fmd)). Note: (a_fmd + (b_fmd/c_fmd)) has a valid range of 15 to 90 with resolution of 1/1048575.
- * 5. Apply settings derived in previous steps to program PLLA, and use PLLA to generate Fout on CLK0.
- *
- *
- * STEPS (Output CLK1)
- *
- * CLK1 steps are exactly the same as for CLK0, except for Step 5, where we will program PLLB, and use PLLB to generate Fout on CLK1.
- *
- *
- * STEPS (Output CLK2)
- *
- * 1. Choose a desired CLK2 output frequency (Fout) in Hz.
- * 2. Starting with the Fvco applied to PLLB to generate CLK1, derive a Multisynth Divider Ratio (a_msd, b_msd and c_msd) that multiplies
- *    Fvco to obtain Fout = Fvco x (a_msd + (b_msd/c_msd)). Note: (a_msd + (b_msd/c_msd)) has a valid range of 4, 6, and all values between
- *    8 and 900 with resolution of 1/1048575. The resulting Fout might not be exact.
- * 3. Apply settings derived in Step 2 to use PLLB to generate Fout on CLK2.
- *
- * NOTE:
- * The order of setting clocks CLK1 and CLK2 may be reversed. If that is done, then the Fvco for PLLB will be derived from the Fout chosen
- * for CLK2 (instead of CLK1 as shown in the steps above). Thus the order in which clocks CLK1 and CLK2 are set, can affect Fvco for PLLB,
- * and therefore the accuracy of the clock settings. However, if the PLLB VCO frequency is first set (using si5351_set_vcoB_freq())
- * then both CLK1 and CLK2 will use the specified VCO frequency to derive the signals on those outputs.
- *
+ * The library intentionally omits general parameter validation unless the
+ * optional bounds-checking features below are enabled.
  */
 
 #include "defs.h"

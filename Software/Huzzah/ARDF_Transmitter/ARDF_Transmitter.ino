@@ -1,46 +1,41 @@
-/**********************************************************************************************
-    Copyright © 2022 Digital Confections LLC
+/*
+ *  MIT License
+ *
+ *  Copyright (c) 2022-2026 Digital Confections LLC
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in all
+ *  copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
+ */
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy of
-    this software and associated documentation files (the "Software"), to deal in the
-    Software without restriction, including without limitation the rights to use, copy,
-    modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-    and to permit persons to whom the Software is furnished to do so, subject to the
-    following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-    INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-    PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
-    FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-    OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-    DEALINGS IN THE SOFTWARE.
-
- **********************************************************************************************
-
-     Basic WiFi Functionality for Receiver Development Platform
-
-     Hardware Target: Adafruit HUZZAH ESP8266
-
-     This sketch provides the following functionality on the target hardware:
-
-       1. Receives commands over the UART0 port. Commands must start with $$$ as the escape sequence.
-
-       2. $$$m,#,val;  <- this command allows the ATmega328p to set variables that the WiFi board
-          will use; such as the SSID and password for a hotspot for Internet access.
-
-       3. $$$t; <- this tells the WiFi to connect to an Internet hotspot and attempt to read the current
-          NIST time; if successful the WiFi sends a command to the ATmega328p telling it to update the time
-          stored in the real-time clock.
-
-       4. $$$b; <- this tells the WiFi to set itself up as a UART-to-TCP bridge, and accept TCP connections
-          from any clients (like a smartphone or PC)
-
-       5. $$$w; <- starts a web server that accepts connections from WiFi devices.
-
-*/
+/*
+ * Top-level ESP8266 WiFi, HTTP, WebSocket, and AVR bridge orchestration.
+ *
+ * Hardware target: Adafruit HUZZAH ESP8266 at 80 MHz.
+ *
+ * This sketch:
+ *
+ * - exchanges framed Linkbus commands and telemetry with the FlexFox AVR;
+ * - hosts the FlexFox access point, HTTP configuration UI, and WebSocket API;
+ * - stores and validates event definitions in LittleFS;
+ * - coordinates master/target wireless cloning, including quiet mode, RTC-edge
+ *   synchronization, checksum validation, and cleanup; and
+ * - can obtain network time and pass it to the AVR when explicitly requested.
+ */
 
 #include <Arduino.h>
 /*#include <GDBStub.h> */

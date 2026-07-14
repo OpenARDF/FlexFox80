@@ -1,7 +1,7 @@
 /*
  *  MIT License
  *
- *  Copyright (c) 2022 DigitalConfections
+ *  Copyright (c) 2022-2026 DigitalConfections
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -20,18 +20,14 @@
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  *  SOFTWARE.
+ */
+
+/*
+ * DS3231 real-time-clock access and time conversion.
  *
- * ds3231.h
- *
- * DS3231: Extremely Accurate I2C-Integrated RTC/TCXO/Crystal
- * http://datasheets.maximintegrated.com/en/ds/DS3231-DS3231S.pdf
- * The DS3231 is a low-cost, extremely accurate I2C real-time clock (RTC) with an integrated
- * temperature-compensated crystal oscillator (TCXO) and crystal. The device incorporates a
- * battery input, and maintains accurate timekeeping when main power to the device is interrupted.
- * The integration of the crystal resonator enhances the long-term accuracy of the device as well
- * as reduces the piece-part count in a manufacturing line. The DS3231 is available in commercial
- * and industrial temperature ranges, and is offered in a 16-pin, 300-mil SO package.
- *
+ * The DS3231 combines an I2C RTC, temperature-compensated crystal oscillator,
+ * and battery-backed timekeeping. Device details and electrical limits are in:
+ * https://www.analog.com/media/en/technical-documentation/data-sheets/ds3231.pdf
  */
 
 #ifndef DS3231_H_

@@ -1,7 +1,7 @@
 /*
  *  MIT License
  *
- *  Copyright (c) 2022 DigitalConfections
+ *  Copyright (c) 2022-2026 DigitalConfections
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,9 @@
  *  SOFTWARE.
  */
 
-
+/*
+ * AVR configuration-change protection helpers.
+ */
 
 #ifndef CPU_CCP_H
 #define CPU_CCP_H
