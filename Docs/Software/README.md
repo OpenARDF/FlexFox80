@@ -10,6 +10,7 @@ This directory documents the current software architecture on the `AVR128DA48` b
 - [Hardening and bug plan](HARDENING_AND_BUG_PLAN.md) turns the review into two coordinated work paths with specific deliverables, decision points, and exit checkpoints.
 - [Development workflow](CODEX_WORKFLOW.md) defines everyday branch, verification, staging, commit, integration, and handoff rules.
 - [Release workflow](RELEASE_WORKFLOW.md) defines current branch roles, integration gates, release evidence, and the future AVR128DA48 transition to `main`.
+- [July 2026 release-readiness plan](RELEASE_READINESS_PLAN_2026-07-14.md) records the decision to complete R4, freeze firmware scope, qualify an official release candidate, and defer the remaining review items with a precise resume point.
 - [Source and generated-file boundaries](GENERATED_FILES.md) classifies product source, generated-derived files, IDE/build output, ESP assets, and CAD/manufacturing files.
 - [Build environment](BUILD_ENVIRONMENT.md) defines Mac and Windows roles, the portable AVR Release wrapper, evidence classes, and the reference-environment handoff checklist.
 - [Mac build environment evidence](Evidence/MAC_BUILD_ENVIRONMENT_2026-07-11.md) records the verified archived compiler and the remaining historical device-pack requirement.

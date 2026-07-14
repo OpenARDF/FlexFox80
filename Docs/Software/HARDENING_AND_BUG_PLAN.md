@@ -616,6 +616,12 @@ Use a small internal issue table or tracker with these fields:
 | B-TIME-01 | B | High | ESP/Linkbus/AVR RTC | Rare field outlier; reset-dependent one-second system-time quantization reproduced | Corrected target/master pass reset gates; first two corrected clones transfer all files with 479–548 ms target lags | Characterize discrete tick-loss and broader convenient clone evidence; drift deferred | Implementing |
 | B-CLONE-02 | B | Medium | ESP clone file transfer | Operator estimates retry needed in 5–10% of clones; easy workaround | One six-of-nine-file bench stall followed by a successful retry; first two corrected clones pass | Characterize timeout/recovery independently of B-TIME-01 | Planned |
 
+## Release cutoff — 2026-07-14
+
+Because the deployed product has been highly reliable and release time is limited, R4 is the only planned firmware implementation remaining before the next release freeze. R2, R3, R5, the remaining R6 work, an R9 behavior change, residual `B-TIME-01` work, and `B-CLONE-02` are explicitly deferred. Their tracker status is preserved so a later thread does not mistake deferral for resolution.
+
+An additional firmware change before release requires either an R4 gate failure or a newly reproduced release-blocking regression. Documentation, deterministic builds, regression execution, artifact manifests, rollback preparation, release notes, and branch-readiness checks may continue without expanding firmware behavior. See [FlexFox80 release readiness plan](RELEASE_READINESS_PLAN_2026-07-14.md) for the R4 exit gate, release-candidate sequence, and deferred resume point.
+
 Specific field bugs should be added with distinct `B-` identifiers. At each Path A checkpoint:
 
 1. run every available bug reproduction;
