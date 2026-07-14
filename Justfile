@@ -68,6 +68,10 @@ wifi-linkbus-bounds-test:
 wifi-clone-control-test:
     node ./scripts/test-flexfox-clone-controls.mjs
 
+# Exercise ESP role assignment and fail-safe restoration on an authorized dummy-loaded unit.
+wifi-role-assignment-test:
+    node ./scripts/test-flexfox-role-assignment.mjs
+
 # Build the ESP8266 sketch and LittleFS image with the qualified pinned profile.
 esp-build:
     node ./scripts/build-esp8266.mjs

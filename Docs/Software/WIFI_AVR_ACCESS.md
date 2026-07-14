@@ -76,6 +76,22 @@ just wifi-monitor
 
 Monitor mode performs the same initial proof, then sends only `!&` every five seconds until interrupted with Ctrl-C. The ESP disconnects a WebSocket after approximately ten seconds without text traffic, so a 30-second heartbeat cannot preserve one continuous socket. Five seconds leaves margin for scheduling delay while reducing the built-in pages' two-second heartbeat rate. This resets the ESP WebSocket activity timer and allows the ESP/AVR keep-alive behavior to remain active while the Moto stays associated with the FlexFox AP.
 
+On an explicitly authorized dummy-loaded unit, the guarded role-assignment regression requires a previously recorded event and restoration role:
+
+```text
+FLEXFOX_ROLE_ASSIGNMENT_DRY_RUN=1 \
+FLEXFOX_ROLE_ASSIGNMENT_EXPECT_EVENT='Classic 80m Set 1-1' \
+FLEXFOX_ROLE_ASSIGNMENT_EXPECT_ROLE=1:0 \
+just wifi-role-assignment-test
+
+FLEXFOX_ROLE_ASSIGNMENT_TEST=1 \
+FLEXFOX_ROLE_ASSIGNMENT_EXPECT_EVENT='Classic 80m Set 1-1' \
+FLEXFOX_ROLE_ASSIGNMENT_EXPECT_ROLE=1:0 \
+just wifi-role-assignment-test
+```
+
+Substitute the unit's read-back event and role; do not copy the example blindly. The test refuses to run without both expected values, confirms them before mutation, exercises one transmitter assignment per configured role, queries each role's frequency and power, and restores and reloads the expected assignment during normal or handled-error cleanup. It never sends `EXECUTE`, raw `PASS`, time writes, or RF commands. Event-list generation can exceed ten seconds on the deployed ESP, so the harness sends each explicit event request once and allows 30 seconds rather than duplicating the state transition.
+
 `just wifi-linkbus-bounds-test` is a narrow writable-test-unit qualification for the AVR receive parser. It first proves that raw `PASS,$TEM?` and `PASS,$BAT?` produce fresh replies. It then sends two malformed field frames under the unrecognized `ZZZ` message ID and the overlength read-only alias reproducer `$AZRX?`, followed by both recovery queries. It passes only if each dropped frame remains unanswered through the ESP retry delay and fresh temperature and battery replies prove that the queued valid frames were parsed. Requiring both replies after the delay prevents an incidental periodic broadcast from satisfying the check.
 
 The same recipe sends the read-only `$RXW?` probe twice. The legacy decimal ID encoding aliases `RXW` to `TEM` and therefore produces a visible temperature reply for every probe; the collision-free parser instead returns a Linkbus NAK, which the ESP consumes without broadcasting. The test fails only if both short observation windows contain temperature replies, tolerating one incidental periodic update, then requires a fresh battery reply to prove recovery. Do not generalize this recipe into arbitrary `PASS` forwarding; raw pass-through also exposes configuration, RF, reset, clock, EEPROM, and WiFi-shutdown commands.

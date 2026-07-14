@@ -34,6 +34,7 @@ const clockObserverPath = join(repoRoot, "scripts", "observe-flexfox-clock.mjs")
 const clockSyncTestPath = join(repoRoot, "scripts", "test-flexfox-clock-sync.mjs");
 const clockPhaseTestPath = join(repoRoot, "scripts", "test-flexfox-clock-phase.mjs");
 const cloneControlTestPath = join(repoRoot, "scripts", "test-flexfox-clone-controls.mjs");
+const roleAssignmentTestPath = join(repoRoot, "scripts", "test-flexfox-role-assignment.mjs");
 const linkbusBoundsTestPath = join(repoRoot, "scripts", "test-flexfox-linkbus-rx-bounds.mjs");
 const linkbusPath = join(
   repoRoot,
@@ -149,6 +150,7 @@ const clockObserver = readFileSync(clockObserverPath, "utf8");
 const clockSyncTest = readFileSync(clockSyncTestPath, "utf8");
 const clockPhaseTest = readFileSync(clockPhaseTestPath, "utf8");
 const cloneControlTest = readFileSync(cloneControlTestPath, "utf8");
+const roleAssignmentTest = readFileSync(roleAssignmentTestPath, "utf8");
 const linkbusBoundsTest = readFileSync(linkbusBoundsTestPath, "utf8");
 const linkbus = readFileSync(linkbusPath, "utf8");
 const linkbusHeader = readFileSync(linkbusHeaderPath, "utf8");
@@ -378,6 +380,25 @@ if (
 }
 
 process.stdout.write("PASS WiFi clone-control test is opt-in and fail-safe\n");
+
+if (
+  !roleAssignmentTest.includes('process.env.FLEXFOX_ROLE_ASSIGNMENT_TEST === "1"') ||
+  !roleAssignmentTest.includes("FLEXFOX_ROLE_ASSIGNMENT_EXPECT_EVENT") ||
+  !roleAssignmentTest.includes("FLEXFOX_ROLE_ASSIGNMENT_EXPECT_ROLE") ||
+  !roleAssignmentTest.includes("await restoreBaseline()") ||
+  !roleAssignmentTest.includes('send(`TX_ROLE,${assignment}`)') ||
+  roleAssignmentTest.includes('send("EXECUTE")') ||
+  roleAssignmentTest.includes('send("PASS') ||
+  roleAssignmentTest.includes('send("SYNC') ||
+  roleAssignmentTest.includes('send("CLEAR')
+) {
+  process.stderr.write(
+    "Firmware contract check failed: role-assignment live test is not opt-in, bounded, and fail-safe\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS WiFi role-assignment test is opt-in and fail-safe\n");
 
 const unsafeTextSends = [
   ["Linkbus", linkbus],

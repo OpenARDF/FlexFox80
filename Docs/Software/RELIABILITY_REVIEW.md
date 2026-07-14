@@ -135,15 +135,15 @@ The initialization flag represents the entire layout but has no schema version o
 
 ### R8: Role index extraction is off by one
 
-**Classification:** Confirmed code issue; source/build correction passes, target consequence pending<br>
+**Classification:** Confirmed internal-state issue; correction and all focused gates complete<br>
 **Area:** ESP8266 per-transmitter role assignment<br>
 **Potential impact:** Cached role power/frequency can be taken from the wrong role
 
 `Event::setTxAssignment()` locates `:` and extracts the role with `substring(0, c - 1)`. For `1:2`, where the colon is at index 1, this yields an empty string rather than `1`. Conversion then selects role zero for cached power and frequency.
 
-The full assignment string is still stored and other code parses it differently, so the exact visible consequence needs tracing through the browser and event-send flow.
+The full assignment string is still stored and the AVR event-send path parses it correctly. A completed call-site trace found no active consumer for cached power and no external caller of the cached-frequency accessor. Current evidence therefore identifies inconsistent internal state and a latent future hazard, but not an incorrect AVR configuration in released behavior.
 
-**Implementation status:** The shared production bounds helper and red/green host test now prove complete role prefixes for roles 0, 1, and 10 while preserving the legacy input boundary. A source contract and two exact zero-warning candidate builds pass with 32 additional flash bytes and no RAM/IRAM change. Distinct-role cached-value and AVR-message target verification remains; see [ESP role-assignment prefix correction](Evidence/ESP_ROLE_ASSIGNMENT_2026-07-13.md).
+**Implementation status:** Complete. The shared production bounds helper and red/green host test prove complete role prefixes for roles 0, 1, and a multi-digit parser boundary while preserving the legacy input boundary. A source contract and two exact zero-warning candidate builds pass with 32 additional flash bytes and no RAM/IRAM change. The exact sketch passed independent flash verification, standalone reset/SSID startup, guarded installed role-persistence checks for roles 0 and 1, restoration of the original event assignment, clone controls, and final HTTP/WebSocket/AVR telemetry; see [ESP role-assignment prefix correction](Evidence/ESP_ROLE_ASSIGNMENT_2026-07-13.md).
 
 ## Additional hardening candidates
 
