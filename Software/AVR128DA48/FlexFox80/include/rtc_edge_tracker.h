@@ -47,4 +47,9 @@ static inline uint8_t rtcEdgeTrackerTake(volatile RtcEdgeTracker* tracker)
 	return elapsed;
 }
 
+static inline uint8_t rtcEdgeTrackerGeneration(volatile RtcEdgeTracker* tracker)
+{
+	return tracker->observed;
+}
+
 #endif /* RTC_EDGE_TRACKER_H_INCLUDED */

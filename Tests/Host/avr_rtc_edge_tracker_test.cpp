@@ -65,6 +65,7 @@ void counter_wrap_preserves_elapsed_edge_count()
 		rtcEdgeTrackerObserve(&tracker, false);
 	}
 
+	expect(rtcEdgeTrackerGeneration(&tracker) == 1, "generation_counter_wraps_with_observed_edges");
 	expect(rtcEdgeTrackerTake(&tracker) == 3, "counter_wrap_preserves_elapsed_edge_count");
 }
 

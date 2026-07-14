@@ -526,6 +526,38 @@ if (
 
 process.stdout.write("PASS AVR boot aligns system time to an RTC edge\n");
 
+const rtcSyncStart = avrMain.indexOf("EC syncSystemTimeToRTC(void)\n{");
+const rtcSyncEnd = avrMain.indexOf("\nEC __attribute__((optimize(\"O0\"))) launchEvent", rtcSyncStart);
+const rtcSyncFunctions = avrMain.slice(rtcSyncStart, rtcSyncEnd);
+if (
+  rtcSyncStart < 0 ||
+  rtcSyncEnd < 0 ||
+  !rtcSyncFunctions.includes("RTC_SYNC_WAIT_TIMEOUT_MS") ||
+  !rtcSyncFunctions.includes("rtcSyncWaitState") ||
+  !rtcSyncFunctions.includes("rtcEdgeGeneration") ||
+  !rtcSyncFunctions.includes("rtcSyncReadCanCommit") ||
+  !rtcSyncFunctions.includes("ERROR_CODE_RTC_NONRESPONSIVE") ||
+  /while\s*\(\s*!g_seconds_transition\s*\)\s*;/.test(avrMain)
+) {
+  process.stderr.write(
+    "Firmware contract check failed: RTC synchronization is unbounded or can commit across an edge\n",
+  );
+  process.exit(1);
+}
+
+if (
+  !/uint8_t\s+rtcEdgeGeneration\(\)[\s\S]*TCB2\.INTCTRL\s*=\s*0[\s\S]*rtcEdgeTrackerObserve[\s\S]*rtcEdgeTrackerGeneration[\s\S]*TCB2\.INTCTRL\s*=\s*interrupt_control/.test(
+    tcb,
+  )
+) {
+  process.stderr.write(
+    "Firmware contract check failed: RTC generation snapshot is not race-safe\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS RTC synchronization is bounded and rejects stale reads\n");
+
 if (
   !/VPORTA\.INTFLAGS\s*=\s*x[\s\S]*rtcElapsedEdges\(\)/.test(rtcIsr[1]) ||
   !/do\s*\{[\s\S]*system_tick\(\)[\s\S]*\}\s*while\s*\(\s*--elapsed_seconds\s*\)/.test(

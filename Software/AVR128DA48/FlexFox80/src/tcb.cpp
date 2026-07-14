@@ -195,6 +195,17 @@ uint8_t rtcElapsedEdges()
 	return elapsed;
 }
 
+uint8_t rtcEdgeGeneration()
+{
+	/* Include the live pin in the snapshot and keep it atomic to the Level-1 observer. */
+	uint8_t interrupt_control = TCB2.INTCTRL;
+	TCB2.INTCTRL = 0;
+	rtcEdgeTrackerObserve(&g_rtc_edge_tracker, PORTA_get_pin_level(RTC_SQW));
+	uint8_t generation = rtcEdgeTrackerGeneration(&g_rtc_edge_tracker);
+	TCB2.INTCTRL = interrupt_control;
+	return generation;
+}
+
 
 
 /**

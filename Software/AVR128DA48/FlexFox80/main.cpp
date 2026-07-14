@@ -24,6 +24,7 @@
 #include "huzzah.h"
 #include "CircularStringBuff.h"
 #include "event_time_state.h"
+#include "rtc_sync_guard.h"
 
 #include <cpuint.h>
 #include <ccp.h>
@@ -71,6 +72,7 @@ typedef enum
  * Use "volatile" for globals shared between ISRs and foreground
  ************************************************************************/
 #define TEMPSTR_SIZE 100
+#define RTC_SYNC_WAIT_TIMEOUT_MS 1500
 static char g_tempStr[TEMPSTR_SIZE] = { '\0' };
 static volatile EC g_last_error_code = ERROR_CODE_NO_ERROR;
 static volatile SC g_last_status_code = STATUS_CODE_IDLE;
@@ -229,6 +231,7 @@ static void setOnTheAirFromForeground(int32_t value)
  ************************************************************************/
 void handle_1sec_tasks(void);
 EC syncSystemTimeToRTC(void);
+EC waitForRTCSecondTransition(void);
 bool eventEnabled(void);
 void handleLinkBusMsgs(void);
 void enterCloneQuietMode(void);
@@ -1614,8 +1617,6 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 							g_off_air_seconds = 0;                      /* off period is very short */
 							setOnTheAirFromForeground(9999);            /* start out transmitting */
 							g_sendID_seconds_countdown = MAX_UINT16;			/* wait a long time to send the ID */
-// 							g_seconds_transition = false;
-// 							while(!g_seconds_transition);
 							g_event_commenced = true;                   /* get things running immediately */
 							g_event_enabled = true;                     /* get things running immediately */
 							g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
@@ -2147,12 +2148,42 @@ uint16_t throttleValue(uint8_t speed)
 
 EC syncSystemTimeToRTC(void)
 {
-	g_seconds_transition = false;  /* Sync to RTC second transition */
-	while(!g_seconds_transition);
-	EC result;
+	EC result = waitForRTCSecondTransition();
+	if(result != ERROR_CODE_NO_ERROR)
+	{
+		return result;
+	}
+
+	uint8_t generation = rtcEdgeGeneration();
 	time_t t = ds3231_get_epoch(&result);
-	if(result == ERROR_CODE_NO_ERROR) set_system_time(t);
+	if(!rtcSyncReadCanCommit(
+		result == ERROR_CODE_NO_ERROR,
+		generation,
+		rtcEdgeGeneration()))
+	{
+		return ERROR_CODE_RTC_NONRESPONSIVE;
+	}
+
+	set_system_time(t);
 	return result;
+}
+
+EC waitForRTCSecondTransition(void)
+{
+	g_seconds_transition = false;
+	util_delay_ms(0);
+
+	RtcSyncWaitState wait_state;
+	do
+	{
+		bool timer_running = util_delay_ms(RTC_SYNC_WAIT_TIMEOUT_MS);
+		wait_state = rtcSyncWaitState(
+			g_seconds_transition,
+			timer_running);
+	} while(wait_state == RTC_SYNC_WAITING);
+
+	util_delay_ms(0);
+	return wait_state == RTC_SYNC_EDGE_READY ? ERROR_CODE_NO_ERROR : ERROR_CODE_RTC_NONRESPONSIVE;
 }
 
 EC __attribute__((optimize("O0"))) launchEvent(SC* statusCode)
@@ -2223,9 +2254,13 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 		g_time_needed_for_ID = 0;   /* ID will never be sent */
 	}
 
-	/* Ensure that no one-second transitions occur while time comparisons are being made below */
-	g_seconds_transition = false;
-	while(!g_seconds_transition); /* sync to clock seconds transition */	
+	/* Take one edge-aligned snapshot without hanging forever if RTC SQW is lost. */
+	EC sync_result = waitForRTCSecondTransition();
+	if(sync_result != ERROR_CODE_NO_ERROR)
+	{
+		return sync_result;
+	}
+
 	time_t now = time(null);
 	
 	if(g_event_finish_epoch < now)   /* the event has already finished */

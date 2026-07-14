@@ -54,3 +54,11 @@ ASAN_OPTIONS="${ASAN_OPTIONS:+$ASAN_OPTIONS:}allocator_may_return_null=1" \
 	-o "$build_dir/avr-rtc-edge-tracker-tests"
 
 "$build_dir/avr-rtc-edge-tracker-tests"
+
+# shellcheck disable=SC2086 # Flags are intentionally expanded into individual compiler arguments.
+"$cxx" $common_flags $sanitizer_flags \
+	-I "$repo_root/Software/AVR128DA48/FlexFox80/include" \
+	"$repo_root/Tests/Host/avr_rtc_sync_guard_test.cpp" \
+	-o "$build_dir/avr-rtc-sync-guard-tests"
+
+"$build_dir/avr-rtc-sync-guard-tests"
