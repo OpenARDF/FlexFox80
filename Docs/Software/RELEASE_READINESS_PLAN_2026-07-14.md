@@ -33,12 +33,13 @@ This cutoff does not declare the deferred findings unimportant or resolved. It r
 R4 completed all required gates on 2026-07-14:
 
 1. [x] The exact production candidate and build profile are identified by source commit and SHA-256 hash.
-2. [x] A normal master-to-target clone succeeds with legacy event-file compatibility intact.
-3. [x] A clone with a deliberately mismatched transferred checksum is rejected.
-4. [x] The target retains its prior valid event after the rejected transfer.
-5. [x] Normal cleanup restores reporting and leaves both devices responsive.
-6. [x] Temporary fault-injection firmware and configuration were removed, and both test units were restored to documented operating configurations.
-7. [x] The focused host tests, deterministic ESP builds, installed smoke checks, and [R4 evidence](Evidence/ESP_EVENT_FILE_INTEGRITY_2026-07-13.md) pass.
+2. [x] Embedded release identities are assigned as AVR `0.201` and ESP `2.1`, with a source contract for `SW_VERSIONS,2.1,0.201`.
+3. [x] A normal master-to-target clone succeeds with legacy event-file compatibility intact.
+4. [x] A clone with a deliberately mismatched transferred checksum is rejected.
+5. [x] The target retains its prior valid event after the rejected transfer.
+6. [x] Normal cleanup restores reporting and leaves both devices responsive.
+7. [x] Temporary fault-injection firmware and configuration were removed, and both test units were restored to documented operating configurations.
+8. [x] The focused host tests, deterministic ESP builds, installed smoke checks, and [R4 evidence](Evidence/ESP_EVENT_FILE_INTEGRITY_2026-07-13.md) pass.
 
 The temporary fault-injection build was test equipment, not a production change. The separately tracked intermittent normal-clone retry behavior remains deferred as `B-CLONE-02`.
 

@@ -27,8 +27,9 @@
 | Gate | Status | Evidence / remaining action |
 | --- | --- | --- |
 | Full repository suite | Pass | `just check` passed policy, links, sanitizer-enabled host tests, firmware contracts, and EEPROM layout. |
-| AVR deterministic Release build | Pass | Two AVR-GCC 7.3.0 / DFP 1.9.103 builds, zero warnings, identical artifacts; HEX `db2c4125…dcda`. |
-| ESP deterministic sketch build | Pass | Two core-2.7.4/WebSockets-2.3.6 builds, zero warnings, sketch `8d079501…3911`. |
+| AVR deterministic Release build | Pass | Version `0.201`; two AVR-GCC 7.3.0 / DFP 1.9.103 builds, zero warnings, identical artifacts; HEX `89707660…1ba4`. |
+| ESP deterministic sketch build | Pass | Version `2.1`; two core-2.7.4/WebSockets-2.3.6 builds, zero warnings, sketch `0749b0e4…bad8`. |
+| Combined installed version report | Pending | Program both selected artifacts on a representative paired unit and require `SW_VERSIONS,2.1,0.201`; source/reporting contract already passes. |
 | AVR EEPROM ABI | Pass | Linker `.eeprom = 0x112`; fixed-width host and compile-time contracts pass. |
 | ESP standalone startup | Pass | Qualified core/library profile repeatedly restored normal LEDs and SSID; 3.x profiles were rejected. |
 | Installed HTTP/WebSocket/AVR telemetry | Pass | Both restored R4 test units returned HTTP 200, WebSocket, temperature, battery, versions, role, and advancing epochs. |
@@ -101,7 +102,7 @@ Before official release, record:
 2. which proposed deferrals are approved for this release;
 3. the board/hardware revision description;
 4. the selected rollback archive and its verification result;
-5. the release label/version decision;
+5. the release label decision (the embedded identities are AVR `0.201` and ESP `2.1`);
 6. approval to fast-forward `AVR128DA48` only after the final clean-checkout gates pass.
 
 Until those decisions are recorded, the candidate is frozen and reproducible but not officially released.

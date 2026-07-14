@@ -4,6 +4,8 @@
 
 **Release label:** Pending
 
+**Reported firmware versions:** ESP `2.1`, AVR `0.201` (`SW_VERSIONS,2.1,0.201`)
+
 **Status:** Engineering draft; not yet approved for publication or fleet deployment
 
 ## Summary
@@ -38,6 +40,7 @@ This candidate preserves the established FlexFox80 operating model while correct
 ## Verification summary
 
 - Full host and source-contract suite passes with sanitizers.
+- The release-pair contract pins AVR `0.201` and ESP `2.1` and verifies their combined version-report path.
 - Two exact AVR Release builds are warning-free and byte-identical.
 - Two exact ESP builds are warning-free and produce the same selected sketch image.
 - Focused dummy-load target tests cover programming identity, EEPROM/fuse preservation, Linkbus bounds and recovery, RTC delay recovery, RTC synchronization faults, event boundaries, role assignment, normal cloning, corrupt-clone rejection, prior-file retention, and final configuration restoration.
@@ -53,4 +56,4 @@ These deferrals reflect the mature product's field reliability and the decision 
 
 ## Before release
 
-The release label, board revision description, remaining A8 hardware tests or approved skips, rollback package, integration commit, and publication approval are still required. Do not deploy from this draft alone.
+Live installation/readback of both selected firmware artifacts, the release label, board revision description, remaining A8 hardware tests or approved skips, rollback package, integration commit, and publication approval are still required. Do not deploy from this draft alone.
