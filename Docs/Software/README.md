@@ -12,6 +12,7 @@ This directory documents the current software architecture on the `AVR128DA48` b
 - [Release workflow](RELEASE_WORKFLOW.md) defines current branch roles, integration gates, release evidence, and the future AVR128DA48 transition to `main`.
 - [Release package format](RELEASE_PACKAGE_FORMAT.md) defines the two-processor manifest, checksums, package contents, validation rules, and durable maintenance archive adapted from SignalSlinger.
 - [Release checklist template](release-checklist-template.json) provides evidence-bearing `candidate`, `release`, and `final` gates with explicit owner-attributed skips.
+- [FlexFox80 v1.0.0 candidate record](Releases/v1.0.0/README.md) tracks the first tagged maintenance baseline, candidate package evidence, proposed GitHub assets, and the remaining owner and hardware gates.
 - [July 2026 release-readiness plan](RELEASE_READINESS_PLAN_2026-07-14.md) records the decision to complete R4, freeze firmware scope, qualify an official release candidate, and defer the remaining review items with a precise resume point.
 - [July 2026 release-candidate snapshot](RELEASE_CANDIDATE_SNAPSHOT_2026-07-14.md) records the frozen firmware source, exact artifact hashes, completed verification, branch alignment, rollback position, and still-open official-release gates.
 - [July 2026 release hardware checklist](RELEASE_HARDWARE_CHECKLIST_2026-07-14.md) maps the A8 matrix to passed, partial, pending, and proposed-defer evidence and isolates the remaining owner decisions.

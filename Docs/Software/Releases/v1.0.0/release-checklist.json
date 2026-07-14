@@ -1,0 +1,143 @@
+{
+  "release": "v1.0.0",
+  "repository": "OpenARDF/FlexFox80",
+  "channel": "stable",
+  "sourceCommit": "10dd7c200bc1d63a13b174b2833b452801ae57a8",
+  "hardwareRevision": "Ver 2.1 (Mar 2022)",
+  "avrVersion": "0.201",
+  "espVersion": "2.1",
+  "items": [
+    {
+      "id": "branch-announced",
+      "description": "Confirm the current branch and announce it before release work begins.",
+      "status": "done",
+      "evidence": "Development_AVR128DA48 announced and confirmed by git status on 2026-07-14."
+    },
+    {
+      "id": "working-tree-reviewed",
+      "description": "Confirm the working tree is clean or that unrelated changes are intentionally excluded.",
+      "status": "done",
+      "evidence": "Clean working tree aligned with origin/Development_AVR128DA48 at 10dd7c2 before candidate builds."
+    },
+    {
+      "id": "release-channel",
+      "description": "Record whether this is a stable release or an explicitly approved prerelease.",
+      "status": "done",
+      "evidence": "Stable maintenance baseline proposed for the established FlexFox user base; GitHub is the intended durable archive."
+    },
+    {
+      "id": "release-label-and-firmware-pair",
+      "description": "Approve the product release label and exact AVR and ESP embedded version pair.",
+      "status": "pending",
+      "evidence": "Proposed v1.0.0 with AVR 0.201 and ESP 2.1; owner label approval pending."
+    },
+    {
+      "id": "hardware-revision",
+      "description": "Confirm the release supports only FlexFox Ver 2.1 (Mar 2022).",
+      "status": "done",
+      "evidence": "Owner explicitly limited supported releases to FlexFox Ver 2.1 (Mar 2022)."
+    },
+    {
+      "id": "source-commit-frozen",
+      "description": "Freeze and record the exact clean source commit used for both release builds.",
+      "status": "done",
+      "evidence": "Candidate builds used clean commit 10dd7c200bc1d63a13b174b2833b452801ae57a8; subsequent release-record edits do not change firmware source."
+    },
+    {
+      "id": "full-repository-check",
+      "description": "Run the full repository check at the frozen source commit.",
+      "status": "done",
+      "evidence": "just check passed on 2026-07-14 at 10dd7c2, including policy, links, sanitizer host tests, firmware contracts, release-checklist tests, and the 274-byte EEPROM layout."
+    },
+    {
+      "id": "deterministic-avr-build",
+      "description": "Build AVR Release firmware twice with pinned tools and record matching hashes, warnings, resources, and EEPROM ABI.",
+      "status": "done",
+      "evidence": "Two AVR-GCC 7.3.0 / AVR-Dx_DFP 1.9.103 builds at 10dd7c2: zero warnings, identical artifacts, HEX 897076608a3473d48c0226dfd8800f5ac058e553286a2f97450bfd03a77f1ba4, text 41010, data 1112, BSS 1572, EEPROM 274 bytes."
+    },
+    {
+      "id": "deterministic-esp-build",
+      "description": "Build the ESP sketch twice with the qualified profile and record matching sketch hashes, warnings, and resources.",
+      "status": "done",
+      "evidence": "Two core-2.7.4/WebSockets-2.3.6 HUZZAH 80 MHz 4M1M builds at 10dd7c2: zero warnings and identical sketch, ELF, map, LittleFS, and evidence files; sketch SHA-256 0749b0e493254d526cb7a5e8afd938bd65b04c22bfffaa6c5150614f6315bad8."
+    },
+    {
+      "id": "artifact-manifest",
+      "description": "Generate the release manifest, checksums, package README, and exact AVR, ESP, and LittleFS artifact set.",
+      "status": "done",
+      "evidence": "Candidate package assembled under /private/tmp with AVR HEX, ESP sketch, LittleFS recovery image, flexfox80-release-info-v1 manifest, checksum list, and preservation README. Final package must be regenerated from AVR128DA48."
+    },
+    {
+      "id": "package-validation",
+      "description": "Independently validate manifest fields, package contents, file sizes, and SHA-256 hashes.",
+      "status": "done",
+      "evidence": "Clean extraction passed unzip integrity, jq identity checks, shasum -a 256 -c for all five listed files, AVR Intel HEX conversion, ESP esptool image checksum, and LittleFS listing of the expected eight files. Candidate ZIP is 451743 bytes, SHA-256 08166cf8105fcea0d589de54b09ddeb67ac883370a970647e8ac30d0717ab1ec."
+    },
+    {
+      "id": "hardware-checklist",
+      "description": "Complete the versioned FlexFox hardware checklist, recording every approved skip explicitly.",
+      "status": "pending",
+      "evidence": "Focused gates pass; owner decision on pending and proposed-defer A8 rows remains open."
+    },
+    {
+      "id": "live-version-report",
+      "description": "Install the selected pair on a representative unit and capture the expected combined AVR and ESP version report.",
+      "status": "pending",
+      "evidence": "Source contract passes; an installed representative pair must still report SW_VERSIONS,2.1,0.201."
+    },
+    {
+      "id": "rollback-package",
+      "description": "Select and verify the release rollback package and recovery instructions.",
+      "status": "pending",
+      "evidence": "Known-good AVR and ESP archives exist outside Git, but the retained release rollback set has not been selected and reverified."
+    },
+    {
+      "id": "release-notes",
+      "description": "Approve concise maintainer notes that separate changes, verification, compatibility, and deferrals.",
+      "status": "pending",
+      "evidence": "Docs/Software/Releases/v1.0.0/release-notes.md prepared; owner approval pending."
+    },
+    {
+      "id": "integration-approved",
+      "description": "Obtain explicit approval to integrate the candidate into AVR128DA48.",
+      "status": "pending",
+      "evidence": "Development remains a fast-forward candidate; approval pending."
+    },
+    {
+      "id": "release-branch-verified",
+      "description": "Verify the clean integrated AVR128DA48 commit and reproduce the selected release artifacts from it.",
+      "status": "pending",
+      "evidence": "Awaiting approved fast-forward integration."
+    },
+    {
+      "id": "release-approved",
+      "description": "Obtain explicit approval for the maintenance release, tag, and designated durable archive.",
+      "status": "pending",
+      "evidence": "Awaiting final release approval after candidate gates."
+    },
+    {
+      "id": "annotated-tag",
+      "description": "Create and push an annotated release tag pointing to the verified release commit.",
+      "status": "pending",
+      "evidence": "No tag created."
+    },
+    {
+      "id": "release-record-created",
+      "description": "Create a durable maintainer release record with the approved notes and verification summary.",
+      "status": "pending",
+      "evidence": "Candidate record exists; final GitHub release is not created."
+    },
+    {
+      "id": "release-assets-archived",
+      "description": "Store the validated release ZIP and individually required firmware assets in the designated durable archive.",
+      "status": "pending",
+      "evidence": "Candidate artifacts remain temporary; final GitHub assets are not uploaded."
+    },
+    {
+      "id": "archived-release-verified",
+      "description": "Copy and independently verify the archived assets, hashes, release record, and tag target.",
+      "status": "pending",
+      "evidence": "Awaiting GitHub release publication."
+    }
+  ]
+}

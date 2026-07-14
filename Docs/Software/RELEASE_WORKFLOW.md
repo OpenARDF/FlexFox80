@@ -20,7 +20,7 @@ The current branch names intentionally expose the hardware transition. They can 
 
 FlexFox releases support one hardware target only: **Ver 2.1 (Mar 2022)**. Unlike SignalSlinger, the FlexFox release process does not build or publish parallel board variants. Earlier prototypes and any future revision require a separate compatibility decision before they can use these release assets.
 
-FlexFox is a mature, actively used legacy product rather than a new general-audience product. Its release process is therefore maintainer-oriented and proportional to operational risk. Reproducible firmware, exact evidence, rollback, and installed-device verification are essential. Public launch material, broad distribution packaging, and a GitHub release are optional unless the owner requests them. An official maintenance release still needs a durable record and recoverable artifacts.
+FlexFox is a mature, actively used legacy product rather than a new general-audience product. Its release process is therefore maintainer-oriented and proportional to operational risk. Reproducible firmware, exact evidence, rollback, and installed-device verification are essential. GitHub is the normal durable release archive, but public launch material and broad-audience packaging are unnecessary. An internal-only archive remains available when the owner explicitly requests one.
 
 The standard release has three checklist phases:
 
@@ -130,7 +130,7 @@ After the `candidate` checklist passes and integration is explicitly approved:
 5. Complete the `release` checklist and obtain explicit release approval.
 6. Create and push an annotated `vX.Y.Z` tag pointing to the verified release commit. Record the tag object and peeled commit IDs.
 7. Create a durable release record containing the approved maintainer notes, hardware target, embedded version pair, verification summary, and approved deferrals.
-8. Store the validated ZIP and any individually approved installation assets in the designated durable release archive. A GitHub release is one acceptable archive/distribution method, but is not mandatory.
+8. Store the validated ZIP, AVR HEX, ESP sketch BIN, ESP LittleFS BIN, manifest, and checksums in the GitHub release unless an internal-only archive was explicitly approved. Label the LittleFS image as recovery/factory content rather than a routine update.
 9. Verify the archived tag target, record, asset names, byte sizes, and hashes.
 10. Copy the archived package into a clean temporary directory and rerun package validation.
 11. Mark the final checklist with archive locations and verification evidence, then commit that final record without moving the release tag.

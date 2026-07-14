@@ -36,7 +36,7 @@ The validated ZIP contains exactly:
 - `FlexFox80-Checksums-<release>.txt` — SHA-256 checksum list for every packaged file other than the checksum file itself;
 - `README-FlexFox80-<release>.txt` — plain-language installation, preservation, compatibility, and rollback warnings.
 
-The AVR HEX and ESP sketch BIN may also be uploaded individually for qualified installers. Keep the LittleFS image inside the complete ZIP unless an explicit recovery workflow requires a standalone asset.
+For the normal GitHub release, upload the AVR HEX, ESP sketch BIN, and LittleFS BIN individually as well as inside the complete ZIP. Label the LittleFS asset as recovery/factory content because installing it replaces stored web assets, events, and settings; its availability as a release asset does not make it part of a routine firmware update.
 
 ## Files deliberately excluded
 
@@ -116,6 +116,7 @@ Retain in the designated durable release archive:
 - the complete validated release ZIP;
 - the AVR HEX for qualified UPDI installation;
 - the ESP sketch BIN for qualified FTDI installation;
-- optionally the manifest and checksum list as standalone convenience assets.
+- the ESP LittleFS BIN, clearly labeled as recovery/factory content;
+- the manifest and checksum list as standalone verification assets.
 
-The durable archive may be a GitHub release, an owner-managed release store, or both. Public distribution is not required for this legacy product. The maintainer notes must identify both embedded versions, hardware applicability, important compatibility constraints, completed verification, approved deferrals, and the source tag. If a GitHub release is used, do not substitute generated commit or pull-request notes for that record.
+The normal durable archive is a GitHub release, with an additional owner-managed copy when desired. An internal-only archive remains acceptable when the owner explicitly requests one. The maintainer notes must identify both embedded versions, hardware applicability, important compatibility constraints, completed verification, approved deferrals, and the source tag. Do not substitute generated commit or pull-request notes for that record.

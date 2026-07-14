@@ -6,6 +6,8 @@
 
 **Qualification base commit:** `730d5bad796c9561f483382a0119dea3284cb125`
 
+**Proposed maintenance release:** `v1.0.0`
+
 **Status:** Firmware behavior is frozen, release firmware identities are assigned, and automated/build gates and R4 pass; official release approval and the remaining A8 hardware decisions are pending
 
 ## Purpose
@@ -21,6 +23,8 @@ This document preserves the first complete release-candidate identity after R4. 
 | ESP8266 LittleFS | data inputs at `c2e4e98` | `c2e4e989f8ce5f1bcb4124bcea72ac88c7381446` | `ARDF_Transmitter.littlefs.bin` | `0b45a6ad86ea7774fc6f964a2325417f6d8978f7d2213305d3786b9ee77f0c41` |
 
 The ESP source has no separate embedded firmware-date identifier. The table therefore records the source commit and this build date rather than inventing one. The sole supported release hardware target is **FlexFox Ver 2.1 (Mar 2022)**.
+
+Release preparation at clean commit `10dd7c200bc1d63a13b174b2833b452801ae57a8` reproduced the same three selected installation hashes. Two new AVR builds and two new ESP/LittleFS builds were warning-free and byte-identical. The documentation-only commits after the firmware identity checkpoint therefore do not change the selected executable artifacts.
 
 ## Exact build evidence
 
@@ -63,7 +67,7 @@ The LittleFS tool does not promise byte-identical images across all invocations 
 
 ## Branch readiness
 
-After pushing the source-header checkpoint, `Development_AVR128DA48` and `origin/Development_AVR128DA48` both pointed to `99bc9e9`. The development branch was 118 commits ahead of `origin/AVR128DA48` and zero commits behind. Integration can therefore be a fast-forward if that relationship remains unchanged, but no integration was performed.
+At the `10dd7c2` release-preparation build, `Development_AVR128DA48` and `origin/Development_AVR128DA48` were aligned. The development branch was 120 commits ahead of `origin/AVR128DA48` and zero commits behind. Integration can therefore be a fast-forward if that relationship remains unchanged, but no integration was performed.
 
 The separately planned transition from the AVR128DA48 product line to `main` remains out of scope.
 

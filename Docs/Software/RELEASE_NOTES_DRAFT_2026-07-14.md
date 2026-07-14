@@ -2,7 +2,7 @@
 
 **Draft date:** 2026-07-14
 
-**Release label:** Pending
+**Proposed release label:** `v1.0.0`
 
 **Reported firmware versions:** ESP `2.1`, AVR `0.201` (`SW_VERSIONS,2.1,0.201`)
 
