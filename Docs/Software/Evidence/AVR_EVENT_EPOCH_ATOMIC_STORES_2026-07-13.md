@@ -4,7 +4,7 @@
 
 **Scope:** Foreground writes to `g_event_start_epoch` and `g_event_finish_epoch`
 
-**Status:** Source and exact-build gates pass; connected-target gate pending
+**Status:** Source, exact-build, byte-verified target-programming, and focused runtime gates pass
 
 ## Risk addressed
 
@@ -68,6 +68,28 @@ Candidate artifact SHA-256 values:
 | LSS | `f339e565700340a64480e37d744d9053d85d4c02c66eabb111a2b39ee3879930` |
 | SREC | `1e2db28032c81ac781167e53de637578ca158268568bf0cf28c252352838acc6` |
 
+## Connected-target verification
+
+The committed candidate at `87c7332` was programmed on the authorized dummy-loaded test unit through Atmel-ICE `J41800053674`. The target identified as AVR128DA48 signature `1E 97 08`, silicon revision 1.7, at 3.27 V.
+
+Two independent pre-program reads matched byte-for-byte and retained the previously qualified production state:
+
+| Region | Bytes read | Pre-program SHA-256 |
+| --- | ---: | --- |
+| Programmed flash span | 41,922 | `b8d7bb66de33a59ce57777734ef27cbf0e2ceda302f9b41fb3dacfffc499c3f8` |
+| Complete EEPROM | 512 | `5ad612a6aa41ae86de821ba4b701a7072aaeebb942747e2562040d08c22d610c` |
+| Complete fuse memory | 16 | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` |
+
+The target was explicitly erased, the committed HEX was written and verified twice in the programming session, and the captured 512-byte EEPROM was restored. Fuses were not written. The candidate binary programmed span is 41,882 bytes with SHA-256 `6b623e216d0aabb1eca72ad71b6e0b3d01517e1dc32b4fdd48bd4a3345a269d1`.
+
+Two new post-program sessions independently read flash, EEPROM, and fuses. Both reads matched each other. They also established:
+
+- target flash exactly matches the committed candidate binary;
+- all 512 EEPROM bytes exactly match the pre-program capture;
+- all 16 fuse bytes exactly match the pre-program capture.
+
+After the Moto route was restored, a read-only runtime probe received HTTP 200, opened the WebSocket, and returned AVR temperature `26.0C`, battery `11.5V`, advancing clock reports, SSID `Tx_Master`, software versions `2.0,0.200`, and master role `1`. The tunnel disconnected after the functional assertions and several additional clock reports, so the harness exited nonzero; an immediate retry timed out before contact. This is recorded as a transport tail rather than a clean harness pass. The successful HTTP, AVR telemetry, and advancing clock reports establish ordinary startup and ESP-to-AVR communication for this focused gate.
+
 ## Verification boundary
 
-Host tests, the firmware contract, and the exact build establish that foreground stores cannot be interrupted mid-value and that the generated interrupt bodies did not change. They do not yet establish connected-target programming or broader event behavior. The next focused gate is byte-verified programming with EEPROM and fuse preservation, followed by ordinary startup/WiFi observation. Classic, Sprint, foxoring, beacon, ID, sleep/wake, and event-boundary regression remain in A8.
+Host tests, the firmware contract, the exact build, byte-verified target programming, and focused startup observation establish that foreground stores cannot be interrupted mid-value, generated interrupt bodies did not change, device state was preserved, and the firmware boots with ordinary ESP-to-AVR telemetry. This focused gate does not exercise a complete event or substitute for Classic, Sprint, foxoring, beacon, ID, sleep/wake, and event-boundary regression retained in A8.
