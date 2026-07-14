@@ -82,6 +82,13 @@ const avrMainPath = join(
   "FlexFox80",
   "main.cpp",
 );
+const avrDefinitionsPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "defs.h",
+);
 const eventScheduleStatePath = join(
   repoRoot,
   "Software",
@@ -128,6 +135,13 @@ const espHeaderPath = join(
   "ARDF_Transmitter",
   "Transmitter.h",
 );
+const espDefinitionsPath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "esp8266.h",
+);
 const espEventPath = join(
   repoRoot,
   "Software",
@@ -165,15 +179,37 @@ const serialbus = readFileSync(serialbusPath, "utf8");
 const driverIsr = readFileSync(driverIsrPath, "utf8");
 const goertzel = readFileSync(goertzelPath, "utf8");
 const avrMain = readFileSync(avrMainPath, "utf8");
+const avrDefinitions = readFileSync(avrDefinitionsPath, "utf8");
 const eventScheduleState = readFileSync(eventScheduleStatePath, "utf8");
 const tcb = readFileSync(tcbPath, "utf8");
 const ds3231 = readFileSync(ds3231Path, "utf8");
 const ds3231Header = readFileSync(ds3231HeaderPath, "utf8");
 const espMain = readFileSync(espMainPath, "utf8");
 const espHeader = readFileSync(espHeaderPath, "utf8");
+const espDefinitions = readFileSync(espDefinitionsPath, "utf8");
 const espEvent = readFileSync(espEventPath, "utf8");
 const roleAssignmentBounds = readFileSync(roleAssignmentBoundsPath, "utf8");
 const eventFileIntegrity = readFileSync(eventFileIntegrityPath, "utf8");
+
+const expectedAvrVersion = "0.201";
+const expectedEspVersion = "2.1";
+const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
+const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
+
+if (
+  avrVersion?.[1] !== expectedAvrVersion ||
+  espVersion?.[1] !== expectedEspVersion ||
+  !avrMain.includes("LB_MESSAGE_VER_LABEL, (char *)SW_REVISION") ||
+  !espMain.includes("SOCK_COMMAND_SW_VERSIONS) + \",\" + WIFI_SW_VERSION + \",\" + atmegaVersion")
+) {
+  process.stderr.write(
+    `Firmware contract check failed: combined release version must report ${expectedEspVersion},${expectedAvrVersion}\n`,
+  );
+  process.exit(1);
+}
+
+process.stdout.write(`PASS combined firmware version reports ${expectedEspVersion},${expectedAvrVersion}\n`);
+
 const declaration = source.match(/extern\s+volatile\s+Fox_t\s+g_fox\s*\[\s*([^\]]+?)\s*\]\s*;/);
 
 if (!declaration) {
