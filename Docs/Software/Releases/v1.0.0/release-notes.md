@@ -4,6 +4,8 @@
 
 **Firmware:** ESP `2.1`, AVR `0.201` (`SW_VERSIONS,2.1,0.201`)
 
+**Maintainer approval:** Approved by the release owner on 2026-07-14; final release remains contingent on the representative installed-version gate and release-branch verification.
+
 ## Summary
 
 This first tagged maintenance baseline preserves the established FlexFox80 operating model while correcting bounded reliability defects found during the July 2026 hardening review. It emphasizes clone-time coordination, malformed-input containment, persistence-width correctness, and recovery from timing delays. It does not introduce a new event format or change normal transmitter assignments, frequencies, powers, or user workflows.

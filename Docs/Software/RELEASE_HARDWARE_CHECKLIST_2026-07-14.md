@@ -6,7 +6,7 @@
 
 **Supported hardware target:** FlexFox Ver 2.1 (Mar 2022) only
 
-**Status:** Focused gates pass; remaining broad A8 tests or explicit owner-approved skips are required before official release
+**Status:** Focused gates pass; the release owner approved the remaining broad A8 tests as explicit v1.0.0 deferrals; representative installed-version and integration gates remain
 
 ## Status meanings
 
@@ -106,4 +106,6 @@ Before official release, record:
 4. the release label decision (the embedded identities are AVR `0.201` and ESP `2.1`);
 5. approval to fast-forward `AVR128DA48` only after the final clean-checkout gates pass.
 
-Until those decisions are recorded, the candidate is frozen and reproducible but not officially released.
+Until the remaining representative-device and integration decisions are recorded, the candidate is frozen and reproducible but not officially released.
+
+For v1.0.0, the release owner approved the remaining broad A8 items as explicit deferrals on 2026-07-14. The release-specific scope and unchanged test boundaries are recorded in [v1.0.0 hardware-test disposition](Releases/v1.0.0/hardware-disposition.md). The representative installed-version gate remains mandatory.

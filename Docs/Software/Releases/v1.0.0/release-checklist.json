@@ -28,8 +28,8 @@
     {
       "id": "release-label-and-firmware-pair",
       "description": "Approve the product release label and exact AVR and ESP embedded version pair.",
-      "status": "pending",
-      "evidence": "Proposed v1.0.0 with AVR 0.201 and ESP 2.1; owner label approval pending."
+      "status": "done",
+      "evidence": "Release owner approved v1.0.0 with AVR 0.201 and ESP 2.1 on 2026-07-14."
     },
     {
       "id": "hardware-revision",
@@ -76,8 +76,10 @@
     {
       "id": "hardware-checklist",
       "description": "Complete the versioned FlexFox hardware checklist, recording every approved skip explicitly.",
-      "status": "pending",
-      "evidence": "Focused gates pass; owner decision on pending and proposed-defer A8 rows remains open."
+      "status": "skipped",
+      "evidence": "",
+      "skipReason": "For this first maintenance baseline, the release owner approved deferral of the remaining broad A8 power-cycle, complete event/RF-cycle, scheduled sleep/wake, thermal/endurance, clone-interruption, watchdog, and general power-loss tests. Focused tests and prior field reliability remain the release basis; Docs/Software/Releases/v1.0.0/hardware-disposition.md preserves every open boundary.",
+      "skipRequestedBy": "Charles Scharlau, release owner, 2026-07-14"
     },
     {
       "id": "live-version-report",
@@ -88,14 +90,14 @@
     {
       "id": "rollback-package",
       "description": "Select and verify the release rollback package and recovery instructions.",
-      "status": "pending",
-      "evidence": "Known-good AVR and ESP archives exist outside Git, but the retained release rollback set has not been selected and reverified."
+      "status": "done",
+      "evidence": "Docs/Software/Releases/v1.0.0/rollback.md selects the verified AVR 0.200 reference flash and mature ESP full-flash baseline, records exact hashes and recovery evidence, excludes unit-specific state from GitHub, and requires fresh per-unit EEPROM/fuse/full-ESP backups before fleet updates. Approved by the release owner on 2026-07-14."
     },
     {
       "id": "release-notes",
       "description": "Approve concise maintainer notes that separate changes, verification, compatibility, and deferrals.",
-      "status": "pending",
-      "evidence": "Docs/Software/Releases/v1.0.0/release-notes.md prepared; owner approval pending."
+      "status": "done",
+      "evidence": "Release owner approved Docs/Software/Releases/v1.0.0/release-notes.md on 2026-07-14."
     },
     {
       "id": "integration-approved",

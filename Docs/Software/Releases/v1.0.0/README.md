@@ -1,6 +1,6 @@
 # FlexFox80 v1.0.0 Maintenance Release Record
 
-**Status:** Candidate preparation; not tagged, published, or approved for fleet deployment
+**Status:** Owner-approved candidate identity and deferrals; representative installed-version gate remains open; not tagged, published, or approved for fleet deployment
 
 **Hardware:** FlexFox Ver 2.1 (Mar 2022) only
 
@@ -26,12 +26,19 @@ The candidate package is intentionally temporary. The final package must be rege
 - `FlexFox80-LittleFS-2.1.bin` labeled as recovery/factory content;
 - release manifest and checksum list.
 
-## Decisions still required
+## Owner decisions recorded
 
-1. Approve product release label `v1.0.0` for the first tagged maintenance baseline.
-2. Approve or revise the proposed hardware-test deferrals recorded in the release hardware checklist.
-3. Select and verify the retained AVR and ESP rollback archives.
-4. Install or identify a representative paired unit that reports `SW_VERSIONS,2.1,0.201` and retains its expected configuration.
-5. Approve fast-forward integration into `AVR128DA48`, followed by final clean-branch builds, packaging, tag, and GitHub release.
+On 2026-07-14, the release owner approved:
 
-See [release checklist](release-checklist.json), [candidate notes](release-notes.md), and the repository [release workflow](../../RELEASE_WORKFLOW.md).
+1. product release label `v1.0.0` for the first tagged maintenance baseline;
+2. the proposed maintainer release notes;
+3. the remaining broad A8 tests as explicit v1.0.0 deferrals rather than silent passes; and
+4. the documented reference rollback set plus fresh unit-specific backups before fleet updates.
+
+See [hardware disposition](hardware-disposition.md) and [rollback record](rollback.md).
+
+## Remaining candidate gate
+
+Install the exact selected pair on a representative Ver 2.1 unit, require `SW_VERSIONS,2.1,0.201`, and verify its expected configuration. After that proof is recorded, the candidate checklist can pass and the separately approved fast-forward integration/final-release sequence can begin.
+
+See [release checklist](release-checklist.json), [approved maintainer notes](release-notes.md), and the repository [release workflow](../../RELEASE_WORKFLOW.md).
