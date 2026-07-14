@@ -190,6 +190,7 @@ class Event {
 
     static bool validEventFile(String path);
     static bool validEventFile(String path, String* filename);
+    static bool validEventFile(String path, String* filename, bool requireChecksum);
     bool validateEvent(void);
     bool readEventFile(String path);
     bool writeEventFile(void);

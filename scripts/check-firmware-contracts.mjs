@@ -142,6 +142,13 @@ const roleAssignmentBoundsPath = join(
   "ARDF_Transmitter",
   "role_assignment_bounds.h",
 );
+const eventFileIntegrityPath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "event_file_integrity.h",
+);
 const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
@@ -166,6 +173,7 @@ const espMain = readFileSync(espMainPath, "utf8");
 const espHeader = readFileSync(espHeaderPath, "utf8");
 const espEvent = readFileSync(espEventPath, "utf8");
 const roleAssignmentBounds = readFileSync(roleAssignmentBoundsPath, "utf8");
+const eventFileIntegrity = readFileSync(eventFileIntegrityPath, "utf8");
 const declaration = source.match(/extern\s+volatile\s+Fox_t\s+g_fox\s*\[\s*([^\]]+?)\s*\]\s*;/);
 
 if (!declaration) {
@@ -900,6 +908,28 @@ if (
 }
 
 process.stdout.write("PASS ESP role assignment retains the complete role prefix\n");
+
+const eventFileValidatorBody = espEvent.match(
+  /bool\s+Event::validEventFile\s*\(\s*String\s+path\s*,\s*String\s*\*\s*filename\s*,\s*bool\s+requireChecksum\s*\)\s*\{([\s\S]*?)\n\}/,
+);
+if (
+  !eventFileValidatorBody ||
+  !eventFileValidatorBody[1].includes("eventFileIntegrityInitialState()") ||
+  !eventFileValidatorBody[1].includes("eventFileIntegrityObserveLine") ||
+  !eventFileValidatorBody[1].includes("eventFileIntegrityValid(&integrity, requireChecksum)") ||
+  !espEvent.includes("validEventFile(path, NULL, false)") ||
+  !espMain.includes("Event::validEventFile(path, &updatedFileName, true)") ||
+  !eventFileIntegrity.includes("uint32_t checksum;") ||
+  !eventFileIntegrity.includes("received == state->checksum") ||
+  !eventFileIntegrity.includes("return !requireChecksum || state->checksumSeen;")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: cloned event files do not require the transferred checksum while legacy files remain compatible\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS cloned event files require checksum while legacy files remain compatible\n");
 
 if (
   espMain.includes("g_webSocketServer.isRunning()") ||

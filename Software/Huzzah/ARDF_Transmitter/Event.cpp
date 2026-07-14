@@ -20,6 +20,7 @@
 
 **********************************************************************************************/
 #include "Event.h"
+#include "event_file_integrity.h"
 #include "role_assignment_bounds.h"
 #include <LittleFS.h>
 #include "Helpers.h"
@@ -353,19 +354,19 @@ bool Event::extractMeFileData(String path, EventFileRef *eventRef)
 
 bool Event::validEventFile(String path)
 {
-  bool isValid;
-  isValid = validEventFile(path, NULL);
-  return (isValid);
+  return (validEventFile(path, NULL, false));
 }
 
 bool Event::validEventFile(String path, String* filename)
 {
-  bool failure = false;
-  bool startFound = false;
-  bool endFound = false;
+  return (validEventFile(path, filename, false));
+}
+
+bool Event::validEventFile(String path, String* filename, bool requireChecksum)
+{
+  bool failure = true;
   int linesInFile = 0;
-  EventLineData lineData;
-  int checksum;
+  EventFileIntegrityState integrity = eventFileIntegrityInitialState();
 
   if (LittleFS.exists(path))
   {
@@ -374,62 +375,35 @@ bool Event::validEventFile(String path, String* filename)
 
     if (file)
     {
-      String s = String("START");
+      String s;
 
-      while (s.length() && !startFound)
+      while (file.available() && (linesInFile < MAXIMUM_NUMBER_OF_EVENT_FILE_LINES))
       {
         yield();
         s = file.readStringUntil('\n');
         s.trim();
-
-        if (!extractLineData(s, &lineData))
+        if (!s.length())
         {
-          startFound = s.equals(EVENT_FILE_START);
-          if (lineData.id.equals(EVENT_FILE_NAME))
+          break;
+        }
+
+        const bool startSeenBeforeLine = integrity.startSeen;
+        eventFileIntegrityObserveLine(&integrity, s.c_str(), s.length());
+        linesInFile++;
+
+        if (filename && !startSeenBeforeLine && !integrity.startSeen)
+        {
+          EventLineData lineData;
+          if (!extractLineData(s, &lineData) && lineData.id.equals(EVENT_FILE_NAME))
           {
-            if (filename)
-            {
-              *filename = lineData.value;
-            }
+            *filename = lineData.value;
           }
         }
       }
 
-      if (startFound)
-      {
-        linesInFile = 1;
-        checksum += s.length(); /* Add length of EVENT_START */
-
-        while (s.length() && (linesInFile++ <= MAXIMUM_NUMBER_OF_EVENT_FILE_LINES) && !endFound)
-        {
-          yield();
-          s = file.readStringUntil('\n');
-          s.trim();
-          if (!endFound)
-          {
-            checksum += s.length();
-            endFound = s.equals(EVENT_FILE_END);
-          }
-          else if (!extractLineData(s, &lineData))
-          {
-            if (lineData.id.equals(EVENT_FILE_CHECKSUM))
-            {
-              failure = (checksum != lineData.value.toInt());
-            }
-          }
-
-          linesInFile++;
-        }
-
-        if (!failure)
-        {
-          failure = (!endFound || (linesInFile > MAXIMUM_NUMBER_OF_EVENT_FILE_LINES));
-        }
-      }
-      else
-      {
-        failure = true;
-      }
+      const bool lineLimitExceeded =
+        (linesInFile >= MAXIMUM_NUMBER_OF_EVENT_FILE_LINES) && file.available();
+      failure = lineLimitExceeded || !eventFileIntegrityValid(&integrity, requireChecksum);
 
       file.close();   /* Close the file */
     }

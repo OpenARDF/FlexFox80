@@ -78,3 +78,11 @@ ASAN_OPTIONS="${ASAN_OPTIONS:+$ASAN_OPTIONS:}allocator_may_return_null=1" \
 	-o "$build_dir/esp-role-assignment-bounds-tests"
 
 "$build_dir/esp-role-assignment-bounds-tests"
+
+# shellcheck disable=SC2086 # Flags are intentionally expanded into individual compiler arguments.
+"$cxx" $common_flags $sanitizer_flags \
+	-I "$repo_root/Software/Huzzah/ARDF_Transmitter" \
+	"$repo_root/Tests/Host/esp_event_file_integrity_test.cpp" \
+	-o "$build_dir/esp-event-file-integrity-tests"
+
+"$build_dir/esp-event-file-integrity-tests"

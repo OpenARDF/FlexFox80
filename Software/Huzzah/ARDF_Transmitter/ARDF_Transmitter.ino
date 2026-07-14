@@ -1994,7 +1994,7 @@ bool clientUpdateEventFilesLoop()
           else
           {
             String path = String("/Temp");
-            if (Event::validEventFile(path, &updatedFileName))
+            if (Event::validEventFile(path, &updatedFileName, true))
             {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
               if (g_debug_prints_enabled)

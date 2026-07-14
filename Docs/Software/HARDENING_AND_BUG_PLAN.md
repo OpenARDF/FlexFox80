@@ -601,7 +601,7 @@ Use a small internal issue table or tracker with these fields:
 | R1 | A | High | AVR Linkbus | Direct bounds, length, collision, and target regressions; exact Mac builds | Static review and focused red-green/target evidence | — | Complete |
 | R2 | A/B | High | AVR RTC | Hardware fault test needed | Static review | A2/A5 | Planned |
 | R3 | A | High | AVR recovery | Directly visible | Static review | A5 | Planned |
-| R4 | A | Medium | ESP event files | Pending fixture | Static review | A3 | Planned |
+| R4 | A | Medium | ESP event files | Legacy files remain compatible; clone `/Temp` requires the transferred checksum | [ESP clone event-file integrity](Evidence/ESP_EVENT_FILE_INTEGRITY_2026-07-13.md); red/green host test, source contract, compatibility trace, and two exact deterministic builds pass | Program receiver; normal clone and corrupt-transfer retention gates | Implementing |
 | R5 | A/B | High | Cross-processor timing input | Pending fixture | Static review | A3 | Planned |
 | R6 | A | High | AVR EEPROM | I2C counter and enum ABI regressions; 65-field layout protected | Static review, focused red-green evidence, and exact Mac build | A3/A4 | In progress |
 | R7 | A | High | AVR text output | Direct boundary regression; exact Mac build and target probe | Static review and focused red-green evidence | — | Complete |

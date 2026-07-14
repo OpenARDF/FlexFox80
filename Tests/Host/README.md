@@ -54,6 +54,13 @@ The ESP role-assignment bounds regression compiles the same first-colon decision
 - rejection of null, missing-colon, and empty-role assignments;
 - preservation of the existing permissive handling for empty slots and additional colons.
 
+The ESP event-file integrity regression compiles the same framing/checksum state tracker used by `Event::validEventFile()` and covers:
+
+- continued acceptance of mature checksum-less event files;
+- required matching checksums for cloned temporary files;
+- observation of the deployed `CHECK` line after `EVENT_END`;
+- rejection of changed-length payloads, malformed or duplicate checksums, missing end framing, and checksums placed before the end marker.
+
 Zero-capacity construction and allocation-failure behavior are intentionally not asserted yet. They are candidate red-green defect slices and must begin with recorded pre-fix evidence.
 
 ## Limits

@@ -36,7 +36,7 @@ The ESP8266 frequently calls `yield()` in long loops, allowing its built-in watc
 
 ### R1: Linkbus receive fields are not bounds checked
 
-**Classification:** Confirmed code issue<br>
+**Classification:** Confirmed code issue; source/build correction passes, target gates pending<br>
 **Area:** AVR communications ISR<br>
 **Potential impact:** SRAM corruption, reset, incorrect settings, or unpredictable RF behavior after malformed serial input
 
@@ -85,7 +85,9 @@ In `Event::validEventFile()`:
 
 The effective validation is therefore based mainly on file existence, start/end markers, and a line limit.
 
-**Recommended first step:** Decide whether checksums remain part of the supported file format. If yes, document the exact covered bytes and compatibility behavior for existing files. If no, remove the misleading mechanism and use atomic-file replacement plus semantic validation.
+**Implementation status:** The existing clone-transfer checksum remains the wire contract. A shared red/green state tracker now initializes the sum, reads the checksum after `EVENT_END`, rejects malformed/duplicate/mismatched values, and requires a matching checksum only for clone-received `/Temp`. Mature stored and newly written checksum-less files remain compatible. The source contract and two exact deterministic zero-warning builds pass with no IRAM/DATA/BSS growth. Target programming, normal clone, and corrupt-transfer retention gates remain; see [ESP clone event-file integrity correction](Evidence/ESP_EVENT_FILE_INTEGRITY_2026-07-13.md).
+
+Atomic replacement for ordinary web-editor saves and a stronger versioned checksum remain separate hardening work; neither is silently introduced by this compatibility correction.
 
 ### R5: Transmit interval input is insufficiently validated
 
