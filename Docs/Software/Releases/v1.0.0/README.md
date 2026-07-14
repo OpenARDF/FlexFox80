@@ -1,12 +1,14 @@
 # FlexFox80 v1.0.0 Maintenance Release Record
 
-**Status:** Candidate gates and approved integration to `main` pass; final reproduction and release approval remain open; not tagged, published, or approved for fleet deployment
+**Status:** Candidate gates, integration to `main`, clean-main reproduction, and final release authorization pass; awaiting annotated tag and GitHub publication
 
 **Hardware:** FlexFox Ver 2.1 (Mar 2022) only
 
 **Embedded versions:** AVR `0.201`, ESP `2.1`
 
 **Candidate source commit:** `10dd7c200bc1d63a13b174b2833b452801ae57a8`
+
+**Integrated main reproduction:** `2dd843859da4e10561704534779a62964374f803`
 
 ## Candidate evidence
 
@@ -17,7 +19,7 @@
 - Candidate ZIP: `FlexFox80-v1.0.0-AVR-0.201-ESP-2.1-Release-Files.zip`, 451,743 bytes, SHA-256 `08166cf8105fcea0d589de54b09ddeb67ac883370a970647e8ac30d0717ab1ec`.
 - The exact selected pair was independently programmed and verified on a representative Ver 2.1 master. Its preserved configuration, normal startup and telemetry, and live `SW_VERSIONS,2.1,0.201` response pass the final candidate hardware gate.
 
-The candidate package is intentionally temporary. The final package must be regenerated from the clean integrated `main` commit so its manifest, tag target, branch, and archived hashes agree.
+The candidate package is intentionally temporary. The final package is regenerated from the exact clean `main` tag commit so its manifest, tag target, branch, and archived hashes agree.
 
 ## Intended GitHub assets
 
@@ -34,12 +36,13 @@ On 2026-07-14, the release owner approved:
 1. product release label `v1.0.0` for the first tagged maintenance baseline;
 2. the proposed maintainer release notes;
 3. the remaining broad A8 tests as explicit v1.0.0 deferrals rather than silent passes; and
-4. the documented reference rollback set, with routine per-unit AVR EEPROM preservation and full-device backups only when specifically requested or separately justified.
+4. the documented reference rollback set, with routine per-unit AVR EEPROM preservation and full-device backups only when specifically requested or separately justified; and
+5. final rebuilding, annotated `v1.0.0` tag creation, and GitHub publication after the clean-main reproduction passed.
 
 See [hardware disposition](hardware-disposition.md) and [rollback record](rollback.md).
 
 ## Candidate disposition
 
-The candidate checklist passes and integration is approved. [Installed-pair verification](../../Evidence/V1_0_0_INSTALLED_PAIR_VERIFICATION_2026-07-14.md) records the exact flash, EEPROM, fuse, configuration, identity, telemetry, and combined-version evidence. The approved replacement-tree merge established the qualified current-product tree on `main` while preserving the former tip at `legacy-main-before-avr128da48-2026-07-14`; the redundant `AVR128DA48` branch was removed. The next controlled step is to integrate these policy records, rebuild and repackage from the final clean `main` release commit, review the release checklist, and grant final tag/publication approval.
+The candidate checklist passes and integration is approved. [Installed-pair verification](../../Evidence/V1_0_0_INSTALLED_PAIR_VERIFICATION_2026-07-14.md) records the exact flash, EEPROM, fuse, configuration, identity, telemetry, and combined-version evidence. The approved replacement-tree merge established the qualified current-product tree on `main` while preserving the former tip at `legacy-main-before-avr128da48-2026-07-14`; the redundant `AVR128DA48` branch was removed. [Clean-main reproduction](../../Evidence/V1_0_0_MAIN_RELEASE_REPRODUCTION_2026-07-14.md) records the final repository and deterministic-build gate. The release owner then authorized final rebuilding, tagging, and GitHub publication.
 
 See [release checklist](release-checklist.json), [approved maintainer notes](release-notes.md), and the repository [release workflow](../../RELEASE_WORKFLOW.md).

@@ -108,14 +108,14 @@
     {
       "id": "release-branch-verified",
       "description": "Verify the clean integrated main commit and reproduce the selected release artifacts from it.",
-      "status": "pending",
-      "evidence": "The replacement merge passed just check and the candidate checklist with an exact candidate tree. Final deterministic builds and package reproduction remain required from the final clean main release commit after branch-policy records are integrated."
+      "status": "done",
+      "evidence": "Docs/Software/Evidence/V1_0_0_MAIN_RELEASE_REPRODUCTION_2026-07-14.md records a clean main checkout at 2dd843859da4e10561704534779a62964374f803, a passing full repository check, two warning-free byte-identical AVR builds, and two warning-free ESP/LittleFS builds with byte-identical selected release artifacts. The documentation-only release-record descendant is rebuilt again before tagging."
     },
     {
       "id": "release-approved",
       "description": "Obtain explicit approval for the maintenance release, tag, and designated durable archive.",
-      "status": "pending",
-      "evidence": "Awaiting final release approval after candidate gates."
+      "status": "done",
+      "evidence": "On 2026-07-14, after the replacement-tree integration and clean-main reproduction, the release owner explicitly directed final rebuilding, annotated v1.0.0 tag creation, and GitHub publication with the approved release assets."
     },
     {
       "id": "annotated-tag",

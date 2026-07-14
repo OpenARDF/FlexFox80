@@ -4,7 +4,7 @@
 
 **Firmware:** ESP `2.1`, AVR `0.201` (`SW_VERSIONS,2.1,0.201`)
 
-**Maintainer approval:** Approved by the release owner on 2026-07-14; final release remains contingent on the representative installed-version gate and release-branch verification.
+**Maintainer approval:** Approved for annotated `v1.0.0` tagging and GitHub publication by the release owner on 2026-07-14 after the representative installed-version and clean-main reproduction gates passed.
 
 ## Summary
 
