@@ -84,8 +84,8 @@
     {
       "id": "live-version-report",
       "description": "Install the selected pair on a representative unit and capture the expected combined AVR and ESP version report.",
-      "status": "pending",
-      "evidence": "Source contract passes; an installed representative pair must still report SW_VERSIONS,2.1,0.201."
+      "status": "done",
+      "evidence": "Docs/Software/Evidence/V1_0_0_INSTALLED_PAIR_VERIFICATION_2026-07-14.md records exact ESP and AVR programming/readback, preserved EEPROM/fuses/LittleFS, normal installed identity and telemetry, and the live required response SW_VERSIONS,2.1,0.201 on a representative Ver 2.1 master."
     },
     {
       "id": "rollback-package",

@@ -1,6 +1,6 @@
 # FlexFox80 v1.0.0 Maintenance Release Record
 
-**Status:** Owner-approved candidate identity and deferrals; representative installed-version gate remains open; not tagged, published, or approved for fleet deployment
+**Status:** Candidate gates pass; integration and final release approval remain open; not tagged, published, or approved for fleet deployment
 
 **Hardware:** FlexFox Ver 2.1 (Mar 2022) only
 
@@ -15,6 +15,7 @@
 - Two pinned ESP8266 core 2.7.4 / WebSockets 2.3.6 builds are warning-free and byte-identical, including the selected LittleFS image.
 - The candidate ZIP was assembled under `/private/tmp`, extracted into a separate clean directory, and checked for ZIP integrity, manifest identity, SHA-256 values, AVR Intel HEX parsing, ESP image checksum, and LittleFS contents.
 - Candidate ZIP: `FlexFox80-v1.0.0-AVR-0.201-ESP-2.1-Release-Files.zip`, 451,743 bytes, SHA-256 `08166cf8105fcea0d589de54b09ddeb67ac883370a970647e8ac30d0717ab1ec`.
+- The exact selected pair was independently programmed and verified on a representative Ver 2.1 master. Its preserved configuration, normal startup and telemetry, and live `SW_VERSIONS,2.1,0.201` response pass the final candidate hardware gate.
 
 The candidate package is intentionally temporary. The final package must be regenerated from the clean integrated `AVR128DA48` commit so its manifest, tag target, branch, and archived hashes agree.
 
@@ -37,8 +38,8 @@ On 2026-07-14, the release owner approved:
 
 See [hardware disposition](hardware-disposition.md) and [rollback record](rollback.md).
 
-## Remaining candidate gate
+## Candidate disposition
 
-Install the exact selected pair on a representative Ver 2.1 unit, require `SW_VERSIONS,2.1,0.201`, and verify its expected configuration. After that proof is recorded, the candidate checklist can pass and the separately approved fast-forward integration/final-release sequence can begin.
+The candidate checklist now passes. [Installed-pair verification](../../Evidence/V1_0_0_INSTALLED_PAIR_VERIFICATION_2026-07-14.md) records the exact flash, EEPROM, fuse, configuration, identity, telemetry, and combined-version evidence. The next separately controlled step is explicit owner approval to fast-forward `AVR128DA48`, rebuild and repackage from that exact release commit, review the resulting release checklist, and grant final tag/publication approval.
 
 See [release checklist](release-checklist.json), [approved maintainer notes](release-notes.md), and the repository [release workflow](../../RELEASE_WORKFLOW.md).

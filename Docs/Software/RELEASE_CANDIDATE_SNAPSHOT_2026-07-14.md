@@ -8,7 +8,7 @@
 
 **Proposed maintenance release:** `v1.0.0`
 
-**Status:** Firmware behavior is frozen, release firmware identities are assigned, and automated/build gates and R4 pass; official release approval and the remaining A8 hardware decisions are pending
+**Status:** Candidate gates pass, including the representative installed pair; explicit integration and final release approval remain pending
 
 ## Purpose
 
@@ -64,6 +64,7 @@ The LittleFS tool does not promise byte-identical images across all invocations 
 - The test master and R4 candidate were restored to their recorded event, callsign, role, master/receiver, frequency, power, and telemetry baselines.
 - The accumulated AVR corrections have focused host, exact-build, and applicable connected-target evidence linked from the [hardening tracker](HARDENING_AND_BUG_PLAN.md).
 - The selected ESP image has installed HTTP, WebSocket, AVR telemetry, role-assignment, clone-control, normal-clone, and rejection-path evidence.
+- [v1.0.0 installed-pair verification](Evidence/V1_0_0_INSTALLED_PAIR_VERIFICATION_2026-07-14.md) independently programmed and read back both selected images on the representative Ver 2.1 master, preserved its EEPROM/fuses/LittleFS and established identity, and received live `SW_VERSIONS,2.1,0.201` with normal telemetry.
 
 ## Branch readiness
 
@@ -81,11 +82,9 @@ This establishes available rollback material; it does not by itself satisfy A8's
 
 The following are not silently treated as passed:
 
-- install both selected artifacts on a representative paired unit and require the live combined response `SW_VERSIONS,2.1,0.201`;
-- execute or explicitly approve skips in the [release hardware checklist](RELEASE_HARDWARE_CHECKLIST_2026-07-14.md), including representative classic, sprint, foxoring, beacon, antenna removal/reconnection, scheduled sleep/wake, temperature/fan, long-duration event, and broader fault-recovery checks;
-- select and verify the final rollback package;
-- approve the user-readable release notes;
+- retain the approved skips in the [release hardware checklist](RELEASE_HARDWARE_CHECKLIST_2026-07-14.md), including representative classic, sprint, foxoring, beacon, antenna removal/reconnection, scheduled sleep/wake, temperature/fan, long-duration event, and broader fault-recovery checks;
 - re-run the clean-checkout build and status gates at the exact integration commit;
-- explicitly approve fast-forward integration into `AVR128DA48` and any later release distribution.
+- explicitly approve fast-forward integration into `AVR128DA48`;
+- review the reproduced release artifacts and explicitly approve the annotated tag and GitHub publication.
 
 No additional firmware behavior work is planned unless one of these gates reproduces a release-blocking regression.
