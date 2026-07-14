@@ -4,7 +4,7 @@
 
 **Scope:** ESP8266 event-file framing and the existing clone-transfer length checksum
 
-**Status:** Red/green host test, source contract, compatibility review, and two exact candidate builds pass; target programming, normal installed regression, valid clone, and corrupt-transfer rejection gates remain
+**Status:** Complete; host, deterministic-build, installed, normal-clone, corrupt-transfer rejection, prior-file retention, and restoration gates pass
 
 ## Confirmed defect
 
@@ -77,18 +77,53 @@ The candidate retains 42,188 bytes of dynamic-memory headroom and 5,156 bytes of
 
 Candidate sketch binary:
 
+- production source commit `c2e4e989f8ce5f1bcb4124bcea72ac88c7381446`;
 - 503,824 bytes;
 - SHA-256 `8d079501ce39810818fa64664a70a7f21729eb234fa93a6da04cb6679dfb3911`;
 - byte-identical across two exact builds.
 
-## Remaining target gates
+## Target qualification — 2026-07-14
 
-Before R4 is complete:
+The corrected production sketch was installed on the candidate HUZZAH with ESP chip MAC `44:17:93:0f:09:3e`. The WebSocket `MAC` command reports the connected client's MAC address, not the ESP chip MAC, so hardware identity was established through `esptool` rather than that command. Existing known-good flash archives were retained as rollback images; at the operator's explicit direction, this checkpoint did not create another full-flash archive.
 
-1. preserve the receiving HUZZAH's complete flash and program only the exact candidate sketch;
-2. require normal standalone reset/SSID and installed HTTP/WebSocket/AVR telemetry;
-3. perform a normal clone into the corrected receiver and require all files, checksum validation, role restoration, RTC readback, and cleanup to succeed;
-4. inject a mismatched or missing transfer checksum through a controlled test master and require the receiver to retain the prior event file and report clone failure;
-5. restore both units' reliable event, role, master/target, clock, and filesystem state.
+Installed startup and communication passed through the supported path:
 
-Do not infer the corrupt-transfer target gate from the host test or a successful normal clone.
+- the ESP advertised its expected SSID after reset;
+- HTTP returned 200 and WebSocket communication opened normally;
+- live AVR temperature, battery, software-version, master-state, and advancing `SYNC` reports were received;
+- the exact production sketch is 503,824 bytes with SHA-256 `8d079501ce39810818fa64664a70a7f21729eb234fa93a6da04cb6679dfb3911`.
+
+### Normal clone
+
+The candidate was temporarily changed from `MASTER,1` to `MASTER,0` and used as the receiver. Its recorded pre-test state was `Classic 80m Set 1-1`, assignment `1:0`, callsign `NZ0I<<`, six role definitions, 3,520,000/3,600,000 Hz, and 3000/3000 mW.
+
+The first normal attempt exhibited the already tracked `B-CLONE-02` stall. Resetting only the target did not restore ordinary AVR reports; the existing `$ESP,R;` cleanup command did. A clean retry then showed the established successful-clone LED sequence. Direct post-clone readback proved:
+
+- `MASTER,0` and assignment `1:0` were preserved;
+- all nine expected `Classic 80m Set` event files loaded;
+- the active event and callsign remained valid;
+- all six roles and both frequency/power values matched the baseline;
+- HTTP, WebSocket, telemetry, and advancing clock reports resumed normally.
+
+The production receive path cannot install a clone `/Temp` file unless the explicit checksum-required validator passes. The successful file set therefore exercised the corrected validator while retaining compatibility with the ordinary checksum-less files already stored in LittleFS. The clone event stream was not independently captured, so the evidence does not claim a frame-by-frame timing trace.
+
+### Controlled mismatched-checksum clone
+
+The temporary source/master HUZZAH was independently identified by `esptool` as `a4:e5:7c:2d:69:ed`. A test-only copy changed only the master event-file send expression from `String(checksum)` to `String(checksum + 1)`. Its sketch binary was 503,808 bytes with SHA-256 `ad68541b0f04c228d48a936f7b37d6de80b830b8acf6fa25359e769c3c98894e`. This was test equipment and was never committed as production source.
+
+The source active event was given the temporary, persisted callsign `R4BAD`; the receiver baseline remained `NZ0I<<`. During the clone, the ESP LED sequence indicated that the transfer aborted. Direct receiver readback then proved:
+
+- the active `Classic 80m Set 1-1` still contained `NZ0I<<`, not `R4BAD`;
+- all nine prior event files remained readable;
+- `MASTER,0`, assignment `1:0`, every role, both frequencies, and both powers were unchanged;
+- HTTP, WebSocket, temperature, battery, and advancing `SYNC` reports remained healthy.
+
+This distinguishes rejection with prior-file retention from a transfer that merely appeared to fail at the user interface.
+
+### Restoration
+
+The temporary source ESP was reflashed at address `0x0` with the exact production R4 binary; LittleFS was not rewritten. Its callsign was restored from `R4BAD` to `NZ0I<<` with `SAVED_EVENT` confirmation, and it was restored to `MASTER,0`, SSID `Tx_7C2D69ED`, and assignment `0:4`. A complete readback confirmed all nine events, six roles, both frequencies, both powers, and live telemetry.
+
+The R4 candidate was restored to `MASTER,1`, SSID `Tx_Master`, and assignment `1:0`. Final readback confirmed all nine event files with `NZ0I<<`, six roles, 3,520,000/3,600,000 Hz, 3000/3000 mW, battery and temperature reports, and advancing `SYNC` epochs.
+
+R4 is complete. The intermittent normal-clone stall remains deferred as `B-CLONE-02`; it did not invalidate the successful retry or the independently proven corrupt-transfer rejection and retention behavior.

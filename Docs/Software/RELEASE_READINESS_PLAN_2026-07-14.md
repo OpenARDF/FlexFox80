@@ -6,19 +6,21 @@
 
 **Release baseline branch:** `AVR128DA48`
 
+**Current status:** R4 completed its full target gate on 2026-07-14; firmware behavior is frozen and release-candidate qualification is next
+
 ## Purpose
 
 FlexFox80 has a long record of reliable field operation. The July 2026 work has corrected several bounded defects and added reproducible builds, tests, and target evidence. Time available before the next release does not justify expanding the firmware change surface merely to close every open review item.
 
-The immediate objective is therefore to finish R4, freeze behavior, qualify the accumulated release candidate, and leave the repository in a documented state that can be resumed safely in a few weeks.
+R4 is complete. The immediate objective is therefore to preserve the behavior freeze, qualify the accumulated release candidate, and leave the repository in a documented state that can be resumed safely in a few weeks.
 
 ## Firmware cutoff
 
-R4, ESP clone event-file checksum validation, is the only planned firmware implementation remaining before the release freeze.
+R4, ESP clone event-file checksum validation, was the only planned firmware implementation remaining before the release freeze. Its host, deterministic-build, installed, normal-clone, controlled rejection, retention, and restoration gates now pass. The release freeze is active.
 
 Until the release candidate is qualified:
 
-- permit an additional firmware change only when it is required to complete R4 or correct a newly reproduced release-blocking regression;
+- permit an additional firmware change only to correct a newly reproduced release-blocking regression;
 - do not begin R2, R3, R5, the remaining R6 work, or an R9 behavior change;
 - do not resume deferred clock drift, RTC aging, clone-retry, or broader timing investigations;
 - do not combine cleanup, refactoring, dependency upgrades, or branch restructuring with release preparation;
@@ -28,17 +30,17 @@ This cutoff does not declare the deferred findings unimportant or resolved. It r
 
 ## R4 completion gate
 
-R4 is complete only when evidence records all of the following:
+R4 completed all required gates on 2026-07-14:
 
-1. The exact production candidate and build profile are identified by source commit and SHA-256 hash.
-2. A normal master-to-target clone succeeds with legacy event-file compatibility intact.
-3. A clone with a deliberately absent, malformed, or mismatched transferred checksum is rejected.
-4. The target retains its prior valid event after the rejected transfer.
-5. Normal cleanup restores reporting and leaves both devices responsive.
-6. Any temporary fault-injection firmware or configuration is removed, and both test units are restored to documented operating configurations.
-7. The focused host tests, deterministic ESP builds, installed smoke checks, and evidence document pass.
+1. [x] The exact production candidate and build profile are identified by source commit and SHA-256 hash.
+2. [x] A normal master-to-target clone succeeds with legacy event-file compatibility intact.
+3. [x] A clone with a deliberately mismatched transferred checksum is rejected.
+4. [x] The target retains its prior valid event after the rejected transfer.
+5. [x] Normal cleanup restores reporting and leaves both devices responsive.
+6. [x] Temporary fault-injection firmware and configuration were removed, and both test units were restored to documented operating configurations.
+7. [x] The focused host tests, deterministic ESP builds, installed smoke checks, and [R4 evidence](Evidence/ESP_EVENT_FILE_INTEGRITY_2026-07-13.md) pass.
 
-If these gates expose a defect, use the smallest R4-only correction and repeat the complete gate. A temporary fault-injection build is test equipment, not a production change.
+The temporary fault-injection build was test equipment, not a production change. The separately tracked intermittent normal-clone retry behavior remains deferred as `B-CLONE-02`.
 
 ## Work allowed without additional device intervention
 
@@ -57,7 +59,7 @@ These activities may discover a release blocker, but they must not be used as a 
 
 ## Release-candidate sequence
 
-After R4 passes:
+With R4 complete:
 
 1. Freeze AVR and ESP source at named commits.
 2. Run the full repository check and deterministic release builds.
