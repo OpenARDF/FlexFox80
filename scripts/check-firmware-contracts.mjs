@@ -604,6 +604,37 @@ if (
 
 process.stdout.write("PASS event epoch stores are atomic to ISR readers\n");
 
+const wakeTimeAssignments = avrMain.match(/\bg_time_to_wake_up\s*=/g) || [];
+const atomicWakeTimeSetter = avrMain.match(
+  /static\s+void\s+setWakeTimeFromForeground\s*\(\s*time_t\s+value\s*\)\s*\{([^{}]*)\}/,
+);
+const eventEnabledBody = avrMain.match(
+  /bool\s+__attribute__\s*\(\(optimize\("O0"\)\)\)\s+eventEnabled\s*\(\)\s*\{([\s\S]*?)\n\}\n\n\nvoid\s+wdt_init/,
+);
+const eventEnabledWakeSetters =
+  eventEnabledBody?.[1].match(/\bsetWakeTimeFromForeground\s*\(/g) || [];
+
+if (
+  wakeTimeAssignments.length !== 3 ||
+  !atomicWakeTimeSetter ||
+  !eventEnabledBody ||
+  eventEnabledWakeSetters.length !== 3 ||
+  /\bg_time_to_wake_up\s*=/.test(eventEnabledBody[1] ?? "") ||
+  !/ENTER_CRITICAL[\s\S]*g_time_to_wake_up\s*=\s*value[\s\S]*EXIT_CRITICAL/.test(
+    atomicWakeTimeSetter?.[1] ?? "",
+  ) ||
+  !/g_time_to_wake_up\s*=\s*temp_time\s*\+\s*seconds_to_sleep/.test(
+    avrMain,
+  )
+) {
+  process.stderr.write(
+    "Firmware contract check failed: foreground wake-time stores are not atomic to the RTC ISR\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS foreground wake-time stores are atomic to the RTC ISR\n");
+
 if (!/if\s*\(\s*g_report_seconds\s*&&\s*!g_clone_quiet\s*\)/.test(avrMain)) {
   process.stderr.write(
     "Firmware contract check failed: ordinary time reports are not suppressed during clone quiet mode\n",

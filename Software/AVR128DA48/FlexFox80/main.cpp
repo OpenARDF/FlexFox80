@@ -208,6 +208,13 @@ void setEventEpochs(time_t start, time_t finish)
 	EXIT_CRITICAL(event_epochs_store);
 }
 
+static void setWakeTimeFromForeground(time_t value)
+{
+	ENTER_CRITICAL(wake_time_store);
+	g_time_to_wake_up = value;
+	EXIT_CRITICAL(wake_time_store);
+}
+
 /***********************************************************************
  * Private Function Prototypes
  *
@@ -2094,7 +2101,7 @@ bool __attribute__((optimize("O0"))) eventEnabled()
 	if(dif >= 0) /* Event has already finished */
 	{
 		g_sleepType = SLEEP_FOREVER;
-		g_time_to_wake_up = MAX_TIME;
+		setWakeTimeFromForeground(MAX_TIME);
 		g_wifi_enable_delay = 2;
 		return(false); /* completed events are never enabled */
 	}
@@ -2105,13 +2112,13 @@ bool __attribute__((optimize("O0"))) eventEnabled()
 	if(dif >= -120)  /* Don't sleep if the event starts in 120 seconds or less, or has already started */
 	{
 		g_sleepType = DO_NOT_SLEEP;
-		g_time_to_wake_up = g_event_start_epoch - 10;
+		setWakeTimeFromForeground(g_event_start_epoch - 10);
 		return( true);
 	}
 
 	/* If we reach here, we have an event that will not start for at least 121 seconds. It needs to be enabled, and a sleep time needs to be calculated
 	 * while allowing time for power-up (coming out of sleep) prior to the event start */
-	g_time_to_wake_up = g_event_start_epoch - 10;
+	setWakeTimeFromForeground(g_event_start_epoch - 10);
 	g_sleepType = SLEEP_UNTIL_START_TIME;
 
 	return( true);
