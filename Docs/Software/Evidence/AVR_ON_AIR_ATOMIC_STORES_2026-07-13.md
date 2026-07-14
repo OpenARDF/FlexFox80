@@ -4,7 +4,7 @@
 
 **Scope:** Foreground writes to `g_on_the_air`
 
-**Status:** Source and exact-build gates pass; connected-target start/stop gate pending
+**Status:** Focused source, exact-build, byte-verified programming, and connected-target gates pass
 
 ## Ownership and risk
 
@@ -70,6 +70,27 @@ Candidate artifact SHA-256 values:
 | LSS | `44230700ea8c332d9ab977bd488ed7bc3fea804ca7fce209791782fbe978bde3` |
 | SREC | `92592df734db9e3d8c7a1681af19afe9132ad64696ea735adb173834a8d84dda` |
 
+## Connected-target verification
+
+The candidate was installed on the authorized AVR128DA48 test unit through Atmel-ICE `J41800053674` at 3.27 V. Two pre-program reads agreed. Programming used an explicit chip erase, candidate flash, and restoration of the captured EEPROM. Two independent post-program reads then agreed with these SHA-256 values:
+
+| Memory | Before | Installed candidate |
+| --- | --- | --- |
+| Flash | `a095ac4d9d46553d9291002c16cd6c501a41d9a2410f524d4fe93d246eccd27d` | `d7f2c11755ea4b17232c7d1e9b4bfb3c00db048c5e944fd956927f435a9b2d1b` |
+| EEPROM | `5ad612a6aa41ae86de821ba4b701a7072aaeebb942747e2562040d08c22d610c` | unchanged |
+| Fuses | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | unchanged |
+
+The installed image passed HTTP, WebSocket, identity, version, temperature, battery, and advancing-clock probes before the state-transition test.
+
+The dummy load did not satisfy the firmware's antenna-detect input, so the first ordinary start request was safely rejected with error 247. The focused test therefore used the existing zero-power path:
+
+1. `$POW,M,0;` returned `POWER,0`. Error 246 was expected because antenna-detect remained open; the implementation nevertheless establishes `g_tx_power_is_zero` and inhibits RF output.
+2. `$GO,1;` returned the expected antenna warning 247 and then `STATUS,253`. The status is emitted only after the immediate-start handler publishes `9999` through the new atomic setter and enables the event.
+3. After four seconds, `$KEY,^;` ran `suspendEvent()`, publishing zero through the same setter. Fresh `$TEM?` and `$BAT?` responses queued behind the stop frame prove that the ESP received the AVR acknowledgment and advanced the Linkbus queue only after the stop handler completed.
+4. Two additional stop frames ran from the test's fail-safe cleanup path.
+
+Atmel-ICE then reset the AVR so it reloaded the preserved EEPROM configuration. A final flash, EEPROM, and fuse read matched the installed candidate and both pre-test nonvolatile images byte-for-byte.
+
 ## Verification boundary
 
-The source and generated-code gates establish atomic foreground publication, unchanged ISR bodies, and equivalent local event-launch arithmetic. Because this shared value directly drives RF cycling, the focused target gate should include byte-verified programming and a controlled start/stop observation on the authorized dummy-loaded unit. Broader event patterns, ID timing, sleep/wake, and long-duration cycling remain in A8.
+The focused gates establish atomic foreground publication, unchanged ISR bodies, equivalent local event-launch arithmetic, exact installation, and acknowledged immediate-start/stop execution without RF output. The test does not qualify antenna-detect behavior, RF amplitude, every scheduled-event branch, ID timing, sleep/wake, or long-duration cycling; those remain in A8.
