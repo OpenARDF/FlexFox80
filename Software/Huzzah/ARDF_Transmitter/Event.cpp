@@ -20,6 +20,7 @@
 
 **********************************************************************************************/
 #include "Event.h"
+#include "role_assignment_bounds.h"
 #include <LittleFS.h>
 #include "Helpers.h"
 #include <ESP8266WebServer.h>
@@ -826,15 +827,15 @@ bool Event::setTxAssignment(String role_slot)
     return ( true);
   }
   role_slot.trim();
-  int c = role_slot.indexOf(':');
-  if (c < 1)
+  RoleAssignmentBounds bounds;
+  if (!roleAssignmentBounds(role_slot.c_str(), &bounds))
   {
     return ( true);
   }
 
   if (this->eventData->tx_assignment != role_slot)
   {
-    String r = role_slot.substring(0, c - 1);
+    String r = role_slot.substring(bounds.roleBegin, bounds.roleEnd);
     this->eventData->tx_assignment = role_slot;
     this->eventData->tx_role_name = Event::getTxDescriptiveName(role_slot);
     this->eventData->tx_role_pwr = Event::getPowerlevelForRole(r.toInt());

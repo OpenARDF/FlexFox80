@@ -133,9 +133,9 @@ The initialization flag represents the entire layout but has no schema version o
 
 **Recommended first step:** Inventory maximum message lengths and all callers. Add tests for maximum-length callsigns, patterns, labels, `%` characters, and error messages before replacing formatting with length-aware copies.
 
-### R8: Role index extraction appears off by one
+### R8: Role index extraction is off by one
 
-**Classification:** Confirmed code issue; user-visible consequence needs reproduction<br>
+**Classification:** Confirmed code issue; source/build correction passes, target consequence pending<br>
 **Area:** ESP8266 per-transmitter role assignment<br>
 **Potential impact:** Cached role power/frequency can be taken from the wrong role
 
@@ -143,7 +143,7 @@ The initialization flag represents the entire layout but has no schema version o
 
 The full assignment string is still stored and other code parses it differently, so the exact visible consequence needs tracing through the browser and event-send flow.
 
-**Recommended first step:** Exercise assignments for roles 0, 1, and a two-digit role in an isolated Event test, then verify the values sent to the AVR.
+**Implementation status:** The shared production bounds helper and red/green host test now prove complete role prefixes for roles 0, 1, and 10 while preserving the legacy input boundary. A source contract and two exact zero-warning candidate builds pass with 32 additional flash bytes and no RAM/IRAM change. Distinct-role cached-value and AVR-message target verification remains; see [ESP role-assignment prefix correction](Evidence/ESP_ROLE_ASSIGNMENT_2026-07-13.md).
 
 ## Additional hardening candidates
 

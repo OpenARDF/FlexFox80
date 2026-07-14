@@ -127,6 +127,20 @@ const espHeaderPath = join(
   "ARDF_Transmitter",
   "Transmitter.h",
 );
+const espEventPath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "Event.cpp",
+);
+const roleAssignmentBoundsPath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "role_assignment_bounds.h",
+);
 const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
@@ -148,6 +162,8 @@ const ds3231 = readFileSync(ds3231Path, "utf8");
 const ds3231Header = readFileSync(ds3231HeaderPath, "utf8");
 const espMain = readFileSync(espMainPath, "utf8");
 const espHeader = readFileSync(espHeaderPath, "utf8");
+const espEvent = readFileSync(espEventPath, "utf8");
+const roleAssignmentBounds = readFileSync(roleAssignmentBoundsPath, "utf8");
 const declaration = source.match(/extern\s+volatile\s+Fox_t\s+g_fox\s*\[\s*([^\]]+?)\s*\]\s*;/);
 
 if (!declaration) {
@@ -844,6 +860,25 @@ if (
 }
 
 process.stdout.write("PASS ESP clone handshake drains queues and requires matching RTC readback\n");
+
+const txAssignmentBody = espEvent.match(
+  /bool\s+Event::setTxAssignment\s*\(\s*String\s+role_slot\s*\)\s*\{([\s\S]*?)\n\}/,
+);
+if (
+  !txAssignmentBody ||
+  !txAssignmentBody[1].includes("roleAssignmentBounds(role_slot.c_str(), &bounds)") ||
+  !txAssignmentBody[1].includes("role_slot.substring(bounds.roleBegin, bounds.roleEnd)") ||
+  /substring\s*\(\s*0\s*,\s*c\s*-\s*1\s*\)/.test(txAssignmentBody[1]) ||
+  !roleAssignmentBounds.includes("bounds->roleEnd = index;") ||
+  !roleAssignmentBounds.includes("bounds->slotBegin = index + 1;")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: ESP role assignment does not retain the complete role prefix\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS ESP role assignment retains the complete role prefix\n");
 
 if (
   espMain.includes("g_webSocketServer.isRunning()") ||

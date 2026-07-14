@@ -48,6 +48,12 @@ The event-schedule state regression compiles the same pure decision used by the 
 - `finish-1`, `finish`, and `finish+1`;
 - agreement between future, active, and overall-scheduled predicates using one supplied `now` value.
 
+The ESP role-assignment bounds regression compiles the same first-colon decision used by `Event::setTxAssignment()` and covers:
+
+- complete extraction of role prefixes `0`, `1`, and `10`;
+- rejection of null, missing-colon, and empty-role assignments;
+- preservation of the existing permissive handling for empty slots and additional colons.
+
 Zero-capacity construction and allocation-failure behavior are intentionally not asserted yet. They are candidate red-green defect slices and must begin with recorded pre-fix evidence.
 
 ## Limits

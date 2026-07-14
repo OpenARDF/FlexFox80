@@ -70,3 +70,11 @@ ASAN_OPTIONS="${ASAN_OPTIONS:+$ASAN_OPTIONS:}allocator_may_return_null=1" \
 	-o "$build_dir/avr-event-schedule-state-tests"
 
 "$build_dir/avr-event-schedule-state-tests"
+
+# shellcheck disable=SC2086 # Flags are intentionally expanded into individual compiler arguments.
+"$cxx" $common_flags $sanitizer_flags \
+	-I "$repo_root/Software/Huzzah/ARDF_Transmitter" \
+	"$repo_root/Tests/Host/esp_role_assignment_bounds_test.cpp" \
+	-o "$build_dir/esp-role-assignment-bounds-tests"
+
+"$build_dir/esp-role-assignment-bounds-tests"
