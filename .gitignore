@@ -1,2 +1,39 @@
+# Operating-system metadata
+.DS_Store
 
-Software/.vs/Dual-Band Transmitter/v14/.atsuo
+# Visual Studio / Atmel Studio workspace state
+.vs/
+*.atsuo
+*.VC.db
+*.VC.opendb
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.wsuo
+
+# Compiler and linker products
+*.o
+*.obj
+*.d
+*.gch
+*.pch
+*.elf
+*.hex
+*.eep
+*.map
+*.lss
+*.srec
+*.mk
+*.bin
+*.exe
+*.out
+
+# Local toolchains, release staging, and verification output
+/Software/AVR128DA48/avr8-gnu-toolchain*/
+/Software/AVR128DA48/release-packages/
+/Software/AVR128DA48/tmp/
+/Software/Huzzah/tmp/
+
+# KiCad automatic backups; intentional Gerber/manufacturing ZIPs stay visible
+/KiCad/*-backups/

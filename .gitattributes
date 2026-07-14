@@ -1,0 +1,70 @@
+* text=auto
+
+# Repository policy files
+/.gitattributes text eol=lf
+/.gitleaksignore text eol=lf
+/.gitignore text eol=lf
+/.editorconfig text eol=lf
+/Justfile text eol=lf
+
+# Hand-maintained source, documentation, and web/event assets
+*.md text eol=lf
+*.txt text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.xml text eol=lf
+*.html text eol=lf
+*.dox text eol=lf
+*.rst text eol=lf
+*.h text eol=lf
+*.c text eol=lf
+*.cpp text eol=lf
+*.ino text eol=lf
+*.S text eol=lf
+
+# KiCad and manufacturing text formats
+*.sch text eol=lf
+*.pro text eol=lf
+*.net text eol=lf
+*.lib text eol=lf
+*.kicad_sch text eol=lf
+*.kicad_pcb text eol=lf
+*.kicad_pro text eol=lf
+*.kicad_prl text eol=lf
+*.kicad_sym text eol=lf
+*.kicad_mod text eol=lf
+*.gbr text eol=lf
+*.gbrjob text eol=lf
+*.drl text eol=lf
+*.pos text eol=lf
+*.rpt text eol=lf
+*.csv -text
+
+# Windows-native IDE and helper formats
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.atsln text eol=crlf
+*.sln text eol=crlf
+*.cppproj text eol=crlf
+*.componentinfo.xml text eol=crlf
+
+# Binary project, manufacturing, and generated artifacts
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.xlsx binary
+*.numbers binary
+*.step binary
+*.FCStd binary
+*.atsuo binary
+*.elf binary
+*.hex binary
+*.eep binary
+*.srec binary
+*.bin binary

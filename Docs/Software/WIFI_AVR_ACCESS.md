@@ -1,0 +1,317 @@
+# FlexFox WiFi-to-AVR Access
+
+## Purpose
+
+FlexFox does not currently expose a supported wired serial console. Normal interactive access is:
+
+```text
+Mac browser or probe -> ESP8266 access point -> HTTP/WebSocket -> 9600-baud Linkbus -> AVR128DA48
+```
+
+Atmel-ICE remains the programming and low-level readback path. WiFi is the supported path for observing and controlling the running product.
+
+## Network endpoint
+
+The ESP8266 starts a soft access point in AP+station mode:
+
+- ordinary SSID: `Tx_` followed by the final four bytes of the ESP access-point MAC address;
+- master SSID: `Tx_Master`;
+- default password: empty (open network);
+- ESP address and gateway: `73.73.73.73`;
+- subnet: `255.255.255.0`;
+- HTTP: port 80;
+- WebSocket: port 81.
+
+The access-point address is configurable in running ESP state, so `73.73.73.73` is the source default rather than proof of a particular unit's current value.
+
+The HTTP root offers these checked-in pages:
+
+- `/events.html` — event configuration;
+- `/test.html` — engineering controls and direct-message field;
+- `/radio.html` — live radio controls;
+- file upload, download, and deletion pages.
+
+Opening one of the main pages creates `ws://<page-host>:81/`. The WebSocket server starts when a station joins the ESP access point.
+
+## Message path
+
+Browser messages are textual commands such as `SSID` or `SW_VERSIONS`. The ESP handles some locally and translates others into Linkbus frames queued for the AVR. Linkbus uses a 9600-baud UART, acknowledges commands, and retries a pending message after an ACK timeout.
+
+Examples:
+
+| Browser command | ESP behavior | AVR effect |
+| --- | --- | --- |
+| `SSID` | Reports the ESP access-point name | None |
+| `MAC` | Reports the connected client's MAC address | None |
+| `SW_VERSIONS` | Reports ESP version and cached AVR version | None |
+| `MASTER` | Reports current ESP master/slave state when no value is supplied | None |
+| WebSocket connect | Queues `$TEM?` and `$BAT?` | Reads temperature and battery voltage |
+| `PASS,$TIM?` | Queues the raw Linkbus query | Reads RTC time and refreshes AVR system time from the RTC |
+
+The ESP translates AVR replies back to WebSocket messages including `TEMP`, `BAT`, `SYNC`, `ERR_CODE`, `STATUS`, and `POWER`.
+
+## Future AVR bootloading over WiFi
+
+### Feasibility decision
+
+AVR firmware updates over the existing WiFi path are technically feasible. The intended transport would be:
+
+```text
+Browser or host -> WiFi -> ESP8266 -> USART1 -> AVR bootloader -> AVR application flash
+```
+
+This is a future architecture decision, not a description of a currently supported feature. It requires coordinated AVR bootloader, AVR application, ESP8266, build, release, recovery, and security work. Do not treat the existing arbitrary file upload or `PASS` command as a firmware-update mechanism.
+
+Microchip documents self-programming for the AVR DA family in [AN3341, Basic Bootloader for the AVR DA MCU Family](https://www.microchip.com/en-us/application-notes/an3341). Its AVR128DA48 UART example uses USART1 on PC0 for transmit and PC1 for receive. FlexFox already uses those same pins and USART for Linkbus, as shown in [`linkbus.h`](../../Software/AVR128DA48/FlexFox80/include/linkbus.h) and [`linkbus.cpp`](../../Software/AVR128DA48/FlexFox80/src/linkbus.cpp). Therefore, no PCB change is required merely to provide a serial data path between the ESP and an AVR-resident bootloader.
+
+The existing hardware cannot instead make the ESP behave like the Atmel-ICE over UPDI without modification. The AVR UPDI pin is routed to programming header P301, not to the ESP, while the ESP is connected to the AVR through the PC0/PC1 UART path. See [`FlexFox80.net`](../../KiCad/FlexFox80.net) nets 62, 96, and 99.
+
+### Required one-time provisioning
+
+The July 2026 target fuse capture records bytes `00 00 F0 FF FF D3 F8 00 00 FF FF FF FF FF FF FF`; byte 8 is the AVR128DA48 `BOOTSIZE` fuse. The [AVR128DA48 data sheet](https://www.microchip.com/content/dam/mchp/documents/MCU08/ProductDocuments/DataSheets/AVR128DA28-32-48-64-Data-Sheet-DS40002183.pdf) defines a value of zero as the entire Flash being the Boot section. The present application is linked at address zero and has no reserved, independently protected bootloader region. See [Mac Atmel-ICE target evidence](Evidence/MAC_ATMEL_ICE_TARGET_EVIDENCE_2026-07-12.md).
+
+Every existing unit would consequently need one physical UPDI provisioning operation before it could receive later wireless AVR updates. That operation must install and verify all of the following as one compatible set:
+
+1. a permanent bootloader in a nonzero Boot section;
+2. the matching nonzero `BOOTSIZE` fuse;
+3. an application linked after the reserved Boot section;
+4. the expected interrupt-vector selection and boot/application handoff behavior;
+5. unchanged or deliberately migrated EEPROM and other unit-specific state.
+
+At the time of this analysis, the Release application text occupied approximately 40.7 KB of the AVR's 128 KB Flash. There is ample nominal space for a small bootloader and the current application, but exact sizes and section boundaries must be recalculated from the candidate artifacts rather than copied from this note. The ESP's qualified profile provides 4 MB Flash with a 1 MB LittleFS partition; the current candidate retained 42,188 bytes of dynamic-memory headroom and 5,156 bytes of IRAM headroom. See [ESP event-file integrity evidence](Evidence/ESP_EVENT_FILE_INTEGRITY_2026-07-13.md). Resource comparison remains a required gate, especially because ESP IRAM margin is limited.
+
+### AVR reset cuts power to the ESP
+
+The important hardware complication is the ESP power-enable circuit. AVR PA5 drives `WIFI_ENABLE`, which drives the shutdown input of LT1763 regulator U306. R310 is a 10 kOhm pull-down from `WIFI_ENABLE` to ground. When the AVR is reset, PA5 becomes high-impedance, R310 disables U306, and the ESP loses power. The AVR also controls the ESP reset line; the ESP does not have an existing reciprocal AVR-reset control.
+
+An update design must not assume that a live ESP, browser socket, or fixed-delay bootloader handshake will survive a genuine AVR reset. There are two viable design directions.
+
+#### Software-only entry without an AVR reset
+
+The normal update path can preserve ESP power by transferring control directly from the application to a fixed entry point in the protected Boot section:
+
+1. The ESP receives the complete candidate into a temporary LittleFS file, validates it, and atomically promotes it to a staged update.
+2. The ESP sends an explicit bootloader-entry command over Linkbus.
+3. The AVR refuses entry while RF is active or power conditions are unsuitable, then forces the transmitter into a safe state, quiesces Linkbus, disables interrupts, and deliberately leaves `WIFI_ENABLE` asserted.
+4. The AVR transfers control to the bootloader without issuing a processor reset. The bootloader establishes its own stack, vector selection, peripheral state, and USART protocol before altering application Flash.
+5. The ESP and bootloader transfer, write, acknowledge, and verify the complete application.
+6. Only after successful final verification does the AVR reset or otherwise enter the new application. A final reset may reboot the ESP and drop the browser connection, but the programming transaction is already complete.
+
+Execution does not have to begin at reset for code in the AVR Boot section to program the Application section. This direct handoff must nevertheless be treated as boot-chain code: it needs explicit assembly/linker review, generated-code inspection, and connected-target fault testing. It must not depend on ordinary C/C++ startup state accidentally remaining valid across the handoff.
+
+#### Cold-reset and interrupted-update recovery
+
+A power failure, watchdog reset, brownout, UPDI reset, or unexpected application failure can still reset the AVR and power-cycle the ESP. Recovery therefore cannot depend on preserving the original WiFi session.
+
+Before erasing any application page, persist an update-pending state in locations defined for both processors. On a later reset, the bootloader must:
+
+- assert the RF-safe outputs and re-enable ESP power immediately;
+- distinguish a valid ordinary application from an update-pending or invalid application;
+- enter the valid application promptly during an ordinary boot;
+- wait without a short fixed timeout when an update is pending or the application fails integrity validation;
+- tolerate the ESP's full startup and access-point delay;
+- accept a resumable or complete retransmission from the image retained in LittleFS;
+- keep the bootloader itself immutable throughout recovery.
+
+The ESP must retain the staged candidate and its manifest across its own power loss. The browser may need to reconnect to the re-created access point, but the device must not require an Atmel-ICE merely because the update was interrupted. Persistent state must also distinguish an intentionally requested update from an image that has already been accepted, preventing reset loops and accidental reinstallation.
+
+### Optional hardware improvement
+
+A hardware modification is required if the product requirement is to keep the ESP and browser session alive across a true AVR reset. The simplest candidate is to make `WIFI_ENABLE` default high while the AVR pin is high-impedance, while retaining the AVR's ability to drive the signal low for intentional WiFi shutdown. Reworking R310 from a pull-down to an appropriate logic-supply pull-up is one possible implementation, but it must not be adopted from this software analysis alone.
+
+Changing the default has product-level consequences:
+
+- an unprogrammed, held-in-reset, or crashed AVR could leave the ESP powered;
+- battery drain and sleep behavior would change;
+- startup UART garbage and the existing ESP-reset/UART-gating logic must be requalified;
+- regulator shutdown thresholds, voltage domains, reset timing, and PCB rework practicality must be checked;
+- all normal WiFi-off, sleep, wake, clone, and fault-recovery paths require regression testing.
+
+Alternatives include a calculated hold-up network on the regulator shutdown control or a self-hold/OR enable circuit shared by the AVR and ESP. Those options may retain default-off behavior or allow the ESP to hold its own power during an update, but they require an electrical design and fault analysis. Merely adding an ESP-to-AVR reset connection does not solve the existing power interruption by itself. Adding an ESP-to-UPDI connection is unnecessary for the preferred UART-bootloader architecture and would create a separate programming and electrical-protection problem.
+
+The recommended order is to prove the direct, no-reset software handoff and interrupted-update recovery on a pilot unit before deciding whether seamless reset survival justifies a board revision or fleet rework.
+
+### Update protocol and safety requirements
+
+The ESP should stage a compact application binary plus a manifest rather than forward an unchecked Intel HEX stream from an open browser connection. At minimum, the manifest and protocol must bind:
+
+- product and processor identity;
+- bootloader protocol and minimum bootloader version;
+- application start address and maximum length;
+- application version and downgrade policy;
+- payload length and cryptographic hash;
+- cryptographic signature or equivalent authenticated-release proof;
+- EEPROM schema compatibility or a declared migration;
+- per-page sequence, retry, and integrity information.
+
+CRC or readback detects corruption but does not authenticate firmware. The default FlexFox access point is open, so an unauthenticated firmware endpoint would permit nearby users to replace transmitter code. Prefer signature verification inside the immutable AVR bootloader; ESP-only verification does not protect the AVR if ESP firmware or its filesystem is compromised. A physical confirmation or deliberate maintenance-mode condition should also gate bootloader entry.
+
+The transfer must use numbered Flash pages with acknowledgements, bounded retries, and final AVR-side readback or whole-image verification. It must never write the Boot section, fuses, lock bits, EEPROM, or User Row unless a separately reviewed provisioning or migration design explicitly requires that region. The current 9600-baud Linkbus rate gives a raw transfer floor of roughly 43 seconds for a 40.7 KB image before framing, erase, write, and verification overhead. A bootloader-specific higher baud rate is reasonable after hardware qualification; correctness and recovery matter more than minimizing update time.
+
+Bootloader entry must be refused during an active or imminent event, RF keying, insufficient supply margin, or an unresolved hardware fault. Both processors must report progress and final identity without treating a lost browser socket as proof of failure or success.
+
+### Decision checklist before implementation
+
+Do not begin implementation until the project has explicitly decided all of the following:
+
+1. Whether a dropped browser connection after final AVR reset is acceptable, or continuous ESP power across reset is a product requirement.
+2. Whether the first release uses only direct no-reset handoff or also includes an ESP-power hardware modification.
+3. Boot section size, application offset, fuse values, vector behavior, and a combined initial-provisioning artifact.
+4. Image format, signature scheme, signing-key custody, version policy, and bootloader compatibility rules.
+5. Persistent update-marker locations and their compatibility with the existing 512-byte EEPROM schema.
+6. ESP staging-space preflight, atomic file handling, and behavior when LittleFS is full or damaged.
+7. Power threshold, brownout behavior, RF-safe state, event exclusion, and watchdog behavior during update.
+8. Page retry, resume, final verification, rollback, and invalid-application recovery semantics.
+9. Pilot-unit and fault-injection tests covering resets or power loss before staging, during every page phase, after verification, and during first application boot.
+10. A one-time UPDI fleet-provisioning and rollback plan for every unit that should support later wireless updates.
+
+This work is a boot-chain, fuse-layout, release-security, and recovery project rather than a small extension of the existing WebSocket command set. It should remain separate from release-candidate stabilization unless a dedicated pilot and full rollback path have been authorized.
+
+## Read-only Mac probe
+
+After joining the FlexFox SSID, run:
+
+```text
+just wifi-probe
+```
+
+The probe uses Node's built-in HTTP and WebSocket clients. It:
+
+1. verifies the root HTTP page;
+2. opens the port-81 WebSocket;
+3. sends only `SSID`, `MAC`, `SW_VERSIONS`, `MASTER`, and the `!&` heartbeat;
+4. waits for the ESP's automatic live AVR temperature and battery requests;
+5. fails unless both ESP identity replies and live AVR replies are observed.
+
+It does not synchronize the clock, change settings, load or execute an event, key the transmitter, save EEPROM, shut off WiFi, or use raw pass-through.
+
+For an extended hardware session, keep DroidTether running and hold the safe WebSocket open:
+
+```text
+just wifi-monitor
+```
+
+Monitor mode performs the same initial proof, then sends only `!&` every five seconds until interrupted with Ctrl-C. The ESP disconnects a WebSocket after approximately ten seconds without text traffic, so a 30-second heartbeat cannot preserve one continuous socket. Five seconds leaves margin for scheduling delay while reducing the built-in pages' two-second heartbeat rate. This resets the ESP WebSocket activity timer and allows the ESP/AVR keep-alive behavior to remain active while the Moto stays associated with the FlexFox AP.
+
+On an explicitly authorized dummy-loaded unit, the guarded role-assignment regression requires a previously recorded event and restoration role:
+
+```text
+FLEXFOX_ROLE_ASSIGNMENT_DRY_RUN=1 \
+FLEXFOX_ROLE_ASSIGNMENT_EXPECT_EVENT='Classic 80m Set 1-1' \
+FLEXFOX_ROLE_ASSIGNMENT_EXPECT_ROLE=1:0 \
+just wifi-role-assignment-test
+
+FLEXFOX_ROLE_ASSIGNMENT_TEST=1 \
+FLEXFOX_ROLE_ASSIGNMENT_EXPECT_EVENT='Classic 80m Set 1-1' \
+FLEXFOX_ROLE_ASSIGNMENT_EXPECT_ROLE=1:0 \
+just wifi-role-assignment-test
+```
+
+Substitute the unit's read-back event and role; do not copy the example blindly. The test refuses to run without both expected values, confirms them before mutation, exercises one transmitter assignment per configured role, queries each role's frequency and power, and restores and reloads the expected assignment during normal or handled-error cleanup. It never sends `EXECUTE`, raw `PASS`, time writes, or RF commands. Event-list generation can exceed ten seconds on the deployed ESP, so the harness sends each explicit event request once and allows 30 seconds rather than duplicating the state transition.
+
+`just wifi-linkbus-bounds-test` is a narrow writable-test-unit qualification for the AVR receive parser. It first proves that raw `PASS,$TEM?` and `PASS,$BAT?` produce fresh replies. It then sends two malformed field frames under the unrecognized `ZZZ` message ID and the overlength read-only alias reproducer `$AZRX?`, followed by both recovery queries. It passes only if each dropped frame remains unanswered through the ESP retry delay and fresh temperature and battery replies prove that the queued valid frames were parsed. Requiring both replies after the delay prevents an incidental periodic broadcast from satisfying the check.
+
+The same recipe sends the read-only `$RXW?` probe twice. The legacy decimal ID encoding aliases `RXW` to `TEM` and therefore produces a visible temperature reply for every probe; the collision-free parser instead returns a Linkbus NAK, which the ESP consumes without broadcasting. The test fails only if both short observation windows contain temperature replies, tolerating one incidental periodic update, then requires a fresh battery reply to prove recovery. Do not generalize this recipe into arbitrary `PASS` forwarding; raw pass-through also exposes configuration, RF, reset, clock, EEPROM, and WiFi-shutdown commands.
+
+To observe clock phase without setting time or changing configuration, run:
+
+```text
+just wifi-clock-observe
+```
+
+The observer sends only the `!&` heartbeat every five seconds and samples the ESP's `SYNC,<epoch>` broadcasts from the AVR. The five-second interval is required by the deployed module's approximately ten-second WebSocket inactivity timeout; a 30-second interval does not preserve one continuous observation. It reports the Mac receive time, target epoch, median offset, and sample spread. A positive offset means the target-reported epoch is behind the Mac; a negative offset means it is ahead. Absolute offset includes WebSocket and USB-tunnel latency, so compare unit medians only through the same network path. See the [wireless time synchronization investigation](Evidence/WIRELESS_TIME_SYNC_INVESTIGATION_2026-07-12.md) for the protocol limitations and multi-unit measurement plan.
+
+On an explicitly authorized dummy-loaded test unit, qualify RTC writes with:
+
+```text
+FLEXFOX_CLOCK_SYNC_DRY_RUN=1 just wifi-clock-sync-test
+FLEXFOX_ALLOW_CLOCK_SET=1 FLEXFOX_CLOCK_SYNC_TRIALS=10 just wifi-clock-sync-test
+```
+
+This state-changing test alternates distinctive `+8`, `-8`, and current-time signatures so each RTC write can be distinguished from the previous value. It requires every signature in the AVR's returned epochs and restores current Mac time after the series or a handled failure. Run it only when brief schedule changes are acceptable. It does not change event files, EEPROM configuration, or RF settings.
+
+To distinguish persistent RTC-edge phase from transient report-delivery delay on the same authorized unit, run:
+
+```text
+FLEXFOX_CLOCK_PHASE_DRY_RUN=1 just wifi-clock-phase-test
+FLEXFOX_CLOCK_PHASE_TEST=1 just wifi-clock-phase-test
+```
+
+This characterization enters clone quiet mode, collects baseline one-shot RTC-edge reports, performs queued `$TIM,...,C;` writes at a controlled Mac phase, and collects three consecutive one-shot edges after every write. It records linear receipt delay and circular modulo-one-second phase statistics in ignored `Software/Huzzah/tmp/clock-phase-latest.json`. It restores current Mac time and requests normal-report resumption on completion or a handled failure. A delayed first report followed by normal later edges identifies a transient observation-path stall; a persistent phase change should remain visible in the following edges. The route still contributes latency, so final product qualification requires two physical units.
+
+Useful overrides:
+
+```text
+FLEXFOX_PROBE_DRY_RUN=1 just wifi-probe
+FLEXFOX_URL=http://73.73.73.73/ FLEXFOX_PROBE_TIMEOUT_MS=15000 just wifi-probe
+FLEXFOX_PROBE_DRY_RUN=1 just wifi-monitor
+FLEXFOX_CLOCK_DRY_RUN=1 just wifi-clock-observe
+FLEXFOX_CLOCK_SAMPLES=30 FLEXFOX_CLOCK_TIMEOUT_MS=120000 just wifi-clock-observe
+FLEXFOX_CLOCK_PHASE_BASELINE=12 FLEXFOX_CLOCK_PHASE_TRIALS=30 FLEXFOX_CLOCK_PHASE_EDGES_PER_WRITE=3 FLEXFOX_CLOCK_PHASE_TEST=1 just wifi-clock-phase-test
+```
+
+## Safety classification
+
+### Safe initial observations
+
+- HTTP root and static page retrieval;
+- `SSID`, `MAC`, `SW_VERSIONS`, and query-only `MASTER`;
+- the automatic temperature and battery queries sent at WebSocket connection;
+- WebSocket heartbeat `!&`.
+
+### State-changing operations
+
+- `SYNC` writes the AVR RTC;
+- callsign, pattern, frequency, power, modulation, speed, and event commands change live configuration;
+- `CLEAR`, `PREP`, `EXECUTE`, and `MASTER,<value>` change event or ESP state;
+- `WIFI_OFF` can remove the active access path.
+
+### RF-active or hazardous operations
+
+- `XMIT` begins immediate transmission when interlocks permit;
+- `KEY_DOWN` and raw `$KEY,[;` key the transmitter;
+- `/radio.html` exposes keying and arbitrary manual Morse input;
+- `PASS,<text>` forwards arbitrary text to the AVR Linkbus without command allow-listing.
+
+The current bench unit is connected to a dummy load, but RF-active commands still require an explicit test objective, expected response, stop command, and independent observation. Do not use `PASS` during initial connectivity testing.
+
+## Mac networking
+
+The proven simultaneous-connectivity arrangement is:
+
+1. keep the Mac WiFi interface associated with ScharStar 2 so its normal default route and internet access remain unchanged;
+2. associate the Moto with the FlexFox `Tx_...` access point;
+3. connect the Moto to the Mac by USB and enable Moto USB tethering;
+4. start DroidTether with default routing disabled;
+5. add a host-only route for `73.73.73.73` through the `utun` interface created by DroidTether;
+6. keep DroidTether running for the entire FlexFox session;
+7. run `just wifi-probe`, followed by `just wifi-monitor` for extended work.
+
+The DroidTether `utun` number can change between sessions. Identify the active interface rather than permanently assuming `utun6`. Verify the IPv4 routing table before probing:
+
+- the ordinary `default` destination must still use the Mac WiFi interface and ScharStar 2 gateway;
+- `73.73.73.73` must be the narrow host route through the active DroidTether `utun`;
+- DroidTether must not install a competing default route.
+
+In the first successful session, the default route remained on `en0` through `10.0.4.1`, while only `73.73.73.73` used `utun6`.
+
+### DroidTether diagnostics learned on the Moto
+
+Before starting DroidTether, the Moto must actually expose the RNDIS USB function. With Android debugging available, verify:
+
+```text
+adb shell getprop sys.usb.state
+```
+
+The value should include `rndis` (the proven state was `rndis,adb`). A value of only `adb` exposes the Android Debug Bridge interface `ff/42/01`, not RNDIS. DroidTether v0.8.7's broad known-Motorola fallback can misclassify that ADB interface as RNDIS and then misleadingly time out waiting for `INIT_CMPLT`. Confirm the phone's **USB tethering** switch remains enabled before diagnosing the Mac route.
+
+Do not assume a fixed DroidTether client subnet. The Moto has assigned both `10.154.x.x` and `10.75.18.x` leases in successful sessions. Locate the newly created `utun` carrying an IPv4 address, then install the `73.73.73.73` host route through that interface. A helper that recognizes only `10.154.x.x` can stop a fully successful RNDIS/DHCP session and falsely report that no tunnel was created.
+
+A successful path has four separate proofs:
+
+1. the RNDIS handshake reaches data mode;
+2. DHCP configures an IPv4 address on the new `utun`;
+3. `route -n get 73.73.73.73` names that `utun`, not `en0`;
+4. `just wifi-probe` returns HTTP, ESP identity, temperature, and battery data.
+
+Do not change macOS routing, Internet Sharing, the FlexFox AP address, or the ESP firmware merely to make the first smoke test convenient. First prove the default direct path, then document any repeatable dual-network arrangement separately.

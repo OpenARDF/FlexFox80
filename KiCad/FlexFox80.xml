@@ -2,7 +2,7 @@
 <export version="E">
   <design>
     <source>/Users/Charles/Documents/GitHub/FlexFox80/KiCad/FlexFox80.kicad_sch</source>
-    <date>Thursday, April 21, 2022 at 08:17:05 AM</date>
+    <date>Wednesday, April 27, 2022 at 05:09:05 PM</date>
     <tool>Eeschema (6.0.4-0)</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -547,7 +547,7 @@
     </comp>
     <comp ref="W105">
       <value>T2</value>
-      <footprint>Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small</footprint>
+      <footprint>Measurement:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small</footprint>
       <fields>
         <field name="Digi-Key Part No.">np</field>
         <field name="Link">np</field>
@@ -562,7 +562,7 @@
     </comp>
     <comp ref="W106">
       <value>T3</value>
-      <footprint>Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small</footprint>
+      <footprint>Measurement:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small</footprint>
       <fields>
         <field name="Digi-Key Part No.">np</field>
         <field name="Link">np</field>
@@ -577,7 +577,7 @@
     </comp>
     <comp ref="W108">
       <value>T4</value>
-      <footprint>Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small</footprint>
+      <footprint>Measurement:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small</footprint>
       <fields>
         <field name="Digi-Key Part No.">np</field>
         <field name="Link">np</field>
@@ -592,7 +592,7 @@
     </comp>
     <comp ref="W111">
       <value>T5</value>
-      <footprint>Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small</footprint>
+      <footprint>Measurement:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small</footprint>
       <fields>
         <field name="Digi-Key Part No.">np</field>
         <field name="Link">np</field>
@@ -607,7 +607,7 @@
     </comp>
     <comp ref="W113">
       <value>T6</value>
-      <footprint>Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small</footprint>
+      <footprint>Measurement:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small</footprint>
       <fields>
         <field name="Digi-Key Part No.">np</field>
         <field name="Link">np</field>
@@ -652,7 +652,7 @@
     </comp>
     <comp ref="W117">
       <value>T7</value>
-      <footprint>Measurement_Points:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small</footprint>
+      <footprint>Measurement:Measurement_Point_ScopeProbe_Round-SMD-2sides-Pad_Small</footprint>
       <fields>
         <field name="Digi-Key Part No.">np</field>
         <field name="Link">np</field>
@@ -3520,6 +3520,52 @@
       <property name="Sheetfile" value="file5BF4C51F.kicad_sch"/>
       <sheetpath names="/Non-PCB/" tstamps="/00000000-0000-0000-0000-00005bf4c520/"/>
       <tstamps>00000000-0000-0000-0000-0000607ea3f6</tstamps>
+    </comp>
+    <comp ref="PH402">
+      <value>PCB Power Pole Pin</value>
+      <footprint>Oddities:Dummy_Empty</footprint>
+      <fields>
+        <field name="Description">RIGHT ANGLE PCB CONT .40/1.295 B</field>
+        <field name="Digi-Key Part No.">2243-1377G2-BK-ND</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=2243-1377G2-BK-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">Anderson Power Products, Inc.</field>
+        <field name="Manufacturer PN">1377G2-BK</field>
+        <field name="Part No.">2243-114555P2-ND</field>
+      </fields>
+      <libsource lib="FlexFox80-rescue" part="PinlessHardware-Device" description=""/>
+      <property name="Part No." value="2243-114555P2-ND"/>
+      <property name="Link" value="&lt;a href=&quot;https://www.digikey.com/products/en?keywords=2243-1377G2-BK-ND&quot;&gt;Link&lt;/a&gt;"/>
+      <property name="Manufacturer" value="Anderson Power Products, Inc."/>
+      <property name="Manufacturer PN" value="1377G2-BK"/>
+      <property name="Description" value="RIGHT ANGLE PCB CONT .40/1.295 B"/>
+      <property name="Digi-Key Part No." value="2243-1377G2-BK-ND"/>
+      <property name="Sheetname" value="Non-PCB"/>
+      <property name="Sheetfile" value="file5BF4C51F.kicad_sch"/>
+      <sheetpath names="/Non-PCB/" tstamps="/00000000-0000-0000-0000-00005bf4c520/"/>
+      <tstamps>bfb21a15-f3d0-4d9f-8b76-36cdc3daeb16</tstamps>
+    </comp>
+    <comp ref="PH403">
+      <value>PCB Power Pole Pin</value>
+      <footprint>Oddities:Dummy_Empty</footprint>
+      <fields>
+        <field name="Description">RIGHT ANGLE PCB CONT .40/1.295 B</field>
+        <field name="Digi-Key Part No.">2243-1377G2-BK-ND</field>
+        <field name="Link">&lt;a href="https://www.digikey.com/products/en?keywords=2243-1377G2-BK-ND"&gt;Link&lt;/a&gt;</field>
+        <field name="Manufacturer">Anderson Power Products, Inc.</field>
+        <field name="Manufacturer PN">1377G2-BK</field>
+        <field name="Part No.">2243-114555P2-ND</field>
+      </fields>
+      <libsource lib="FlexFox80-rescue" part="PinlessHardware-Device" description=""/>
+      <property name="Part No." value="2243-114555P2-ND"/>
+      <property name="Link" value="&lt;a href=&quot;https://www.digikey.com/products/en?keywords=2243-1377G2-BK-ND&quot;&gt;Link&lt;/a&gt;"/>
+      <property name="Manufacturer" value="Anderson Power Products, Inc."/>
+      <property name="Manufacturer PN" value="1377G2-BK"/>
+      <property name="Description" value="RIGHT ANGLE PCB CONT .40/1.295 B"/>
+      <property name="Digi-Key Part No." value="2243-1377G2-BK-ND"/>
+      <property name="Sheetname" value="Non-PCB"/>
+      <property name="Sheetfile" value="file5BF4C51F.kicad_sch"/>
+      <sheetpath names="/Non-PCB/" tstamps="/00000000-0000-0000-0000-00005bf4c520/"/>
+      <tstamps>dae5bd5f-f354-4ccd-9208-6423c8c62b6f</tstamps>
     </comp>
     <comp ref="SCREW401">
       <value>QTY 4 SCREWS</value>

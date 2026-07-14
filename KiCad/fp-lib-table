@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name "Measurement")(type "KiCad")(uri "/Library/Application Support/kicad/modules/Measurement_Points.pretty")(options "")(descr ""))
+)
