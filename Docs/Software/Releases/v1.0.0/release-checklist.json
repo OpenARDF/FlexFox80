@@ -91,7 +91,7 @@
       "id": "rollback-package",
       "description": "Select and verify the release rollback package and recovery instructions.",
       "status": "done",
-      "evidence": "Docs/Software/Releases/v1.0.0/rollback.md selects the verified AVR 0.200 reference flash and mature ESP full-flash baseline, records exact hashes and recovery evidence, excludes unit-specific state from GitHub, and requires fresh per-unit EEPROM/fuse/full-ESP backups before fleet updates. Approved by the release owner on 2026-07-14."
+      "evidence": "Docs/Software/Releases/v1.0.0/rollback.md selects the verified AVR 0.200 reference flash and mature ESP full-flash baseline, records exact hashes and recovery evidence, excludes unit-specific state from GitHub, requires routine per-unit AVR EEPROM preservation, and makes full-device backups optional unless specifically requested or separately justified. Approved by the release owner on 2026-07-14."
     },
     {
       "id": "release-notes",

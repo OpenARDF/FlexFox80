@@ -6,7 +6,7 @@
 
 ## Policy
 
-The reference rollback material proves that the established AVR `0.200` firmware and mature ESP image remain recoverable. It is not a generic state image for every FlexFox. Before any fleet unit is updated, preserve and verify that unit's complete AVR EEPROM, fuses, and full 4 MiB ESP flash. Unit-specific settings images must not be published on GitHub or copied between transmitters.
+The reference rollback material proves that the established AVR `0.200` firmware and mature ESP image remain recoverable. It is not a generic state image for every FlexFox. Routine programming does not require a complete AVR or 4 MiB ESP backup for every unit. Preserve and verify the AVR EEPROM because it contains unit-specific configuration and may need restoration after chip erase; read fuses for before/after comparison. Make a full-device backup only when specifically requested or separately justified. Unit-specific settings images must not be published on GitHub or copied between transmitters.
 
 ## AVR reference
 
@@ -34,7 +34,7 @@ A second verified 4 MiB reference capture remains available for HUZZAH MAC `44:1
 
 ## Recovery rule
 
-1. Preserve and verify the affected unit's own state before changing it.
+1. Preserve and verify the affected unit's AVR EEPROM before an AVR update; make a full-device backup only when specifically requested or separately justified.
 2. Stop RF activity and use the documented Atmel-ICE or FTDI recovery path.
 3. Restore reference program firmware only with the unit's own validated EEPROM/fuse/ESP-state material as applicable.
 4. Independently read back and compare every restored region.

@@ -139,22 +139,26 @@ The current repository has deterministic AVR and ESP build wrappers but does not
 
 ## AVR programming and rollback
 
-Before replacing AVR firmware on a configured unit:
+Routine programming does not require a full archival backup of each AVR or ESP device. Create a full-device backup only when the owner requests one or when a separately documented recovery risk makes it necessary. Normal rollback uses the versioned release firmware and the established reference recovery set.
 
-1. read flash, the complete EEPROM address space, and all fuse bytes through the selected programmer;
-2. record hashes and repeat critical reads to establish a stable backup;
+AVR EEPROM is different from a full-device backup: it contains unit-specific configuration and may need to be restored after the required chip erase. Before replacing AVR firmware on a configured unit:
+
+1. read and verify the complete EEPROM address space; read fuses for a before/after comparison, but do not write them during a routine firmware update;
+2. record hashes and repeat the EEPROM read to establish a stable unit-specific configuration image;
 3. classify the captured EEPROM by validated field offsets; do not infer its ABI only from the installed flash image;
 4. if and only if the image validates as the historical 268-byte Release layout, migrate it with `node scripts/migrate-eeprom-enum-layout.mjs --from legacy-268 --input <backup> --output <new-image>`;
 5. confirm the selected image's 274-byte EEPROM ABI and inactive/safe boot configuration;
 6. erase and program flash using a procedure that supports required 0-to-1 transitions;
 7. restore the validated 274-byte EEPROM image when erase retention has not been independently proven;
 8. verify the input flash and EEPROM through the programmer;
-9. perform independent post-operation reads and compare flash, EEPROM, and fuses byte-for-byte;
-10. retain the prior flash image and raw unit-specific backup outside Git until functional qualification is complete.
+9. perform independent post-operation reads and compare the installed release flash, restored EEPROM, and unchanged fuses byte-for-byte;
+10. retain the raw unit-specific EEPROM outside Git until functional qualification is complete. Preserve prior AVR flash or a complete device image only when specifically requested or separately justified.
 
 Do not rely on avrdude `-D` alone to preserve EEPROM while replacing arbitrary flash. Without an erase, required 0-to-1 transitions can leave a mixed image even though page writes were attempted. The first Mac procedure and recovery are recorded in [MAC_AVR_PROGRAMMING_2026-07-12.md](Evidence/MAC_AVR_PROGRAMMING_2026-07-12.md).
 
 Do not force a layout conversion when the plausibility gate rejects the raw EEPROM. Preserve the original image and diagnose it separately; a rejected image may be mixed, damaged, or from another historical layout.
+
+For a routine ESP sketch update, write and verify only the release sketch at `0x0`; do not erase or replace LittleFS. A full 4 MiB ESP backup is optional and is made only when specifically requested or separately justified. A LittleFS replacement is a distinct recovery/factory operation and requires explicit authorization.
 
 ## Future AVR128DA48 overwrite transition to main
 

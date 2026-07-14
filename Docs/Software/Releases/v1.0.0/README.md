@@ -33,7 +33,7 @@ On 2026-07-14, the release owner approved:
 1. product release label `v1.0.0` for the first tagged maintenance baseline;
 2. the proposed maintainer release notes;
 3. the remaining broad A8 tests as explicit v1.0.0 deferrals rather than silent passes; and
-4. the documented reference rollback set plus fresh unit-specific backups before fleet updates.
+4. the documented reference rollback set, with routine per-unit AVR EEPROM preservation and full-device backups only when specifically requested or separately justified.
 
 See [hardware disposition](hardware-disposition.md) and [rollback record](rollback.md).
 
