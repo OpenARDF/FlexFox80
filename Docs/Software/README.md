@@ -12,6 +12,7 @@ This directory documents the current software architecture on the `AVR128DA48` b
 - [Release workflow](RELEASE_WORKFLOW.md) defines current branch roles, integration gates, release evidence, and the future AVR128DA48 transition to `main`.
 - [July 2026 release-readiness plan](RELEASE_READINESS_PLAN_2026-07-14.md) records the decision to complete R4, freeze firmware scope, qualify an official release candidate, and defer the remaining review items with a precise resume point.
 - [July 2026 release-candidate snapshot](RELEASE_CANDIDATE_SNAPSHOT_2026-07-14.md) records the frozen firmware source, exact artifact hashes, completed verification, branch alignment, rollback position, and still-open official-release gates.
+- [July 2026 release hardware checklist](RELEASE_HARDWARE_CHECKLIST_2026-07-14.md) maps the A8 matrix to passed, partial, pending, and proposed-defer evidence and isolates the remaining owner decisions.
 - [Firmware release-notes draft](RELEASE_NOTES_DRAFT_2026-07-14.md) separates user-visible improvements, internal reliability corrections, compatibility boundaries, verification, and explicitly deferred work.
 - [Source and generated-file boundaries](GENERATED_FILES.md) classifies product source, generated-derived files, IDE/build output, ESP assets, and CAD/manufacturing files.
 - [Build environment](BUILD_ENVIRONMENT.md) defines Mac and Windows roles, the portable AVR Release wrapper, evidence classes, and the reference-environment handoff checklist.

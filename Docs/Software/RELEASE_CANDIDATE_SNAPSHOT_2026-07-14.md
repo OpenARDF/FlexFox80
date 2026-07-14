@@ -74,7 +74,7 @@ The following are not silently treated as passed:
 
 - approve the official board/hardware revision description;
 - select the official release label/version policy for the existing AVR `0.200` and ESP `2.0` identifiers;
-- execute or explicitly approve skips for the remaining A8 matrix: representative classic, sprint, foxoring, beacon, antenna removal/reconnection, scheduled sleep/wake, temperature/fan, long-duration event, and broader fault-recovery checks;
+- execute or explicitly approve skips in the [release hardware checklist](RELEASE_HARDWARE_CHECKLIST_2026-07-14.md), including representative classic, sprint, foxoring, beacon, antenna removal/reconnection, scheduled sleep/wake, temperature/fan, long-duration event, and broader fault-recovery checks;
 - select and verify the final rollback package;
 - approve the user-readable release notes;
 - re-run the clean-checkout build and status gates at the exact integration commit;
