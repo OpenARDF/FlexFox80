@@ -120,26 +120,26 @@
     {
       "id": "annotated-tag",
       "description": "Create and push an annotated release tag pointing to the verified release commit.",
-      "status": "pending",
-      "evidence": "No tag created."
+      "status": "done",
+      "evidence": "Annotated tag v1.0.0 was created and pushed on 2026-07-14. Tag object 1ce3b05909014ae8df50c0d246d042550ef47fb3 peels to verified release commit b4b98165af2ece0ed442ce23311be07df57c0231, which exactly matches the package manifest."
     },
     {
       "id": "release-record-created",
       "description": "Create a durable maintainer release record with the approved notes and verification summary.",
-      "status": "pending",
-      "evidence": "Candidate record exists; final GitHub release is not created."
+      "status": "done",
+      "evidence": "The stable, non-draft, non-prerelease GitHub release FlexFox80 v1.0.0 was published at https://github.com/OpenARDF/FlexFox80/releases/tag/v1.0.0 with the approved maintainer notes on 2026-07-14."
     },
     {
       "id": "release-assets-archived",
       "description": "Store the validated release ZIP and individually required firmware assets in the designated durable archive.",
-      "status": "pending",
-      "evidence": "Candidate artifacts remain temporary; final GitHub assets are not uploaded."
+      "status": "done",
+      "evidence": "The GitHub release contains the validated ZIP, AVR HEX, ESP sketch BIN, recovery/factory-labeled LittleFS BIN, manifest, and checksum list. Docs/Software/Evidence/V1_0_0_GITHUB_RELEASE_VERIFICATION_2026-07-14.md records every asset name, byte size, and SHA-256 digest."
     },
     {
       "id": "archived-release-verified",
       "description": "Copy and independently verify the archived assets, hashes, release record, and tag target.",
-      "status": "pending",
-      "evidence": "Awaiting GitHub release publication."
+      "status": "done",
+      "evidence": "Docs/Software/Evidence/V1_0_0_GITHUB_RELEASE_VERIFICATION_2026-07-14.md records a fresh GitHub download, byte-for-byte comparison with the local release set, ZIP integrity and extraction, internal checksums, manifest identity, AVR HEX parsing, ESP checksum validation, LittleFS contents, and exact equality between the manifest commit and peeled remote tag target."
     }
   ]
 }
