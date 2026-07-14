@@ -6,7 +6,7 @@
 
 **Supported hardware target:** FlexFox Ver 2.1 (Mar 2022) only
 
-**Status:** Focused gates pass; the release owner approved the remaining broad A8 tests as explicit v1.0.0 deferrals; representative installed-version and integration gates remain
+**Status:** Focused gates and representative installed-version gate pass; the release owner approved the remaining broad A8 tests as explicit v1.0.0 deferrals and approved integration to `main`
 
 ## Status meanings
 
@@ -31,7 +31,7 @@
 | Full repository suite | Pass | `just check` passed policy, links, sanitizer-enabled host tests, firmware contracts, and EEPROM layout. |
 | AVR deterministic Release build | Pass | Version `0.201`; two AVR-GCC 7.3.0 / DFP 1.9.103 builds, zero warnings, identical artifacts; HEX `89707660…1ba4`. |
 | ESP deterministic sketch build | Pass | Version `2.1`; two core-2.7.4/WebSockets-2.3.6 builds, zero warnings, sketch `0749b0e4…bad8`. |
-| Combined installed version report | Pending | Program both selected artifacts on a representative paired unit and require `SW_VERSIONS,2.1,0.201`; source/reporting contract already passes. |
+| Combined installed version report | Pass | [v1.0.0 installed-pair verification](Evidence/V1_0_0_INSTALLED_PAIR_VERIFICATION_2026-07-14.md) records exact AVR/ESP installation and readback, preserved configuration, normal telemetry, and live `SW_VERSIONS,2.1,0.201`. |
 | AVR EEPROM ABI | Pass | Linker `.eeprom = 0x112`; fixed-width host and compile-time contracts pass. |
 | ESP standalone startup | Pass | Qualified core/library profile repeatedly restored normal LEDs and SSID; 3.x profiles were rejected. |
 | Installed HTTP/WebSocket/AVR telemetry | Pass | Both restored R4 test units returned HTTP 200, WebSocket, temperature, battery, versions, role, and advancing epochs. |
@@ -104,8 +104,8 @@ Before official release, record:
 2. which proposed deferrals are approved for this release;
 3. the selected rollback archive and its verification result;
 4. the release label decision (the embedded identities are AVR `0.201` and ESP `2.1`);
-5. approval to fast-forward `AVR128DA48` only after the final clean-checkout gates pass.
+5. approval to integrate the qualified candidate into `main` only after the final clean-checkout gates pass.
 
-Until the remaining representative-device and integration decisions are recorded, the candidate is frozen and reproducible but not officially released.
+The representative-device and integration decisions are now recorded. Final clean-`main` reproduction, release approval, tag, publication, and archive verification remain before the candidate is officially released.
 
-For v1.0.0, the release owner approved the remaining broad A8 items as explicit deferrals on 2026-07-14. The release-specific scope and unchanged test boundaries are recorded in [v1.0.0 hardware-test disposition](Releases/v1.0.0/hardware-disposition.md). The representative installed-version gate remains mandatory.
+For v1.0.0, the release owner approved the remaining broad A8 items as explicit deferrals on 2026-07-14. The release-specific scope and unchanged test boundaries are recorded in [v1.0.0 hardware-test disposition](Releases/v1.0.0/hardware-disposition.md). The mandatory representative installed-version gate passed later that day.

@@ -1,6 +1,6 @@
 # FlexFox80 Software Documentation
 
-This directory documents the current software architecture on the `AVR128DA48` branch and records the initial reliability review performed in July 2026. It is intended to give future maintainers and project threads a shared starting point before changing mature transmitter behavior.
+This directory documents the current AVR128DA48-based software architecture on the active `Development_AVR128DA48` branch and stable `main` release branch, and records the initial reliability review performed in July 2026. It is intended to give future maintainers and project threads a shared starting point before changing mature transmitter behavior.
 
 ## Documents
 
@@ -9,7 +9,7 @@ This directory documents the current software architecture on the `AVR128DA48` b
 - [Safe hardening strategy](SAFE_HARDENING_STRATEGY.md) defines a conservative process for reproducing and fixing bugs without unnecessarily changing proven transmitter behavior.
 - [Hardening and bug plan](HARDENING_AND_BUG_PLAN.md) turns the review into two coordinated work paths with specific deliverables, decision points, and exit checkpoints.
 - [Development workflow](CODEX_WORKFLOW.md) defines everyday branch, verification, staging, commit, integration, and handoff rules.
-- [Release workflow](RELEASE_WORKFLOW.md) defines current branch roles, integration gates, release evidence, and the future AVR128DA48 transition to `main`.
+- [Release workflow](RELEASE_WORKFLOW.md) defines current development/`main` branch roles, integration gates, release evidence, and the completed current-product transition to `main`.
 - [Release package format](RELEASE_PACKAGE_FORMAT.md) defines the two-processor manifest, checksums, package contents, validation rules, and durable maintenance archive adapted from SignalSlinger.
 - [Release checklist template](release-checklist-template.json) provides evidence-bearing `candidate`, `release`, and `final` gates with explicit owner-attributed skips.
 - [FlexFox80 v1.0.0 candidate record](Releases/v1.0.0/README.md) tracks the first tagged maintenance baseline, candidate package evidence, proposed GitHub assets, and the remaining owner and hardware gates.

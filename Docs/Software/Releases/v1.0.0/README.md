@@ -1,6 +1,6 @@
 # FlexFox80 v1.0.0 Maintenance Release Record
 
-**Status:** Candidate gates pass; integration and final release approval remain open; not tagged, published, or approved for fleet deployment
+**Status:** Candidate gates and approved integration to `main` pass; final reproduction and release approval remain open; not tagged, published, or approved for fleet deployment
 
 **Hardware:** FlexFox Ver 2.1 (Mar 2022) only
 
@@ -17,7 +17,7 @@
 - Candidate ZIP: `FlexFox80-v1.0.0-AVR-0.201-ESP-2.1-Release-Files.zip`, 451,743 bytes, SHA-256 `08166cf8105fcea0d589de54b09ddeb67ac883370a970647e8ac30d0717ab1ec`.
 - The exact selected pair was independently programmed and verified on a representative Ver 2.1 master. Its preserved configuration, normal startup and telemetry, and live `SW_VERSIONS,2.1,0.201` response pass the final candidate hardware gate.
 
-The candidate package is intentionally temporary. The final package must be regenerated from the clean integrated `AVR128DA48` commit so its manifest, tag target, branch, and archived hashes agree.
+The candidate package is intentionally temporary. The final package must be regenerated from the clean integrated `main` commit so its manifest, tag target, branch, and archived hashes agree.
 
 ## Intended GitHub assets
 
@@ -40,6 +40,6 @@ See [hardware disposition](hardware-disposition.md) and [rollback record](rollba
 
 ## Candidate disposition
 
-The candidate checklist now passes. [Installed-pair verification](../../Evidence/V1_0_0_INSTALLED_PAIR_VERIFICATION_2026-07-14.md) records the exact flash, EEPROM, fuse, configuration, identity, telemetry, and combined-version evidence. The next separately controlled step is explicit owner approval to fast-forward `AVR128DA48`, rebuild and repackage from that exact release commit, review the resulting release checklist, and grant final tag/publication approval.
+The candidate checklist passes and integration is approved. [Installed-pair verification](../../Evidence/V1_0_0_INSTALLED_PAIR_VERIFICATION_2026-07-14.md) records the exact flash, EEPROM, fuse, configuration, identity, telemetry, and combined-version evidence. The approved replacement-tree merge established the qualified current-product tree on `main` while preserving the former tip at `legacy-main-before-avr128da48-2026-07-14`; the redundant `AVR128DA48` branch was removed. The next controlled step is to integrate these policy records, rebuild and repackage from the final clean `main` release commit, review the release checklist, and grant final tag/publication approval.
 
 See [release checklist](release-checklist.json), [approved maintainer notes](release-notes.md), and the repository [release workflow](../../RELEASE_WORKFLOW.md).

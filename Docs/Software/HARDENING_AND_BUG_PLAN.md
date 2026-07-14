@@ -62,25 +62,15 @@ Host tests do not replace target verification. In particular, host `int`, pointe
 
 Do not reorganize ISR, RF, persistence, or sleep/wake code merely to increase testability or coverage. Introduce the smallest seam needed for a demonstrated behavior, prefer proven existing helpers, and keep the production path shared between tests and firmware so a parallel test-only implementation cannot drift.
 
-## Resolved provisional branch model
+## Current branch model
 
-The present repository does not have the same branch model as SignalSlinger:
+The provisional three-branch model was retired on 2026-07-14 after the approved replacement-tree transition preserved the earlier `main` at annotated tag `legacy-main-before-avr128da48-2026-07-14` and established the qualified Ver 2.1 tree on `main` without a force-push.
 
-- `origin/main` is the default branch.
-- active AVR128DA48 development is on `AVR128DA48`.
-- `main` has two merge commits not present on `AVR128DA48`.
-- `AVR128DA48` has substantial development history not reachable from the current `main` tip.
-- the source layout differs between the two branches.
-
-The project has adopted this provisional model:
-
-- Leave `main` unchanged while its historical role and different source layout are audited and while the AVR128DA48 line is hardened.
-- Treat `AVR128DA48` as the current integration/release baseline for this hardware generation.
-- Use `Development_AVR128DA48`, created from `AVR128DA48`, as the active hardening and bug-development branch.
-- Use narrow topic branches for safety-critical or independently reviewable slices when they materially improve isolation.
-- Merge into the AVR128DA48 integration branch only after the applicable checkpoint passes; reconcile to `main` only through a separately planned and reviewed operation.
-
-This recommendation protects the known AVR128DA48 lineage without claiming that the current `main` branch is obsolete or safe to overwrite.
+- `Development_AVR128DA48` is the active hardening and bug-development branch.
+- `main` holds approved releases for the current Ver 2.1 product line.
+- The redundant `AVR128DA48` integration branch was deleted locally and remotely.
+- Narrow topic branches remain appropriate for safety-critical or independently reviewable slices when they materially improve isolation.
+- Release integration follows [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md): verify development, integrate into `main` with explicit approval, then carry the release history back into development before resuming work.
 
 ## Path A: Code hardening and clear-error removal
 

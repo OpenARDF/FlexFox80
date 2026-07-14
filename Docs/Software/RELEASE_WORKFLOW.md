@@ -5,17 +5,16 @@
 | Branch | Role |
 | --- | --- |
 | `Development_AVR128DA48` | Active hardening and bug-development branch |
-| `AVR128DA48` | Integration and release baseline for current hardware |
-| `main` | Preserved earlier lineage until the approved AVR128DA48 overwrite transition |
+| `main` | Stable release branch and default GitHub branch for current Ver 2.1 hardware |
 | `ATMEGA328p` | Historical hardware-generation branch |
 
-The current branch names intentionally expose the hardware transition. They can be simplified after `main` becomes the AVR128DA48 product line.
+The transitional `AVR128DA48` branch was removed after the approved 2026-07-14 replacement-tree merge established the current product line on `main`. Its history remains reachable through `main`, `Development_AVR128DA48`, and release history.
 
 ## Release authority and phases
 
 - `Development_AVR128DA48` may produce a release candidate or explicitly approved prerelease.
-- A stable release must be integrated into and reproduced from `AVR128DA48` first.
-- The later replacement-tree transition to `main` is a separate operation and must not be combined with a firmware release.
+- A stable release must be integrated into and reproduced from a clean `main` release commit.
+- After a release integration, fast-forward `Development_AVR128DA48` through the resulting `main` commit before resuming development. This keeps later release integrations linear when no independent release-only commit intervenes.
 - Creating a tag, distributing release artifacts, or programming a fleet requires explicit owner approval; completion of local engineering gates does not imply deployment authority.
 
 FlexFox releases support one hardware target only: **Ver 2.1 (Mar 2022)**. Unlike SignalSlinger, the FlexFox release process does not build or publish parallel board variants. Earlier prototypes and any future revision require a separate compatibility decision before they can use these release assets.
@@ -25,7 +24,7 @@ FlexFox is a mature, actively used legacy product rather than a new general-audi
 The standard release has three checklist phases:
 
 1. `candidate` proves the frozen source, deterministic builds, package, hardware evidence, rollback, and release notes are ready for an integration decision.
-2. `release` additionally proves explicit integration and release approval and reproduces the artifacts from the clean `AVR128DA48` release commit.
+2. `release` additionally proves explicit integration and release approval and reproduces the artifacts from the clean `main` release commit.
 3. `final` additionally proves the annotated tag, durable release record, archived artifacts, and independent archive verification.
 
 ## Release-specific checklist
@@ -47,9 +46,9 @@ just release-checklist Docs/Software/Releases/<release>/release-checklist.json f
 
 The final checklist update may be a post-release documentation commit. It must not move or recreate the annotated release tag.
 
-## Development integration checklist
+## Development-to-main release integration checklist
 
-Before integrating `Development_AVR128DA48` into `AVR128DA48`:
+Before integrating `Development_AVR128DA48` into `main`:
 
 1. Confirm the roadmap checkpoint or bug closure being integrated.
 2. Confirm all intended commits are pushed to `origin/Development_AVR128DA48`.
@@ -59,20 +58,20 @@ Before integrating `Development_AVR128DA48` into `AVR128DA48`:
    ```text
    Development_AVR128DA48
    origin/Development_AVR128DA48
-   AVR128DA48
-   origin/AVR128DA48
+   main
+   origin/main
    ```
 
 5. Run the full verification available at that roadmap stage.
-6. Review the commit list and diff from `AVR128DA48` to `Development_AVR128DA48`.
-7. Fast-forward when `AVR128DA48` is exactly behind development. Do not manufacture a merge commit when histories are already linear.
-8. If `AVR128DA48` has independent commits, stop and review the divergence before selecting a merge or rebase strategy.
-9. Push the verified integration result to `origin/AVR128DA48`.
-10. Return to `Development_AVR128DA48` and verify local/remote alignment.
+6. Review the commit list and diff from `main` to `Development_AVR128DA48`.
+7. Fast-forward when `main` is exactly behind development. Do not manufacture a merge commit when histories are already linear.
+8. If `main` has independent commits, stop and review the divergence before selecting a merge strategy; never rebase or force-push published release history.
+9. Push the verified integration result to `origin/main`.
+10. Fast-forward `Development_AVR128DA48` through the resulting `main` commit when necessary, return the checkout to development, and verify both local/remote alignments.
 
 ## Firmware release gate
 
-A firmware release from `AVR128DA48` requires:
+A firmware release from `main` requires:
 
 - a clean checkout at the intended commit;
 - an approved product release label and stable/prerelease channel;
@@ -123,7 +122,7 @@ Do not identify a release by a checked-in binary timestamp alone.
 
 After the `candidate` checklist passes and integration is explicitly approved:
 
-1. Fast-forward or otherwise perform the separately reviewed integration into `AVR128DA48`.
+1. Fast-forward or otherwise perform the separately reviewed integration into `main`.
 2. From a clean checkout of the exact integrated commit, rerun `just check` and both deterministic Release builds.
 3. Assemble the release package, manifest, checksums, and package README defined by [release package format](RELEASE_PACKAGE_FORMAT.md), manually or with a qualified helper.
 4. Validate the package independently rather than trusting the assembly step's success.
@@ -160,33 +159,21 @@ Do not force a layout conversion when the plausibility gate rejects the raw EEPR
 
 For a routine ESP sketch update, write and verify only the release sketch at `0x0`; do not erase or replace LittleFS. A full 4 MiB ESP backup is optional and is made only when specifically requested or separately justified. A LittleFS replacement is a distinct recovery/factory operation and requires explicit authorization.
 
-## Future AVR128DA48 overwrite transition to main
+## Completed transition to main
 
-The transition is intentionally deferred until the current hardware line passes the agreed hardening and release gates.
+On 2026-07-14, the owner approved the one-time replacement-tree merge that established the qualified AVR128DA48 product line on `main`:
 
-Before the transition:
+- old `main`: `acf7b586b6cccd28fa7aa0e8ddeeb3079d6e5880`;
+- preserved annotated tag: `legacy-main-before-avr128da48-2026-07-14`;
+- qualified development parent: `56d1f479358bf4163e98a1d0abe7c9970857b926`;
+- replacement merge: `17b31195e77a3617f6f0e5aa66b3ed54f4de745f`;
+- resulting tree: `3b792e14ad2ea7b57c07a9dd42dcca2c390a6f73`, exactly matching the qualified development tree.
 
-1. Confirm `AVR128DA48` is the approved product baseline and is fully pushed.
-2. Preserve the existing `main` tip with an annotated tag and/or clearly named legacy branch.
-3. Record the old and new commit IDs and complete tree hashes.
-4. Verify that release artifacts can be reproduced from `AVR128DA48`.
-5. Review the exact replacement-tree diff, including software, KiCad, documentation, and ignored/tracked artifact policy.
-6. Prepare a rollback procedure that restores the preserved legacy ref.
-7. Obtain explicit approval for the overwrite integration.
-
-The overwrite operation must preserve history while making the resulting `main` tree exactly match the approved AVR128DA48 tree. The exact Git commands will be scripted and dry-run in a temporary worktree before they are used on `main`.
-
-After the transition:
-
-- `main` becomes the stable current-product branch;
-- a development branch remains the active checkout;
-- future integrations prefer fast-forward merges when history is linear;
-- branch protection and required checks should be configured to match the new workflow;
-- legacy hardware remains reachable through its preserved refs.
+The merge was created and checked in a temporary detached worktree, passed `just check` and the v1.0.0 candidate checklist, preserved both parent histories, and was pushed normally without force. `Development_AVR128DA48` was then fast-forwarded through the merge. The redundant `AVR128DA48` branch was deleted locally and remotely at the owner's direction.
 
 ## Prohibited shortcuts
 
-- Do not force-push `main` or `AVR128DA48` without a separately reviewed recovery plan.
+- Do not force-push `main` or rewrite published release history.
 - Do not overwrite `main` merely to simplify branch names.
 - Do not publish Debug artifacts as a release substitute.
 - Do not flash an AVR Release image over retained deployed EEPROM if its `.eeprom` object is not exactly 274 bytes (`0x112`).

@@ -2,9 +2,9 @@
 
 ## Branch roles
 
-- `AVR128DA48` is the current integration and release baseline for the AVR128DA48 hardware generation.
-- `Development_AVR128DA48` is the active development branch. Routine hardening and bug work starts here and returns here after integration checks.
-- `main` preserves the earlier product lineage until the AVR128DA48 hardware and software are ready for the separately approved overwrite integration described in [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md).
+- `Development_AVR128DA48` is the active development branch. Routine hardening and bug work starts here and returns here after release integration.
+- `main` is the stable release branch and default GitHub branch for the current Ver 2.1 product line.
+- The transitional `AVR128DA48` branch was removed after the approved 2026-07-14 replacement-tree merge. Do not recreate it as an integration layer.
 - `ATMEGA328p` and any other legacy hardware branches are historical product lines. Do not merge them into current firmware work without a specific compatibility objective.
 
 ## Before editing
@@ -101,19 +101,19 @@ Routine hardening slices therefore do not require a separate Windows mailbox rou
 
 See [GENERATED_FILES.md](GENERATED_FILES.md) for the detailed inventory.
 
-## Integration back to AVR128DA48
+## Release integration into main
 
 Integration requires explicit user authorization.
 
 1. Finish the applicable hardening or bug checkpoint on `Development_AVR128DA48`.
-2. Verify both the development branch and `AVR128DA48` remote state.
+2. Verify both the development branch and `main` remote state.
 3. Require a clean worktree.
-4. Prefer a fast-forward integration when `AVR128DA48` is exactly behind the development branch.
+4. Prefer a fast-forward integration when `main` is exactly behind the development branch.
 5. If histories diverge, stop and review the commits and merge strategy before merging.
-6. Push `AVR128DA48` only after the integration result is verified.
-7. Return the checkout to `Development_AVR128DA48` and verify it tracks its remote.
+6. Push `main` only after the integration result is verified.
+7. Fast-forward the development branch through the resulting `main` commit when necessary, return the checkout to `Development_AVR128DA48`, and verify it tracks its remote.
 
-Do not integrate current work into `main` through this routine. The legacy-to-current transition has separate preservation and verification gates.
+The one-time legacy-to-current transition is complete. Its preservation tag, exact parents, tree hash, and verification are recorded in [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md).
 
 ## Work handoff
 

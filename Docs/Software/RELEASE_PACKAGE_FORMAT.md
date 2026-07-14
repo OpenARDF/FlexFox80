@@ -59,7 +59,7 @@ The manifest format identifier is `flexfox80-release-info-v1`. A conforming mani
   "channel": "stable",
   "generatedUtc": "2026-07-14T00:00:00.000Z",
   "gitCommit": "40-character release commit",
-  "branch": "AVR128DA48",
+  "branch": "main",
   "hardwareRevision": "Ver 2.1 (Mar 2022)",
   "avr": {
     "version": "0.201",

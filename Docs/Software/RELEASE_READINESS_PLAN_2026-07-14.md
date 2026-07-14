@@ -4,7 +4,7 @@
 
 **Development branch:** `Development_AVR128DA48`
 
-**Release baseline branch:** `AVR128DA48`
+**Release branch:** `main`
 
 **Current status:** R4 completed its full target gate on 2026-07-14; firmware behavior is frozen and release-candidate qualification is next
 
@@ -50,7 +50,7 @@ The following low-risk work may proceed without putting another ESP into bootloa
 - run `just check` and the focused host regressions;
 - build AVR and ESP release candidates twice and compare artifacts;
 - record warnings, resource usage, source revisions, build profiles, and SHA-256 hashes;
-- review the complete source and protocol diff against `AVR128DA48`;
+- review the complete source and protocol diff against `main`;
 - prepare release notes, artifact manifests, flashing instructions, and rollback instructions;
 - verify documentation links, repository policy, ignored build outputs, and clean branch state;
 - assemble the versioned hardware checklist and mark any approved deferrals explicitly;
@@ -70,9 +70,9 @@ With R4 complete:
 6. Preserve known-good rollback images and programming instructions outside ordinary source commits, with committed checksums and provenance where appropriate.
 7. Write user-readable release notes that separate corrections, observed verification, and deferred work.
 8. Verify `Development_AVR128DA48` is clean, fully pushed, and reproducible.
-9. Review integration into `AVR128DA48` under the existing fast-forward-first workflow. Integration and release distribution require their own explicit approval.
+9. Review integration into `main` under the fast-forward-first release workflow. Integration and release distribution require their own explicit approval.
 
-The separately planned replacement-tree transition from `AVR128DA48` to `main` remains deferred. It must not be combined with this firmware release.
+The separately approved replacement-tree transition completed on 2026-07-14. It preserved the former `main` at annotated tag `legacy-main-before-avr128da48-2026-07-14`, made the current `main` tree exactly match the qualified Ver 2.1 development tree, and removed the redundant `AVR128DA48` branch. Future development remains on `Development_AVR128DA48`; approved releases go to `main`.
 
 ## Deferred resume point
 

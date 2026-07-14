@@ -65,7 +65,7 @@
       "id": "artifact-manifest",
       "description": "Generate the release manifest, checksums, package README, and exact AVR, ESP, and LittleFS artifact set.",
       "status": "done",
-      "evidence": "Candidate package assembled under /private/tmp with AVR HEX, ESP sketch, LittleFS recovery image, flexfox80-release-info-v1 manifest, checksum list, and preservation README. Final package must be regenerated from AVR128DA48."
+      "evidence": "Candidate package assembled under /private/tmp with AVR HEX, ESP sketch, LittleFS recovery image, flexfox80-release-info-v1 manifest, checksum list, and preservation README. Final package must be regenerated from main."
     },
     {
       "id": "package-validation",
@@ -101,15 +101,15 @@
     },
     {
       "id": "integration-approved",
-      "description": "Obtain explicit approval to integrate the candidate into AVR128DA48.",
-      "status": "pending",
-      "evidence": "Development remains a fast-forward candidate; approval pending."
+      "description": "Obtain explicit approval to integrate the candidate into main.",
+      "status": "done",
+      "evidence": "The release owner approved the AVR128DA48 fast-forward and then explicitly approved the one-time replacement-tree merge to main on 2026-07-14. Main now preserves both histories at merge 17b31195e77a3617f6f0e5aa66b3ed54f4de745f, with a tree exactly matching qualified candidate 56d1f479358bf4163e98a1d0abe7c9970857b926; the former main is preserved at annotated tag legacy-main-before-avr128da48-2026-07-14."
     },
     {
       "id": "release-branch-verified",
-      "description": "Verify the clean integrated AVR128DA48 commit and reproduce the selected release artifacts from it.",
+      "description": "Verify the clean integrated main commit and reproduce the selected release artifacts from it.",
       "status": "pending",
-      "evidence": "Awaiting approved fast-forward integration."
+      "evidence": "The replacement merge passed just check and the candidate checklist with an exact candidate tree. Final deterministic builds and package reproduction remain required from the final clean main release commit after branch-policy records are integrated."
     },
     {
       "id": "release-approved",

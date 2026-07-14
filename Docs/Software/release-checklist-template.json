@@ -99,13 +99,13 @@
     },
     {
       "id": "integration-approved",
-      "description": "Obtain explicit approval to integrate the candidate into AVR128DA48.",
+      "description": "Obtain explicit approval to integrate the candidate into main.",
       "status": "pending",
       "evidence": ""
     },
     {
       "id": "release-branch-verified",
-      "description": "Verify the clean integrated AVR128DA48 commit and reproduce the selected release artifacts from it.",
+      "description": "Verify the clean integrated main commit and reproduce the selected release artifacts from it.",
       "status": "pending",
       "evidence": ""
     },

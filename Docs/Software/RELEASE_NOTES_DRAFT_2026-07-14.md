@@ -57,4 +57,4 @@ These deferrals reflect the mature product's field reliability and the decision 
 
 ## Before release
 
-Live installation/readback of both selected firmware artifacts, the release label, remaining A8 hardware tests or approved skips, rollback package, integration commit, and release approval are still required. Do not deploy from this draft alone.
+The live installed pair, release label, approved A8 deferrals, rollback record, and integration to `main` are complete. Final deterministic builds and package reproduction from the clean `main` release commit, explicit release approval, annotated tag, GitHub publication, and archive verification are still required. Do not deploy from this draft alone.

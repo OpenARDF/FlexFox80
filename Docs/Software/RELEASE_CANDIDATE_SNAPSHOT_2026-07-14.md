@@ -8,7 +8,7 @@
 
 **Proposed maintenance release:** `v1.0.0`
 
-**Status:** Candidate gates pass, including the representative installed pair; explicit integration and final release approval remain pending
+**Status:** Candidate gates and approved integration to `main` pass; final clean-`main` reproduction and release approval remain pending
 
 ## Purpose
 
@@ -68,9 +68,9 @@ The LittleFS tool does not promise byte-identical images across all invocations 
 
 ## Branch readiness
 
-At the `10dd7c2` release-preparation build, `Development_AVR128DA48` and `origin/Development_AVR128DA48` were aligned. The development branch was 120 commits ahead of `origin/AVR128DA48` and zero commits behind. Integration can therefore be a fast-forward if that relationship remains unchanged, but no integration was performed.
+At the `10dd7c2` release-preparation build, `Development_AVR128DA48` and its remote were aligned. The owner later approved integration, and the candidate was fast-forwarded through the transitional `AVR128DA48` branch before the approved replacement-tree merge established it on `main`.
 
-The separately planned transition from the AVR128DA48 product line to `main` remains out of scope.
+The 2026-07-14 replacement merge `17b3119` preserves both histories and has the exact qualified candidate tree. The former `main` is preserved by annotated tag `legacy-main-before-avr128da48-2026-07-14`; the redundant `AVR128DA48` branch was removed, and `Development_AVR128DA48` was fast-forwarded through the merge for future work.
 
 ## Rollback position
 
@@ -84,7 +84,7 @@ The following are not silently treated as passed:
 
 - retain the approved skips in the [release hardware checklist](RELEASE_HARDWARE_CHECKLIST_2026-07-14.md), including representative classic, sprint, foxoring, beacon, antenna removal/reconnection, scheduled sleep/wake, temperature/fan, long-duration event, and broader fault-recovery checks;
 - re-run the clean-checkout build and status gates at the exact integration commit;
-- explicitly approve fast-forward integration into `AVR128DA48`;
+- reproduce and verify the selected artifacts from the final clean `main` release commit;
 - review the reproduced release artifacts and explicitly approve the annotated tag and GitHub publication.
 
 No additional firmware behavior work is planned unless one of these gates reproduces a release-blocking regression.
