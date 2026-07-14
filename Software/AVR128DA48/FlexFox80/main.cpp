@@ -215,6 +215,13 @@ static void setWakeTimeFromForeground(time_t value)
 	EXIT_CRITICAL(wake_time_store);
 }
 
+static void setOnTheAirFromForeground(int32_t value)
+{
+	ENTER_CRITICAL(on_the_air_store);
+	g_on_the_air = value;
+	EXIT_CRITICAL(on_the_air_store);
+}
+
 /***********************************************************************
  * Private Function Prototypes
  *
@@ -1605,7 +1612,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 							setEventEpochs(1, MAX_TIME);                 /* run from a long time ago to a long time from now */
 							g_on_air_seconds = 9999;                    /* on period is very long */
 							g_off_air_seconds = 0;                      /* off period is very short */
-							g_on_the_air = 9999;                        /*  start out transmitting */
+							setOnTheAirFromForeground(9999);            /* start out transmitting */
 							g_sendID_seconds_countdown = MAX_UINT16;			/* wait a long time to send the ID */
 // 							g_seconds_transition = false;
 // 							while(!g_seconds_transition);
@@ -2235,6 +2242,7 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 		if(dif >= 0)                                    /* start time is in the past */
 		{
 			bool turnOnTransmitter = false;
+			int32_t on_the_air = 0;
 			int cyclePeriod = g_on_air_seconds + g_off_air_seconds;
 			int secondsIntoCycle = dif % cyclePeriod;
 			int timeTillTransmit = g_intra_cycle_delay_time - secondsIntoCycle;
@@ -2243,7 +2251,7 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 			{
 				if(g_on_air_seconds <= -timeTillTransmit)   /* we should have finished transmitting in this cycle */
 				{
-					g_on_the_air = -(cyclePeriod + timeTillTransmit);
+					on_the_air = -(cyclePeriod + timeTillTransmit);
 					if(statusCode)
 					{
 						*statusCode = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
@@ -2251,12 +2259,12 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 
 					if(!g_event_enabled)
 					{
-						g_sendID_seconds_countdown = (g_on_air_seconds - g_on_the_air) - g_time_needed_for_ID;
+						g_sendID_seconds_countdown = (g_on_air_seconds - on_the_air) - g_time_needed_for_ID;
 					}
 				}
 				else    /* we should be transmitting right now */
 				{
-					g_on_the_air = g_on_air_seconds + timeTillTransmit;
+					on_the_air = g_on_air_seconds + timeTillTransmit;
 					turnOnTransmitter = true;
 					if(statusCode)
 					{
@@ -2265,16 +2273,16 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 
 					if(!g_event_enabled)
 					{
-						if(g_time_needed_for_ID < g_on_the_air)
+						if(g_time_needed_for_ID < on_the_air)
 						{
-							g_sendID_seconds_countdown = g_on_the_air - g_time_needed_for_ID;
+							g_sendID_seconds_countdown = on_the_air - g_time_needed_for_ID;
 						}
 					}
 				}
 			}
 			else    /* it is not yet time to transmit in this cycle */
 			{
-				g_on_the_air = -timeTillTransmit;
+				on_the_air = -timeTillTransmit;
 				if(statusCode)
 				{
 					*statusCode = STATUS_CODE_EVENT_STARTED_WAITING_FOR_TIME_SLOT;
@@ -2285,6 +2293,8 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 					g_sendID_seconds_countdown = timeTillTransmit + g_on_air_seconds - g_time_needed_for_ID;
 				}
 			}
+
+			setOnTheAirFromForeground(on_the_air);
 
 			if(turnOnTransmitter)
 			{
@@ -2382,7 +2392,7 @@ void initializeAllEventSettings(bool disableEvent)
 void suspendEvent()
 {
 	g_event_enabled = false;    /* get things stopped immediately */
-	g_on_the_air = 0;           /*  stop transmitting */
+	setOnTheAirFromForeground(0); /* stop transmitting */
 	g_event_commenced = false;  /* get things stopped immediately */
 	keyTransmitter(OFF);
 	powerToTransmitter(OFF);
@@ -2727,7 +2737,7 @@ void setupForFox(Fox_t fox, EventAction_t action)
 	{
 		g_code_throttle = throttleValue(g_pattern_codespeed);
 
-		g_on_the_air = g_on_air_seconds;			/* start out transmitting */
+		setOnTheAirFromForeground(g_on_air_seconds); /* start out transmitting */
 		g_event_commenced = true;                   /* get things running immediately */
 		g_last_status_code = STATUS_CODE_EVENT_STARTED_NOW_TRANSMITTING;
  		g_use_rtc_for_startstop = false;

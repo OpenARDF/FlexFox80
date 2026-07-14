@@ -635,6 +635,40 @@ if (
 
 process.stdout.write("PASS foreground wake-time stores are atomic to the RTC ISR\n");
 
+const activeOnAirAssignments =
+  avrMain.match(/^\s*g_on_the_air\s*=/gm) || [];
+const atomicOnAirSetter = avrMain.match(
+  /static\s+void\s+setOnTheAirFromForeground\s*\(\s*int32_t\s+value\s*\)\s*\{([^{}]*)\}/,
+);
+const activateEventBody = avrMain.match(
+  /EC\s+activateEventUsingCurrentSettings\s*\(\s*SC\*\s*statusCode\s*\)\s*\{([\s\S]*?)\n\}\n\nvoid\s+initializeAllEventSettings/,
+);
+
+if (
+  activeOnAirAssignments.length !== 9 ||
+  !atomicOnAirSetter ||
+  !activateEventBody ||
+  /\bg_on_the_air\b/.test(activateEventBody[1] ?? "") ||
+  !/ENTER_CRITICAL[\s\S]*g_on_the_air\s*=\s*value[\s\S]*EXIT_CRITICAL/.test(
+    atomicOnAirSetter?.[1] ?? "",
+  ) ||
+  !/\bg_on_the_air\+\+/.test(avrMain) ||
+  !/\bg_on_the_air--/.test(avrMain) ||
+  !/g_on_the_air\s*=\s*-g_intra_cycle_delay_time/.test(avrMain) ||
+  !/g_on_the_air\s*=\s*-g_off_air_seconds/.test(avrMain) ||
+  !/setOnTheAirFromForeground\s*\(\s*9999\s*\)/.test(avrMain) ||
+  !/setOnTheAirFromForeground\s*\(\s*on_the_air\s*\)/.test(avrMain) ||
+  !/setOnTheAirFromForeground\s*\(\s*0\s*\)/.test(avrMain) ||
+  !/setOnTheAirFromForeground\s*\(\s*g_on_air_seconds\s*\)/.test(avrMain)
+) {
+  process.stderr.write(
+    "Firmware contract check failed: foreground on-air state stores are not atomic to ISR owners\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS foreground on-air state stores are atomic to ISR owners\n");
+
 if (!/if\s*\(\s*g_report_seconds\s*&&\s*!g_clone_quiet\s*\)/.test(avrMain)) {
   process.stderr.write(
     "Firmware contract check failed: ordinary time reports are not suppressed during clone quiet mode\n",
