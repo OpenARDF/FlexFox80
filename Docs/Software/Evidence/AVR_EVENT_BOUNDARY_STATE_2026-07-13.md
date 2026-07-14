@@ -4,7 +4,7 @@
 
 **Scope:** Foreground event-window predicates and `clockConfigurationCheck()`
 
-**Status:** Red/green host tests, firmware contract, generated-code review, and two exact builds pass; connected-target gate pending
+**Status:** Red/green host tests, firmware contract, generated-code review, two exact builds, byte-verified target installation, and normal-path telemetry pass
 
 ## Confirmed defect
 
@@ -70,12 +70,22 @@ The 41,848-byte raw candidate flash image has SHA-256 `a02b6b92bbb5a5d5f4284e535
 
 ## Connected-target gate
 
-After committing the source/build checkpoint:
+The authorized dummy-loaded test unit was connected through Atmel-ICE `J41800053674` at 3.29 V. Two independent pre-program reads agreed and confirmed that the unit contained the exact R14 production image:
 
-1. independently read and hash production flash, EEPROM, and fuses twice;
-2. program the exact candidate while preserving EEPROM and fuses;
-3. independently read the installed regions twice and require exact candidate flash plus byte-for-byte preserved EEPROM/fuses;
-4. require ordinary HTTP, WebSocket, temperature, battery, version, role, and advancing-clock telemetry;
-5. retain exact scheduled start/finish runtime behavior for the broader A8 event-mode regression, because exercising a real transmit event is outside this predicate-only slice.
+| Region | Length | Pre-program SHA-256 |
+| --- | ---: | --- |
+| Flash | 41,992 bytes | `d6845f9088c344c3c3fa723a334c0033da9f72de3c1f47e3457574bed80577d4` |
+| EEPROM | 512 bytes | `5ad612a6aa41ae86de821ba4b701a7072aaeebb942747e2562040d08c22d610c` |
+| Fuses | 16 bytes | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` |
 
-Do not retain the candidate if any exact restoration or normal-path gate fails.
+Programming used an explicit chip erase, the committed R15 Release HEX, and restoration of the complete captured EEPROM. Fuses were excluded from all writes. Two independent post-program reads then agreed byte-for-byte:
+
+| Region | Length | Post-program SHA-256 | Required comparison |
+| --- | ---: | --- | --- |
+| Flash | 41,848 bytes | `a02b6b92bbb5a5d5f4284e53553688b680ab9cf37720a376a40f7f4ed013a26d` | Exact candidate match |
+| EEPROM | 512 bytes | `5ad612a6aa41ae86de821ba4b701a7072aaeebb942747e2562040d08c22d610c` | Exact pre-program match |
+| Fuses | 16 bytes | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` | Exact pre-program match |
+
+After the Moto route was reconnected, the normal read-only probe returned HTTP 200, WebSocket connectivity, `TEMP,26.0C`, `BAT,11.4V`, SSID `Tx_Master`, software version `2.0,0.200`, and master role `1`. Six epochs advanced normally at two-second intervals from `1783991030` through `1783991040`.
+
+The exact R15 candidate is therefore retained on the unit with its full pre-test EEPROM and fuse contents. Exact scheduled start/finish runtime behavior remains assigned to the broader A8 event-mode regression because exercising a real transmit event is outside this predicate-only slice.
