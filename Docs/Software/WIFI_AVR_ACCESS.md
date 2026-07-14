@@ -50,6 +50,123 @@ Examples:
 
 The ESP translates AVR replies back to WebSocket messages including `TEMP`, `BAT`, `SYNC`, `ERR_CODE`, `STATUS`, and `POWER`.
 
+## Future AVR bootloading over WiFi
+
+### Feasibility decision
+
+AVR firmware updates over the existing WiFi path are technically feasible. The intended transport would be:
+
+```text
+Browser or host -> WiFi -> ESP8266 -> USART1 -> AVR bootloader -> AVR application flash
+```
+
+This is a future architecture decision, not a description of a currently supported feature. It requires coordinated AVR bootloader, AVR application, ESP8266, build, release, recovery, and security work. Do not treat the existing arbitrary file upload or `PASS` command as a firmware-update mechanism.
+
+Microchip documents self-programming for the AVR DA family in [AN3341, Basic Bootloader for the AVR DA MCU Family](https://www.microchip.com/en-us/application-notes/an3341). Its AVR128DA48 UART example uses USART1 on PC0 for transmit and PC1 for receive. FlexFox already uses those same pins and USART for Linkbus, as shown in [`linkbus.h`](../../Software/AVR128DA48/FlexFox80/include/linkbus.h) and [`linkbus.cpp`](../../Software/AVR128DA48/FlexFox80/src/linkbus.cpp). Therefore, no PCB change is required merely to provide a serial data path between the ESP and an AVR-resident bootloader.
+
+The existing hardware cannot instead make the ESP behave like the Atmel-ICE over UPDI without modification. The AVR UPDI pin is routed to programming header P301, not to the ESP, while the ESP is connected to the AVR through the PC0/PC1 UART path. See [`FlexFox80.net`](../../KiCad/FlexFox80.net) nets 62, 96, and 99.
+
+### Required one-time provisioning
+
+The July 2026 target fuse capture records bytes `00 00 F0 FF FF D3 F8 00 00 FF FF FF FF FF FF FF`; byte 8 is the AVR128DA48 `BOOTSIZE` fuse. The [AVR128DA48 data sheet](https://www.microchip.com/content/dam/mchp/documents/MCU08/ProductDocuments/DataSheets/AVR128DA28-32-48-64-Data-Sheet-DS40002183.pdf) defines a value of zero as the entire Flash being the Boot section. The present application is linked at address zero and has no reserved, independently protected bootloader region. See [Mac Atmel-ICE target evidence](Evidence/MAC_ATMEL_ICE_TARGET_EVIDENCE_2026-07-12.md).
+
+Every existing unit would consequently need one physical UPDI provisioning operation before it could receive later wireless AVR updates. That operation must install and verify all of the following as one compatible set:
+
+1. a permanent bootloader in a nonzero Boot section;
+2. the matching nonzero `BOOTSIZE` fuse;
+3. an application linked after the reserved Boot section;
+4. the expected interrupt-vector selection and boot/application handoff behavior;
+5. unchanged or deliberately migrated EEPROM and other unit-specific state.
+
+At the time of this analysis, the Release application text occupied approximately 40.7 KB of the AVR's 128 KB Flash. There is ample nominal space for a small bootloader and the current application, but exact sizes and section boundaries must be recalculated from the candidate artifacts rather than copied from this note. The ESP's qualified profile provides 4 MB Flash with a 1 MB LittleFS partition; the current candidate retained 42,188 bytes of dynamic-memory headroom and 5,156 bytes of IRAM headroom. See [ESP event-file integrity evidence](Evidence/ESP_EVENT_FILE_INTEGRITY_2026-07-13.md). Resource comparison remains a required gate, especially because ESP IRAM margin is limited.
+
+### AVR reset cuts power to the ESP
+
+The important hardware complication is the ESP power-enable circuit. AVR PA5 drives `WIFI_ENABLE`, which drives the shutdown input of LT1763 regulator U306. R310 is a 10 kOhm pull-down from `WIFI_ENABLE` to ground. When the AVR is reset, PA5 becomes high-impedance, R310 disables U306, and the ESP loses power. The AVR also controls the ESP reset line; the ESP does not have an existing reciprocal AVR-reset control.
+
+An update design must not assume that a live ESP, browser socket, or fixed-delay bootloader handshake will survive a genuine AVR reset. There are two viable design directions.
+
+#### Software-only entry without an AVR reset
+
+The normal update path can preserve ESP power by transferring control directly from the application to a fixed entry point in the protected Boot section:
+
+1. The ESP receives the complete candidate into a temporary LittleFS file, validates it, and atomically promotes it to a staged update.
+2. The ESP sends an explicit bootloader-entry command over Linkbus.
+3. The AVR refuses entry while RF is active or power conditions are unsuitable, then forces the transmitter into a safe state, quiesces Linkbus, disables interrupts, and deliberately leaves `WIFI_ENABLE` asserted.
+4. The AVR transfers control to the bootloader without issuing a processor reset. The bootloader establishes its own stack, vector selection, peripheral state, and USART protocol before altering application Flash.
+5. The ESP and bootloader transfer, write, acknowledge, and verify the complete application.
+6. Only after successful final verification does the AVR reset or otherwise enter the new application. A final reset may reboot the ESP and drop the browser connection, but the programming transaction is already complete.
+
+Execution does not have to begin at reset for code in the AVR Boot section to program the Application section. This direct handoff must nevertheless be treated as boot-chain code: it needs explicit assembly/linker review, generated-code inspection, and connected-target fault testing. It must not depend on ordinary C/C++ startup state accidentally remaining valid across the handoff.
+
+#### Cold-reset and interrupted-update recovery
+
+A power failure, watchdog reset, brownout, UPDI reset, or unexpected application failure can still reset the AVR and power-cycle the ESP. Recovery therefore cannot depend on preserving the original WiFi session.
+
+Before erasing any application page, persist an update-pending state in locations defined for both processors. On a later reset, the bootloader must:
+
+- assert the RF-safe outputs and re-enable ESP power immediately;
+- distinguish a valid ordinary application from an update-pending or invalid application;
+- enter the valid application promptly during an ordinary boot;
+- wait without a short fixed timeout when an update is pending or the application fails integrity validation;
+- tolerate the ESP's full startup and access-point delay;
+- accept a resumable or complete retransmission from the image retained in LittleFS;
+- keep the bootloader itself immutable throughout recovery.
+
+The ESP must retain the staged candidate and its manifest across its own power loss. The browser may need to reconnect to the re-created access point, but the device must not require an Atmel-ICE merely because the update was interrupted. Persistent state must also distinguish an intentionally requested update from an image that has already been accepted, preventing reset loops and accidental reinstallation.
+
+### Optional hardware improvement
+
+A hardware modification is required if the product requirement is to keep the ESP and browser session alive across a true AVR reset. The simplest candidate is to make `WIFI_ENABLE` default high while the AVR pin is high-impedance, while retaining the AVR's ability to drive the signal low for intentional WiFi shutdown. Reworking R310 from a pull-down to an appropriate logic-supply pull-up is one possible implementation, but it must not be adopted from this software analysis alone.
+
+Changing the default has product-level consequences:
+
+- an unprogrammed, held-in-reset, or crashed AVR could leave the ESP powered;
+- battery drain and sleep behavior would change;
+- startup UART garbage and the existing ESP-reset/UART-gating logic must be requalified;
+- regulator shutdown thresholds, voltage domains, reset timing, and PCB rework practicality must be checked;
+- all normal WiFi-off, sleep, wake, clone, and fault-recovery paths require regression testing.
+
+Alternatives include a calculated hold-up network on the regulator shutdown control or a self-hold/OR enable circuit shared by the AVR and ESP. Those options may retain default-off behavior or allow the ESP to hold its own power during an update, but they require an electrical design and fault analysis. Merely adding an ESP-to-AVR reset connection does not solve the existing power interruption by itself. Adding an ESP-to-UPDI connection is unnecessary for the preferred UART-bootloader architecture and would create a separate programming and electrical-protection problem.
+
+The recommended order is to prove the direct, no-reset software handoff and interrupted-update recovery on a pilot unit before deciding whether seamless reset survival justifies a board revision or fleet rework.
+
+### Update protocol and safety requirements
+
+The ESP should stage a compact application binary plus a manifest rather than forward an unchecked Intel HEX stream from an open browser connection. At minimum, the manifest and protocol must bind:
+
+- product and processor identity;
+- bootloader protocol and minimum bootloader version;
+- application start address and maximum length;
+- application version and downgrade policy;
+- payload length and cryptographic hash;
+- cryptographic signature or equivalent authenticated-release proof;
+- EEPROM schema compatibility or a declared migration;
+- per-page sequence, retry, and integrity information.
+
+CRC or readback detects corruption but does not authenticate firmware. The default FlexFox access point is open, so an unauthenticated firmware endpoint would permit nearby users to replace transmitter code. Prefer signature verification inside the immutable AVR bootloader; ESP-only verification does not protect the AVR if ESP firmware or its filesystem is compromised. A physical confirmation or deliberate maintenance-mode condition should also gate bootloader entry.
+
+The transfer must use numbered Flash pages with acknowledgements, bounded retries, and final AVR-side readback or whole-image verification. It must never write the Boot section, fuses, lock bits, EEPROM, or User Row unless a separately reviewed provisioning or migration design explicitly requires that region. The current 9600-baud Linkbus rate gives a raw transfer floor of roughly 43 seconds for a 40.7 KB image before framing, erase, write, and verification overhead. A bootloader-specific higher baud rate is reasonable after hardware qualification; correctness and recovery matter more than minimizing update time.
+
+Bootloader entry must be refused during an active or imminent event, RF keying, insufficient supply margin, or an unresolved hardware fault. Both processors must report progress and final identity without treating a lost browser socket as proof of failure or success.
+
+### Decision checklist before implementation
+
+Do not begin implementation until the project has explicitly decided all of the following:
+
+1. Whether a dropped browser connection after final AVR reset is acceptable, or continuous ESP power across reset is a product requirement.
+2. Whether the first release uses only direct no-reset handoff or also includes an ESP-power hardware modification.
+3. Boot section size, application offset, fuse values, vector behavior, and a combined initial-provisioning artifact.
+4. Image format, signature scheme, signing-key custody, version policy, and bootloader compatibility rules.
+5. Persistent update-marker locations and their compatibility with the existing 512-byte EEPROM schema.
+6. ESP staging-space preflight, atomic file handling, and behavior when LittleFS is full or damaged.
+7. Power threshold, brownout behavior, RF-safe state, event exclusion, and watchdog behavior during update.
+8. Page retry, resume, final verification, rollback, and invalid-application recovery semantics.
+9. Pilot-unit and fault-injection tests covering resets or power loss before staging, during every page phase, after verification, and during first application boot.
+10. A one-time UPDI fleet-provisioning and rollback plan for every unit that should support later wireless updates.
+
+This work is a boot-chain, fuse-layout, release-security, and recovery project rather than a small extension of the existing WebSocket command set. It should remain separate from release-candidate stabilization unless a dedicated pilot and full rollback path have been authorized.
+
 ## Read-only Mac probe
 
 After joining the FlexFox SSID, run:

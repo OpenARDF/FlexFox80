@@ -13,6 +13,7 @@ This directory documents the current software architecture on the `AVR128DA48` b
 - [July 2026 release-readiness plan](RELEASE_READINESS_PLAN_2026-07-14.md) records the decision to complete R4, freeze firmware scope, qualify an official release candidate, and defer the remaining review items with a precise resume point.
 - [Source and generated-file boundaries](GENERATED_FILES.md) classifies product source, generated-derived files, IDE/build output, ESP assets, and CAD/manufacturing files.
 - [Build environment](BUILD_ENVIRONMENT.md) defines Mac and Windows roles, the portable AVR Release wrapper, evidence classes, and the reference-environment handoff checklist.
+- [WiFi-to-AVR access](WIFI_AVR_ACCESS.md) documents the supported HTTP/WebSocket/Linkbus path, safe probes, and the feasibility, reset-power constraint, recovery design, optional hardware changes, and decision gates for future AVR bootloading over WiFi.
 - [Mac build environment evidence](Evidence/MAC_BUILD_ENVIRONMENT_2026-07-11.md) records the verified archived compiler and the remaining historical device-pack requirement.
 - [Wireless clone time synchronization investigation](Evidence/WIRELESS_TIME_SYNC_INVESTIGATION_2026-07-12.md) records the rare multi-unit timing symptom, confirmed false-success paths, read-only phase observer, ranked hypotheses, and measurement plan.
 - The repository-root [Codex mailbox](../../CODEX_MAILBOX.md) carries committed Mac/Windows requests and replies; durable results belong under `Evidence/`.
