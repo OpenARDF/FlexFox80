@@ -4,6 +4,8 @@
 
 **Candidate identity:** [Release-candidate snapshot](RELEASE_CANDIDATE_SNAPSHOT_2026-07-14.md)
 
+**Supported hardware target:** FlexFox Ver 2.1 (Mar 2022) only
+
 **Status:** Focused gates pass; remaining broad A8 tests or explicit owner-approved skips are required before official release
 
 ## Status meanings
@@ -100,9 +102,8 @@ Before official release, record:
 
 1. which pending RF/event/sleep/thermal tests will be run;
 2. which proposed deferrals are approved for this release;
-3. the board/hardware revision description;
-4. the selected rollback archive and its verification result;
-5. the release label decision (the embedded identities are AVR `0.201` and ESP `2.1`);
-6. approval to fast-forward `AVR128DA48` only after the final clean-checkout gates pass.
+3. the selected rollback archive and its verification result;
+4. the release label decision (the embedded identities are AVR `0.201` and ESP `2.1`);
+5. approval to fast-forward `AVR128DA48` only after the final clean-checkout gates pass.
 
 Until those decisions are recorded, the candidate is frozen and reproducible but not officially released.

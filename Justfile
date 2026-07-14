@@ -17,11 +17,13 @@ docs-check:
 policy-check:
     ./scripts/check-repository-policy.sh
     node ./scripts/check-firmware-source-headers.mjs
+    node ./scripts/check-release-checklist.mjs --file ./Docs/Software/release-checklist-template.json --phase template
 
 # Build and run dependency-light host characterization tests.
 test:
     ./scripts/run-host-tests.sh
     node ./Tests/Host/eeprom_enum_layout_migration_test.mjs
+    node ./Tests/Host/release_checklist_validator_test.mjs
     node ./scripts/check-firmware-contracts.mjs
     node ./scripts/check-eeprom-layout.mjs
 
@@ -76,3 +78,7 @@ wifi-role-assignment-test:
 # Build the ESP8266 sketch and LittleFS image with the qualified pinned profile.
 esp-build:
     node ./scripts/build-esp8266.mjs
+
+# Validate a release-specific checklist at the requested phase.
+release-checklist file phase:
+    node ./scripts/check-release-checklist.mjs --file "{{file}}" --phase "{{phase}}"

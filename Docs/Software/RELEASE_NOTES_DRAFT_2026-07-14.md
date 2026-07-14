@@ -6,7 +6,7 @@
 
 **Reported firmware versions:** ESP `2.1`, AVR `0.201` (`SW_VERSIONS,2.1,0.201`)
 
-**Status:** Engineering draft; not yet approved for publication or fleet deployment
+**Status:** Engineering draft; not yet approved as a maintenance release or for fleet deployment
 
 ## Summary
 
@@ -32,6 +32,7 @@ This candidate preserves the established FlexFox80 operating model while correct
 
 ## Compatibility
 
+- Supported hardware: FlexFox Ver 2.1 (Mar 2022) only.
 - AVR EEPROM schema: 274 bytes (`0x112`). Historical 268-byte Release EEPROM requires the documented validated migration before use with this candidate.
 - Existing stored event files remain valid; the checksum requirement applies only to clone-transfer `/Temp` files.
 - Qualified ESP build environment remains ESP8266 core 2.7.4 with WebSockets 2.3.6 on the 80 MHz Adafruit HUZZAH profile.
@@ -56,4 +57,4 @@ These deferrals reflect the mature product's field reliability and the decision 
 
 ## Before release
 
-Live installation/readback of both selected firmware artifacts, the release label, board revision description, remaining A8 hardware tests or approved skips, rollback package, integration commit, and publication approval are still required. Do not deploy from this draft alone.
+Live installation/readback of both selected firmware artifacts, the release label, remaining A8 hardware tests or approved skips, rollback package, integration commit, and release approval are still required. Do not deploy from this draft alone.

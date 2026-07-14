@@ -70,7 +70,7 @@ With R4 complete:
 6. Preserve known-good rollback images and programming instructions outside ordinary source commits, with committed checksums and provenance where appropriate.
 7. Write user-readable release notes that separate corrections, observed verification, and deferred work.
 8. Verify `Development_AVR128DA48` is clean, fully pushed, and reproducible.
-9. Review integration into `AVR128DA48` under the existing fast-forward-first workflow. Integration and release publication require their own explicit approval.
+9. Review integration into `AVR128DA48` under the existing fast-forward-first workflow. Integration and release distribution require their own explicit approval.
 
 The separately planned replacement-tree transition from `AVR128DA48` to `main` remains deferred. It must not be combined with this firmware release.
 

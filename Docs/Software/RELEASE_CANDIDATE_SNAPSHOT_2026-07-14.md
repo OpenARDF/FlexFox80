@@ -20,7 +20,7 @@ This document preserves the first complete release-candidate identity after R4. 
 | ESP8266 | `2.1` | `99bc9e93397f86c996870731c158cb4d060cd8ec` | `ARDF_Transmitter.ino.bin` | `0749b0e493254d526cb7a5e8afd938bd65b04c22bfffaa6c5150614f6315bad8` |
 | ESP8266 LittleFS | data inputs at `c2e4e98` | `c2e4e989f8ce5f1bcb4124bcea72ac88c7381446` | `ARDF_Transmitter.littlefs.bin` | `0b45a6ad86ea7774fc6f964a2325417f6d8978f7d2213305d3786b9ee77f0c41` |
 
-The ESP source has no separate embedded firmware-date identifier. The table therefore records the source commit and this build date rather than inventing one. The hardware line is the AVR128DA48 FlexFox80 design; a distinct PCB revision marking was not recovered from the software repository and remains an operator confirmation for the official release record.
+The ESP source has no separate embedded firmware-date identifier. The table therefore records the source commit and this build date rather than inventing one. The sole supported release hardware target is **FlexFox Ver 2.1 (Mar 2022)**.
 
 ## Exact build evidence
 
@@ -77,12 +77,11 @@ This establishes available rollback material; it does not by itself satisfy A8's
 
 The following are not silently treated as passed:
 
-- approve the official board/hardware revision description;
 - install both selected artifacts on a representative paired unit and require the live combined response `SW_VERSIONS,2.1,0.201`;
 - execute or explicitly approve skips in the [release hardware checklist](RELEASE_HARDWARE_CHECKLIST_2026-07-14.md), including representative classic, sprint, foxoring, beacon, antenna removal/reconnection, scheduled sleep/wake, temperature/fan, long-duration event, and broader fault-recovery checks;
 - select and verify the final rollback package;
 - approve the user-readable release notes;
 - re-run the clean-checkout build and status gates at the exact integration commit;
-- explicitly approve fast-forward integration into `AVR128DA48` and any later publication.
+- explicitly approve fast-forward integration into `AVR128DA48` and any later release distribution.
 
 No additional firmware behavior work is planned unless one of these gates reproduces a release-blocking regression.
