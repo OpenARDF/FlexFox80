@@ -4,7 +4,7 @@
 
 **Scope:** `syncSystemTimeToRTC()` and the event-launch RTC-edge wait
 
-**Status:** Source, host-test, firmware-contract, generated-code, and exact-build gates pass; isolated connected-target fault injection pending
+**Status:** Source, host-test, firmware-contract, generated-code, exact-build, isolated connected-target fault-injection, restoration, and normal-path gates pass
 
 ## Confirmed failure modes
 
@@ -81,11 +81,30 @@ Candidate artifact SHA-256 values:
 
 ## Connected-target gate
 
-Use an isolated fault-injection image on the authorized test unit, with RF inhibited and EEPROM preserved:
+An isolated fault-injection image was built outside the repository and programmed on the authorized dummy-loaded test unit with RF inhibited. The temporary image added only two test commands: one disabled the DS3231 square wave long enough to drain the pending edge before calling the synchronization helper, and one delayed the commit check for 1,100 ms after the RTC read. The temporary raw flash image was 42,140 bytes with SHA-256 `ec3b7a1561a4a33f4b6211810ea446ab549fa50a6f91d6418a39ebec84a73257`.
 
-1. suppress the DS3231 square wave after normal boot and prove the helper returns error 252 in approximately 1.5 seconds while WiFi/foreground processing recovers;
-2. force a delay longer than one second between RTC read and commit check and prove the changed generation rejects the stale read;
-3. restore the production candidate, then verify flash exactly and EEPROM/fuses byte-for-byte against their pre-test images;
-4. re-run normal clock-set/readback and advancing-time probes.
+The missing-edge command returned `ERR_CODE,252` after 2,729 ms, including command delivery, the deliberate 1,100 ms edge drain, and the bounded wait. Queued temperature and battery requests were then acknowledged, and `SYNC` reports resumed with advancing epochs.
 
-No target image should be retained unless all restoration and normal-path gates pass.
+The delayed-commit command returned `ERR_CODE,252` after 1,854 ms. This proves that an RTC read spanning a later counted edge does not commit. Temperature, battery, and advancing `SYNC` reports again resumed afterward. Neither injected fault stranded foreground processing.
+
+Before fault injection, two independent reads agreed on all retained target state:
+
+| Region | Length | SHA-256 |
+| --- | ---: | --- |
+| Production R13 flash | 41,830 bytes | `d7f2c11755ea4b17232c7d1e9b4bfb3c00db048c5e944fd956927f435a9b2d1b` |
+| EEPROM | device region | `5ad612a6aa41ae86de821ba4b701a7072aaeebb942747e2562040d08c22d610c` |
+| Fuses | device region | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` |
+
+The production R14 candidate was then restored with an explicit erase and EEPROM restoration. Two independent post-program reads agreed byte-for-byte. Raw production flash was 41,992 bytes with SHA-256 `d6845f9088c344c3c3fa723a334c0033da9f72de3c1f47e3457574bed80577d4`, exactly matching the retained candidate; EEPROM and fuses exactly matched the pre-test hashes above.
+
+The normal read-only WiFi probe returned HTTP 200, WebSocket telemetry, software version `2.0,0.200`, master role `1`, and six successively advancing epochs at two-second intervals. The guarded minimum clock-write cycle then produced first-report matches for all three distinctive writes:
+
+| Trial | Requested signature | Normalized observation error |
+| --- | ---: | ---: |
+| 1 | +8 seconds | 1,066 ms |
+| 2 | -8 seconds | 907 ms |
+| 3 | current Mac time | 751 ms |
+
+The final current-time restoration produced three confirmation samples at 1,452, 1,486, and 1,506 ms of normalized observation error: a 1,486 ms median and 54 ms range. These values include ESP, WiFi, Moto tunnel, and host delivery latency; the gate is successful write/readback, advancing time, and bounded repeatability rather than absolute phase through that path.
+
+The retained unit therefore runs the exact R14 production image with its original EEPROM and fuse bytes. Broader RF-cycle, sleep/wake, and event-mode regression remains assigned to A8.

@@ -4,7 +4,7 @@
 
 **Scope:** AVR128DA48 system-clock reads, RTC-edge handling, interrupt latency, and shared schedule state
 
-**Status:** Static review complete; RTC edge recovery and three atomic schedule-state slices pass focused target gates; bounded RTC synchronization passes source/build gates
+**Status:** Static review complete; RTC edge recovery, three atomic schedule-state slices, and bounded RTC synchronization pass focused target gates
 
 ## Reason for this review
 
@@ -81,7 +81,7 @@ There is also a fault-sensitive read/set window. Under normal I2C timing, the RT
 
 The unbounded wait was already listed in the general reliability review. The ISR/I2C audit raises its timing significance: a bounded synchronization helper should use a counted edge observation and reject a read whose edge generation changed during the transaction.
 
-**Implementation status:** The helper now waits at most 1,500 ms using the independent CPU-clock utility timer, snapshots the counted RTC-edge generation around the RTC read, and installs system time only after a successful read with an unchanged generation. The separate event-activation edge wait uses the same bounded operation. Red/green host tests, firmware contracts, generated-code review, and an exact zero-warning build pass with unchanged RTC and RF ISR sizes. Isolated missing-edge and intervening-edge target fault injection remains the gate; see [AVR bounded RTC synchronization guard](AVR_RTC_SYNC_GUARD_2026-07-13.md).
+**Implementation status:** The helper now waits at most 1,500 ms using the independent CPU-clock utility timer, snapshots the counted RTC-edge generation around the RTC read, and installs system time only after a successful read with an unchanged generation. The separate event-activation edge wait uses the same bounded operation. Red/green host tests, firmware contracts, generated-code review, and an exact zero-warning build pass with unchanged RTC and RF ISR sizes. Isolated target injection proved that both a missing edge and an RTC read crossing a later edge return error 252 without stranding foreground processing. Exact flash restoration, byte-preserved EEPROM/fuses, advancing reports, and the guarded clock-write/readback cycle pass; see [AVR bounded RTC synchronization guard](AVR_RTC_SYNC_GUARD_2026-07-13.md).
 
 ### 4. Medium: exact event boundaries use inconsistent comparisons and multiple `now` snapshots
 
@@ -110,9 +110,9 @@ No ISR or RF behavior should be reorganized from static reasoning alone. The nex
 4. **Separate edge capture from slow work.** The current candidate completes the counted-edge portion using the already-running Level-1 timeout timer and leaves RF keying unchanged. Do not transmit or perform general I2C from the higher-priority sampler. Hardware fault injection remains the gate.
 5. **Make 32-bit transfers explicit.** The event start/finish, wake-time, and separately owned on-air state slices pass focused source/build and connected-target gates without changing either consuming ISR.
 6. **Add boundary tests.** Exercise `start-1`, `start`, `start+1`, `finish-1`, `finish`, and `finish+1` using one supplied `now` value.
-7. **Bound RTC synchronization.** Source/build gates now pass for the bounded wait and generation-validated read. Complete isolated missing-square-wave and intervening-edge target fault injection before retaining the image.
+7. **Bound RTC synchronization.** Source/build and isolated target gates pass for the bounded wait and generation-validated read. Production flash was exactly restored, EEPROM/fuses were preserved, and the normal write/readback path passes.
 8. **Repeat hardware timing gates.** Re-run corrected reset and clone qualification, plus classic, Sprint, foxoring, beacon, ID, sleep/wake, and event-finish traces.
 
 ## Priority decision
 
-Long-duration drift and aging-register work remains bookmarked. The RTC edge-loss recovery is source- and target-verified, with broader product regression retained for A8. The event-epoch, wake-time, and separately owned on-air atomic slices pass their focused source, exact-build, programming, and runtime gates without changing either consuming ISR. The bounded RTC synchronization candidate now passes source/build gates and cannot install a read that crosses a counted edge. Complete its isolated target fault-injection and restoration gate next. These changes target rare discrete jitter and whole-second loss, which are better aligned with the observed failure class than expected short-term oscillator drift.
+Long-duration drift and aging-register work remains bookmarked. RTC edge-loss recovery, event-epoch ownership, wake-time ownership, on-air ownership, and bounded RTC synchronization are source- and target-verified, with broader product regression retained for A8. These changes target rare discrete jitter and whole-second loss, which are better aligned with the observed failure class than expected short-term oscillator drift. The next conservative slice is deterministic characterization of the exact event-boundary helpers using one supplied `now` value; no schedule semantics should change until the red tests make the existing inconsistency explicit.
