@@ -4,7 +4,7 @@
 
 **Scope:** Foreground writes to `g_time_to_wake_up`
 
-**Status:** Source and exact-build gates pass; connected-target gate pending
+**Status:** Source, exact-build, byte-verified target-programming, and focused runtime gates pass
 
 ## Ownership and risk
 
@@ -67,6 +67,28 @@ Candidate artifact SHA-256 values:
 | LSS | `1fe13a6ce45e381239d682cb1c1b574b560ec8b1be2e61afda690cbfeabd9427` |
 | SREC | `815d64043bdfcf6e85ce09f65d99e3466ff95ab23c210020596cbd50b2cf8f1f` |
 
+## Connected-target verification
+
+The committed candidate at `4afd355` was programmed on the authorized dummy-loaded test unit through Atmel-ICE `J41800053674`. The target identified as AVR128DA48 signature `1E 97 08`, silicon revision 1.7, at 3.27 V.
+
+Two independent pre-program reads matched byte-for-byte. They confirmed that the target still carried the exact R11 image and preserved state:
+
+| Region | Bytes read | Pre-program SHA-256 |
+| --- | ---: | --- |
+| Programmed flash span | 41,882 | `6b623e216d0aabb1eca72ad71b6e0b3d01517e1dc32b4fdd48bd4a3345a269d1` |
+| Complete EEPROM | 512 | `5ad612a6aa41ae86de821ba4b701a7072aaeebb942747e2562040d08c22d610c` |
+| Complete fuse memory | 16 | `837b85bfd32b26ed1cc534c6f1970b7d0ef3ce36a4b3b71612602170f1301126` |
+
+The target was explicitly erased, the committed HEX was written and verified twice in the programming session, and the captured 512-byte EEPROM was restored. Fuses were not written. The R12 candidate binary programmed span is 41,882 bytes with SHA-256 `a095ac4d9d46553d9291002c16cd6c501a41d9a2410f524d4fe93d246eccd27d`.
+
+Two new post-program sessions independently read flash, EEPROM, and fuses. Both reads matched each other and established:
+
+- target flash exactly matches the committed R12 candidate binary;
+- all 512 EEPROM bytes exactly match the pre-program capture;
+- all 16 fuse bytes exactly match the pre-program capture.
+
+After the Moto route was restored, the read-only runtime probe passed cleanly. It received HTTP 200, opened the WebSocket, returned AVR temperature `28.0C` and battery `11.4V`, identified SSID `Tx_Master`, software versions `2.0,0.200`, and master role `1`, and observed advancing clock reports from epoch `1783987788` through `1783987798`.
+
 ## Verification boundary
 
-The source and generated-code gates establish that foreground wake-time stores cannot be interrupted mid-value and that neither consuming ISR changed. Connected-target programming, state preservation, and startup observation remain the next focused gate. A complete scheduled sleep/wake cycle remains part of A8 rather than this narrow atomic-transfer check.
+The source and generated-code gates establish that foreground wake-time stores cannot be interrupted mid-value and that neither consuming ISR changed. Byte-verified target programming establishes exact flash installation with complete EEPROM and fuse preservation, while the runtime probe establishes ordinary startup and ESP-to-AVR telemetry. A complete scheduled sleep/wake cycle remains part of A8 rather than this narrow atomic-transfer check.
