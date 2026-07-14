@@ -16,8 +16,8 @@ This document preserves the first complete release-candidate identity after R4. 
 
 | Processor | Embedded version | Last source commit | Release artifact | SHA-256 |
 | --- | --- | --- | --- | --- |
-| AVR128DA48 | `0.201` | `3652cd54c77871f25bd9e7e668e65f11deb791d5` | `FlexFox80.hex` | `897076608a3473d48c0226dfd8800f5ac058e553286a2f97450bfd03a77f1ba4` |
-| ESP8266 | `2.1` | `3652cd54c77871f25bd9e7e668e65f11deb791d5` | `ARDF_Transmitter.ino.bin` | `0749b0e493254d526cb7a5e8afd938bd65b04c22bfffaa6c5150614f6315bad8` |
+| AVR128DA48 | `0.201` | `99bc9e93397f86c996870731c158cb4d060cd8ec` | `FlexFox80.hex` | `897076608a3473d48c0226dfd8800f5ac058e553286a2f97450bfd03a77f1ba4` |
+| ESP8266 | `2.1` | `99bc9e93397f86c996870731c158cb4d060cd8ec` | `ARDF_Transmitter.ino.bin` | `0749b0e493254d526cb7a5e8afd938bd65b04c22bfffaa6c5150614f6315bad8` |
 | ESP8266 LittleFS | data inputs at `c2e4e98` | `c2e4e989f8ce5f1bcb4124bcea72ac88c7381446` | `ARDF_Transmitter.littlefs.bin` | `0b45a6ad86ea7774fc6f964a2325417f6d8978f7d2213305d3786b9ee77f0c41` |
 
 The ESP source has no separate embedded firmware-date identifier. The table therefore records the source commit and this build date rather than inventing one. The hardware line is the AVR128DA48 FlexFox80 design; a distinct PCB revision marking was not recovered from the software repository and remains an operator confirmation for the official release record.
@@ -53,6 +53,8 @@ The LittleFS tool does not promise byte-identical images across all invocations 
 
 - `just check` passed every repository policy, Markdown, sanitizer-enabled host, firmware-contract, and 65-field EEPROM-layout check.
 - The firmware source contract requires AVR `0.201` and ESP `2.1` and verifies that their existing reporting paths compose `SW_VERSIONS,2.1,0.201`.
+- All 70 project-owned production firmware files carry standardized, dated MIT and module-purpose headers. Generated and externally licensed sources retain their upstream notices.
+- Exact post-header AVR and ESP builds remained byte-identical to the selected release images, confirming that the source-documentation pass changed no executable firmware.
 - The focused ESP event-file integrity regression passed all legacy, required-checksum, malformed, missing, duplicate, ordering, and bounds cases.
 - [R4 target qualification](Evidence/ESP_EVENT_FILE_INTEGRITY_2026-07-13.md) passed installed startup, normal clone, controlled mismatched-checksum rejection, prior-file retention, cleanup, and two-unit restoration.
 - The test master and R4 candidate were restored to their recorded event, callsign, role, master/receiver, frequency, power, and telemetry baselines.
@@ -61,7 +63,7 @@ The LittleFS tool does not promise byte-identical images across all invocations 
 
 ## Branch readiness
 
-After pushing the assigned identities, `Development_AVR128DA48` and `origin/Development_AVR128DA48` both pointed to `3652cd5`. The development branch was 116 commits ahead of `origin/AVR128DA48` and zero commits behind. Integration can therefore be a fast-forward if that relationship remains unchanged, but no integration was performed.
+After pushing the source-header checkpoint, `Development_AVR128DA48` and `origin/Development_AVR128DA48` both pointed to `99bc9e9`. The development branch was 118 commits ahead of `origin/AVR128DA48` and zero commits behind. Integration can therefore be a fast-forward if that relationship remains unchanged, but no integration was performed.
 
 The separately planned transition from the AVR128DA48 product line to `main` remains out of scope.
 
