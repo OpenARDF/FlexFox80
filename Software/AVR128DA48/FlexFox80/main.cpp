@@ -23,6 +23,7 @@
 #include "linkbus.h"
 #include "huzzah.h"
 #include "CircularStringBuff.h"
+#include "event_schedule_state.h"
 #include "event_time_state.h"
 #include "rtc_sync_guard.h"
 
@@ -2938,23 +2939,18 @@ bool reportTimeTill(time_t from, time_t until, const char* prefix, const char* f
 ConfigurationState_t clockConfigurationCheck(void)
 {
 	time_t now = time(null);
-	
-	if((g_event_finish_epoch <= MINIMUM_VALID_EPOCH) || (g_event_start_epoch <= MINIMUM_VALID_EPOCH) || (now <= MINIMUM_VALID_EPOCH))
+	EventSchedulePosition position = eventSchedulePosition(
+		now,
+		g_event_start_epoch,
+		g_event_finish_epoch,
+		MINIMUM_VALID_EPOCH);
+
+	if((position == EVENT_SCHEDULE_INVALID) || (position == EVENT_SCHEDULE_FINISHED))
 	{
 		return(CONFIGURATION_ERROR);
 	}
 
-	if(g_event_finish_epoch <= g_event_start_epoch) /* Event configured to finish before it started */
-	{
-		return(CONFIGURATION_ERROR);
-	}
-
-	if(now > g_event_finish_epoch)  /* The scheduled event is over */
-	{
-		return(CONFIGURATION_ERROR);
-	}
-
-	if(now > g_event_start_epoch)       /* Event should be running */
+	if(position == EVENT_SCHEDULE_ACTIVE) /* Event should be running */
 	{
 		if(!g_event_enabled)
 		{
@@ -3201,41 +3197,32 @@ bool noEventWillRun(void)
 
 bool eventScheduledForNow(void)
 {
-	time_t now = time(null);	
-	bool result = false;
-	
-	if((now > MINIMUM_VALID_EPOCH) && (g_event_start_epoch > MINIMUM_VALID_EPOCH))
-	{
-		result = ((g_event_start_epoch < now) && (g_event_finish_epoch > now));
-	}
-	
-	return(result);
+	time_t now = time(null);
+	return eventScheduledForNowAt(
+		now,
+		g_event_start_epoch,
+		g_event_finish_epoch,
+		MINIMUM_VALID_EPOCH);
 }
 
 bool eventScheduledForTheFuture(void)
 {
-	time_t now = time(null);	
-	bool result = false;
-	
-	if(now > MINIMUM_VALID_EPOCH)
-	{
-		result = ((g_event_start_epoch > now) && (g_event_finish_epoch > g_event_start_epoch));
-	}
-	
-	return(result);
+	time_t now = time(null);
+	return eventScheduledForTheFutureAt(
+		now,
+		g_event_start_epoch,
+		g_event_finish_epoch,
+		MINIMUM_VALID_EPOCH);
 }
 
 bool eventScheduled(void)
 {
-	time_t now = time(null);	
-	bool result = false;
-	
-	if(now > MINIMUM_VALID_EPOCH)
-	{
-		result = eventScheduledForTheFuture() || eventScheduledForNow();
-	}
-	
-	return(result);
+	time_t now = time(null);
+	return eventScheduledAt(
+		now,
+		g_event_start_epoch,
+		g_event_finish_epoch,
+		MINIMUM_VALID_EPOCH);
 }
 
 

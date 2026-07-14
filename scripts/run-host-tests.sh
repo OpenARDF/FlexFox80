@@ -62,3 +62,11 @@ ASAN_OPTIONS="${ASAN_OPTIONS:+$ASAN_OPTIONS:}allocator_may_return_null=1" \
 	-o "$build_dir/avr-rtc-sync-guard-tests"
 
 "$build_dir/avr-rtc-sync-guard-tests"
+
+# shellcheck disable=SC2086 # Flags are intentionally expanded into individual compiler arguments.
+"$cxx" $common_flags $sanitizer_flags \
+	-I "$repo_root/Software/AVR128DA48/FlexFox80/include" \
+	"$repo_root/Tests/Host/avr_event_schedule_state_test.cpp" \
+	-o "$build_dir/avr-event-schedule-state-tests"
+
+"$build_dir/avr-event-schedule-state-tests"

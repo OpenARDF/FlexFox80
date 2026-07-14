@@ -41,6 +41,13 @@ The Linkbus receive-boundary regression compiles the same guards used by the USA
 - safe termination of a maximum-length third field;
 - rejection of a fourth comma-delimited field and zero-capacity buffers.
 
+The event-schedule state regression compiles the same pure decision used by the foreground schedule helpers and covers:
+
+- invalid clock and event-window inputs;
+- `start-1`, `start`, and `start+1`;
+- `finish-1`, `finish`, and `finish+1`;
+- agreement between future, active, and overall-scheduled predicates using one supplied `now` value.
+
 Zero-capacity construction and allocation-failure behavior are intentionally not asserted yet. They are candidate red-green defect slices and must begin with recorded pre-fix evidence.
 
 ## Limits

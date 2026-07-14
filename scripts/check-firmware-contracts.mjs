@@ -81,6 +81,14 @@ const avrMainPath = join(
   "FlexFox80",
   "main.cpp",
 );
+const eventScheduleStatePath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "include",
+  "event_schedule_state.h",
+);
 const tcbPath = join(
   repoRoot,
   "Software",
@@ -134,6 +142,7 @@ const serialbus = readFileSync(serialbusPath, "utf8");
 const driverIsr = readFileSync(driverIsrPath, "utf8");
 const goertzel = readFileSync(goertzelPath, "utf8");
 const avrMain = readFileSync(avrMainPath, "utf8");
+const eventScheduleState = readFileSync(eventScheduleStatePath, "utf8");
 const tcb = readFileSync(tcbPath, "utf8");
 const ds3231 = readFileSync(ds3231Path, "utf8");
 const ds3231Header = readFileSync(ds3231HeaderPath, "utf8");
@@ -596,6 +605,44 @@ if (
 }
 
 process.stdout.write("PASS delayed RTC edges are counted and replayed\n");
+
+const clockConfigurationBody = avrMain.match(
+  /ConfigurationState_t\s+clockConfigurationCheck\s*\(void\)\s*\{([\s\S]*?)\n\}\n\nvoid\s+reportConfigErrors/,
+);
+const scheduledNowBody = avrMain.match(
+  /bool\s+eventScheduledForNow\s*\(void\)\s*\{([\s\S]*?)\n\}/,
+);
+const scheduledFutureBody = avrMain.match(
+  /bool\s+eventScheduledForTheFuture\s*\(void\)\s*\{([\s\S]*?)\n\}/,
+);
+const scheduledBody = avrMain.match(
+  /bool\s+eventScheduled\s*\(void\)\s*\{([\s\S]*?)\n\}/,
+);
+
+if (
+  !eventScheduleState.includes("if(now >= finish)") ||
+  !eventScheduleState.includes("return (now >= start) ? EVENT_SCHEDULE_ACTIVE") ||
+  !clockConfigurationBody ||
+  !scheduledNowBody ||
+  !scheduledFutureBody ||
+  !scheduledBody ||
+  (clockConfigurationBody[1].match(/time\s*\(\s*null\s*\)/g) || []).length !== 1 ||
+  !clockConfigurationBody[1].includes("eventSchedulePosition(") ||
+  (scheduledNowBody[1].match(/time\s*\(\s*null\s*\)/g) || []).length !== 1 ||
+  !scheduledNowBody[1].includes("eventScheduledForNowAt(") ||
+  (scheduledFutureBody[1].match(/time\s*\(\s*null\s*\)/g) || []).length !== 1 ||
+  !scheduledFutureBody[1].includes("eventScheduledForTheFutureAt(") ||
+  (scheduledBody[1].match(/time\s*\(\s*null\s*\)/g) || []).length !== 1 ||
+  !scheduledBody[1].includes("eventScheduledAt(") ||
+  /eventScheduledFor(?:Now|TheFuture)\s*\(/.test(scheduledBody[1])
+) {
+  process.stderr.write(
+    "Firmware contract check failed: event boundaries do not share one ISR-aligned time decision\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS event boundaries share one ISR-aligned time decision\n");
 
 const eventStartAssignments = avrMain.match(/\bg_event_start_epoch\s*=/g) || [];
 const eventFinishAssignments = avrMain.match(/\bg_event_finish_epoch\s*=/g) || [];

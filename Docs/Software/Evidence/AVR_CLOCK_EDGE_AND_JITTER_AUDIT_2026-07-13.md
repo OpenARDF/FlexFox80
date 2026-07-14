@@ -94,6 +94,8 @@ The actual RTC event-start and event-finish decisions use `>=`, which is appropr
 
 `clockConfigurationCheck()` likewise uses strict `now > start` and `now > finish`. These paths can report inconsistent state for the exact boundary second and can straddle a transition because they do not share one captured `now`. The RTC ISR remains the schedule owner, so this is not presently a demonstrated persistent phase shift, but it is a concrete boundary defect suitable for deterministic host tests.
 
+**Implementation status:** A pure four-state decision now uses one supplied `now` and the RTC ISR's `start <= now < finish` contract. Every legacy wrapper captures `time()` once and delegates directly; `eventScheduled()` no longer nests helpers. Red/green tests cover invalid windows and `start-1` through `finish+1`, the firmware contract passes, and two exact zero-warning builds are byte-identical with 144 fewer flash bytes and unchanged RAM/ISR sizes. The focused connected-target installation gate remains; see [AVR event-boundary state](AVR_EVENT_BOUNDARY_STATE_2026-07-13.md).
+
 ### 5. Low phase risk: ordinary clock reports are not edge timestamps
 
 The periodic report path notices that `time()` changed and then formats/sends the value from foreground. `$ESP,0` also sends the current integer epoch immediately when WiFi announces that it is awake. Linkbus, ESP, WiFi, tunnel, and host scheduling can delay receipt.
@@ -109,10 +111,10 @@ No ISR or RF behavior should be reorganized from static reasoning alone. The nex
 3. **Reproduce the fault path safely.** Force Si5351 NACK/timeout behavior with RF inhibited and confirm whether RTC edge count and AVR system time lose seconds. Preserve reset cause and error state.
 4. **Separate edge capture from slow work.** The current candidate completes the counted-edge portion using the already-running Level-1 timeout timer and leaves RF keying unchanged. Do not transmit or perform general I2C from the higher-priority sampler. Hardware fault injection remains the gate.
 5. **Make 32-bit transfers explicit.** The event start/finish, wake-time, and separately owned on-air state slices pass focused source/build and connected-target gates without changing either consuming ISR.
-6. **Add boundary tests.** Exercise `start-1`, `start`, `start+1`, `finish-1`, `finish`, and `finish+1` using one supplied `now` value.
+6. **Add boundary tests.** Red/green host and source/build gates now pass for `start-1`, `start`, `start+1`, `finish-1`, `finish`, and `finish+1` using one supplied `now`. Complete exact target installation and normal-path verification.
 7. **Bound RTC synchronization.** Source/build and isolated target gates pass for the bounded wait and generation-validated read. Production flash was exactly restored, EEPROM/fuses were preserved, and the normal write/readback path passes.
 8. **Repeat hardware timing gates.** Re-run corrected reset and clone qualification, plus classic, Sprint, foxoring, beacon, ID, sleep/wake, and event-finish traces.
 
 ## Priority decision
 
-Long-duration drift and aging-register work remains bookmarked. RTC edge-loss recovery, event-epoch ownership, wake-time ownership, on-air ownership, and bounded RTC synchronization are source- and target-verified, with broader product regression retained for A8. These changes target rare discrete jitter and whole-second loss, which are better aligned with the observed failure class than expected short-term oscillator drift. The next conservative slice is deterministic characterization of the exact event-boundary helpers using one supplied `now` value; no schedule semantics should change until the red tests make the existing inconsistency explicit.
+Long-duration drift and aging-register work remains bookmarked. RTC edge-loss recovery, event-epoch ownership, wake-time ownership, on-air ownership, and bounded RTC synchronization are source- and target-verified, with broader product regression retained for A8. These changes target rare discrete jitter and whole-second loss, which are better aligned with the observed failure class than expected short-term oscillator drift. The exact event-boundary candidate now passes its deterministic red/green and source/build gates; complete exact connected-target installation and normal-path verification next, leaving full scheduled event-mode behavior for A8.
