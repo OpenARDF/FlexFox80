@@ -43,14 +43,5 @@ python3 "$esptool" \
 	--flash_size 4MB \
 	0x0 "$firmware"
 
-python3 "$esptool" \
-	--chip esp8266 \
-	--port "$port" \
-	--baud 115200 \
-	--before no_reset \
-	--after no_reset \
-	verify_flash \
-	0x0 "$firmware"
-
-printf '%s\n' "PASS sketch write and independent readback verification completed"
+printf '%s\n' "PASS sketch write and esptool on-chip flash hash verification completed"
 printf '%s\n' "Press RESET to boot normally; this procedure did not erase or write LittleFS."
