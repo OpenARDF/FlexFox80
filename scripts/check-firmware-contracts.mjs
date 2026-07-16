@@ -170,6 +170,13 @@ const cloneEventManifestPath = join(
   "ARDF_Transmitter",
   "clone_event_manifest.h",
 );
+const firmwareUpdateIntegrityPath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "firmware_update_integrity.h",
+);
 const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
@@ -198,9 +205,10 @@ const espEvent = readFileSync(espEventPath, "utf8");
 const roleAssignmentBounds = readFileSync(roleAssignmentBoundsPath, "utf8");
 const eventFileIntegrity = readFileSync(eventFileIntegrityPath, "utf8");
 const cloneEventManifest = readFileSync(cloneEventManifestPath, "utf8");
+const firmwareUpdateIntegrity = readFileSync(firmwareUpdateIntegrityPath, "utf8");
 
 const expectedAvrVersion = "0.201";
-const expectedEspVersion = "2.1";
+const expectedEspVersion = "2.2";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -217,6 +225,24 @@ if (
 }
 
 process.stdout.write(`PASS combined firmware version reports ${expectedEspVersion},${expectedAvrVersion}\n`);
+
+if (
+  !espMain.includes("Update.begin(g_firmwareUpdateExpectedSize, U_FLASH)") ||
+  espMain.includes("Update.begin(g_firmwareUpdateExpectedSize, U_FS)") ||
+  !espMain.includes("Update.end(false)") ||
+  !espMain.includes("receivedCrc32 != g_firmwareUpdateExpectedCrc32") ||
+  !espMain.includes("g_firmwareUpdateReceivedSize != g_firmwareUpdateExpectedSize") ||
+  !espMain.includes("firmwareUpdateCloneIsActive()") ||
+  !espMain.includes("g_firmwareRestartPending = true") ||
+  !firmwareUpdateIntegrity.includes("firmwareUpdateCrc32")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: WiFi sketch updates must remain clone-gated, exact-length, CRC-checked, U_FLASH-only, and reboot-transactional\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS WiFi updater is transactional and cannot select a filesystem update\n");
 
 const declaration = source.match(/extern\s+volatile\s+Fox_t\s+g_fox\s*\[\s*([^\]]+?)\s*\]\s*;/);
 

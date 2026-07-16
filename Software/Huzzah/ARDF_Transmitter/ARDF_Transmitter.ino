@@ -44,6 +44,8 @@
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFiMulti.h>
+#include <Updater.h>
+#include <StreamString.h>
 /*#include <ESP8266mDNS.h> */
 #include <user_interface.h>
 #include "esp8266.h"
@@ -56,8 +58,10 @@
 #include <time.h>
 #include "Transmitter.h"
 #include "RootPage.h"
+#include "FirmwareUpdatePage.h"
 #include "Event.h"
 #include "clone_event_manifest.h"
+#include "firmware_update_integrity.h"
 /* #include <Wire.h> */
 #include "Helpers.h"
 #include "CircularStringBuff.h"
@@ -161,6 +165,17 @@ bool g_masterClonePruneTargetEvents = false;
 bool g_slaveClonePruneTargetEvents = false;
 CloneEventManifest g_cloneEventManifest;
 
+bool g_firmwareUpdateActive = false;
+bool g_firmwareUpdateSucceeded = false;
+bool g_firmwareRestartPending = false;
+size_t g_firmwareUpdateExpectedSize = 0;
+size_t g_firmwareUpdateReceivedSize = 0;
+uint32_t g_firmwareUpdateExpectedCrc32 = 0;
+uint32_t g_firmwareUpdateRunningCrc32 = 0xffffffffUL;
+unsigned long g_firmwareUpdateLastKeepAliveMillis = 0;
+unsigned long g_firmwareRestartAtMillis = 0;
+String g_firmwareUpdateError;
+
 static_assert(
   CLONE_EVENT_MANIFEST_CAPACITY == MAXIMUM_NUMBER_OF_EVENTS,
   "Clone manifest must hold every supported event file");
@@ -202,6 +217,11 @@ void saveDefaultsFile(void);
 void showSettings(void);
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 void handleFileUpload(void);
+void handleFirmwareUpdatePage(void);
+void handleFirmwareUpdateStatus(void);
+void handleFirmwareUpdateResult(void);
+void handleFirmwareUpdateUpload(void);
+void serviceFirmwareUpdateRestart(void);
 void handleFileDownload(void);
 void fileDelete(void);
 void fileDeleteWithMessage(String msg);
@@ -410,6 +430,247 @@ void handleUpload()
   g_http_server.send(200, "text/html", message);
 }
 
+bool firmwareUpdateCloneIsActive()
+{
+  return g_master_has_connected_slave ||
+         g_masterCloneQuietPending ||
+         g_masterCloneQuietActive ||
+         g_slaveCloneQuietActive;
+}
+
+uint32_t firmwareUpdateMaximumSketchSize()
+{
+  const uint32_t freeSketchSpace = ESP.getFreeSketchSpace();
+  if (freeSketchSpace <= 0x1000)
+  {
+    return 0;
+  }
+  return (freeSketchSpace - 0x1000) & 0xfffff000UL;
+}
+
+void firmwareUpdateCaptureUpdaterError(const String& prefix)
+{
+  StreamString details;
+  Update.printError(details);
+  g_firmwareUpdateError = prefix;
+  if (details.length())
+  {
+    g_firmwareUpdateError += ": ";
+    g_firmwareUpdateError += details.c_str();
+  }
+  g_firmwareUpdateError.trim();
+}
+
+void firmwareUpdateAbort(const String& reason)
+{
+  if (Update.isRunning())
+  {
+    Update.end(false); /* No eboot command is created for an incomplete image. */
+  }
+  g_firmwareUpdateActive = false;
+  g_firmwareUpdateSucceeded = false;
+  g_firmwareUpdateError = reason;
+}
+
+void firmwareUpdateKeepAvrAwake()
+{
+  const unsigned long now = millis();
+  if (!g_firmwareUpdateLastKeepAliveMillis ||
+      (unsigned long)(now - g_firmwareUpdateLastKeepAliveMillis) >= 20000UL)
+  {
+    g_firmwareUpdateLastKeepAliveMillis = now;
+    if (g_LBOutputBuff && !g_LBOutputBuff->full())
+    {
+      g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
+    }
+  }
+}
+
+void handleFirmwareUpdatePage()
+{
+  g_http_server.sendHeader("Cache-Control", "no-store");
+  g_http_server.send_P(200, PSTR("text/html; charset=utf-8"), FIRMWARE_UPDATE_PAGE_HTML);
+}
+
+void handleFirmwareUpdateStatus()
+{
+  String response = "{\"version\":\"";
+  response += WIFI_SW_VERSION;
+  response += "\",\"filesystemProtected\":true,\"updateActive\":";
+  response += g_firmwareUpdateActive ? "true" : "false";
+  response += ",\"restartPending\":";
+  response += g_firmwareRestartPending ? "true" : "false";
+  response += ",\"cloneActive\":";
+  response += firmwareUpdateCloneIsActive() ? "true" : "false";
+  response += ",\"currentSketchBytes\":";
+  response += String(ESP.getSketchSize());
+  response += ",\"currentSketchMd5\":\"";
+  response += ESP.getSketchMD5();
+  response += "\",\"uptimeMillis\":";
+  response += String(millis());
+  response += ",\"maximumUpdateBytes\":";
+  response += String(firmwareUpdateMaximumSketchSize());
+  response += "}";
+  g_http_server.sendHeader("Cache-Control", "no-store");
+  g_http_server.send(200, "application/json", response);
+}
+
+void handleFirmwareUpdateResult()
+{
+  g_http_server.sendHeader("Cache-Control", "no-store");
+  g_http_server.sendHeader("Connection", "close");
+  if (g_firmwareUpdateSucceeded && g_firmwareRestartPending)
+  {
+    g_http_server.send_P(200, PSTR("text/html; charset=utf-8"), FIRMWARE_UPDATE_SUCCESS_HTML);
+    return;
+  }
+
+  String response = "Firmware update rejected. The running firmware and LittleFS were not changed.";
+  if (g_firmwareUpdateError.length())
+  {
+    response += "\n";
+    response += g_firmwareUpdateError;
+  }
+  g_http_server.send(firmwareUpdateCloneIsActive() ? 409 : 400, "text/plain; charset=utf-8", response);
+}
+
+void handleFirmwareUpdateUpload()
+{
+  HTTPUpload& upload = g_http_server.upload();
+
+  if (upload.status == UPLOAD_FILE_START)
+  {
+    g_firmwareUpdateActive = false;
+    g_firmwareUpdateSucceeded = false;
+    g_firmwareUpdateError = "";
+    g_firmwareUpdateExpectedSize = 0;
+    g_firmwareUpdateReceivedSize = 0;
+    g_firmwareUpdateExpectedCrc32 = 0;
+    g_firmwareUpdateRunningCrc32 = 0xffffffffUL;
+    g_firmwareUpdateLastKeepAliveMillis = 0;
+
+    if (g_firmwareRestartPending)
+    {
+      g_firmwareUpdateError = "A validated update is already waiting for reboot";
+      return;
+    }
+    if (firmwareUpdateCloneIsActive())
+    {
+      g_firmwareUpdateError = "Finish or cancel cloning before updating firmware";
+      return;
+    }
+    if (upload.name != "firmware" ||
+        !firmwareUpdateHasBinExtension(upload.filename.c_str()))
+    {
+      g_firmwareUpdateError = "Only an uncompressed .bin sketch is accepted";
+      return;
+    }
+    if (g_http_server.arg("confirm") != "UPDATE")
+    {
+      g_firmwareUpdateError = "Explicit update confirmation is missing";
+      return;
+    }
+
+    const uint32_t maximumSize = firmwareUpdateMaximumSketchSize();
+    if (!maximumSize ||
+        !firmwareUpdateParseSize(
+          g_http_server.arg("size").c_str(),
+          maximumSize,
+          &g_firmwareUpdateExpectedSize) ||
+        g_firmwareUpdateExpectedSize < 4096)
+    {
+      g_firmwareUpdateError = "Firmware size is missing, invalid, or too large";
+      return;
+    }
+    if (!firmwareUpdateParseCrc32(
+          g_http_server.arg("crc32").c_str(),
+          &g_firmwareUpdateExpectedCrc32))
+    {
+      g_firmwareUpdateError = "Firmware CRC32 is missing or invalid";
+      return;
+    }
+
+    if (!Update.begin(g_firmwareUpdateExpectedSize, U_FLASH))
+    {
+      firmwareUpdateCaptureUpdaterError("Unable to stage sketch update");
+      return;
+    }
+    g_firmwareUpdateActive = true;
+    firmwareUpdateKeepAvrAwake();
+  }
+  else if (upload.status == UPLOAD_FILE_WRITE)
+  {
+    if (!g_firmwareUpdateActive)
+    {
+      return;
+    }
+    if (upload.currentSize >
+        g_firmwareUpdateExpectedSize - g_firmwareUpdateReceivedSize)
+    {
+      firmwareUpdateAbort("Upload contains more data than declared");
+      return;
+    }
+    if (Update.write(upload.buf, upload.currentSize) != upload.currentSize)
+    {
+      firmwareUpdateCaptureUpdaterError("Flash staging write failed");
+      g_firmwareUpdateActive = false;
+      return;
+    }
+    g_firmwareUpdateRunningCrc32 = firmwareUpdateCrc32(
+      g_firmwareUpdateRunningCrc32,
+      upload.buf,
+      upload.currentSize);
+    g_firmwareUpdateReceivedSize += upload.currentSize;
+    firmwareUpdateKeepAvrAwake();
+  }
+  else if (upload.status == UPLOAD_FILE_END)
+  {
+    if (!g_firmwareUpdateActive)
+    {
+      return;
+    }
+    const uint32_t receivedCrc32 = g_firmwareUpdateRunningCrc32 ^ 0xffffffffUL;
+    if (upload.totalSize != g_firmwareUpdateExpectedSize ||
+        g_firmwareUpdateReceivedSize != g_firmwareUpdateExpectedSize)
+    {
+      firmwareUpdateAbort("Upload ended before the declared firmware size was received");
+      return;
+    }
+    if (receivedCrc32 != g_firmwareUpdateExpectedCrc32)
+    {
+      firmwareUpdateAbort("Firmware CRC32 did not match the complete uploaded file");
+      return;
+    }
+    if (!Update.isFinished() || !Update.end(false))
+    {
+      firmwareUpdateCaptureUpdaterError("Staged sketch failed final validation");
+      g_firmwareUpdateActive = false;
+      return;
+    }
+
+    g_firmwareUpdateActive = false;
+    g_firmwareUpdateSucceeded = true;
+    g_firmwareRestartPending = true;
+    g_firmwareRestartAtMillis = millis() + 1500UL;
+  }
+  else if (upload.status == UPLOAD_FILE_ABORTED)
+  {
+    firmwareUpdateAbort("Upload was interrupted before validation completed");
+  }
+  delay(0);
+}
+
+void serviceFirmwareUpdateRestart()
+{
+  if (g_firmwareRestartPending &&
+      (long)(millis() - g_firmwareRestartAtMillis) >= 0)
+  {
+    g_http_server.stop();
+    delay(50);
+    ESP.restart();
+  }
+}
+
 void handleSuccess()
 {
   String message = "<html><head><title>Success</title></head><body><p><a href=\"/\">[HOME]</a></p><h1 style=\"font-family:verdana;font-size:30px;color:Black;text-align:left;\">File uploaded successfully!</h1></body></html>";
@@ -560,6 +821,14 @@ bool setupHTTP_AP()
 
     g_http_server.on("/upload", HTTP_GET, handleUpload);
     g_http_server.on("/upload.html", HTTP_GET, handleUpload);
+
+    g_http_server.on("/firmware", HTTP_GET, handleFirmwareUpdatePage);
+    g_http_server.on("/firmware/status", HTTP_GET, handleFirmwareUpdateStatus);
+    g_http_server.on(
+      "/firmware",
+      HTTP_POST,
+      handleFirmwareUpdateResult,
+      handleFirmwareUpdateUpload);
 
     g_http_server.on("/upload.html", HTTP_POST, [] ()
     { /* If a POST request is sent to the /upload.html address, */
@@ -2277,6 +2546,7 @@ void httpWebServerLoop(int blinkRate)
   {
     /*check if there are any new clients */
     g_http_server.handleClient();
+    serviceFirmwareUpdateRestart();
     g_webSocketServer.loop();
 
     g_numberOfWebClients = WiFi.softAPgetStationNum();

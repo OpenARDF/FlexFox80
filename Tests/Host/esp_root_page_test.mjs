@@ -31,6 +31,7 @@ assert.match(html, /href="\/events\.html"/);
 assert.match(html, /href="\/upload\.html"/);
 assert.match(html, /href="\/download\.html"/);
 assert.match(html, /href="\/delete\.html"/);
+assert.match(html, /href="\/firmware"/);
 assert.ok(!html.includes('href="http://73.73.73.73'), "root-page links must follow the current device host");
 assert.ok(
   !/href=.*73\.73\.73\.73/.test(firmware),

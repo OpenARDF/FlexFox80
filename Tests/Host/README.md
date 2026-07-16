@@ -14,7 +14,7 @@ The runner writes executables only under the ignored `Software/AVR128DA48/tmp/ho
 
 `just test` also runs dependency-free source-contract checks for firmware declarations whose target-compiler interpretation is safety-relevant. These checks supplement compilation; they do not replace it.
 
-The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current release identity is ESP `2.1` plus AVR `0.201`, reported together as `SW_VERSIONS,2.1,0.201`.
+The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current release identity is ESP `2.2` plus AVR `0.201`, reported together as `SW_VERSIONS,2.2,0.201`.
 
 ## Current characterization boundary
 
@@ -62,6 +62,8 @@ The ESP event-file integrity regression compiles the same framing/checksum state
 - required matching checksums for cloned temporary files;
 - observation of the deployed `CHECK` line after `EVENT_END`;
 - rejection of changed-length payloads, malformed or duplicate checksums, missing end framing, and checksums placed before the end marker.
+
+The ESP firmware-update integrity regression compiles the exact guards used by the sketch-only WiFi updater and covers strict size bounds, strict CRC32 parsing, the standard CRC32 test vector, and rejection of filesystem or compressed-image filenames.
 
 Zero-capacity construction and allocation-failure behavior are intentionally not asserted yet. They are candidate red-green defect slices and must begin with recorded pre-fix evidence.
 

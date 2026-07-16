@@ -24,6 +24,8 @@ test:
     ./scripts/run-host-tests.sh
     node ./Tests/Host/eeprom_enum_layout_migration_test.mjs
     node ./Tests/Host/esp_root_page_test.mjs
+    node ./Tests/Host/esp_firmware_update_page_test.mjs
+    node ./Tests/Host/flexfox_http_test.mjs
     node ./Tests/Host/events_html_test.mjs
     node ./Tests/Host/release_checklist_validator_test.mjs
     node ./scripts/check-firmware-contracts.mjs
@@ -77,9 +79,21 @@ wifi-clone-control-test:
 wifi-role-assignment-test:
     node ./scripts/test-flexfox-role-assignment.mjs
 
+# Install and verify a sketch through the protected WiFi updater (explicit confirmation required).
+wifi-esp-update:
+    node ./scripts/update-flexfox-esp-over-wifi.mjs
+
+# Install and hash-verify events.html or another named LittleFS web file (explicit confirmation required).
+wifi-web-deploy:
+    node ./scripts/deploy-flexfox-web-file.mjs
+
 # Build the ESP8266 sketch and LittleFS image with the qualified pinned profile.
 esp-build:
     node ./scripts/build-esp8266.mjs
+
+# Program and independently verify only the ESP sketch region (explicit confirmation required).
+esp-program-sketch:
+    ./scripts/program-flexfox-esp-sketch.sh
 
 # Validate a release-specific checklist at the requested phase.
 release-checklist file phase:
