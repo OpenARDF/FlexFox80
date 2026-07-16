@@ -1528,18 +1528,13 @@
                         case "SUS":
                             {
                                 var role = (typeof arr[1] == "string") ? arr[1] : "";
-                                var event = (typeof arr[2] == "string") ? arr[2] : "";
 
                                 if (role.length < 1) {
                                     console.log("Error: sync success returned no role");
                                 }
 
-                                if (event.length < 1) {
-                                    console.log("Error: sync success returned no event");
-                                }
-
-                                if (role.length || event.length) {
-                                    var e = "Success: " + role + " synced. Next up: " + event;
+                                if (role.length) {
+                                    var e = "Success: " + role + " synced.";
                                     var elem = document.getElementById("statusreport");
                                     if (elem != null) {
                                         elem.textContent = e;
@@ -2526,7 +2521,7 @@
         <h1 id="mainHeading" style="font-family:verdana; font-size:30px; color:Black; text-align:center;">Transmitter Settings</h1>
         <p id="wifiVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
         <p id="ATMEGAVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
-        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.5.2 - 15 Jul 2026</p>
+        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.5.3 - 16 Jul 2026</p>
 
         <div>
             <table>

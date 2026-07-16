@@ -181,7 +181,7 @@ assert.ok(!source.includes("Date.getTime()"), "date fallback must call getTime o
 assert.match(html, /<html lang="en">/);
 assert.match(html, /<meta charset="utf-8">/);
 assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1">/);
-assert.match(html, /events\.html Version: 0\.5\.2 - 15 Jul 2026/);
+assert.match(html, /events\.html Version: 0\.5\.3 - 16 Jul 2026/);
 assert.ok(!source.includes('btn.id = "runButton"'), "event selection buttons must not reuse an id");
 assert.equal(
   [...source.matchAll(/setAttribute\("id", "datetimeFinishCell"\)/g)].length,
@@ -394,8 +394,9 @@ console.log("PASS events.html JavaScript and critical HTML syntax parse");
   assert.doesNotThrow(() => socket.onmessage({ data: "SUE" }));
   assert.doesNotThrow(() => socket.onmessage({ data: "FREQ" }));
   assert.doesNotThrow(() => socket.onmessage({ data: "POWER" }));
-  socket.onmessage({ data: "SUS,Fox 2,Sprint" });
-  assert.equal(status.textContent, "Success: Fox 2 synced. Next up: Sprint");
+  socket.onmessage({ data: "SUS,Fox 1 - MOE,Classic 80m Set 1-1" });
+  assert.equal(status.textContent, "Success: Fox 1 - MOE synced.");
+  assert.doesNotMatch(status.textContent, /Next up|Classic 80m Set 1-1/);
   socket.onmessage({ data: "SUE,Checksum mismatch" });
   assert.equal(status.textContent, "Sync Error: Checksum mismatch");
   console.log("PASS clone monitoring tolerates incomplete status frames");
