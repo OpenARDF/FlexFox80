@@ -21,9 +21,16 @@ const firmwarePath = resolve(
 const baseUrl = normalizeFlexFoxUrl(process.env.FLEXFOX_URL);
 const expectedVersion = process.env.FLEXFOX_EXPECTED_ESP_VERSION ?? "2.4";
 const confirmation = process.env.FLEXFOX_UPDATE_CONFIRM;
+const uploadTimeoutMs = Number.parseInt(
+  process.env.FLEXFOX_UPDATE_UPLOAD_TIMEOUT_MS ?? "120000",
+  10,
+);
 
 if (confirmation !== "UPDATE FLEXFOX ESP") {
   throw new Error("Set FLEXFOX_UPDATE_CONFIRM='UPDATE FLEXFOX ESP' to authorize the sketch update");
+}
+if (!Number.isInteger(uploadTimeoutMs) || uploadTimeoutMs < 30000 || uploadTimeoutMs > 300000) {
+  throw new Error("FLEXFOX_UPDATE_UPLOAD_TIMEOUT_MS must be 30000 through 300000");
 }
 if (!statSync(firmwarePath).isFile()) {
   throw new Error(`firmware image is not a file: ${firmwarePath}`);
@@ -80,7 +87,7 @@ try {
     headers: multipart.headers,
     body: multipart.body,
     redirect: "manual",
-  }, 30000);
+  }, uploadTimeoutMs);
   const responseText = await uploadResponse.text();
   if (!uploadResponse.ok) {
     throw new Error(`update rejected with HTTP ${uploadResponse.status}: ${responseText.trim()}`);
