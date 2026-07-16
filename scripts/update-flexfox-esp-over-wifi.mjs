@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import {
   crc32,
   digest,
+  esp8266SketchMd5Candidates,
   fetchWithTimeout,
   multipartFileBody,
   normalizeFlexFoxUrl,
@@ -34,6 +35,8 @@ if (firmware.length < 4096 || firmware[0] !== 0xe9) {
 }
 const firmwareCrc32 = crc32(firmware).toString(16).padStart(8, "0");
 const firmwareMd5 = digest("md5", firmware);
+const installedMd5Candidates = esp8266SketchMd5Candidates(firmware);
+const installedMd5Values = new Set(installedMd5Candidates.map(({ md5 }) => md5));
 const firmwareSha256 = digest("sha256", firmware);
 
 async function readStatus(timeoutMs = 5000) {
@@ -96,7 +99,7 @@ while (Date.now() < deadline) {
     const candidate = await readStatus(3000);
     if (candidate.restartPending || candidate.updateActive) continue;
     if (!Number.isInteger(candidate.uptimeMillis) || candidate.uptimeMillis >= before.uptimeMillis) continue;
-    if (candidate.currentSketchMd5?.toLowerCase() !== firmwareMd5) continue;
+    if (!installedMd5Values.has(candidate.currentSketchMd5?.toLowerCase())) continue;
     after = candidate;
     break;
   } catch {
@@ -105,7 +108,9 @@ while (Date.now() < deadline) {
 }
 
 if (!after) {
-  throw new Error(`device did not return within 60 seconds with installed sketch MD5 ${firmwareMd5}`);
+  throw new Error(
+    `device did not return within 60 seconds with an installed sketch MD5 derived from ${firmwareMd5}`,
+  );
 }
 if (after.version !== expectedVersion) {
   throw new Error(`installed ESP version is ${after.version}; expected ${expectedVersion}`);
@@ -114,6 +119,12 @@ if (after.filesystemProtected !== true) {
   throw new Error("rebooted device no longer reports sketch-only update protection");
 }
 
-console.log(`PASS rebooted into ESP ${after.version}, sketch MD5 ${after.currentSketchMd5}`);
+const installedCandidate = installedMd5Candidates.find(
+  ({ md5 }) => md5 === after.currentSketchMd5.toLowerCase(),
+);
+console.log(
+  `PASS rebooted into ESP ${after.version}, sketch MD5 ${after.currentSketchMd5} ` +
+  `(flash-mode header ${installedCandidate.flashMode})`,
+);
 console.log(`PASS uptime reset from ${before.uptimeMillis} ms to ${after.uptimeMillis} ms`);
 console.log("PASS update endpoint still reports LittleFS protection");

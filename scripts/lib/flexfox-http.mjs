@@ -15,6 +15,20 @@ export function digest(algorithm, bytes) {
   return createHash(algorithm).update(bytes).digest("hex");
 }
 
+export function esp8266SketchMd5Candidates(bytes) {
+  if (!Buffer.isBuffer(bytes) || bytes.length < 3 || bytes[0] !== 0xe9) {
+    throw new Error("ESP8266 sketch MD5 candidates require an uncompressed sketch image");
+  }
+
+  const candidates = [];
+  for (let flashMode = 0; flashMode <= 3; flashMode += 1) {
+    const installedBytes = Buffer.from(bytes);
+    installedBytes[2] = flashMode;
+    candidates.push({ flashMode, md5: digest("md5", installedBytes) });
+  }
+  return candidates;
+}
+
 export function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
 }
