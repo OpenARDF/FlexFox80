@@ -917,7 +917,6 @@ void loop()
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
       }
 
-      g_activeEvent->readEventFile(g_eventList[0].path);
       g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
 
       if (!loadActiveEventFile(g_eventList[0].path))
@@ -1577,6 +1576,9 @@ bool loadActiveEventFile(String updatedFileName)
     {
       case WSClientLoadEventFile:
         {
+          bool eventLoaded = false;
+          g_slave_received_new_event_file = false;
+
           if (updatedFileName.length() > 0)
           {
             if (!g_activeEvent)
@@ -1598,37 +1600,29 @@ bool loadActiveEventFile(String updatedFileName)
                 Serial.println(String("g_activeEvent: " + g_activeEvent->myPath));
               }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-              if (g_activeEvent->getPath().equals(updatedFileName))
-              {
-                g_selectedEventName = g_activeEvent->getEventName();
-                g_slave_received_new_event_file = true;
-              }
-              else
+              /*
+               * The file may have been replaced by cloning while retaining the
+               * same pathname. Always reload it before programming the AVR or
+               * reporting the next event; pathname equality does not prove the
+               * in-memory Event still matches LittleFS.
+               */
+              g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
+              if (g_activeEvent->readEventFile(updatedFileName))
               {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
                 if (g_debug_prints_enabled)
                 {
-                  Serial.println("Loading new file");
+                  Serial.println("Error loading event file");
                 }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-
-                g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
-                if (g_activeEvent->readEventFile(updatedFileName))
-                {
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                  if (g_debug_prints_enabled)
-                  {
-                    Serial.println("Error loading new file");
-                  }
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-                  errorMessage = "Could not read new event file";
-                  g_webSocketSlaveState = WSClientClose;
-                }
-                else
-                {
-                  g_selectedEventName = g_activeEvent->getEventName();
-                  g_slave_received_new_event_file = true;
-                }
+                errorMessage = "Could not read event file";
+                g_webSocketSlaveState = WSClientClose;
+              }
+              else
+              {
+                g_selectedEventName = g_activeEvent->getEventName();
+                g_slave_received_new_event_file = true;
+                eventLoaded = true;
               }
             }
             else
@@ -1650,11 +1644,17 @@ bool loadActiveEventFile(String updatedFileName)
           }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
-          if (g_activeEvent->isNotDisabledEvent(g_timeOfDayFromTx))
+          if (!updatedFileName.length())
+          {
+            errorMessage = "Invalid event file name";
+            g_webSocketSlaveState = WSClientClose;
+          }
+
+          if (eventLoaded && g_activeEvent->isNotDisabledEvent(g_timeOfDayFromTx))
           {
             g_webSocketSlaveState = WSClientProgramATMEGA;
           }
-          else
+          else if (eventLoaded)
           {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
             if (g_debug_prints_enabled)
@@ -2745,8 +2745,6 @@ void httpWebServerLoop(int blinkRate)
               g_activeEvent = new Event(false);
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
             }
-
-            g_activeEvent->readEventFile(g_eventList[0].path);
 
             if (!loadActiveEventFile(g_eventList[0].path))
             {

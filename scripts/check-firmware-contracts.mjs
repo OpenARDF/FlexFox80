@@ -1051,6 +1051,26 @@ process.stdout.write(
   "PASS clone cleanup is opt-in, manifest-gated, and restricted to .event files\n",
 );
 
+const loadActiveEventBody = espMain.match(
+  /bool\s+loadActiveEventFile\s*\(\s*String\s+updatedFileName\s*\)\s*\{([\s\S]*?)\n\}\s*bool\s+clientUpdateEventFilesLoop/,
+);
+if (
+  !loadActiveEventBody ||
+  !loadActiveEventBody[1].includes("g_activeEvent->readEventFile(updatedFileName)") ||
+  !loadActiveEventBody[1].includes("g_slave_received_new_event_file = false;") ||
+  !loadActiveEventBody[1].includes("if (eventLoaded && g_activeEvent->isNotDisabledEvent") ||
+  loadActiveEventBody[1].includes("g_activeEvent->getPath().equals(updatedFileName)")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: active events can remain stale when cloning replaces the same pathname\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write(
+  "PASS active event loading rereads same-path files replaced by cloning\n",
+);
+
 if (
   espMain.includes("g_webSocketServer.isRunning()") ||
   (espMain.match(/g_webSocketServer\.close\(\)/g) || []).length !== 1 ||
