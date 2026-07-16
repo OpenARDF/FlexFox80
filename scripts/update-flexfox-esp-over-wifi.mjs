@@ -12,6 +12,7 @@ import {
   normalizeFlexFoxUrl,
   sleep,
 } from "./lib/flexfox-http.mjs";
+import { createBoundedFlexFoxHeartbeat } from "./lib/flexfox-heartbeat.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const firmwarePath = resolve(
@@ -29,12 +30,6 @@ const verificationTimeoutMs = Number.parseInt(
   process.env.FLEXFOX_UPDATE_VERIFY_TIMEOUT_MS ?? "105000",
   10,
 );
-const websocketUrl = new URL(baseUrl);
-websocketUrl.protocol = "ws:";
-websocketUrl.port = "81";
-websocketUrl.pathname = "/";
-websocketUrl.search = "";
-websocketUrl.hash = "";
 
 if (confirmation !== "UPDATE FLEXFOX ESP") {
   throw new Error("Set FLEXFOX_UPDATE_CONFIRM='UPDATE FLEXFOX ESP' to authorize the sketch update");
@@ -71,70 +66,6 @@ async function readStatus(timeoutMs = 5000) {
   return response.json();
 }
 
-function createBoundedHeartbeat() {
-  let socket;
-  let heartbeatTimer;
-  let reconnectTimer;
-  let stopped = true;
-  let firstConnectionResolve;
-  const firstConnection = new Promise((resolvePromise) => {
-    firstConnectionResolve = resolvePromise;
-  });
-
-  function clearHeartbeatTimer() {
-    if (heartbeatTimer) clearInterval(heartbeatTimer);
-    heartbeatTimer = undefined;
-  }
-
-  function poke() {
-    if (socket?.readyState === WebSocket.OPEN) socket.send("!&");
-  }
-
-  function connect() {
-    if (stopped) return;
-    const candidate = new WebSocket(websocketUrl);
-    socket = candidate;
-
-    candidate.addEventListener("open", () => {
-      if (stopped || socket !== candidate) return;
-      firstConnectionResolve();
-      poke();
-      clearHeartbeatTimer();
-      heartbeatTimer = setInterval(poke, 5000);
-    });
-    candidate.addEventListener("close", () => {
-      if (socket !== candidate) return;
-      clearHeartbeatTimer();
-      socket = undefined;
-      if (!stopped) reconnectTimer = setTimeout(connect, 1500);
-    });
-  }
-
-  return {
-    async start() {
-      stopped = false;
-      connect();
-      await Promise.race([
-        firstConnection,
-        sleep(5000).then(() => {
-          throw new Error("could not establish the bounded AVR update heartbeat");
-        }),
-      ]);
-    },
-    poke,
-    stop() {
-      stopped = true;
-      clearHeartbeatTimer();
-      if (reconnectTimer) clearTimeout(reconnectTimer);
-      reconnectTimer = undefined;
-      if (socket && socket.readyState < WebSocket.CLOSING) {
-        socket.close(1000, "firmware update verification complete");
-      }
-      socket = undefined;
-    },
-  };
-}
-
 let before = await readStatus();
 if (before.uptimeMillis < 10000) {
   await sleep(10000 - before.uptimeMillis);
@@ -155,7 +86,7 @@ console.log(`Before: ESP ${before.version}, sketch ${before.currentSketchBytes} 
 console.log(`Upload: ${basename(firmwarePath)}, ${firmware.length} bytes, CRC32 ${firmwareCrc32}`);
 console.log(`SHA-256: ${firmwareSha256}`);
 
-const heartbeat = createBoundedHeartbeat();
+const heartbeat = createBoundedFlexFoxHeartbeat(baseUrl, "firmware update verification");
 process.once("exit", () => heartbeat.stop());
 await heartbeat.start();
 console.log("PASS bounded AVR update heartbeat established");
