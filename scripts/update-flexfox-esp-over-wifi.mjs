@@ -20,7 +20,7 @@ const firmwarePath = resolve(
     join(repoRoot, "Software", "Huzzah", "tmp", "esp-build", "ARDF_Transmitter.ino.bin"),
 );
 const baseUrl = normalizeFlexFoxUrl(process.env.FLEXFOX_URL);
-const expectedVersion = process.env.FLEXFOX_EXPECTED_ESP_VERSION ?? "2.4";
+const expectedVersion = process.env.FLEXFOX_EXPECTED_ESP_VERSION ?? "2.5";
 const confirmation = process.env.FLEXFOX_UPDATE_CONFIRM;
 const uploadTimeoutMs = Number.parseInt(
   process.env.FLEXFOX_UPDATE_UPLOAD_TIMEOUT_MS ?? "120000",

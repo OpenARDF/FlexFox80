@@ -61,6 +61,7 @@
 #include "FirmwareUpdatePage.h"
 #include "Event.h"
 #include "clone_event_manifest.h"
+#include "clone_keepalive_schedule.h"
 #include "firmware_update_integrity.h"
 /* #include <Wire.h> */
 #include "Helpers.h"
@@ -174,6 +175,7 @@ bool g_masterCloneQuietActive = false;
 bool g_masterClonePruneTargetEvents = false;
 bool g_slaveClonePruneTargetEvents = false;
 CloneEventManifest g_cloneEventManifest;
+CloneKeepAliveSchedule g_slaveCloneKeepAliveSchedule = {0, false, false};
 
 bool g_firmwareUpdateActive = false;
 bool g_firmwareUpdateSucceeded = false;
@@ -250,6 +252,9 @@ bool loadActiveEventFile(String updatedFileName);
 int numberOfEventsScheduled(unsigned long epoch);
 void shutdownSlave(void);
 bool setAVRCloneQuietMode(bool quiet);
+void beginSlaveCloneKeepAlive(void);
+void serviceSlaveCloneKeepAlive(void);
+void endSlaveCloneKeepAlive(void);
 void serviceMasterCloneHandshake(void);
 void endMasterCloneSession(void);
 bool reconcileCloneEventFiles(const CloneEventManifest *manifest);
@@ -492,12 +497,33 @@ void firmwareUpdateKeepAvrAwake()
   if (!g_firmwareUpdateLastKeepAliveMillis ||
       (unsigned long)(now - g_firmwareUpdateLastKeepAliveMillis) >= 20000UL)
   {
-    g_firmwareUpdateLastKeepAliveMillis = now;
     if (g_LBOutputBuff && !g_LBOutputBuff->full())
     {
       g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
+      g_firmwareUpdateLastKeepAliveMillis = now;
     }
   }
+}
+
+void beginSlaveCloneKeepAlive()
+{
+  cloneKeepAliveBegin(&g_slaveCloneKeepAliveSchedule);
+}
+
+void serviceSlaveCloneKeepAlive()
+{
+  const uint32_t now = millis();
+  if (cloneKeepAliveIsDue(&g_slaveCloneKeepAliveSchedule, now) &&
+      g_LBOutputBuff && !g_LBOutputBuff->full())
+  {
+    g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
+    cloneKeepAliveWasQueued(&g_slaveCloneKeepAliveSchedule, now);
+  }
+}
+
+void endSlaveCloneKeepAlive()
+{
+  cloneKeepAliveEnd(&g_slaveCloneKeepAliveSchedule);
 }
 
 void handleFirmwareUpdatePage()
@@ -1025,7 +1051,7 @@ bool setupWiFiAPConnection()
         if (!sentComsOFF)
         {
           lights->setLEDs(RED_BLUE_TOGETHER, true);
-          Serial.printf(LB_MESSAGE_WIFI_COMS_OFF);    /* send immediate */
+          Serial.print(LB_MESSAGE_WIFI_COMS_OFF);    /* send immediate */
           sentComsOFF = true;
           if (g_slave_released)
           {
@@ -1086,7 +1112,7 @@ bool setupWiFiAPConnection()
       if (!sentComsOFF)
       {
         lights->setLEDs(RED_BLUE_TOGETHER, true);
-        Serial.printf(LB_MESSAGE_WIFI_COMS_OFF);    /* send immediate */
+        Serial.print(LB_MESSAGE_WIFI_COMS_OFF);    /* send immediate */
         sentComsOFF = true;
         if (g_slave_released)
         {
@@ -1241,6 +1267,10 @@ void loop()
   {
     g_slaveClonePruneTargetEvents = false;
     cloneEventManifestReset(&g_cloneEventManifest);
+    if (!g_onlyUpdateEvent)
+    {
+      beginSlaveCloneKeepAlive();
+    }
 
     if (!g_onlyUpdateEvent && !setupWiFiAPConnection())
     {
@@ -1275,7 +1305,6 @@ void loop()
               g_activeEventIndex = 0;
               String msg = String(String(SOCK_COMMAND_SLAVE_UPDATE_SUCCESS) + "," + g_activeEvent->getTxDescriptiveName(g_activeEvent->getTxAssignment()) + "," + g_activeEvent->getEventName());
               g_webSocketLocalClient.sendTXT(stringObjToConstCharString(&msg)); /* Send to Master */
-              shutdownSlave();
               blinkPeriodMillis = 500;
             }
             else
@@ -1325,6 +1354,11 @@ void loop()
       {
         blinkPeriodMillis = 100;
       }
+    }
+
+    if (!g_onlyUpdateEvent)
+    {
+      endSlaveCloneKeepAlive();
     }
   }
 
@@ -1548,7 +1582,7 @@ bool waitForTimeLoop()
       if (!sentComsOFF)
       {
         lights->setLEDs(RED_BLUE_TOGETHER, true);
-        Serial.printf(LB_MESSAGE_WIFI_COMS_OFF);    /* send immediate */
+        Serial.print(LB_MESSAGE_WIFI_COMS_OFF);    /* send immediate */
         sentComsOFF = true;
       }
     }
@@ -1786,6 +1820,7 @@ bool clientConnectLoop()
             if (g_fileDataBuff)
             {
               delete g_fileDataBuff;
+              g_fileDataBuff = NULL;
             }
 
             g_slave_released = true;
@@ -1962,7 +1997,7 @@ bool loadActiveEventFile(String updatedFileName)
 
             if (err.length())
             {
-              errorMessage = "Failed to send data to ATMEGA";
+              errorMessage = String("Failed to send data to AVR: ") + err;
               g_webSocketSlaveState = WSClientClose;
               blinkPeriodMillis = 100;
             }
@@ -2020,6 +2055,7 @@ bool loadActiveEventFile(String updatedFileName)
               if (g_fileDataBuff)
               {
                 delete g_fileDataBuff;
+                g_fileDataBuff = NULL;
               }
 
               if (tempFile)
@@ -2420,6 +2456,7 @@ bool clientUpdateEventFilesLoop()
             if (g_fileDataBuff)
             {
               delete g_fileDataBuff;
+              g_fileDataBuff = NULL;
             }
 
             if (tempFile)
@@ -2474,10 +2511,16 @@ bool reconcileCloneEventFiles(const CloneEventManifest *manifest)
 
   while (true)
   {
+    linkbusLoop();
+    yield();
+
     String staleEventFile;
     Dir dir = LittleFS.openDir("/");
     while (dir.next())
     {
+      linkbusLoop();
+      yield();
+
       String fileName = dir.fileName();
       if (cloneEventPathIsEventFile(stringObjToConstCharString(&fileName)) &&
           !cloneEventManifestContains(manifest, stringObjToConstCharString(&fileName)))
@@ -2689,7 +2732,7 @@ void httpWebServerLoop(int blinkRate)
     {
       if (!sentComsOFF)
       {
-        Serial.printf(LB_MESSAGE_WIFI_COMS_OFF);    /* send immediate */
+        Serial.print(LB_MESSAGE_WIFI_COMS_OFF);    /* send immediate */
         sentComsOFF = true;
       }
     }
@@ -3598,10 +3641,12 @@ bool linkbusLoop()
   static String msg = "";
   static int linkBusTimeoutCount = 0;
   size_t bytesAvail, bytesIn;
-  uint8_t j;
+  size_t j;
   int timeout = 1000;
   unsigned long lbSendTimeSeconds;
   bool sendMessages = false;
+
+  serviceSlaveCloneKeepAlive();
 
   if (!g_linkBusAckPending)
   {
@@ -3667,7 +3712,7 @@ bool linkbusLoop()
   {
     yield(); /* Avoids WDT reset for long LB messages */
     timeout--;
-    bytesIn = Serial.readBytes(buf, min(sizeof(buf), bytesAvail));
+    bytesIn = Serial.readBytes(buf, min(sizeof(buf) - 1, bytesAvail));
 
     if (bytesIn > 0)
     {
@@ -3688,6 +3733,13 @@ bool linkbusLoop()
         }
         else if ( messageLength > 0 )
         {
+          if ((size_t)messageLength >= sizeof(buf) - 1)
+          {
+            messageLength = 0;
+            lb_message = "";
+            continue;
+          }
+
           lb_message += buf[j];
           messageLength++;
 
@@ -4336,7 +4388,7 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
             String msgOut = String(String(LB_MESSAGE_TIME_SET) + p + ";");
-            Serial.printf(stringObjToConstCharString(&msgOut));  /* Send time to Transmitter for synchronization */
+            Serial.print(stringObjToConstCharString(&msgOut));  /* Send time to Transmitter for synchronization */
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_TX_ROLE))
           {
@@ -4394,7 +4446,7 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
               if (g_debug_prints_enabled)
               {
-                Serial.printf(String("Callsign: \"" + p + "\"\n").c_str());
+                Serial.print(String("Callsign: \"" + p + "\"\n"));
               }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
@@ -4435,7 +4487,7 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
               if (g_debug_prints_enabled)
               {
-                Serial.printf(String("Pattern: \"" + pat + "\"\n").c_str());
+                Serial.print(String("Pattern: \"" + pat + "\"\n"));
               }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 

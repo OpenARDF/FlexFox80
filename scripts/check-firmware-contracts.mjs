@@ -173,6 +173,13 @@ const cloneEventManifestPath = join(
   "ARDF_Transmitter",
   "clone_event_manifest.h",
 );
+const cloneKeepAliveSchedulePath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "clone_keepalive_schedule.h",
+);
 const firmwareUpdateIntegrityPath = join(
   repoRoot,
   "Software",
@@ -211,10 +218,11 @@ const espEvent = readFileSync(espEventPath, "utf8");
 const roleAssignmentBounds = readFileSync(roleAssignmentBoundsPath, "utf8");
 const eventFileIntegrity = readFileSync(eventFileIntegrityPath, "utf8");
 const cloneEventManifest = readFileSync(cloneEventManifestPath, "utf8");
+const cloneKeepAliveSchedule = readFileSync(cloneKeepAliveSchedulePath, "utf8");
 const firmwareUpdateIntegrity = readFileSync(firmwareUpdateIntegrityPath, "utf8");
 
 const expectedAvrVersion = "0.201";
-const expectedEspVersion = "2.4";
+const expectedEspVersion = "2.5";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -271,6 +279,57 @@ if (
 }
 
 process.stdout.write("PASS host WiFi updates use a shared bounded reconnecting AVR heartbeat\n");
+
+const slaveMainLoop = espMain.match(
+  /else \/\* IamSlave \*\/([\s\S]*?)\n\s*if \(g_onlyUpdateEvent\)/,
+)?.[1];
+const slaveShutdownCalls = slaveMainLoop?.match(/shutdownSlave\(\);/g)?.length ?? 0;
+if (
+  !espMain.includes('#include "clone_keepalive_schedule.h"') ||
+  !espMain.includes("beginSlaveCloneKeepAlive();") ||
+  !espMain.includes("serviceSlaveCloneKeepAlive();") ||
+  !espMain.includes("endSlaveCloneKeepAlive();") ||
+  !espMain.includes('String("Failed to send data to AVR: ") + err') ||
+  espMain.includes('errorMessage = "Failed to send data to ATMEGA"') ||
+  !cloneKeepAliveSchedule.includes("CLONE_KEEPALIVE_INTERVAL_MILLIS 20000UL") ||
+  !cloneKeepAliveSchedule.includes("schedule->queueImmediately = true;") ||
+  !cloneKeepAliveSchedule.includes("schedule->active = false;") ||
+  slaveShutdownCalls !== 3
+) {
+  process.stderr.write(
+    "Firmware contract check failed: target cloning must use a bounded 20-second AVR heartbeat, retain detailed programming errors, and shut down once per outcome\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS target cloning keeps the AVR awake only while clone work remains active\n");
+
+if (
+  espMain.match(/delete g_fileDataBuff;/g)?.length !== 3 ||
+  espMain.match(/delete g_fileDataBuff;\s+g_fileDataBuff = NULL;/g)?.length !== 3 ||
+  !espMain.includes("size_t j;") ||
+  !espMain.includes("Serial.readBytes(buf, min(sizeof(buf) - 1, bytesAvail))") ||
+  !espMain.includes("if ((size_t)messageLength >= sizeof(buf) - 1)")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: ESP clone cleanup and serial parsing must retain pointer and buffer bounds\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS ESP clone cleanup and serial parsing retain explicit memory bounds\n");
+
+if (
+  espMain.includes("Serial.printf(stringObjToConstCharString") ||
+  /Serial\.printf\(String\(/.test(espMain)
+) {
+  process.stderr.write(
+    "Firmware contract check failed: ESP UART writes must not treat dynamic text as printf format strings\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS ESP UART writes keep dynamic text out of printf format strings\n");
 
 if (
   !espMain.includes("recoverInterruptedFileUploads();") ||
