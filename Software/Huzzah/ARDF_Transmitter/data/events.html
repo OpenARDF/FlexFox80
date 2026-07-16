@@ -1,6 +1,9 @@
 <!DOCTYPE html>
+<html lang="en">
 
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ARDF Events Settings</title>
     <style type="text/css">
         .button {
@@ -181,8 +184,21 @@
             font-size: 50px;
             font-family: verdana;
             color: white;
+            text-align: center;
+            white-space: pre-line;
             transform: translate(-50%, -50%);
             -ms-transform: translate(-50%, -50%);
+        }
+
+        .eventTableContainer {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #eventTable {
+            min-width: 1100px;
+            border-collapse: collapse;
         }
 
     </style>
@@ -192,6 +208,7 @@
     <script>
         var g_timer = 0;
         var g_timeUpdateTimer = 0;
+        var g_clockSyncTimer = 0;
         var g_homeTimer = 0;
         var g_eventRadioBand = "";
         var g_timedOut = false;
@@ -201,19 +218,24 @@
 
         var g_freq1FrequencyHz = "";
 
-        var g_numberOfOpenWebSockets = 0;
         var g_stillConnected = 0;
         var g_stillDisconnected = 60;
         var g_lastPacketTime = 0;
         var g_delayedPackets = 0;
         var g_lastSocketTxMessage;
         var g_transmitterTimeMs = 0;
+        var g_transmitterTimeReceivedMs = 0;
         var g_websock = null;
         var g_timesync_rcvd = 0;
         var g_webSocketAliveTimer = 0;
+        var g_webSocketReconnectTimer = 0;
+        var g_webSocketStopping = false;
 
         var g_loading_data = true;
         var g_event_changes_saved = true;
+        var g_eventSheetLoaded = false;
+        var g_eventSheetCacheSupported = false;
+        var g_renderedSelectedEvent = "";
 
         ///////////////////////////////
         // Settings
@@ -263,7 +285,61 @@
             return -1;
         }
 
-        function displayEvents(erase) {
+        function selectedEventData() {
+            var rowIndex = selectedTableRowIndex();
+            return (rowIndex >= 1) ? g_eventTableData[rowIndex] : null;
+        }
+
+        function upsertEventData(eventLine) {
+            for (var i = 1; i < g_eventTableData.length; i++) {
+                if (g_eventTableData[i].name == eventLine.name) {
+                    g_eventTableData[i] = eventLine;
+                    return;
+                }
+            }
+
+            g_eventTableData.push(eventLine);
+        }
+
+        function updateSelectedEventField(field, value) {
+            var eventData = selectedEventData();
+            if (eventData) {
+                eventData[field] = value;
+            }
+        }
+
+        function replaceEventRow(eventName) {
+            if (!eventName) return;
+
+            var eventTable = document.getElementById("eventTable");
+            var rowIndex = -1;
+            for (var i = 1; i < g_eventTableData.length; i++) {
+                if (g_eventTableData[i].name == eventName) {
+                    rowIndex = i;
+                    break;
+                }
+            }
+
+            if ((rowIndex >= 1) && eventTable && eventTable.rows && (eventTable.rows.length > rowIndex)) {
+                var oldRow = eventTable.rows[rowIndex];
+                oldRow.parentNode.replaceChild(eventRow(g_eventTableData[rowIndex], false), oldRow);
+            }
+        }
+
+        function displaySelectedEvent() {
+            if (!g_eventSheetLoaded) {
+                displayEvents();
+            } else {
+                replaceEventRow(g_renderedSelectedEvent);
+                if (g_renderedSelectedEvent != g_selectedEvent) {
+                    replaceEventRow(g_selectedEvent);
+                }
+            }
+
+            g_renderedSelectedEvent = g_selectedEvent;
+        }
+
+        function displayEvents() {
             var eventNum = g_eventTableData.length;
             var eventTable = document.getElementById("eventTable");
             var tableRows = eventTable.getElementsByTagName('tr');
@@ -271,25 +347,14 @@
 
             console.log("rowCount = ", rowCount);
 
-            if (erase == true) {
-                for (var x = rowCount - 1; x >= 0; x--) {
-                    eventTable.removeChild(tableRows[x]);
-                }
+            for (var x = rowCount - 1; x >= 0; x--) {
+                eventTable.removeChild(tableRows[x]);
+            }
 
-                eventTable.appendChild(eventRow(g_eventTableData[0], true));
+            eventTable.appendChild(eventRow(g_eventTableData[0], true));
 
-                for (var i = 1; i < eventNum; i++) {
-                    eventTable.appendChild(eventRow(g_eventTableData[i], false));
-                }
-            } else {
-                console.log("Refreshing table cells");
-                for (var i = 1, row; row = eventTable.rows[i]; i++) {
-                    var rowData = g_eventTableData[i];
-
-                    for (var j = 0, col; col = row.cells[j]; j++) {
-                        col = rowData[j];
-                    }
-                }
+            for (var i = 1; i < eventNum; i++) {
+                eventTable.appendChild(eventRow(g_eventTableData[i], false));
             }
         }
 
@@ -301,7 +366,8 @@
             if (x != null) x.style.display = "none";
 
             if (g_selectedEvent != selection) {
-                var btext = "EVENT_NAME," + selection;
+                var command = g_eventSheetCacheSupported ? "EVENT_SELECT," : "EVENT_NAME,";
+                var btext = command + selection;
                 console.log(btext);
                 sendToSocket(btext);
                 g_selectedEvent = selection;
@@ -427,7 +493,6 @@
                     })(entry);
                     row.setAttribute("style", "font-family:verdana; font-size:17px; color:blue; font-weight:bold; text-align:center;");
                 } else {
-                    btn.id = "runButton";
                     btn.value = "Select";
                     btn.style.backgroundColor = "blue";
                     btn.onclick = (function(entry) {
@@ -529,28 +594,25 @@
                 cell0.setAttribute("border", "1px solid black");
                 if (g_selectedEvent == rowData.name) {
 
-                    var sel = document.createElement('select'),
-                        option,
-                        i = 0,
-                        il = g_typeTxNames.length;
+                    var roleSelect = document.createElement('select');
 
-                    sel.setAttribute("onchange", "foxClick()");
-                    sel.setAttribute("id", "roleSelect");
-                    sel.setAttribute("style", "font-family:verdana; font-size:15px; color:blue; font-weight:bold;");
+                    roleSelect.setAttribute("onchange", "foxClick()");
+                    roleSelect.setAttribute("id", "roleSelect");
+                    roleSelect.setAttribute("style", "font-family:verdana; font-size:15px; color:blue; font-weight:bold;");
 
-                    for (; i < il; i += 1) {
-                        option = document.createElement('option');
-                        option.setAttribute('value', g_typeTxNames[i].name);
-                        option.appendChild(document.createTextNode(g_typeTxNames[i].name));
-                        if (g_typeTxNames[i].name == rowData.role) {
-                            option.setAttribute("selected", "true");
+                    for (var roleIndex = 0; roleIndex < g_typeTxNames.length; roleIndex++) {
+                        var roleOption = document.createElement('option');
+                        roleOption.setAttribute('value', g_typeTxNames[roleIndex].name);
+                        roleOption.appendChild(document.createTextNode(g_typeTxNames[roleIndex].name));
+                        if (g_typeTxNames[roleIndex].name == rowData.role) {
+                            roleOption.selected = true;
                             g_selectedTxType = rowData.role;
                         }
-                        sel.appendChild(option);
-                        console.log("TxType name:", g_typeTxNames[i].name);
+                        roleSelect.appendChild(roleOption);
+                        console.log("TxType name:", g_typeTxNames[roleIndex].name);
                     }
 
-                    cell0.appendChild(sel);
+                    cell0.appendChild(roleSelect);
                 } else {
                     cellText = document.createTextNode(rowData.role);
                     cell0.appendChild(cellText);
@@ -562,7 +624,7 @@
                 console.log("Event Call:", rowData.callsign);
                 cell0.setAttribute("border", "1px solid black");
                 if (g_selectedEvent == rowData.name) {
-                    cell0.setAttribute("id", "datetimeFinishCell");
+                    cell0.setAttribute("id", "callSignCell");
                     var t = document.createElement("input");
                     t.setAttribute("type", "text");
                     t.setAttribute("id", "callText");
@@ -584,29 +646,25 @@
                 cell0.setAttribute("border", "1px solid black");
 
                 if (g_selectedEvent == rowData.name) {
-                    var sel, option, i, il;
-                    sel = document.createElement('select'),
-                        option,
-                        i = 0,
-                        il = g_powerLevels.length;
+                    var powerSelect = document.createElement('select');
 
-                    sel.setAttribute("onchange", "pwrClick()");
-                    sel.setAttribute("id", "pwrSelect");
-                    sel.setAttribute("style", "font-family:verdana; font-size:15px; color:blue; font-weight:bold;");
+                    powerSelect.setAttribute("onchange", "pwrClick()");
+                    powerSelect.setAttribute("id", "pwrSelect");
+                    powerSelect.setAttribute("style", "font-family:verdana; font-size:15px; color:blue; font-weight:bold;");
 
-                    for (; i < il; i += 1) {
-                        option = document.createElement('option');
-                        option.setAttribute('value', g_powerLevels[i]);
-                        option.appendChild(document.createTextNode(g_powerLevels[i]));
-                        if (g_powerLevels[i] == rowData.power) {
-                            option.setAttribute("selected", "true");
+                    for (var powerIndex = 0; powerIndex < g_powerLevels.length; powerIndex++) {
+                        var powerOption = document.createElement('option');
+                        powerOption.setAttribute('value', g_powerLevels[powerIndex]);
+                        powerOption.appendChild(document.createTextNode(g_powerLevels[powerIndex]));
+                        if (g_powerLevels[powerIndex] == rowData.power) {
+                            powerOption.selected = true;
                         }
-                        console.log("Power option:", g_powerLevels[i]);
+                        console.log("Power option:", g_powerLevels[powerIndex]);
 
-                        sel.appendChild(option);
+                        powerSelect.appendChild(powerOption);
                     }
 
-                    cell0.appendChild(sel);
+                    cell0.appendChild(powerSelect);
                 } else {
                     cellText = document.createTextNode(rowData.power);
                     cell0.appendChild(cellText);
@@ -619,7 +677,6 @@
                 cell0 = document.createElement("td");
                 if (g_selectedEvent == rowData.name) {
                     var b = document.createElement('input');
-                    entry = rowData.name;
                     b.setAttribute("type", "button");
                     b.setAttribute("id", "frequencyButton");
                     b.setAttribute("class", "incbutton");
@@ -637,17 +694,21 @@
             return row;
         }
 
-        g_timeUpdateTimer = setTimeout(function() {
+        function updateConnectionState() {
             updateDisplayedLocalTime();
+            updateDisplayedTransmitterTime();
 
             if (g_stillConnected) {
                 g_stillConnected--;
                 if (g_stillConnected == 0) {
-                    setOverlay("Disconnected");
+                    showDisconnectedState("Disconnected");
                     console.log("g_stillConnected timeout!!");
-                    g_timedOut = true;
                     g_stillDisconnected = 200;
                     g_loading_data = false;
+                    var timedOutSocket = g_websock;
+                    g_websock = null;
+                    closeWebSocketSafely(timedOutSocket);
+                    scheduleWebSocketReconnect();
                 }
             } else {
                 if (g_stillDisconnected) {
@@ -660,87 +721,172 @@
                     }
                 }
             }
-        }, 100);
+        }
+
+        function startTimeUpdates() {
+            if (g_timeUpdateTimer) {
+                clearInterval(g_timeUpdateTimer);
+            }
+
+            updateDisplayedLocalTime();
+            updateDisplayedTransmitterTime();
+            g_timeUpdateTimer = setInterval(updateConnectionState, 1000);
+        }
+
+        function showConnectedState() {
+            g_timedOut = false;
+            g_stillConnected = Math.max(200, g_stillConnected);
+            g_stillDisconnected = 200;
+
+            var transmitterTime = document.getElementById("xmtrTime");
+            if (g_eventSheetLoaded) {
+                if (transmitterTime != null) transmitterTime.textContent = "Connected - Refreshing events...";
+                setOverlay(null);
+            } else {
+                if (transmitterTime != null) transmitterTime.textContent = "Connected - Loading events...";
+                setOverlay("Connected\nLoading Events...");
+            }
+        }
+
+        function showDisconnectedState(message) {
+            var transmitterTime = document.getElementById("xmtrTime");
+            if (transmitterTime != null) transmitterTime.textContent = "Disconnected";
+            g_timedOut = true;
+            setOverlay(message || "Disconnected");
+        }
+
+        function clearWebSocketReconnect() {
+            if (g_webSocketReconnectTimer) {
+                clearTimeout(g_webSocketReconnectTimer);
+                g_webSocketReconnectTimer = 0;
+            }
+        }
+
+        function scheduleWebSocketReconnect() {
+            if (g_webSocketStopping || g_webSocketReconnectTimer) return;
+            g_webSocketReconnectTimer = setTimeout(function() {
+                g_webSocketReconnectTimer = 0;
+                webSocketStart();
+            }, 2000);
+        }
+
+        function closeWebSocketSafely(socket) {
+            if (!socket) return true;
+            try {
+                socket.close();
+                return true;
+            } catch (err) {
+                console.warn("Unable to close WebSocket cleanly:", err);
+                return false;
+            }
+        }
+
+        function retrySocketMessage(msg) {
+            if ((msg == "!&") || g_webSocketStopping) return;
+            setTimeout(function() {
+                if (!g_webSocketStopping) sendToSocket(msg);
+            }, 5000);
+        }
+
+        function stopWebSocketForNavigation() {
+            g_webSocketStopping = true;
+            clearWebSocketReconnect();
+            if (g_webSocketAliveTimer) {
+                clearInterval(g_webSocketAliveTimer);
+                g_webSocketAliveTimer = 0;
+            }
+
+            var socket = g_websock;
+            g_websock = null;
+            if (socket) {
+                socket.onclose = null;
+                closeWebSocketSafely(socket);
+            }
+            g_stillConnected = 0;
+        }
 
         function webSocketStart() {
-            var websocketcreated = true;
+            var websocketcreated = false;
             var host = String(window.location.hostname);
+            var socket = null;
 
             console.log("Host: " + host);
 
+            if (g_webSocketStopping) return;
+
             if (host.length > 0) {
-                if (g_websock != null) // socket already exists
-                {
-                    g_websock.close();
-                    g_websock = null;
+                if (g_websock && ((g_websock.readyState === 0) || (g_websock.readyState === 1))) {
+                    return;
                 }
 
                 try {
-                    g_numberOfOpenWebSockets++;
-                    g_websock = new WebSocket("ws://" + window.location.hostname + ":81/");
+                    socket = new WebSocket("ws://" + window.location.hostname + ":81/");
+                    g_websock = socket;
+                    websocketcreated = true;
                 } catch (err) {
-                    document.getElementById("xmtrTime").innerHTML = "Disconnected";
                     console.log("Unable to create web socket");
-                    websocketcreated = false;
-                    setOverlay("Disconnected\nNo Socket");
-                    if (g_numberOfOpenWebSockets) g_numberOfOpenWebSockets--;
+                    showDisconnectedState("Disconnected\nNo Socket");
+                    scheduleWebSocketReconnect();
                 }
             } else {
-                document.getElementById("xmtrTime").innerHTML = "Disconnected\nNo Socket Host";
                 console.log("No websocket host available.");
                 websocketcreated = false;
                 g_websock = null;
-                setOverlay("Disconnected");
+                showDisconnectedState("Disconnected\nNo Socket Host");
             }
 
             if (websocketcreated == true) {
-                document.getElementById("xmtrTime").innerHTML = "Connected";
+                document.getElementById("xmtrTime").textContent = "Connecting...";
 
-                g_websock.onopen = function(evt) {
+                socket.onopen = function(evt) {
+                    if (g_websock !== socket) {
+                        closeWebSocketSafely(socket);
+                        return;
+                    }
                     console.log("websock open");
-                    websocketcreated = true;
-                    g_stillConnected = Math.max(200, g_stillConnected);
+                    clearWebSocketReconnect();
+                    g_lastPacketTime = 0;
+                    g_delayedPackets = 0;
+                    g_loading_data = true;
+                    showConnectedState();
 
-                    setTimeout(function() {
-                        sendSocketAlive();
-                    }, 250);
+                    sendToSocket("EVENT_NAME,NEW!");
+                    sendSocketAlive();
+
                     setTimeout(function() {
                         sendToSocket("SSID");
-                    }, 500);
+                    }, 250);
                     setTimeout(function() {
                         sendToSocket("MAC");
-                    }, 750);
+                    }, 500);
                     setTimeout(function() {
                         sendToSocket("SW_VERSIONS");
-                    }, 1000);
-                    setTimeout(function() {
-                        sendToSocket("EVENT_NAME,NEW!");
-                    }, 1250);
+                    }, 750);
 
-                    g_loading_data = true;
                 };
 
-                g_websock.onclose = function(evt) {
-                    if (g_numberOfOpenWebSockets) g_numberOfOpenWebSockets--;
+                socket.onclose = function(evt) {
+                    if (g_websock !== socket) return;
+                    console.log("websock closed");
+                    g_websock = null;
+                    g_stillConnected = 0;
+                    g_loading_data = false;
+                    showDisconnectedState("Disconnected\nRetrying...");
+                    scheduleWebSocketReconnect();
+                };
 
-                    if (g_numberOfOpenWebSockets == 0) {
-                        console.log("all websocks closed");
-                        if (websocketcreated == true) { // handle test case where server refuses websocket
-                            setOverlay("Disconnected");
-                        }
-                        websocketcreated = false;
+                socket.onerror = function(evt) {
+                    if (g_websock !== socket) return;
+                    console.log("Websock error: " + evt);
+                    showDisconnectedState("Connection Error\nRetrying...");
+                    if (!closeWebSocketSafely(socket)) {
                         g_websock = null;
-                        g_stillConnected = 0;
-                    } else {
-                        console.log("old websock closed");
+                        scheduleWebSocketReconnect();
                     }
                 };
 
-                g_websock.onerror = function(evt) {
-                    console.log("Websock error: " + evt);
-                };
-
-                g_websock.onmessage = function(evt) {
+                socket.onmessage = function(evt) {
+                    if (g_websock !== socket) return;
                     var str = evt.data;
                     var arr = str.split(",");
 
@@ -850,7 +996,7 @@
                                     var e = "State: " + text;
                                     var elem = document.getElementById("statusreport");
                                     if (elem != null) {
-                                        elem.innerHTML = e;
+                                        elem.textContent = e;
                                         elem.setAttribute("style", "font-family:verdana; font-size:25px; color:Black; font-weight:bold; text-align:center;");
                                     }
                                 } else {
@@ -1024,7 +1170,7 @@
                                 var e = "Error: " + text;
                                 var elem = document.getElementById("errorreport");
                                 if (elem != null) {
-                                    elem.innerHTML = e;
+                                    elem.textContent = e;
                                     elem.setAttribute("style", "font-family:verdana; font-size:25px; color:Red; font-weight:bold; text-align:center;");
                                 }
                                 console.log("Error Code:" + arr[1]);
@@ -1035,8 +1181,8 @@
                             {
                                 if (typeof arr[1] == 'undefined') {
                                     console.log("Error: Null event selected!");
+                                    break;
                                 }
-                                setOverlay(null);
                                 g_selectedEvent = arr[1];
                                 g_typeTxNames = [];
                                 g_typeFrequency = [];
@@ -1047,17 +1193,24 @@
                                 g_eventNumberOfTxTypes = 0;
                                 hideFreqSet1();
                                 updateTextFormatting();
-                                g_eventTableData = [{
-                                    name: "Event",
-                                    version: "Ver.",
-                                    start: "Start Time",
-                                    finish: "Finish Time",
-                                    role: "Fox",
-                                    callsign: "Call",
-                                    power: "Power",
-                                    frequency: "Freq"
-                                }];
-                                displayEvents(true);
+                                if (!g_eventSheetLoaded) {
+                                    g_eventTableData = [{
+                                        name: "Event",
+                                        version: "Ver.",
+                                        start: "Start Time",
+                                        finish: "Finish Time",
+                                        role: "Fox",
+                                        callsign: "Call",
+                                        power: "Power",
+                                        frequency: "Freq"
+                                    }];
+                                }
+                            }
+                            break;
+
+                        case "EVENT_CACHE":
+                            {
+                                g_eventSheetCacheSupported = (arr[1] == "1");
                             }
                             break;
 
@@ -1075,8 +1228,11 @@
                                 if (typeof arr[8] == 'undefined') arr[8] = '?';
 
                                 if (arr[1] == "Done") {
-                                    displayEvents(false);
+                                    displayEvents();
+                                    g_renderedSelectedEvent = g_selectedEvent;
+                                    g_eventSheetLoaded = (g_eventTableData.length > 1);
                                     g_loading_data = false;
+                                    setOverlay(null);
                                 } else {
                                     var eventLine = {
                                         name: arr[1],
@@ -1090,8 +1246,7 @@
                                         saved: true
                                     };
 
-                                    var theEvent = g_eventTableData.find(g_eventTableData => g_eventTableData.name == g_selectedEvent);
-                                    theEvent.role = g_selectedTxType;
+                                    upsertEventData(eventLine);
                                 }
                             }
                             break;
@@ -1121,14 +1276,15 @@
                                     saved: true
                                 };
 
-                                g_eventTableData.push(eventLine);
+                                upsertEventData(eventLine);
                             }
                             break;
 
                         case "TYPE_NAME":
                             {
                                 if ((arr[1] == "Done") && (arr[2] == "Done")) {
-                                    displayEvents(true);
+                                    displaySelectedEvent();
+                                    g_eventSheetLoaded = (g_eventTableData.length > 1);
                                 } else {
                                     var tn = {
                                         name: arr[1],
@@ -1151,11 +1307,11 @@
                                 console.log("Tx SW Versions: ", arr[1], arr[2]);
 
                                 if (v1 != null) {
-                                    v1.innerHTML = "WiFi Module SW Version: " + arr[1];
+                                    v1.textContent = "WiFi Module SW Version: " + arr[1];
                                 }
 
                                 if (v2 != null) {
-                                    v2.innerHTML = "ATMEGA SW Version: " + arr[2];
+                                    v2.textContent = "ATMEGA SW Version: " + arr[2];
                                 }
                             }
                             break;
@@ -1163,11 +1319,10 @@
                         case "SYNC":
                             {
                                 if (typeof arr[1] != 'undefined') {
-                                    g_transmitterTimeMs = 1000 * arr[1];
-                                    var txd = new Date(g_transmitterTimeMs);
-                                    var d = document.getElementById("xmtrTime");
-                                    if (d != null) d.innerHTML = "TX: " + txd;
-                                    updateDisplayedLocalTime()
+                                    g_transmitterTimeMs = 1000 * Number(arr[1]);
+                                    g_transmitterTimeReceivedMs = Date.now();
+                                    updateDisplayedTransmitterTime();
+                                    updateDisplayedLocalTime();
                                 }
                             }
                             break;
@@ -1184,7 +1339,7 @@
                         case "VERS":
                             {
                                 if (typeof arr[1] != 'undefined') {
-                                    document.getElementById("version").innerHTML = arr[1];
+                                    document.getElementById("version").textContent = arr[1];
                                 }
                             }
                             break;
@@ -1194,7 +1349,7 @@
                                 if (typeof arr[1] != 'undefined') {
                                     var t = "MAC: " + arr[1];
                                     var m = document.getElementById("macAddress");
-                                    if (m != null) m.innerHTML = t;
+                                    if (m != null) m.textContent = t;
                                     console.log(t);
                                 }
                             }
@@ -1205,7 +1360,7 @@
                                 if (typeof arr[1] != 'undefined') {
                                     var t = "Battery: " + arr[1];
                                     var b = document.getElementById("batteryLevel");
-                                    if (b != null) b.innerHTML = t;
+                                    if (b != null) b.textContent = t;
                                 }
                             }
                             break;
@@ -1215,7 +1370,7 @@
                                 if (typeof arr[1] != 'undefined') {
                                     var t = "Temp: " + arr[1];
                                     var x = document.getElementById("temperature");
-                                    if (x != null) x.innerHTML = t;
+                                    if (x != null) x.textContent = t;
                                 }
                             }
                             break;
@@ -1225,7 +1380,7 @@
                                 if (typeof arr[1] != 'undefined') {
                                     var t = arr[1] + ": Events Settings";
                                     var h = document.getElementById("mainHeading");
-                                    if (h != null) h.innerHTML = t;
+                                    if (h != null) h.textContent = t;
                                     console.log(t);
                                 }
                             }
@@ -1234,6 +1389,7 @@
                         case "CALLSIGN":
                             {
                                 if (typeof arr[1] == 'undefined') arr[1] = '?';
+                                updateSelectedEventField("callsign", arr[1]);
 
                                 var c = document.getElementById("callText");
                                 if (c != null) {
@@ -1288,8 +1444,9 @@
                                     } else if ((freq < Number("148000000")) && (freq > Number("144000000"))) {
                                         g_eventRadioBand = "2m";
                                     }
-                                } else if (arr[1].length > 1) {
+                                } else if ((typeof arr[1] == "string") && (arr[1].length > 1)) {
                                     var freq = Number(arr[1]);
+                                    updateSelectedEventField("freq", String(freq));
                                     var b = document.getElementById("frequencyButton");
                                     if (b != null) {
                                         b.setAttribute("value", freqDotFormat(freq));
@@ -1302,10 +1459,7 @@
                             {
                                 var text = arr[1];
 
-                                if (text.includes(":")) {
-                                    var colon = text.indexOf(":");
-                                    var newTypeIndex = parseInt(text.substring(0, colon), 10);
-                                    var newSubIndex = parseInt(text.substring(colon + 1), 10);
+                                if ((typeof text == "string") && (text.indexOf(":") >= 0)) {
                                     console.log("role code: ", arr[1]);
 
                                     var r = document.getElementById("roleSelect");
@@ -1314,24 +1468,30 @@
 
                                         var roleIndex = 0;
 
-                                        while ((g_typeTxNames[roleIndex].indices != text) && (roleIndex < g_typeTxNames.length)) {
-                                            r[roleIndex++].setAttribute("selected", "false");
+                                        while ((roleIndex < g_typeTxNames.length) && (g_typeTxNames[roleIndex].indices != text)) {
+                                            roleIndex++;
                                         }
 
                                         if (roleIndex < g_typeTxNames.length) {
-                                            r[roleIndex].setAttribute("selected", "true");
-                                            g_selectedTxType = r[roleIndex].value;
-                                        }
+                                            r.selectedIndex = roleIndex;
+                                            g_selectedTxType = r.options[roleIndex].value;
+                                            updateSelectedEventField("role", g_selectedTxType);
 
-                                        var msgText = "FREQ," + currentRoleIndex();
-                                        sendToSocket(msgText);
-                                        msgText = "POWER," + currentRoleIndex();
-                                        sendToSocket(msgText);
+                                            var msgText = "FREQ," + currentRoleIndex();
+                                            sendToSocket(msgText);
+                                            msgText = "POWER," + currentRoleIndex();
+                                            sendToSocket(msgText);
+                                        } else {
+                                            console.warn("Unknown transmitter role assignment: " + text);
+                                        }
                                     }
 
                                 } else {
                                     console.log("role name: ", arr[1]);
                                 }
+
+                                g_loading_data = false;
+                                setOverlay(null);
                             }
                             break;
 
@@ -1345,8 +1505,9 @@
 
                                     g_typePower.push(powerStr);
                                     console.log(g_typePower.length, "Power: ", powerStr);
-                                } else if (arr[1].length > 0) {
+                                } else if ((typeof arr[1] == "string") && (arr[1].length > 0)) {
                                     var mw = arr[1];
+                                    updateSelectedEventField("power", mw);
 
                                     console.log("tx power: ", arr[1]);
                                     var pe = document.getElementById("pwrSelect");
@@ -1366,45 +1527,39 @@
 
                         case "SUS":
                             {
-                                var role = "";
-                                var event = "";
+                                var role = (typeof arr[1] == "string") ? arr[1] : "";
+                                var event = (typeof arr[2] == "string") ? arr[2] : "";
 
-                                if (arr[1].length < 1) {
+                                if (role.length < 1) {
                                     console.log("Error: sync success returned no role");
-                                } else {
-                                    role = arr[1];
                                 }
 
-                                if (arr[2].length < 1) {
+                                if (event.length < 1) {
                                     console.log("Error: sync success returned no event");
-                                } else {
-                                    event = arr[2];
                                 }
 
                                 if (role.length || event.length) {
                                     var e = "Success: " + role + " synced. Next up: " + event;
                                     var elem = document.getElementById("statusreport");
                                     if (elem != null) {
-                                        elem.innerHTML = e;
+                                        elem.textContent = e;
                                         elem.setAttribute("style", "font-family:verdana; font-size:25px; color:Green; font-weight:bold; text-align:center;");
                                     }
                                 } else {
                                     var x = document.getElementById("statusreport");
                                     if (x != null) x.style.display = "none";
                                 }
-                                console.log("Sync success:" + arr[1]);
+                                console.log("Sync success:" + role);
 
                             }
                             break;
 
                         case "SUE":
                             {
-                                var msg = "";
+                                var msg = (typeof arr[1] == "string") ? arr[1] : "";
 
-                                if (arr[1].length < 1) {
+                                if (msg.length < 1) {
                                     console.log("Sync error returned no message");
-                                } else {
-                                    msg = arr[1];
                                 }
 
                                 var e;
@@ -1416,7 +1571,7 @@
 
                                 var elem = document.getElementById("statusreport");
                                 if (elem != null) {
-                                    elem.innerHTML = e;
+                                    elem.textContent = e;
                                     elem.setAttribute("style", "font-family:verdana; font-size:25px; color:Red; font-weight:bold; text-align:center;");
                                 }
 
@@ -1435,6 +1590,8 @@
         function start() {
             setOverlay("Loading Events...");
             g_stillConnected = 200;
+            g_webSocketStopping = false;
+            startTimeUpdates();
             webSocketStart();
         }
 
@@ -1455,26 +1612,31 @@
             var now = Date.now();
             var dif = now - g_lastPacketTime;
 
-            if ((g_websock == null) || (g_websock.readyState != g_websock.OPEN)) // wait 5 seconds and try again
-            {
-                if (g_websock != null) {
-                    console.log("Socket not ready. Command delayed.", g_websock, g_websock.readyState);
-                } else {
-                    console.log("Socket null. Restarting.");
-                    webSocketStart();
-                }
-
-                setTimeout(function() {
-                    sendToSocket(msg);
-                }, 5000);
+            if ((g_websock == null) || (g_websock.readyState !== 1)) {
+                console.log("Socket unavailable. Reconnect scheduled.");
+                scheduleWebSocketReconnect();
+                retrySocketMessage(msg);
 
             } else {
                 if (dif > 200) {
                     if (g_delayedPackets) g_delayedPackets--;
                     console.log("=>", msg);
-                    g_websock.send(msg);
-                    g_lastPacketTime = now;
-                    g_lastSocketTxMessage = msg;
+                    var socket = g_websock;
+                    try {
+                        socket.send(msg);
+                        g_lastPacketTime = now;
+                        g_lastSocketTxMessage = msg;
+                    } catch (err) {
+                        console.warn("WebSocket send failed:", err);
+                        if (g_websock === socket) g_websock = null;
+                        socket.onclose = null;
+                        closeWebSocketSafely(socket);
+                        g_stillConnected = 0;
+                        g_loading_data = false;
+                        showDisconnectedState("Disconnected\nRetrying...");
+                        scheduleWebSocketReconnect();
+                        retrySocketMessage(msg);
+                    }
                 } else {
                     g_delayedPackets++;
                     console.log("Commands too rapid. Delaying send.", now, g_lastPacketTime, dif, g_delayedPackets, msg);
@@ -1486,41 +1648,16 @@
         }
 
         function syncClock() {
-            var d = Date();
+            if (g_clockSyncTimer) clearTimeout(g_clockSyncTimer);
 
-            if (g_timeUpdateTimer != 0) {
-                clearTimeout(g_timeUpdateTimer);
-                g_timeUpdateTimer = 0;
-            }
-
-            // Sync to seconds transition
-            n = Date();
-            while (d == n) {
-                //               console.log("Syncing...", d, n);
-                n = Date();
-            };
-
-            d = new Date();
-
-            var btext = d.toISOString();
-            btext = "SYNC," + btext;
-            console.log(btext);
-            sendToSocket(btext);
-            updateDisplayedLocalTime();
-
-            g_timeUpdateTimer = setTimeout(function() {
-                if (g_stillConnected) {
-                    updateDisplayedLocalTime();
-                    if (g_stillConnected) {
-                        g_stillConnected--;
-                        if (g_stillConnected == 0) {
-                            console.log("g_stillConnected timeout!");
-                            setOverlay("Disconnected");
-                            g_timedOut = true;
-                        }
-                    }
-                }
-            }, 100);
+            var delayToNextSecond = 1000 - (Date.now() % 1000);
+            g_clockSyncTimer = setTimeout(function() {
+                g_clockSyncTimer = 0;
+                var btext = "SYNC," + new Date().toISOString();
+                console.log(btext);
+                sendToSocket(btext);
+                updateDisplayedLocalTime();
+            }, delayToNextSecond);
         }
 
         function executeEvent() {
@@ -1534,6 +1671,7 @@
             var btext = "";
             if (b != null) {
                 btext = b.value;
+                updateSelectedEventField("callsign", btext);
                 btext = "CALLSIGN," + btext;
                 sendToSocket(btext);
                 g_event_changes_saved = false;
@@ -1549,6 +1687,7 @@
                 sendToSocket(msgText);
                 console.log(msgText);
                 g_powerLevel = power;
+                updateSelectedEventField("power", power);
                 g_event_changes_saved = false;
             }
         }
@@ -1557,8 +1696,21 @@
             var f = document.getElementById("frequencyButton");
 
             if (f) {
-                var freqStr = freqNoDotsFormat(f.value);
-                var msgText = "FREQ," + currentRoleIndex() + "," + freqStr;
+                var roleIndex = currentRoleIndex();
+                var freq = Number(g_freq1FrequencyHz);
+                if (!isFinite(freq)) {
+                    console.warn("Frequency is not a number: " + g_freq1FrequencyHz);
+                    return;
+                }
+
+                var freqStr = String(Math.round(freq));
+                setFreqButtonText(freqStr);
+                if (g_typeFrequency[roleIndex]) {
+                    g_typeFrequency[roleIndex].frequency = Number(freqStr);
+                }
+                updateSelectedEventField("freq", freqStr);
+
+                var msgText = "FREQ," + roleIndex + "," + freqStr;
                 console.log(msgText);
                 sendToSocket(msgText);
                 g_freq1FrequencyHz = freqStr;
@@ -1588,27 +1740,17 @@
 
         function currentRoleIndex() {
             var r = document.getElementById("roleSelect");
-            if (r) {
-                var roleIndex = g_typeTxNames.length - 1;
-                while ((r[roleIndex].selected != true) && (roleIndex != 0)) {
-                    roleIndex--;
-                }
+            if (r && r.options && (r.selectedIndex >= 0) && (r.selectedIndex < r.options.length)) {
+                var selectedOptionIndex = r.selectedIndex;
+                g_selectedTxType = r.options[selectedOptionIndex].value;
 
-                r[roleIndex].setAttribute("selected", "true");
-                r.options[roleIndex].selected = true;
-                g_selectedTxType = r[roleIndex].value;
-                r.selectedIndex = roleIndex;
-
-                if (roleIndex) {
-                    var i = roleIndex - 1;
-                    while (i) {
-                        r[i--].setAttribute("selected", "false");
-                        r.options[roleIndex].selected = false;
+                var selectedType = g_typeTxNames[selectedOptionIndex];
+                if (selectedType && (typeof selectedType.indices == "string")) {
+                    var roleIndex = parseInt(selectedType.indices.split(":", 1)[0], 10);
+                    if (!isNaN(roleIndex)) {
+                        return roleIndex;
                     }
                 }
-
-                r.selectedIndex = roleIndex;
-                return Number(roleIndex);
             } else {
                 console.log("Warning: Selected role not available!")
             }
@@ -1618,11 +1760,19 @@
         function foxClick() {
             hideFreqSet1();
             g_selectedTxType = document.getElementById("roleSelect").value;
-            var indices = g_typeTxNames.find(g_typeTxNames => g_typeTxNames.name == g_selectedTxType).indices;
+            var selectedType = g_typeTxNames.find(g_typeTxNames => g_typeTxNames.name == g_selectedTxType);
+            if (!selectedType) {
+                console.warn("Unknown transmitter role: " + g_selectedTxType);
+                return;
+            }
+
+            var indices = selectedType.indices;
             var msgText = "TX_ROLE," + indices;
             sendToSocket(msgText);
             var theEvent = g_eventTableData.find(g_eventTableData => g_eventTableData.name == g_selectedEvent);
-            theEvent.role = g_selectedTxType;
+            if (theEvent) {
+                theEvent.role = g_selectedTxType;
+            }
             msgText = "FREQ," + currentRoleIndex();
             sendToSocket(msgText);
             msgText = "POWER," + currentRoleIndex();
@@ -1642,7 +1792,7 @@
 
         function setOverlay(msgTxt) {
             if (msgTxt != null) {
-                document.getElementById("overlayText").innerHTML = msgTxt;
+                document.getElementById("overlayText").textContent = msgTxt;
                 document.getElementById("overlay").style.display = "block";
             } else {
                 document.getElementById("overlay").style.display = "none";
@@ -1716,8 +1866,16 @@
             var d = Date();
             var el = document.getElementById("currentTime");
             if (el != null) {
-                el.innerHTML = "OS: " + d;
+                el.textContent = "OS: " + d;
                 updateTextFormatting();
+            }
+        }
+
+        function updateDisplayedTransmitterTime() {
+            var el = document.getElementById("xmtrTime");
+            if ((el != null) && g_transmitterTimeMs && g_transmitterTimeReceivedMs) {
+                var elapsedSeconds = Math.max(0, Math.round((Date.now() - g_transmitterTimeReceivedMs) / 1000));
+                el.textContent = "TX: " + new Date(g_transmitterTimeMs + (1000 * elapsedSeconds));
             }
         }
 
@@ -1783,8 +1941,8 @@
                     var localEpoch;
 
                     if (!validateTimeStructure(dt)) {
-                        local = Date();
-                        localEpoch = Date.getTime();
+                        localEpoch = now;
+                        local = epochToLocalDateTimeFormat(localEpoch);
                     } else {
                         local = forceValueToLocalTime(dt);
                         localEpoch = new Date(dt);
@@ -1814,8 +1972,8 @@
                         var localf;
 
                         if (!validateTimeStructure(dtf)) {
-                            localf = Date();
-                            localfEpoch = Date.getTime();
+                            localfEpoch = now;
+                            localf = epochToLocalDateTimeFormat(localfEpoch);
                         } else {
                             localf = forceValueToLocalTime(dtf);
                             localfEpoch = new Date(dtf);
@@ -1854,6 +2012,7 @@
                 dtText.value = time;
             }
             g_selectedEventStart = local.getTime();
+            updateSelectedEventField("start", g_selectedEventStart);
         }
 
         function epochToLocalDateTimeFormat(epoch_ms) {
@@ -1882,16 +2041,17 @@
                 var dtf = dtfText.value;
                 var localf;
                 var msgText = "";
+                var now = new Date().getTime();
+                var localfEpoch;
 
                 if (!validateTimeStructure(dtf)) {
-                    localf = Date();
+                    localfEpoch = now;
+                    localf = epochToLocalDateTimeFormat(localfEpoch);
                 } else {
                     localf = forceValueToLocalTime(dtf);
+                    localfEpoch = new Date(dtf).getTime();
                 }
 
-                var now = new Date().getTime();
-                var localfEpoch = new Date(dtf);
-                localfEpoch = localfEpoch.getTime();
                 var utc;
 
                 if (now > localfEpoch) {
@@ -1909,18 +2069,17 @@
                     sendToSocket(msgText);
 
                     var dtsText = document.getElementById("datetimeStart");
+                    var localsEpoch = now;
                     if (dtsText) {
                         var dts = dtsText.value;
                         var locals;
                         if (!validateTimeStructure(dts)) {
-                            locals = Date();
+                            locals = epochToLocalDateTimeFormat(localsEpoch);
                         } else {
                             locals = forceValueToLocalTime(dts);
+                            localsEpoch = new Date(dts).getTime();
                         }
                     }
-
-                    var localsEpoch = new Date(dts);
-                    localsEpoch = localsEpoch.getTime();
 
                     if (localsEpoch > localfEpoch) {
                         applyNewStartTime(localf);
@@ -1953,6 +2112,7 @@
                 dtText.value = time;
             }
             g_selectedEventFinish = local.getTime();
+            updateSelectedEventField("finish", g_selectedEventFinish);
         }
 
         function hasNumber(myString) {
@@ -2045,7 +2205,7 @@
             if (g_selectedEvent) {
                 var stat = statusMessageText(g_selectedEventStart, g_selectedEventFinish);
                 var statusEl = document.getElementById("statusCell");
-                if (statusEl != null) statusEl.innerHTML = stat;
+                if (statusEl != null) statusEl.textContent = stat;
 
                 var runButton = document.getElementById("activeRunButton");
 
@@ -2073,7 +2233,7 @@
             var fTime = document.getElementById("xmtrTime");
 
             if (fTime) {
-                if (fTime.innerHTML.indexOf("Disconnected") !== -1) {
+                if (fTime.textContent.indexOf("Disconnected") !== -1) {
                     fTime.style.color = "red";
                 } else {
                     fTime.style.color = "black";
@@ -2140,7 +2300,7 @@
                 g_freq1FrequencyHz = clamp(Number("3500000"), val, Number("4000000"));
             }
 
-            g_typeFrequency[currentRoleIndex()].frequency = val;
+            g_typeFrequency[currentRoleIndex()].frequency = g_freq1FrequencyHz;
             updateFreqButtonText(currentRoleIndex());
 
             freq1String(g_freq1FrequencyHz)
@@ -2162,7 +2322,7 @@
                 g_freq1FrequencyHz = clamp(Number("3500000"), val, Number("4000000"));
             }
 
-            g_typeFrequency[currentRoleIndex()].frequency = val;
+            g_typeFrequency[currentRoleIndex()].frequency = g_freq1FrequencyHz;
             updateFreqButtonText(currentRoleIndex());
 
             freq1String(g_freq1FrequencyHz)
@@ -2172,7 +2332,6 @@
         ////////////////////////////////////////////////////////////
 
         function incFreq1() {
-            var ftext = document.getElementById("freq1Text");
             var freq = document.querySelector("#freq1");
             var f = Math.floor(Number(freq.value));
             var val;
@@ -2196,7 +2355,7 @@
                     g_freq1FrequencyHz = clamp(Number("3500000"), val, Number("4000000"));
                 }
 
-                g_typeFrequency[currentRoleIndex()].frequency = val;
+                g_typeFrequency[currentRoleIndex()].frequency = g_freq1FrequencyHz;
                 updateFreqButtonText(currentRoleIndex());
 
                 freq1String(g_freq1FrequencyHz);
@@ -2211,12 +2370,20 @@
         function resetFreq1Slider() {
             var freq = document.querySelector("#freq1");
             var count = document.querySelector(".freq1val");
+            var adjustmentWasActive = (g_timer != 0) || (Number(freq.value) != 0);
+
+            if (g_timer != 0) {
+                clearInterval(g_timer);
+                g_timer = 0;
+            }
 
             freq.value = 0;
             count.textContent = "<<<\xa0\xa0\xa0<<\xa0\xa0\xa0<\xa0\xa0\xa0>\xa0\xa0\xa0>>\xa0\xa0\xa0>>>";
 
             setFreqButtonText(g_freq1FrequencyHz);
-            sendFreq();
+            if (adjustmentWasActive) {
+                sendFreq();
+            }
         }
 
         ////////////////////////////////////////////////////////////
@@ -2267,9 +2434,9 @@
 
         function showFreqSettings() {
             showFreqSet1();
-            freqStr = g_typeFrequency[currentRoleIndex()].frequency;
+            var freqStr = g_typeFrequency[currentRoleIndex()].frequency;
             freq1String(freqStr);
-            document.getElementById("freqSet1Heading").innerHTML = g_typeFrequency[currentRoleIndex()].role + " Frequency";
+            document.getElementById("freqSet1Heading").textContent = g_typeFrequency[currentRoleIndex()].role + " Frequency";
         }
 
         function hideFreqSettings() {
@@ -2303,6 +2470,42 @@
             }
         });
 
+        window.addEventListener("touchcancel", function() {
+            if (document.getElementById("freq1").value != 0) {
+                resetFreq1Slider();
+            }
+        });
+
+        window.addEventListener("pointercancel", function() {
+            if (document.getElementById("freq1").value != 0) {
+                resetFreq1Slider();
+            }
+        });
+
+        window.addEventListener("blur", function() {
+            if (document.getElementById("freq1").value != 0) {
+                resetFreq1Slider();
+            }
+        });
+
+        window.addEventListener("pagehide", function() {
+            stopWebSocketForNavigation();
+        });
+
+        window.addEventListener("pageshow", function(evt) {
+            if (evt && evt.persisted) {
+                g_webSocketStopping = false;
+                webSocketStart();
+            }
+        });
+
+        window.addEventListener("online", function() {
+            if (!g_webSocketStopping) {
+                clearWebSocketReconnect();
+                webSocketStart();
+            }
+        });
+
         window.addEventListener("click", function() {
             if (document.getElementById("freq1").value != 0) {
                 resetFreq1Slider();
@@ -2319,11 +2522,11 @@
     </div>
 
     <center>
-        <p style="text-align:left;"><a href=\ "73.73.73.73">[HOME]</a></p>
+        <p style="text-align:left;"><a href="/">[HOME]</a></p>
         <h1 id="mainHeading" style="font-family:verdana; font-size:30px; color:Black; text-align:center;">Transmitter Settings</h1>
         <p id="wifiVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
         <p id="ATMEGAVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
-        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.3.0 - 19 Sep 2021</p>
+        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.5.2 - 15 Jul 2026</p>
 
         <div>
             <table>
@@ -2377,7 +2580,9 @@
                 </tr>
             </table>
 
-            <table border="1" id="eventTable"></table>
+            <div class="eventTableContainer">
+                <table border="1" id="eventTable"></table>
+            </div>
 
 
         </div>
@@ -2409,7 +2614,7 @@
                         <td></td>
 
                         <td style="width:400px; text-align:center">
-                            <input style="font-family:verdana; font-size:20px; width:400px; text-align:center; color:black; font-weight:bold;" type="range" name="freq1" id="freq1" min="-100" max="100" step="1" value="0" oninput="freq1Change();" />
+                            <input style="font-family:verdana; font-size:20px; width:400px; text-align:center; color:black; font-weight:bold;" type="range" name="freq1" id="freq1" min="-100" max="100" step="1" value="0" oninput="freq1Change();" onchange="resetFreq1Slider();" />
                         </td>
                     </tr>
                 </table>

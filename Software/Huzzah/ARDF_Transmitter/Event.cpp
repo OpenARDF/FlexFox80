@@ -254,6 +254,12 @@ String Event::readMeFile(String path)
       while (s.length() && count++ < MAXIMUM_NUMBER_OF_ME_FILE_LINES)
       {
         this->parseStringData(s);
+
+        if (!file.available())
+        {
+          break;
+        }
+
         s = file.readStringUntil('\n');
       }
 
@@ -282,81 +288,6 @@ String Event::readMeFile(String path)
   }
 
   return ( path);
-}
-
-bool Event::extractMeFileData(String path, EventFileRef *eventRef)
-{
-  bool fail = true;
-
-  if (path == NULL)
-  {
-    return ( fail);
-  }
-
-  if (path.endsWith(".event"))
-  {
-    int dot = path.lastIndexOf(".event");
-    path = path.substring(0, dot);
-  }
-
-  if (!path.endsWith(".me"))
-  {
-    path = path + ".me";
-  }
-
-  if (LittleFS.exists(path))
-  {
-    /* Create an object to hold the file data */
-    File file = LittleFS.open(path, "r"); /* Open the file for reading */
-
-    if (file)
-    {
-      yield();
-      String s = file.readStringUntil('\n');
-      int count = 0;
-      int items = 0;
-
-      EventLineData data;
-
-      while (s.length() && (items < 4) && (count++ < MAXIMUM_NUMBER_OF_ME_FILE_LINES))
-      {
-        Event::extractLineData(s, &data);
-
-        if (data.id.equalsIgnoreCase(TX_DESCRIPTIVE_NAME))
-        {
-          eventRef->role = data.value;
-          fail = false;
-          items++;
-        }
-        /* ignore TX_ASSIGNMENT "TX_ASSIGNMENT" / *Which role and time slot is assigned to this transmitter: "r:t" * / */
-
-        yield();
-        s = file.readStringUntil('\n');
-      }
-
-      file.close();   /* Close the file */
-    }
-  }
-  else
-  {
-    File file = LittleFS.open(path, "w"); /* Open the file for writing */
-
-    if (file)
-    {
-      file.println(TX_ASSIGNMENT + String(",0:0"));
-      file.println(String(TX_DESCRIPTIVE_NAME) + ",Finish - MO");
-      //      file.println(String(TX_ROLE_POWER) + ",1000");
-      //      file.println(String(TX_ROLE_FREQ) + ",3550000");
-      file.println(TX_ASSIGNMENT_IS_DEFAULT + String(",true"));
-      file.close();   /* Close the file */
-    }
-
-    eventRef->role = "?";
-    eventRef->freq = "?";
-    fail = false;
-  }
-
-  return ( fail);
 }
 
 bool Event::validEventFile(String path)

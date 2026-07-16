@@ -444,6 +444,59 @@ if (
 
 process.stdout.write("PASS WiFi role-assignment test is opt-in and fail-safe\n");
 
+const readMeFile = espEvent.match(
+  /String Event::readMeFile\(String path\)\s*\{([\s\S]*?)\n\}\n\nbool Event::validEventFile/,
+);
+const stopsBeforeMeFileEofRead = (functionMatch) =>
+  functionMatch &&
+  /if\s*\(\s*!file\.available\(\)\s*\)\s*\{\s*break;\s*\}[\s\S]*?file\.readStringUntil\('\\n'\)/.test(
+    functionMatch[1],
+  );
+
+if (!stopsBeforeMeFileEofRead(readMeFile)) {
+  process.stderr.write(
+    "Firmware contract check failed: .me reader can wait for a timed read after EOF\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS ESP event metadata reader stops before timed EOF reads\n");
+
+if (
+  !espHeader.includes('#define SOCK_COMMAND_EVENT_SELECT "EVENT_SELECT"') ||
+  !espHeader.includes('#define SOCK_MESSAGE_EVENT_CACHE "EVENT_CACHE"') ||
+  !espMain.includes("readEventSummary(") ||
+  !espMain.includes("g_sendEventSheet") ||
+  !espMain.includes("g_eventList[i].role") ||
+  !espMain.includes("g_eventList[i].power") ||
+  !espMain.includes("g_eventList[i].freq") ||
+  espMain.includes('",*," + g_eventList[i].callsign + ",*,*"')
+) {
+  process.stderr.write(
+    "Firmware contract check failed: event-sheet summaries are incomplete or selections cannot use the cached sheet\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS ESP event sheet supports complete summaries and cached selection\n");
+
+if (
+  !espMain.includes("g_eventList[MAXIMUM_NUMBER_OF_EVENTS]") ||
+  !/g_numberOfEventFilesFound\s*>=\s*MAXIMUM_NUMBER_OF_EVENTS[\s\S]*?continue;[\s\S]*?g_eventList\[g_numberOfEventFilesFound\]\s*=/.test(
+    espMain,
+  ) ||
+  !espMain.includes("int emptyClientIndex = -1;") ||
+  !espMain.includes("!found && (emptyClientIndex >= 0)") ||
+  espMain.includes("int top = max(0, g_numberOfWebClients - 1)")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: event or WebSocket client registries can exceed fixed capacity\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS ESP event and WebSocket client registries enforce fixed capacity\n");
+
 const unsafeTextSends = [
   ["Linkbus", linkbus],
   ["Serialbus", serialbus],

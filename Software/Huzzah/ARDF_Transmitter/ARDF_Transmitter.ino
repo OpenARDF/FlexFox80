@@ -55,6 +55,7 @@
 #include <ESP8266WiFiType.h>
 #include <time.h>
 #include "Transmitter.h"
+#include "RootPage.h"
 #include "Event.h"
 /* #include <Wire.h> */
 #include "Helpers.h"
@@ -168,9 +169,10 @@ Event* g_activeEvent = NULL;
 String g_selectedEventName = String("");
 String g_atmega_sw_version = String("");
 int g_activeEventIndex = 0;
-EventFileRef g_eventList[20];
+EventFileRef g_eventList[MAXIMUM_NUMBER_OF_EVENTS];
 int g_numberOfEventFilesFound = 0;
 int g_numberOfScheduledEvents = 0;
+bool g_sendEventSheet = true;
 TxCommState g_ESP_Comm_State = TX_WAKE_UP;
 TxCommState g_Hold_Comm_State = TX_INVALID_STATE;
 
@@ -184,6 +186,8 @@ Blinkies *lights;
 
 void httpWebServerLoop(int blinkRate);
 bool populateEventFileList(void);
+bool updateEventFileRefFromEvent(String path, Event * event, EventFileRef * fileRef);
+bool readEventSummary(String path, Event * event, EventFileRef * fileRef);
 bool readDefaultsFile(void);
 void saveDefaultsFile(void);
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -365,12 +369,12 @@ String connectionStatus( int which )
   =============================================================== */
 void handleRoot()
 {
-  g_http_server.send(200, "text/html", "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><h2 style=\"font-family:verdana; font-size:30px; color:Black; text-align:left;\">Options</h2><p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Configure events: <a href=\"/events.html\">73.73.73.73/events.html</a></p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Upload a file: <a href=\"/upload.html\">73.73.73.73/upload.html</a></p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Download a file: <a href=\"/download.html\">73.73.73.73/download.html</a></p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Delete a file: <a href=\"/delete.html\">73.73.73.73/delete.html</a> <- Use with caution!</p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Testing support: <a href=\"/test.html\">73.73.73.73/test.html</a></p> <p style=\"font-family:verdana; font-size:20px; color:Black; text-align:left;\">Radio Mode: <a href=\"/radio.html\">73.73.73.73/radio.html</a></p> <p style=\"font-size:12\">ESP8266 SW Date: 27-May-2022</p> ");
+  g_http_server.send_P(200, PSTR("text/html; charset=utf-8"), ROOT_PAGE_HTML);
 }
 
 void handleFS()
 {
-  String message = "<p style=\"text-align:left;\"><a href=\\ \"73.73.73.73\">[HOME]</a></p> <h2 style=\"font-family:verdana; font-size:30px; color:Black; text-align:left;\">File System Contents</h2>";
+  String message = "<p style=\"text-align:left;\"><a href=\"/\">[HOME]</a></p> <h2 style=\"font-family:verdana; font-size:30px; color:Black; text-align:left;\">File System Contents</h2>";
   String line;
   Dir dir = LittleFS.openDir("/");
 
@@ -392,14 +396,14 @@ void handleFS()
 
 void handleUpload()
 {
-  String message = "<p style=\"text-align:left;\"><a href=\\ \"73.73.73.73\">[HOME]</a></p><form method=\"post\" enctype=\"multipart/form-data\"><input type=\"file\" name=\"name\"><input class=\"button\" type=\"submit\" value=\"Upload\"></form>";
+  String message = "<p style=\"text-align:left;\"><a href=\"/\">[HOME]</a></p><form method=\"post\" enctype=\"multipart/form-data\"><input type=\"file\" name=\"name\"><input class=\"button\" type=\"submit\" value=\"Upload\"></form>";
 
   g_http_server.send(200, "text/html", message);
 }
 
 void handleSuccess()
 {
-  String message = "<html><head><title>Success</title></head><body><p><a href=\\ \"73.73.73.73\">[HOME]</a></p><h1 style=\"font-family:verdana;font-size:30px;color:Black;text-align:left;\">File uploaded successfully!</h1></body></html>";
+  String message = "<html><head><title>Success</title></head><body><p><a href=\"/\">[HOME]</a></p><h1 style=\"font-family:verdana;font-size:30px;color:Black;text-align:left;\">File uploaded successfully!</h1></body></html>";
 
   g_http_server.send(200, "text/html", message);
 }
@@ -411,7 +415,7 @@ void fileDelete()
 
 void fileDeleteWithMessage(String msg)
 {
-  String message = "<p style=\"text-align:left;\"><a href=\\ \"73.73.73.73\">[HOME]</a></p> <h2 style=\"font-family:verdana; font-size:30px; color:Black; text-align:left;\">File System Contents</h2>";
+  String message = "<p style=\"text-align:left;\"><a href=\"/\">[HOME]</a></p> <h2 style=\"font-family:verdana; font-size:30px; color:Black; text-align:left;\">File System Contents</h2>";
   String line;
   Dir dir = LittleFS.openDir("/");
 
@@ -441,7 +445,7 @@ void handleNotFound()
   /* if the requested file or page doesn't exist, return a 404 not found error */
   if (!handleFileRead(g_http_server.uri()))
   { /* check if the file exists in the flash memory (LittleFS), if so, send it */
-    String message = "<p style=\"text-align:left;\"><a href=\\ \"73.73.73.73\">[HOME]</a></p><p>File Not Found</p>";
+    String message = "<p style=\"text-align:left;\"><a href=\"/\">[HOME]</a></p><p>File Not Found</p>";
     message += "URI: ";
     message += g_http_server.uri();
     message += "\nMethod: ";
@@ -585,9 +589,15 @@ void onNewStation(WiFiEventSoftAPModeStationConnected sta_info)
   String newMacStr = String(newMac);
   newMacStr.toUpperCase();
   bool found = false;
+  int emptyClientIndex = -1;
 
   for (int i = 0; i < MAX_NUMBER_OF_WEB_CLIENTS; i++)
   {
+    if ((emptyClientIndex < 0) && !(g_webSocketClient[i].macAddr).length())
+    {
+      emptyClientIndex = i;
+    }
+
     if (newMacStr.equals(g_webSocketClient[i].macAddr))
     {
       found = true;
@@ -606,12 +616,11 @@ void onNewStation(WiFiEventSoftAPModeStationConnected sta_info)
   g_numberOfWebClients = WiFi.softAPgetStationNum();
   g_numberOfSocketClients = g_webSocketServer.connectedClients(false);
 
-  if (!found)
+  if (!found && (emptyClientIndex >= 0))
   {
-    int top = max(0, g_numberOfWebClients - 1);
-    g_webSocketClient[top].macAddr = newMacStr;
-    g_webSocketClient[top].webID = sta_info.aid;
-    g_webSocketClient[top].socketID = WEBSOCKETS_SERVER_CLIENT_MAX;
+    g_webSocketClient[emptyClientIndex].macAddr = newMacStr;
+    g_webSocketClient[emptyClientIndex].webID = sta_info.aid;
+    g_webSocketClient[emptyClientIndex].socketID = WEBSOCKETS_SERVER_CLIENT_MAX;
   }
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -620,7 +629,7 @@ void onNewStation(WiFiEventSoftAPModeStationConnected sta_info)
     Serial.println("New Station: " + newMacStr);
     Serial.println("  Total stations: " + String(g_numberOfWebClients) + "; Socket clients: " + String(g_numberOfSocketClients));
 
-    for (int i = 0; i < g_numberOfSocketClients; i++)
+    for (int i = 0; (i < g_numberOfSocketClients) && (i < MAX_NUMBER_OF_WEB_CLIENTS); i++)
     {
       Serial.printf("%d. WebSocketClient: WebID# %d. MAC address : %s\n", i, g_webSocketClient[i].webID, (g_webSocketClient[i].macAddr).c_str());
     }
@@ -2131,7 +2140,6 @@ void httpWebServerLoop(int blinkRate)
   File activeFile;
   int checksum = 0;
   bool eventFileStartFound = false;
-  bool firstPageLoad = true;
   int holdWebClients = 0;
   int holdWebSocketClients = 0;
 
@@ -2364,7 +2372,22 @@ void httpWebServerLoop(int blinkRate)
             g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
             g_socket_timeout = 20;  /* allow extra time before declaring socket dead */
 
-            g_activeEvent->writeEventFile();
+            bool fail = g_activeEvent->writeEventFile();
+
+            if (!fail && (g_activeEventIndex >= 0) && (g_activeEventIndex < g_numberOfEventFilesFound))
+            {
+              updateEventFileRefFromEvent(g_activeEvent->myPath, g_activeEvent, &g_eventList[g_activeEventIndex]);
+              g_numberOfScheduledEvents = numberOfEventsScheduled(g_timeOfDayFromTx);
+
+              for (int i = 0; i < g_numberOfEventFilesFound; i++)
+              {
+                if (g_eventList[i].ename.equals(g_activeEvent->getEventName()))
+                {
+                  g_activeEventIndex = i;
+                  break;
+                }
+              }
+            }
 
             String msg = String(SOCK_MESSAGE_EVENT_SAVED);
             g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
@@ -2393,13 +2416,15 @@ void httpWebServerLoop(int blinkRate)
           }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
-          firstPageLoad = true;
+          g_sendEventSheet = true;
         }
       /* Intentional Fall-through
          break; */
 
       case TX_HTML_NEXT_EVENT:
         {
+          bool sendEventSheet = g_sendEventSheet;
+          g_sendEventSheet = true;
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
           if (g_debug_prints_enabled)
           {
@@ -2422,15 +2447,18 @@ void httpWebServerLoop(int blinkRate)
             }
           }
 
-          populateEventFileList();                /* read any values that might have changed into the event list */
-          g_numberOfScheduledEvents = numberOfEventsScheduled(g_timeOfDayFromTx);
+          if (sendEventSheet)
+          {
+            populateEventFileList();
+            g_numberOfScheduledEvents = numberOfEventsScheduled(g_timeOfDayFromTx);
+          }
 
-          if (firstPageLoad)
+          if (sendEventSheet)
           {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
             if (g_debug_prints_enabled)
             {
-              Serial.println("firstPageLoad = true");
+              Serial.println("Sending complete event sheet");
             }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
             if (g_numberOfEventFilesFound)
@@ -2506,21 +2534,17 @@ void httpWebServerLoop(int blinkRate)
                     g_activeEvent->readEventFile(g_eventList[0].path);
                     g_selectedEventName = g_activeEvent->getEventName();
                   }
-                  else if (!firstPageLoad)
+                  else if (!sendEventSheet)
                   {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
                     if (g_debug_prints_enabled)
                     {
-                      Serial.println("!firstPageLoad");
+                      Serial.println("Selecting next event from cached sheet");
                     }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
                     g_activeEventIndex = (g_activeEventIndex + 1) % g_numberOfEventFilesFound;
                     g_activeEvent->readEventFile(g_eventList[g_activeEventIndex].path);
                     g_selectedEventName = g_activeEvent->getEventName();
-                  }
-                  else
-                  {
-                    firstPageLoad = false;
                   }
                 }
               }
@@ -2538,9 +2562,15 @@ void httpWebServerLoop(int blinkRate)
               g_http_server.handleClient();
               g_webSocketServer.loop();
 
-              for (int i = 0; i < g_numberOfEventFilesFound; i++)
+              if (sendEventSheet)
               {
-                msg = String(String(SOCK_COMMAND_EVENT_DATA) + "," + g_eventList[i].ename + "," + g_eventList[i].vers + "," +  g_eventList[i].startDateTimeEpoch + "," +  g_eventList[i].finishDateTimeEpoch + ",*," + g_eventList[i].callsign + ",*,*");
+                for (int i = 0; i < g_numberOfEventFilesFound; i++)
+                {
+                  msg = String(String(SOCK_COMMAND_EVENT_DATA) + "," + g_eventList[i].ename + "," + g_eventList[i].vers + "," +  g_eventList[i].startDateTimeEpoch + "," +  g_eventList[i].finishDateTimeEpoch + "," + g_eventList[i].role + "," + g_eventList[i].callsign + "," + g_eventList[i].power + "," + g_eventList[i].freq);
+                  g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
+                }
+
+                msg = String(String(SOCK_MESSAGE_EVENT_CACHE) + ",1");
                 g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
               }
 
@@ -3866,8 +3896,19 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
               g_ESP_Comm_State = TX_HTML_SAVE_CHANGES;
             }
           }
+          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_EVENT_SELECT))
+          {
+            p = p.substring(p.indexOf(',') + 1);
+            if (p.length() > 0)
+            {
+              g_selectedEventName = p;
+              g_sendEventSheet = false;
+              g_ESP_Comm_State = TX_HTML_NEXT_EVENT;
+            }
+          }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_EVENT_NAME))
           {
+            g_sendEventSheet = true;
             if (p.indexOf("NEW!") >= 0)
             {
               if (g_slave_received_new_event_file)
@@ -4492,114 +4533,45 @@ int numberOfEventsScheduled(unsigned long epoch)
   return ( numberScheduled);
 }
 
-bool readEventTimes(String path, EventFileRef * fileRef)
+bool updateEventFileRefFromEvent(String path, Event * event, EventFileRef * fileRef)
 {
-  fileRef->path = path;
-  int data_count = 0;
-
-  if (LittleFS.exists(path))
+  if ((event == NULL) || (fileRef == NULL))
   {
-    File file = LittleFS.open(path, "r"); /* Open the file for reading */
-
-    if (file)
-    {
-      yield();
-      String s = file.readStringUntil('\n');
-      int count = 0;
-
-      while (s.length() && (count++ < MAXIMUM_NUMBER_OF_EVENT_FILE_LINES) && (data_count < 5))
-      {
-        lights->blinkLEDs(500, RED_BLUE_TOGETHER, true);
-        if (s.indexOf("EVENT_START_DATE_TIME") >= 0)
-        {
-          EventLineData data;
-          Event::extractLineData(s, &data);
-          fileRef->startDateTimeEpoch = convertTimeStringToEpoch(data.value);
-          /*        startRead = true; */
-          data_count++;
-
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-          if ( g_debug_prints_enabled )
-          {
-            Serial.println("Start epoch: " + String(fileRef->startDateTimeEpoch));
-          }
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-        }
-        else if (s.indexOf("EVENT_FINISH_DATE_TIME") >= 0)
-        {
-          EventLineData data;
-          Event::extractLineData(s, &data);
-          fileRef->finishDateTimeEpoch = convertTimeStringToEpoch(data.value);
-          data_count++;
-
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-          if ( g_debug_prints_enabled )
-          {
-            Serial.println("Finish epoch: " + String(fileRef->finishDateTimeEpoch));
-          }
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-        }
-        else if ( s.indexOf("EVENT_NAME") >= 0)
-        {
-          EventLineData data;
-          Event::extractLineData(s, &data);
-          fileRef->ename = data.value;
-          data_count++;
-
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-          if ( g_debug_prints_enabled )
-          {
-            Serial.println("Event name: " + fileRef->ename);
-          }
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-        }
-        else if ( s.indexOf(EVENT_FILE_VERSION) >= 0)
-        {
-          EventLineData data;
-          Event::extractLineData(s, &data);
-          fileRef->vers = data.value;
-          data_count++;
-
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-          if ( g_debug_prints_enabled )
-          {
-            Serial.println("File version: " + fileRef->vers);
-          }
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-        }
-        else if (s.indexOf(EVENT_CALLSIGN) >= 0)
-        {
-          EventLineData data;
-          Event::extractLineData(s, &data);
-          fileRef->callsign = data.value;
-          data_count++;
-
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-          if ( g_debug_prints_enabled )
-          {
-            Serial.println("Callsign: " + fileRef->callsign);
-          }
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-        }
-        /* TODO: Role, Power, and Frequency also need to be read */
-
-        yield();
-        s = file.readStringUntil('\n');
-      }
-
-      file.close();   /* Close the file */
-    }
-    Event::extractMeFileData(path, fileRef);
-
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-    if (g_debug_prints_enabled)
-    {
-      Serial.println(String("Times read for file: ") + path);
-    }
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+    return ( true);
   }
 
-  return (data_count != 5);
+  fileRef->path = path;
+  fileRef->startDateTimeEpoch = convertTimeStringToEpoch(event->getEventStartDateTime());
+  fileRef->finishDateTimeEpoch = convertTimeStringToEpoch(event->getEventFinishDateTime());
+  fileRef->vers = event->getEventFileVersion();
+  fileRef->ename = event->getEventName();
+  fileRef->callsign = event->getCallsign();
+
+  int roleIndex = event->getTxRoleIndex();
+  if ((roleIndex >= 0) && (roleIndex < event->getEventNumberOfTxTypes()))
+  {
+    fileRef->role = event->getTxDescriptiveName(event->getTxAssignment());
+    fileRef->power = String(event->getPowerlevelForRole(roleIndex));
+    fileRef->freq = String(event->getFrequencyForRole(roleIndex));
+  }
+  else
+  {
+    fileRef->role = "?";
+    fileRef->power = "?";
+    fileRef->freq = "?";
+  }
+
+  return ( false);
+}
+
+bool readEventSummary(String path, Event * event, EventFileRef * fileRef)
+{
+  if ((event == NULL) || event->readEventFile(path))
+  {
+    return ( true);
+  }
+
+  return ( updateEventFileRefFromEvent(path, event, fileRef));
 }
 
 bool populateEventFileList(void)
@@ -4612,6 +4584,7 @@ bool populateEventFileList(void)
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
   g_numberOfEventFilesFound = 0;
+  Event eventSummary(false);
   Dir dir = LittleFS.openDir("/");
   while (dir.next())
   {
@@ -4631,8 +4604,19 @@ bool populateEventFileList(void)
       }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
+      if (g_numberOfEventFilesFound >= MAXIMUM_NUMBER_OF_EVENTS)
+      {
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
+        if (g_debug_prints_enabled)
+        {
+          Serial.println("Event list capacity reached; ignoring: " + fileName);
+        }
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+        continue;
+      }
+
       EventFileRef fileRef;
-      if (!readEventTimes(fileName, &fileRef))
+      if (!readEventSummary(fileName, &eventSummary, &fileRef))
       {
         g_eventList[g_numberOfEventFilesFound] = fileRef;
         g_numberOfEventFilesFound++;

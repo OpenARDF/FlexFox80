@@ -158,6 +158,7 @@ typedef enum
 
 /* Websocket Info Messages */
 #define SOCK_MESSAGE_EVENT_SAVED "SAVED_EVENT"
+#define SOCK_MESSAGE_EVENT_CACHE "EVENT_CACHE"
 
 /* Websocket Command Messages */
 #define SOCK_COMMAND_ALIVE "!&"
@@ -165,6 +166,7 @@ typedef enum
 #define SOCK_COMMAND_STATUS "STATUS"
 #define SOCK_COMMAND_CLEAR_ACTIVE_EVENT "CLEAR"
 #define SOCK_COMMAND_EVENT_NAME "EVENT_NAME"            /* read only */
+#define SOCK_COMMAND_EVENT_SELECT "EVENT_SELECT"        /* read only; select using a browser-cached event sheet */
 #define SOCK_COMMAND_EVENT_DATA "EVENT_DATA"            /* read only */
 #define SOCK_COMMAND_SYNC_TIME "SYNC"
 #define SOCK_COMMAND_TEMPERATURE "TEMP"                 /* read only */

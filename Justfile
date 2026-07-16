@@ -23,6 +23,8 @@ policy-check:
 test:
     ./scripts/run-host-tests.sh
     node ./Tests/Host/eeprom_enum_layout_migration_test.mjs
+    node ./Tests/Host/esp_root_page_test.mjs
+    node ./Tests/Host/events_html_test.mjs
     node ./Tests/Host/release_checklist_validator_test.mjs
     node ./scripts/check-firmware-contracts.mjs
     node ./scripts/check-eeprom-layout.mjs
