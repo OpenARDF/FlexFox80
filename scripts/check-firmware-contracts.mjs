@@ -244,6 +244,23 @@ if (
 
 process.stdout.write("PASS WiFi updater is transactional and cannot select a filesystem update\n");
 
+if (
+  !espMain.includes("recoverInterruptedFileUploads();") ||
+  !espMain.includes('g_fsUploadTargetPath + ".__uploading"') ||
+  !espMain.includes('g_fsUploadTargetPath + ".__upload_backup"') ||
+  !espMain.includes("g_fsUploadReceivedSize != g_fsUploadExpectedSize") ||
+  !espMain.includes("g_fsUploadExpectedCrc32") ||
+  !espMain.includes("LittleFS.rename(g_fsUploadStagingPath, g_fsUploadTargetPath)") ||
+  !espMain.includes("LittleFS.rename(g_fsUploadBackupPath, g_fsUploadTargetPath)")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: LittleFS uploads must stage, validate, activate, and recover the prior live file\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS LittleFS web-file replacement is staged and power-loss recoverable\n");
+
 const declaration = source.match(/extern\s+volatile\s+Fox_t\s+g_fox\s*\[\s*([^\]]+?)\s*\]\s*;/);
 
 if (!declaration) {

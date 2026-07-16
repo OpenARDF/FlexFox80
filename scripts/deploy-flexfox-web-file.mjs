@@ -4,6 +4,7 @@ import { readFileSync, statSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  crc32,
   digest,
   fetchWithTimeout,
   multipartFileBody,
@@ -32,12 +33,16 @@ if (!/^[A-Za-z0-9._-]+$/.test(remoteName)) {
 
 const content = readFileSync(localPath);
 const expectedSha256 = digest("sha256", content);
+const expectedCrc32 = crc32(content).toString(16).padStart(8, "0");
 const uploadUrl = new URL("upload", baseUrl);
+uploadUrl.searchParams.set("size", String(content.length));
+uploadUrl.searchParams.set("crc32", expectedCrc32);
 const multipart = multipartFileBody("name", remoteName, content);
 
 console.log(`Target: ${baseUrl.href}`);
 console.log(`Upload: ${localPath} -> /${remoteName} (${content.length} bytes)`);
 console.log(`SHA-256: ${expectedSha256}`);
+console.log(`CRC32: ${expectedCrc32}`);
 
 try {
   const response = await fetchWithTimeout(uploadUrl, {

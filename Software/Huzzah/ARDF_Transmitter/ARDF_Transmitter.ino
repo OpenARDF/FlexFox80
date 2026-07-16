@@ -130,6 +130,16 @@ uint8_t g_socket_timeout = 0;
 
 ESP8266WiFiMulti wifiMulti; /* Create an instance of the ESP8266WiFiMulti class, called 'wifiMulti' */
 File fsUploadFile;          /* a File variable to temporarily store the received file */
+String g_fsUploadTargetPath;
+String g_fsUploadStagingPath;
+String g_fsUploadBackupPath;
+String g_fsUploadError;
+size_t g_fsUploadExpectedSize = 0;
+size_t g_fsUploadReceivedSize = 0;
+uint32_t g_fsUploadExpectedCrc32 = 0;
+uint32_t g_fsUploadRunningCrc32 = 0xffffffffUL;
+bool g_fsUploadIntegrityRequired = false;
+bool g_fsUploadSucceeded = false;
 
 String g_softAP_IP_addr;
 
@@ -217,6 +227,8 @@ void saveDefaultsFile(void);
 void showSettings(void);
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 void handleFileUpload(void);
+void handleFileUploadResult(void);
+void recoverInterruptedFileUploads(void);
 void handleFirmwareUpdatePage(void);
 void handleFirmwareUpdateStatus(void);
 void handleFirmwareUpdateResult(void);
@@ -248,6 +260,7 @@ void setup()
   lights = new Blinkies();
 
   startLittleFS();                  /* Start the LittleFS and list all contents */
+  recoverInterruptedFileUploads(); /* Restore a live file if power failed during a staged replacement. */
   if (!readDefaultsFile())        /* Read default settings from file system */
   {
     saveDefaultsFile();
@@ -830,15 +843,17 @@ bool setupHTTP_AP()
       handleFirmwareUpdateResult,
       handleFirmwareUpdateUpload);
 
-    g_http_server.on("/upload.html", HTTP_POST, [] ()
-    { /* If a POST request is sent to the /upload.html address, */
-      g_http_server.send(200, "text/plain", "");
-    }, handleFileUpload);                       /* go to 'handleFileUpload' */
+    g_http_server.on(
+      "/upload.html",
+      HTTP_POST,
+      handleFileUploadResult,
+      handleFileUpload);
 
-    g_http_server.on("/upload", HTTP_POST, [] ()
-    { /* If a POST request is sent to the /upload.html address, */
-      g_http_server.send(200, "text/plain", "");
-    }, handleFileUpload);                       /* go to 'handleFileUpload' */
+    g_http_server.on(
+      "/upload",
+      HTTP_POST,
+      handleFileUploadResult,
+      handleFileUpload);
 
     g_http_server.onNotFound(handleNotFound);   /* When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound" */
     g_http_server.begin();
@@ -3695,6 +3710,56 @@ void startLittleFS()
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 }
 
+void recoverInterruptedFileUploads()
+{
+  static const String stagingSuffix = ".__uploading";
+  static const String backupSuffix = ".__upload_backup";
+
+  while (true)
+  {
+    String recoveryPath;
+    bool isBackup = false;
+    Dir dir = LittleFS.openDir("/");
+    while (dir.next())
+    {
+      const String fileName = dir.fileName();
+      if (fileName.endsWith(backupSuffix))
+      {
+        recoveryPath = fileName;
+        isBackup = true;
+        break;
+      }
+      if (fileName.endsWith(stagingSuffix))
+      {
+        recoveryPath = fileName;
+        break;
+      }
+    }
+
+    if (!recoveryPath.length())
+    {
+      return;
+    }
+    if (!isBackup)
+    {
+      LittleFS.remove(recoveryPath); /* An incomplete staged upload is never live. */
+      continue;
+    }
+
+    const String targetPath = recoveryPath.substring(
+      0,
+      recoveryPath.length() - backupSuffix.length());
+    if (LittleFS.exists(targetPath))
+    {
+      LittleFS.remove(recoveryPath);
+    }
+    else if (!LittleFS.rename(recoveryPath, targetPath))
+    {
+      return; /* Preserve the only complete copy for the next boot/recovery attempt. */
+    }
+  }
+}
+
 void startWebSocketServer()
 { /* Start a WebSocket server */
   if (g_webSocketServerStarted)
@@ -5377,61 +5442,168 @@ void handleFileDownload()
 }
 
 void handleFileUpload()
-{ /* upload a new file to the LittleFS */
+{ /* Stage a new LittleFS file and replace the live copy only after validation. */
   HTTPUpload& upload = g_http_server.upload();
-  String path;
 
   if (upload.status == UPLOAD_FILE_START)
   {
-    path = upload.filename;
-    if (!path.endsWith(".gz"))
-    { /* The file server always prefers a compressed version of a file */
-      String pathWithGz = path + ".gz";   /* So if an uploaded file is not compressed, the existing compressed */
-      if (LittleFS.exists(pathWithGz))      /* version of that file must be deleted (if it exists) */
-      {
-        LittleFS.remove(pathWithGz);
-      }
+    g_fsUploadTargetPath = upload.filename;
+    g_fsUploadStagingPath = "";
+    g_fsUploadBackupPath = "";
+    g_fsUploadError = "";
+    g_fsUploadExpectedSize = 0;
+    g_fsUploadReceivedSize = 0;
+    g_fsUploadExpectedCrc32 = 0;
+    g_fsUploadRunningCrc32 = 0xffffffffUL;
+    g_fsUploadSucceeded = false;
+    g_fsUploadIntegrityRequired =
+      g_http_server.hasArg("size") || g_http_server.hasArg("crc32");
+
+    if (!g_fsUploadTargetPath.length() ||
+        g_fsUploadTargetPath.length() > 64 ||
+        g_fsUploadTargetPath.indexOf('/') >= 0 ||
+        g_fsUploadTargetPath.indexOf('\\') >= 0 ||
+        g_fsUploadTargetPath.indexOf("..") >= 0)
+    {
+      g_fsUploadError = "Unsafe or invalid target filename";
+      return;
     }
+
+    if (g_fsUploadIntegrityRequired &&
+        (!firmwareUpdateParseSize(
+           g_http_server.arg("size").c_str(),
+           1024000UL,
+           &g_fsUploadExpectedSize) ||
+         !firmwareUpdateParseCrc32(
+           g_http_server.arg("crc32").c_str(),
+           &g_fsUploadExpectedCrc32)))
+    {
+      g_fsUploadError = "Upload size and CRC32 must both be valid";
+      return;
+    }
+
+    g_fsUploadStagingPath = g_fsUploadTargetPath + ".__uploading";
+    g_fsUploadBackupPath = g_fsUploadTargetPath + ".__upload_backup";
+    LittleFS.remove(g_fsUploadStagingPath);
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
     if (g_debug_prints_enabled)
     {
-      Serial.print("handleFileUpload Name: "); Serial.println(path);
+      Serial.print("handleFileUpload Name: "); Serial.println(g_fsUploadTargetPath);
     }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-    fsUploadFile = LittleFS.open(path, "w");  /* Open the file for writing in LittleFS (create if it doesn't exist) */
-    path = String();
+    fsUploadFile = LittleFS.open(g_fsUploadStagingPath, "w");
+    if (!fsUploadFile)
+    {
+      g_fsUploadError = "Could not create the staged upload file";
+    }
   }
   else if (upload.status == UPLOAD_FILE_WRITE)
   {
-    if (fsUploadFile)
+    if (fsUploadFile && !g_fsUploadError.length())
     {
-      fsUploadFile.write(upload.buf, upload.currentSize); /* Write the received bytes to the file */
+      if (g_fsUploadIntegrityRequired &&
+          upload.currentSize > g_fsUploadExpectedSize - g_fsUploadReceivedSize)
+      {
+        g_fsUploadError = "Upload contains more data than declared";
+        return;
+      }
+      if (fsUploadFile.write(upload.buf, upload.currentSize) != upload.currentSize)
+      {
+        g_fsUploadError = "LittleFS staging write failed";
+        return;
+      }
+      g_fsUploadRunningCrc32 = firmwareUpdateCrc32(
+        g_fsUploadRunningCrc32,
+        upload.buf,
+        upload.currentSize);
+      g_fsUploadReceivedSize += upload.currentSize;
     }
   }
   else if (upload.status == UPLOAD_FILE_END)
   {
     if (fsUploadFile)
-    { /* If the file was successfully created */
-      fsUploadFile.close();                                   /* Close the file again */
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-      if (g_debug_prints_enabled)
-      {
-        Serial.print("handleFileUpload Size: ");
-        Serial.println(upload.totalSize);
-      }
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-      handleSuccess();
-
-      if (path.endsWith(".event"))
-      {
-        g_ESP_Comm_State = TX_READ_ALL_EVENTS_FILES; /* have the transmitter re-initialize event file list */
-      }
-    }
-    else
     {
-      g_http_server.send(500, "text/plain", "500: couldn't create file");
+      fsUploadFile.close();
+    }
+    if (!g_fsUploadError.length() &&
+        upload.totalSize != g_fsUploadReceivedSize)
+    {
+      g_fsUploadError = "Staged file length does not match the received upload";
+    }
+    if (!g_fsUploadError.length() && g_fsUploadIntegrityRequired &&
+        (g_fsUploadReceivedSize != g_fsUploadExpectedSize ||
+         (g_fsUploadRunningCrc32 ^ 0xffffffffUL) != g_fsUploadExpectedCrc32))
+    {
+      g_fsUploadError = "Staged file failed size or CRC32 validation";
+    }
+    if (g_fsUploadError.length())
+    {
+      LittleFS.remove(g_fsUploadStagingPath);
+      return;
+    }
+
+    LittleFS.remove(g_fsUploadBackupPath);
+    const bool hadLiveFile = LittleFS.exists(g_fsUploadTargetPath);
+    if (hadLiveFile &&
+        !LittleFS.rename(g_fsUploadTargetPath, g_fsUploadBackupPath))
+    {
+      g_fsUploadError = "Could not preserve the existing live file";
+      LittleFS.remove(g_fsUploadStagingPath);
+      return;
+    }
+    if (!LittleFS.rename(g_fsUploadStagingPath, g_fsUploadTargetPath))
+    {
+      g_fsUploadError = "Could not activate the validated staged file";
+      if (hadLiveFile)
+      {
+        LittleFS.rename(g_fsUploadBackupPath, g_fsUploadTargetPath);
+      }
+      return;
+    }
+    LittleFS.remove(g_fsUploadBackupPath);
+    if (!g_fsUploadTargetPath.endsWith(".gz"))
+    {
+      LittleFS.remove(g_fsUploadTargetPath + ".gz");
+    }
+    g_fsUploadSucceeded = true;
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
+    if (g_debug_prints_enabled)
+    {
+      Serial.print("handleFileUpload Size: ");
+      Serial.println(upload.totalSize);
+    }
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+
+    if (g_fsUploadTargetPath.endsWith(".event"))
+    {
+      g_ESP_Comm_State = TX_READ_ALL_EVENTS_FILES;
     }
   }
+  else if (upload.status == UPLOAD_FILE_ABORTED)
+  {
+    if (fsUploadFile)
+    {
+      fsUploadFile.close();
+    }
+    LittleFS.remove(g_fsUploadStagingPath);
+    g_fsUploadError = "Upload was interrupted; the live file was left unchanged";
+  }
+}
+
+void handleFileUploadResult()
+{
+  if (g_fsUploadSucceeded)
+  {
+    handleSuccess();
+    return;
+  }
+  String response = "File upload failed. The existing live file was left unchanged.";
+  if (g_fsUploadError.length())
+  {
+    response += "\n";
+    response += g_fsUploadError;
+  }
+  g_http_server.send(400, "text/plain; charset=utf-8", response);
 }
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
