@@ -44,7 +44,11 @@ async function readStatus(timeoutMs = 5000) {
   return response.json();
 }
 
-const before = await readStatus();
+let before = await readStatus();
+if (before.uptimeMillis < 10000) {
+  await sleep(10000 - before.uptimeMillis);
+  before = await readStatus();
+}
 if (before.filesystemProtected !== true) {
   throw new Error("device did not confirm that its firmware endpoint protects LittleFS");
 }
@@ -91,6 +95,7 @@ while (Date.now() < deadline) {
   try {
     const candidate = await readStatus(3000);
     if (candidate.restartPending || candidate.updateActive) continue;
+    if (!Number.isInteger(candidate.uptimeMillis) || candidate.uptimeMillis >= before.uptimeMillis) continue;
     if (candidate.currentSketchMd5?.toLowerCase() !== firmwareMd5) continue;
     after = candidate;
     break;
@@ -110,4 +115,5 @@ if (after.filesystemProtected !== true) {
 }
 
 console.log(`PASS rebooted into ESP ${after.version}, sketch MD5 ${after.currentSketchMd5}`);
+console.log(`PASS uptime reset from ${before.uptimeMillis} ms to ${after.uptimeMillis} ms`);
 console.log("PASS update endpoint still reports LittleFS protection");
