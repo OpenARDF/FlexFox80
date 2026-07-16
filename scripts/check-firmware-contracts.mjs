@@ -30,6 +30,7 @@ const driverInitHeaderPath = join(
   "driver_init.h",
 );
 const wifiProbePath = join(repoRoot, "scripts", "probe-flexfox-wifi.mjs");
+const wifiUpdaterPath = join(repoRoot, "scripts", "update-flexfox-esp-over-wifi.mjs");
 const clockObserverPath = join(repoRoot, "scripts", "observe-flexfox-clock.mjs");
 const clockSyncTestPath = join(repoRoot, "scripts", "test-flexfox-clock-sync.mjs");
 const clockPhaseTestPath = join(repoRoot, "scripts", "test-flexfox-clock-phase.mjs");
@@ -181,6 +182,7 @@ const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
 const wifiProbe = readFileSync(wifiProbePath, "utf8");
+const wifiUpdater = readFileSync(wifiUpdaterPath, "utf8");
 const clockObserver = readFileSync(clockObserverPath, "utf8");
 const clockSyncTest = readFileSync(clockSyncTestPath, "utf8");
 const clockPhaseTest = readFileSync(clockPhaseTestPath, "utf8");
@@ -243,6 +245,22 @@ if (
 }
 
 process.stdout.write("PASS WiFi updater is transactional and cannot select a filesystem update\n");
+
+if (
+  !wifiUpdater.includes('socket.send("!&")') ||
+  !wifiUpdater.includes("heartbeatTimer = setInterval(poke, 5000)") ||
+  !wifiUpdater.includes("reconnectTimer = setTimeout(connect, 1500)") ||
+  !wifiUpdater.includes('FLEXFOX_UPDATE_VERIFY_TIMEOUT_MS ?? "105000"') ||
+  !wifiUpdater.includes("verificationTimeoutMs > 110000") ||
+  !wifiUpdater.includes("heartbeat.stop()")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: host WiFi updates must keep the AVR awake only during a bounded, reconnecting verification window\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS host WiFi updater uses a bounded reconnecting AVR heartbeat\n");
 
 if (
   !espMain.includes("recoverInterruptedFileUploads();") ||
