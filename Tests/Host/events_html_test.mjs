@@ -182,7 +182,7 @@ assert.ok(!source.includes("Date.getTime()"), "date fallback must call getTime o
 assert.match(html, /<html lang="en">/);
 assert.match(html, /<meta charset="utf-8">/);
 assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1">/);
-assert.match(html, /events\.html Version: 0\.5\.4 - 16 Jul 2026/);
+assert.match(html, /events\.html Version: 0\.5\.5 - 16 Jul 2026/);
 assert.match(html, /Transmitter assignment \(\.me\) files are always preserved\./);
 assert.ok(!source.includes('btn.id = "runButton"'), "event selection buttons must not reuse an id");
 assert.equal(
@@ -385,6 +385,51 @@ console.log("PASS events.html JavaScript and critical HTML syntax parse");
   assert.equal(renderCount, 1);
   assert.equal(page.context.g_eventSheetLoaded, true);
   console.log("PASS cached event sheet survives row selection and summary refreshes");
+}
+
+{
+  const page = createPage();
+  const roleSelect = makeSelect(["Fox 1 - OE", "Spectator - S"], 0);
+  const replacedRows = [];
+  page.elements.set("roleSelect", roleSelect);
+  page.context.g_typeTxNames = [
+    { name: "Fox 1 - OE", indices: "0:0" },
+    { name: "Spectator - S", indices: "2:0" },
+  ];
+  page.context.g_eventTableData = [
+    { name: "Event" },
+    { name: "Alpha", role: "Finish - MO", power: "3000", freq: "3600000" },
+    { name: "Beta", role: "Finish - MO", power: "3000", freq: "3600000" },
+  ];
+  page.context.g_selectedEvent = "Beta";
+  page.context.g_eventSheetLoaded = true;
+  page.context.replaceEventRow = (eventName) => replacedRows.push(eventName);
+  page.context.webSocketStart();
+  const socket = page.sockets.at(-1);
+
+  socket.onmessage({ data: "EVENT_SELECTION,Beta,2:0,Spectator - S,1000,3540000" });
+  assert.equal(page.context.g_eventSelectionIdentitySupported, true);
+  assert.equal(page.context.g_eventTableData[2].role, "Spectator - S");
+  assert.equal(page.context.g_eventTableData[2].power, "1000");
+  assert.equal(page.context.g_eventTableData[2].freq, "3540000");
+  assert.equal(roleSelect.selectedIndex, 1);
+
+  socket.onmessage({ data: "TX_ROLE,0:0" });
+  assert.equal(
+    roleSelect.selectedIndex,
+    1,
+    "an anonymous legacy role reply must not overwrite an identified selection",
+  );
+
+  socket.onmessage({ data: "EVENT_SELECTION,Alpha,0:0,Fox 1 - OE,3000,3570000" });
+  assert.equal(page.context.g_eventTableData[1].role, "Fox 1 - OE");
+  assert.equal(
+    roleSelect.selectedIndex,
+    1,
+    "another browser's identified event must not change this page's selected role",
+  );
+  assert.deepEqual(replacedRows, ["Beta", "Alpha"]);
+  console.log("PASS identified selections keep cached roles attached to the correct event");
 }
 
 {

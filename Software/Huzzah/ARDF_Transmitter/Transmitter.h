@@ -159,6 +159,7 @@ typedef enum
 /* Websocket Info Messages */
 #define SOCK_MESSAGE_EVENT_SAVED "SAVED_EVENT"
 #define SOCK_MESSAGE_EVENT_CACHE "EVENT_CACHE"
+#define SOCK_MESSAGE_EVENT_SELECTION "EVENT_SELECTION"
 
 /* Websocket Command Messages */
 #define SOCK_COMMAND_ALIVE "!&"

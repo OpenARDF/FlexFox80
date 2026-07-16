@@ -221,6 +221,7 @@ void httpWebServerLoop(int blinkRate);
 bool populateEventFileList(void);
 bool updateEventFileRefFromEvent(String path, Event * event, EventFileRef * fileRef);
 bool readEventSummary(String path, Event * event, EventFileRef * fileRef);
+void broadcastEventSummary(const EventFileRef& fileRef);
 bool readDefaultsFile(void);
 void saveDefaultsFile(void);
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -2752,6 +2753,8 @@ void httpWebServerLoop(int blinkRate)
                   break;
                 }
               }
+
+              broadcastEventSummary(g_eventList[g_activeEventIndex]);
             }
 
             String msg = String(SOCK_MESSAGE_EVENT_SAVED);
@@ -2931,8 +2934,7 @@ void httpWebServerLoop(int blinkRate)
               {
                 for (int i = 0; i < g_numberOfEventFilesFound; i++)
                 {
-                  msg = String(String(SOCK_COMMAND_EVENT_DATA) + "," + g_eventList[i].ename + "," + g_eventList[i].vers + "," +  g_eventList[i].startDateTimeEpoch + "," +  g_eventList[i].finishDateTimeEpoch + "," + g_eventList[i].role + "," + g_eventList[i].callsign + "," + g_eventList[i].power + "," + g_eventList[i].freq);
-                  g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
+                  broadcastEventSummary(g_eventList[i]);
                 }
 
                 msg = String(String(SOCK_MESSAGE_EVENT_CACHE) + ",1");
@@ -2977,6 +2979,21 @@ void httpWebServerLoop(int blinkRate)
               }
 
               g_http_server.handleClient();
+
+              int selectedRoleIndex = g_activeEvent->getTxRoleIndex();
+              if ((selectedRoleIndex >= 0) &&
+                  (selectedRoleIndex < g_activeEvent->getEventNumberOfTxTypes()))
+              {
+                String assignment = g_activeEvent->getTxAssignment();
+                msg = String(String(SOCK_MESSAGE_EVENT_SELECTION) + "," +
+                             g_activeEvent->getEventName() + "," +
+                             assignment + "," +
+                             g_activeEvent->getTxDescriptiveName(assignment) + "," +
+                             String(g_activeEvent->getPowerlevelForRole(selectedRoleIndex)) + "," +
+                             String(g_activeEvent->getFrequencyForRole(selectedRoleIndex)));
+                g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
+                g_webSocketServer.loop();
+              }
 
               msg = String(String(SOCK_COMMAND_TX_ROLE) + "," + g_activeEvent->getTxAssignment());
               g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
@@ -4996,6 +5013,15 @@ bool updateEventFileRefFromEvent(String path, Event * event, EventFileRef * file
   }
 
   return ( false);
+}
+
+void broadcastEventSummary(const EventFileRef& fileRef)
+{
+  String msg = String(String(SOCK_COMMAND_EVENT_DATA) + "," + fileRef.ename + "," +
+                      fileRef.vers + "," + fileRef.startDateTimeEpoch + "," +
+                      fileRef.finishDateTimeEpoch + "," + fileRef.role + "," +
+                      fileRef.callsign + "," + fileRef.power + "," + fileRef.freq);
+  g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
 }
 
 bool readEventSummary(String path, Event * event, EventFileRef * fileRef)

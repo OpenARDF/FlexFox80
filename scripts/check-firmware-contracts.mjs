@@ -208,7 +208,7 @@ const cloneEventManifest = readFileSync(cloneEventManifestPath, "utf8");
 const firmwareUpdateIntegrity = readFileSync(firmwareUpdateIntegrityPath, "utf8");
 
 const expectedAvrVersion = "0.201";
-const expectedEspVersion = "2.3";
+const expectedEspVersion = "2.4";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 

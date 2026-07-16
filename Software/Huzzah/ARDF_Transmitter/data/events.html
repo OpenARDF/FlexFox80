@@ -244,6 +244,7 @@
         var g_event_changes_saved = true;
         var g_eventSheetLoaded = false;
         var g_eventSheetCacheSupported = false;
+        var g_eventSelectionIdentitySupported = false;
         var g_renderedSelectedEvent = "";
 
         ///////////////////////////////
@@ -315,6 +316,33 @@
             if (eventData) {
                 eventData[field] = value;
             }
+        }
+
+        function applySelectedRoleAssignment(assignment, requestRoleDetails) {
+            if ((typeof assignment != "string") || (assignment.indexOf(":") < 0)) return false;
+
+            var roleSelect = document.getElementById("roleSelect");
+            if (!roleSelect) return false;
+
+            var roleIndex = 0;
+            while ((roleIndex < g_typeTxNames.length) && (g_typeTxNames[roleIndex].indices != assignment)) {
+                roleIndex++;
+            }
+
+            if (roleIndex >= g_typeTxNames.length) {
+                console.warn("Unknown transmitter role assignment: " + assignment);
+                return false;
+            }
+
+            roleSelect.selectedIndex = roleIndex;
+            g_selectedTxType = roleSelect.options[roleIndex].value;
+            updateSelectedEventField("role", g_selectedTxType);
+
+            if (requestRoleDetails) {
+                sendToSocket("FREQ," + currentRoleIndex());
+                sendToSocket("POWER," + currentRoleIndex());
+            }
+            return true;
         }
 
         function cloneStatusEventName(eventName) {
@@ -1300,6 +1328,46 @@
                                 };
 
                                 upsertEventData(eventLine);
+                                if (g_eventSheetLoaded) replaceEventRow(eventLine.name);
+                            }
+                            break;
+
+                        case "EVENT_SELECTION":
+                            {
+                                var eventName = arr[1];
+                                var assignment = arr[2];
+                                var roleName = arr[3];
+                                var selectedPower = arr[4];
+                                var selectedFrequency = arr[5];
+
+                                if ((typeof eventName != "string") || (eventName.length < 1) ||
+                                    (typeof assignment != "string") || (assignment.indexOf(":") < 0)) {
+                                    console.warn("Invalid identified event selection: " + str);
+                                    break;
+                                }
+
+                                g_eventSelectionIdentitySupported = true;
+                                for (var eventIndex = 1; eventIndex < g_eventTableData.length; eventIndex++) {
+                                    if (g_eventTableData[eventIndex].name == eventName) {
+                                        if ((typeof roleName == "string") && roleName.length) {
+                                            g_eventTableData[eventIndex].role = roleName;
+                                        }
+                                        if ((typeof selectedPower == "string") && selectedPower.length) {
+                                            g_eventTableData[eventIndex].power = selectedPower;
+                                        }
+                                        if ((typeof selectedFrequency == "string") && selectedFrequency.length) {
+                                            g_eventTableData[eventIndex].freq = selectedFrequency;
+                                        }
+                                        break;
+                                    }
+                                }
+
+                                if (g_eventSheetLoaded) replaceEventRow(eventName);
+                                if (eventName == g_selectedEvent) {
+                                    applySelectedRoleAssignment(assignment, false);
+                                    g_loading_data = false;
+                                    setOverlay(null);
+                                }
                             }
                             break;
 
@@ -1491,33 +1559,10 @@
                             {
                                 var text = arr[1];
 
-                                if ((typeof text == "string") && (text.indexOf(":") >= 0)) {
+                                if (!g_eventSelectionIdentitySupported &&
+                                    (typeof text == "string") && (text.indexOf(":") >= 0)) {
                                     console.log("role code: ", arr[1]);
-
-                                    var r = document.getElementById("roleSelect");
-
-                                    if (r) {
-
-                                        var roleIndex = 0;
-
-                                        while ((roleIndex < g_typeTxNames.length) && (g_typeTxNames[roleIndex].indices != text)) {
-                                            roleIndex++;
-                                        }
-
-                                        if (roleIndex < g_typeTxNames.length) {
-                                            r.selectedIndex = roleIndex;
-                                            g_selectedTxType = r.options[roleIndex].value;
-                                            updateSelectedEventField("role", g_selectedTxType);
-
-                                            var msgText = "FREQ," + currentRoleIndex();
-                                            sendToSocket(msgText);
-                                            msgText = "POWER," + currentRoleIndex();
-                                            sendToSocket(msgText);
-                                        } else {
-                                            console.warn("Unknown transmitter role assignment: " + text);
-                                        }
-                                    }
-
+                                    applySelectedRoleAssignment(text, true);
                                 } else {
                                     console.log("role name: ", arr[1]);
                                 }
@@ -2561,7 +2606,7 @@
         <h1 id="mainHeading" style="font-family:verdana; font-size:30px; color:Black; text-align:center;">Transmitter Settings</h1>
         <p id="wifiVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
         <p id="ATMEGAVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
-        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.5.4 - 16 Jul 2026</p>
+        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.5.5 - 16 Jul 2026</p>
 
         <div>
             <table>

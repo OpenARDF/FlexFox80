@@ -14,7 +14,7 @@ The runner writes executables only under the ignored `Software/AVR128DA48/tmp/ho
 
 `just test` also runs dependency-free source-contract checks for firmware declarations whose target-compiler interpretation is safety-relevant. These checks supplement compilation; they do not replace it.
 
-The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current release identity is ESP `2.3` plus AVR `0.201`, reported together as `SW_VERSIONS,2.3,0.201`.
+The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current release identity is ESP `2.4` plus AVR `0.201`, reported together as `SW_VERSIONS,2.4,0.201`.
 
 ## Current characterization boundary
 
