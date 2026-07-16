@@ -4323,12 +4323,10 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_TX_ROLE))
           {
-            int c = p.indexOf(':');
-            p = p.substring(c - 1, c + 2);
-
-            if (g_activeEvent != NULL)
+            String assignment = commaIndex >= 0 ? p.substring(commaIndex + 1) : String("");
+            assignment.trim();
+            if (g_activeEvent != NULL && !g_activeEvent->setTxAssignment(assignment))
             {
-              g_activeEvent->setTxAssignment(p);
               g_ESP_Comm_State = TX_HTML_SAVE_CHANGES;
             }
           }

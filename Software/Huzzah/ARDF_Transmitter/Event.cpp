@@ -27,6 +27,7 @@
  */
 
 #include "Event.h"
+#include "event_data_read_guard.h"
 #include "event_file_integrity.h"
 #include "role_assignment_bounds.h"
 #include <LittleFS.h>
@@ -65,6 +66,11 @@ Event::Event(bool debug)
       }
     }
   }
+
+  resetEventDataForRead(
+    eventData,
+    MAXIMUM_NUMBER_OF_EVENT_TX_TYPES,
+    MAXIMUM_NUMBER_OF_TXs_OF_A_TYPE);
 }
 
 Event::~Event()
@@ -365,19 +371,19 @@ bool Event::readEventFile(String path)
   bool endFound = false;
   int linesInFile = 0;
 
+  if (this->eventData == NULL)
+  {
+    return ( true);
+  }
+
+  resetEventDataForRead(
+    this->eventData,
+    MAXIMUM_NUMBER_OF_EVENT_TX_TYPES,
+    MAXIMUM_NUMBER_OF_TXs_OF_A_TYPE);
+  this->myPath = "";
+
   if (LittleFS.exists(path))
   {
-    this->eventData->tx_assignment = "";
-    this->eventData->tx_assignment_is_default = "";
-    this->eventData->event_file_version = "";
-    this->eventData->event_band = "";
-    this->eventData->event_antenna_port = "";
-    this->eventData->event_callsign = "";
-    this->eventData->event_callsign_speed = "";
-    this->eventData->event_start_date_time = "";
-    this->eventData->event_finish_date_time = "";
-    this->eventData->event_modulation = "";
-    this->eventData->event_number_of_tx_types = -1;
     this->myPath = path;
 
     /* Create an object to hold the file data */
@@ -409,7 +415,9 @@ bool Event::readEventFile(String path)
           linesInFile++;
         }
 
-        failure = (!endFound || (linesInFile > MAXIMUM_NUMBER_OF_EVENT_FILE_LINES));
+        failure = (!endFound ||
+                   (linesInFile > MAXIMUM_NUMBER_OF_EVENT_FILE_LINES) ||
+                   !validateEvent());
       }
       else
       {
@@ -423,7 +431,10 @@ bool Event::readEventFile(String path)
       failure = true;
     }
 
-    getTxAssignment();
+    if (!failure)
+    {
+      getTxAssignment();
+    }
     values_did_change = false;
   }
   else
@@ -476,50 +487,55 @@ void Event::dumpData(void)
 */
 bool Event::validateEvent(void)
 {
-  bool success;
-
-  success = (this->eventData != NULL);
-
-  if (success)
+  if (this->eventData == NULL)
   {
-    success &= (this->eventData->event_name).length() > 0;
-    success &= (this->eventData->event_file_version).length() > 0;
-    success &= (this->eventData->event_band).length() > 0;
-    /*success &= (this->eventData->event_callsign).length() > 2;*/
-    success &= (this->eventData->event_callsign_speed).length() > 0;
-    success &= (this->eventData->event_start_date_time).length() > 19;
-    success &= (this->eventData->event_finish_date_time).length() > 19;
-    success &= (this->eventData->event_modulation).length() > 0;
-    success &= ((this->eventData->event_number_of_tx_types) > 0);
+    return ( false);
+  }
 
-    for (int i = 0; i < this->eventData->event_number_of_tx_types; i++)
+  if ((this->eventData->event_name).length() < 1 ||
+      (this->eventData->event_file_version).length() < 1 ||
+      (this->eventData->event_band).length() < 1 ||
+      (this->eventData->event_callsign_speed).length() < 1 ||
+      (this->eventData->event_start_date_time).length() <= 19 ||
+      (this->eventData->event_finish_date_time).length() <= 19 ||
+      (this->eventData->event_modulation).length() < 1 ||
+      !eventReadCountWithinBounds(
+        this->eventData->event_number_of_tx_types,
+        MAXIMUM_NUMBER_OF_EVENT_TX_TYPES))
+  {
+    return ( false);
+  }
+
+  for (int i = 0; i < this->eventData->event_number_of_tx_types; i++)
+  {
+    RoleDataStruct *role = this->eventData->role[i];
+    if (role == NULL ||
+        role->rolename.length() < 1 ||
+        !eventReadCountWithinBounds(role->numberOfTxs, MAXIMUM_NUMBER_OF_TXs_OF_A_TYPE) ||
+        role->frequency <= 0 ||
+        role->powerLevel_mW <= 0 ||
+        role->code_speed <= 0)
     {
-      success &= (this->eventData->role[i]->rolename).length() > 0;
-      success &= (this->eventData->role[i]->numberOfTxs) > 0;
-      success &= (this->eventData->role[i]->frequency) > 0;
-      success &= (this->eventData->role[i]->powerLevel_mW) > 0;
-      success &= (this->eventData->role[i]->code_speed) > 0;
-      /*success &= (this->eventData->role[i]->id_interval); */
-
-      for (int j = 0; j < this->eventData->role[i]->numberOfTxs; j++)
-      {
-        success &= (this->eventData->role[i]->tx[j]->pattern).length() > 0;
-        success &= (this->eventData->role[i]->tx[j]->onTime).length() > 0;
-        success &= (this->eventData->role[i]->tx[j]->offTime).length() > 0;
-        success &= (this->eventData->role[i]->tx[j]->delayTime).length() > 0;
-      }
+      return ( false);
     }
 
-    if (success)
+    for (int j = 0; j < role->numberOfTxs; j++)
     {
-      String start = this->eventData->event_start_date_time;
-      String finish = this->eventData->event_finish_date_time;
-      success &= (start.indexOf(':') > 0);
-      success &= (finish.indexOf(':') > 0);
+      TxDataStruct *tx = role->tx[j];
+      if (tx == NULL ||
+          tx->pattern.length() < 1 ||
+          tx->onTime.length() < 1 ||
+          tx->offTime.length() < 1 ||
+          tx->delayTime.length() < 1)
+      {
+        return ( false);
+      }
     }
   }
 
-  return ( success);
+  String start = this->eventData->event_start_date_time;
+  String finish = this->eventData->event_finish_date_time;
+  return (start.indexOf(':') > 0) && (finish.indexOf(':') > 0);
 }
 
 bool Event::writeEventFile(void)
@@ -1552,10 +1568,20 @@ bool Event::setEventData(String id, int value)
 bool Event::setEventData(String id, String value)
 {
   bool result = false;
-  static String typeIndexStr = "";
-  static int typeIndex = 0;
-  static String txIndexStr = "";
-  static int txIndex = 0;
+  String typeIndexStr = "";
+  int typeIndex = -1;
+  String txIndexStr = "";
+  int txIndex = -1;
+
+  if (id.startsWith("TYPE"))
+  {
+    int separatorIndex = id.indexOf("_");
+    if (separatorIndex > 4)
+    {
+      typeIndexStr = id.substring(4, separatorIndex);
+      typeIndex = typeIndexStr.toInt() - 1;
+    }
+  }
 
   if (id.equalsIgnoreCase(TX_ASSIGNMENT))
   {
@@ -1699,8 +1725,6 @@ bool Event::setEventData(String id, String value)
   }
   else if (id.endsWith(TYPE_TX_COUNT))
   {
-    typeIndexStr = id.substring((id.indexOf("TYPE") + 4), id.indexOf("_"));
-    typeIndex = typeIndexStr.toInt() - 1;
     if ((typeIndex >= 0) && (typeIndex < MAXIMUM_NUMBER_OF_EVENT_TX_TYPES))
     {
       this->eventData->role[typeIndex]->numberOfTxs = value.toInt();
@@ -1714,8 +1738,6 @@ bool Event::setEventData(String id, String value)
   }
   else if (id.endsWith(TYPE_NAME))
   {
-    typeIndexStr = id.substring((id.indexOf("TYPE") + 4), id.indexOf("_"));
-    typeIndex = typeIndexStr.toInt() - 1;
     if ((typeIndex >= 0) && (typeIndex < MAXIMUM_NUMBER_OF_EVENT_TX_TYPES))
     {
       this->eventData->role[typeIndex]->rolename = value;
@@ -1729,8 +1751,6 @@ bool Event::setEventData(String id, String value)
   }
   else if (id.endsWith(TYPE_FREQ))
   {
-    typeIndexStr = id.substring((id.indexOf("TYPE") + 4), id.indexOf("_"));
-    typeIndex = typeIndexStr.toInt() - 1;
     if ((typeIndex >= 0) && (typeIndex < MAXIMUM_NUMBER_OF_EVENT_TX_TYPES))
     {
       this->eventData->role[typeIndex]->frequency = value.toInt();
@@ -1744,8 +1764,6 @@ bool Event::setEventData(String id, String value)
   }
   else if (id.endsWith(TYPE_POWER_LEVEL))
   {
-    typeIndexStr = id.substring((id.indexOf("TYPE") + 4), id.indexOf("_"));
-    typeIndex = typeIndexStr.toInt() - 1;
     if ((typeIndex >= 0) && (typeIndex < MAXIMUM_NUMBER_OF_EVENT_TX_TYPES))
     {
       this->eventData->role[typeIndex]->powerLevel_mW = value.toInt();
@@ -1759,8 +1777,6 @@ bool Event::setEventData(String id, String value)
   }
   else if (id.endsWith(TYPE_ID_INTERVAL))
   {
-    typeIndexStr = id.substring((id.indexOf("TYPE") + 4), id.indexOf("_"));
-    typeIndex = typeIndexStr.toInt() - 1;
     if ((typeIndex >= 0) && (typeIndex < MAXIMUM_NUMBER_OF_EVENT_TX_TYPES))
     {
       this->eventData->role[typeIndex]->id_interval = value.toInt();
@@ -1774,8 +1790,6 @@ bool Event::setEventData(String id, String value)
   }
   else if (id.endsWith(TYPE_CODE_SPEED))
   {
-    typeIndexStr = id.substring((id.indexOf("TYPE") + 4), id.indexOf("_"));
-    typeIndex = typeIndexStr.toInt() - 1;
     if ((typeIndex >= 0) && (typeIndex < MAXIMUM_NUMBER_OF_EVENT_TX_TYPES))
     {
       this->eventData->role[typeIndex]->code_speed = value.toInt();

@@ -208,7 +208,7 @@ const cloneEventManifest = readFileSync(cloneEventManifestPath, "utf8");
 const firmwareUpdateIntegrity = readFileSync(firmwareUpdateIntegrityPath, "utf8");
 
 const expectedAvrVersion = "0.201";
-const expectedEspVersion = "2.2";
+const expectedEspVersion = "2.3";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -512,6 +512,42 @@ if (!stopsBeforeMeFileEofRead(readMeFile)) {
 }
 
 process.stdout.write("PASS ESP event metadata reader stops before timed EOF reads\n");
+
+const readEventFile = espEvent.match(
+  /bool Event::readEventFile\(String path\)\s*\{([\s\S]*?)\n\}\n\nvoid Event::dumpData/,
+);
+if (
+  !readEventFile ||
+  !readEventFile[1].includes("resetEventDataForRead(") ||
+  !readEventFile[1].includes("!validateEvent()") ||
+  !espEvent.includes("eventReadCountWithinBounds(") ||
+  espEvent.includes("static String typeIndexStr") ||
+  espEvent.includes("static int typeIndex")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: ESP event reads can retain stale fields or accept unsafe bounds\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS ESP event reads clear stale data and reject incomplete structures\n");
+
+const roleMessageHandler = espMain.match(
+  /else if \(msgHeader\.equalsIgnoreCase\(SOCK_COMMAND_TX_ROLE\)\)\s*\{([\s\S]*?)\n\s*\}\n\s*else if/,
+);
+if (
+  !roleMessageHandler ||
+  !roleMessageHandler[1].includes("p.substring(commaIndex + 1)") ||
+  !roleMessageHandler[1].includes("!g_activeEvent->setTxAssignment(assignment)") ||
+  roleMessageHandler[1].includes("substring(c - 1")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: browser role assignments are truncated or saved after rejection\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS browser role assignments retain the complete validated value\n");
 
 if (
   !espHeader.includes('#define SOCK_COMMAND_EVENT_SELECT "EVENT_SELECT"') ||

@@ -91,7 +91,7 @@ const context = vm.createContext({
   },
   fetch: async () => ({
     ok: true,
-    json: async () => ({ version: "2.2", cloneActive: false }),
+    json: async () => ({ version: "2.3", cloneActive: false }),
   }),
   location: { hostname: "flexfox.test" },
   setInterval() { return 1; },
@@ -107,7 +107,7 @@ vm.runInContext(scripts[0][1], context, {
   filename: `${pagePath}:FIRMWARE_UPDATE_PAGE_HTML`,
 });
 await new Promise((resolvePromise) => setImmediate(resolvePromise));
-assert.equal(elements.status.textContent, "Running WiFi firmware 2.2 - ready for a sketch-only update");
+assert.equal(elements.status.textContent, "Running WiFi firmware 2.3 - ready for a sketch-only update");
 
 listeners.get("form:submit")({ preventDefault() {} });
 await new Promise((resolvePromise) => setImmediate(resolvePromise));

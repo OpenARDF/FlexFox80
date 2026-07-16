@@ -18,7 +18,7 @@ const firmwarePath = resolve(
     join(repoRoot, "Software", "Huzzah", "tmp", "esp-build", "ARDF_Transmitter.ino.bin"),
 );
 const baseUrl = normalizeFlexFoxUrl(process.env.FLEXFOX_URL);
-const expectedVersion = process.env.FLEXFOX_EXPECTED_ESP_VERSION ?? "2.2";
+const expectedVersion = process.env.FLEXFOX_EXPECTED_ESP_VERSION ?? "2.3";
 const confirmation = process.env.FLEXFOX_UPDATE_CONFIRM;
 
 if (confirmation !== "UPDATE FLEXFOX ESP") {
