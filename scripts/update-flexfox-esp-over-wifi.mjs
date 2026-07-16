@@ -27,7 +27,7 @@ const uploadTimeoutMs = Number.parseInt(
   10,
 );
 const verificationTimeoutMs = Number.parseInt(
-  process.env.FLEXFOX_UPDATE_VERIFY_TIMEOUT_MS ?? "105000",
+  process.env.FLEXFOX_UPDATE_VERIFY_TIMEOUT_MS ?? "240000",
   10,
 );
 
@@ -40,9 +40,9 @@ if (!Number.isInteger(uploadTimeoutMs) || uploadTimeoutMs < 30000 || uploadTimeo
 if (
   !Number.isInteger(verificationTimeoutMs) ||
   verificationTimeoutMs < 60000 ||
-  verificationTimeoutMs > 110000
+  verificationTimeoutMs > 300000
 ) {
-  throw new Error("FLEXFOX_UPDATE_VERIFY_TIMEOUT_MS must be 60000 through 110000");
+  throw new Error("FLEXFOX_UPDATE_VERIFY_TIMEOUT_MS must be 60000 through 300000");
 }
 if (!statSync(firmwarePath).isFile()) {
   throw new Error(`firmware image is not a file: ${firmwarePath}`);

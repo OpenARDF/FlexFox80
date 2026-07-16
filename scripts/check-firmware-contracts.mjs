@@ -262,8 +262,8 @@ if (
   !heartbeatHelper.includes('socket.send("!&")') ||
   !heartbeatHelper.includes("heartbeatTimer = setInterval(poke, 5000)") ||
   !heartbeatHelper.includes("reconnectTimer = setTimeout(connect, 1500)") ||
-  !wifiUpdater.includes('FLEXFOX_UPDATE_VERIFY_TIMEOUT_MS ?? "105000"') ||
-  !wifiUpdater.includes("verificationTimeoutMs > 110000") ||
+  !wifiUpdater.includes('FLEXFOX_UPDATE_VERIFY_TIMEOUT_MS ?? "240000"') ||
+  !wifiUpdater.includes("verificationTimeoutMs > 300000") ||
   !wifiUpdater.includes("createBoundedFlexFoxHeartbeat") ||
   !wifiUpdater.includes("heartbeat.stop()") ||
   !webDeployer.includes('FLEXFOX_WEB_UPLOAD_TIMEOUT_MS ?? "120000"') ||
