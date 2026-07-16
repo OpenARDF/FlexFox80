@@ -25,6 +25,7 @@ class FakeElement {
   constructor(id = "") {
     this.id = id;
     this.attributes = new Map();
+    this.checked = false;
     this.children = [];
     this.disabled = false;
     this.options = [];
@@ -181,7 +182,8 @@ assert.ok(!source.includes("Date.getTime()"), "date fallback must call getTime o
 assert.match(html, /<html lang="en">/);
 assert.match(html, /<meta charset="utf-8">/);
 assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1">/);
-assert.match(html, /events\.html Version: 0\.5\.3 - 16 Jul 2026/);
+assert.match(html, /events\.html Version: 0\.5\.4 - 16 Jul 2026/);
+assert.match(html, /Transmitter assignment \(\.me\) files are always preserved\./);
 assert.ok(!source.includes('btn.id = "runButton"'), "event selection buttons must not reuse an id");
 assert.equal(
   [...source.matchAll(/setAttribute\("id", "datetimeFinishCell"\)/g)].length,
@@ -288,7 +290,32 @@ console.log("PASS events.html JavaScript and critical HTML syntax parse");
   const socket = page.sockets.at(-1);
   socket.onopen({});
   assert.equal(socket.sent[0], "EVENT_NAME,NEW!", "event loading must be the first socket request");
+  page.context.g_lastPacketTime = 0;
+  lastTimerWithDelay(page.timeouts, 1000).callback();
+  assert.equal(socket.sent.at(-1), "CLONE_PRUNE", "startup must query the firmware's current clone option");
   console.log("PASS clock display cadence and event-first startup scheduling");
+}
+
+{
+  const page = createPage();
+  const sent = [];
+  const checkbox = page.addElement("clonePruneTargetEvents");
+  page.context.sendToSocket = (message) => sent.push(message);
+
+  checkbox.checked = true;
+  page.context.setClonePruneTargetEvents();
+  assert.equal(sent.at(-1), "CLONE_PRUNE,1");
+  checkbox.checked = false;
+  page.context.setClonePruneTargetEvents();
+  assert.equal(sent.at(-1), "CLONE_PRUNE,0");
+
+  page.context.webSocketStart();
+  const socket = page.sockets.at(-1);
+  socket.onmessage({ data: "CLONE_PRUNE,1" });
+  assert.equal(checkbox.checked, true);
+  socket.onmessage({ data: "CLONE_PRUNE,0" });
+  assert.equal(checkbox.checked, false);
+  console.log("PASS clone cleanup remains explicit, opt-in, and synchronized with firmware state");
 }
 
 {
@@ -395,8 +422,10 @@ console.log("PASS events.html JavaScript and critical HTML syntax parse");
   assert.doesNotThrow(() => socket.onmessage({ data: "FREQ" }));
   assert.doesNotThrow(() => socket.onmessage({ data: "POWER" }));
   socket.onmessage({ data: "SUS,Fox 1 - MOE,Classic 80m Set 1-1" });
-  assert.equal(status.textContent, "Success: Fox 1 - MOE synced.");
-  assert.doesNotMatch(status.textContent, /Next up|Classic 80m Set 1-1/);
+  assert.equal(status.textContent, "Success: Fox 1 - MOE synced. Next up: Classic 80m");
+  assert.doesNotMatch(status.textContent, /Set 1-1/);
+  socket.onmessage({ data: "SUS,Fox 3 - MOE,Sprint3 80m" });
+  assert.equal(status.textContent, "Success: Fox 3 - MOE synced. Next up: Sprint3 80m");
   socket.onmessage({ data: "SUE,Checksum mismatch" });
   assert.equal(status.textContent, "Sync Error: Checksum mismatch");
   console.log("PASS clone monitoring tolerates incomplete status frames");

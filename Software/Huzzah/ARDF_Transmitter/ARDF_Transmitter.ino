@@ -57,6 +57,7 @@
 #include "Transmitter.h"
 #include "RootPage.h"
 #include "Event.h"
+#include "clone_event_manifest.h"
 /* #include <Wire.h> */
 #include "Helpers.h"
 #include "CircularStringBuff.h"
@@ -156,6 +157,13 @@ bool g_cloneClockVerified = false;
 bool g_cloneClockReadbackMismatch = false;
 bool g_masterCloneQuietPending = false;
 bool g_masterCloneQuietActive = false;
+bool g_masterClonePruneTargetEvents = false;
+bool g_slaveClonePruneTargetEvents = false;
+CloneEventManifest g_cloneEventManifest;
+
+static_assert(
+  CLONE_EVENT_MANIFEST_CAPACITY == MAXIMUM_NUMBER_OF_EVENTS,
+  "Clone manifest must hold every supported event file");
 
 #define NO_ACTIVITY_TIMEOUT (60 * 5)
 int g_noActivityTimeoutSeconds = NO_ACTIVITY_TIMEOUT;
@@ -211,6 +219,7 @@ void shutdownSlave(void);
 bool setAVRCloneQuietMode(bool quiet);
 void serviceMasterCloneHandshake(void);
 void endMasterCloneSession(void);
+bool reconcileCloneEventFiles(const CloneEventManifest *manifest);
 
 void setup()
 {
@@ -946,6 +955,9 @@ void loop()
   }
   else /* IamSlave */
   {
+    g_slaveClonePruneTargetEvents = false;
+    cloneEventManifestReset(&g_cloneEventManifest);
+
     if (!g_onlyUpdateEvent && !setupWiFiAPConnection())
     {
       g_webSocketLocalClient.begin("73.73.73.73", 81);
@@ -1133,7 +1145,11 @@ void serviceMasterCloneHandshake()
 
     if (g_slave_socket_number >= 0)
     {
-      String msg = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_CONFIRMED;
+      String msg = String(SOCK_COMMAND_CLONE_PRUNE_EVENTS) + "," +
+                   (g_masterClonePruneTargetEvents ? "1" : "0");
+      g_webSocketServer.sendTXT(g_slave_socket_number, stringObjToConstCharString(&msg), msg.length());
+
+      msg = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_CONFIRMED;
       g_webSocketServer.sendTXT(g_slave_socket_number, stringObjToConstCharString(&msg), msg.length());
     }
   }
@@ -2009,27 +2025,49 @@ bool clientUpdateEventFilesLoop()
 
               if (updatedFileName.length() > 0)
               {
-                if (LittleFS.exists(updatedFileName))
+                if (!cloneEventManifestRecord(
+                      &g_cloneEventManifest,
+                      stringObjToConstCharString(&updatedFileName)))
                 {
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                  if (g_debug_prints_enabled)
+                  errorMessage = "Invalid event file manifest";
+                  g_webSocketSlaveState = WSClientClose;
+                }
+                else
+                {
+                  bool fileReady = true;
+                  if (LittleFS.exists(updatedFileName))
                   {
-                    Serial.println("Removing old file");
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
+                    if (g_debug_prints_enabled)
+                    {
+                      Serial.println("Removing old file");
+                    }
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+                    fileReady = LittleFS.remove(updatedFileName);
+                  }
+
+                  if (fileReady)
+                  {
+                    fileReady = LittleFS.rename(path, updatedFileName);
+                  }
+
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
+                  if (g_debug_prints_enabled && fileReady)
+                  {
+                    Serial.println(String("Renamed /Temp to " + updatedFileName));
                   }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-                  LittleFS.remove(updatedFileName);
+                  if (fileReady)
+                  {
+                    g_webSocketSlaveState = WSClientWaitingForFiles;
+                    times2try = 5;
+                  }
+                  else
+                  {
+                    errorMessage = "Could not install event file";
+                    g_webSocketSlaveState = WSClientClose;
+                  }
                 }
-
-                LittleFS.rename(path, updatedFileName);
-
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                if (g_debug_prints_enabled)
-                {
-                  Serial.println(String("Renamed /Temp to " + updatedFileName));
-                }
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-                g_webSocketSlaveState = WSClientWaitingForFiles;
-                times2try = 5;
               }
               else
               {
@@ -2052,9 +2090,18 @@ bool clientUpdateEventFilesLoop()
 
       case WSClientFilesComplete:
         {
-          syncFailed = false;
-          failure = false;
-          busy = false;
+          if (g_slaveClonePruneTargetEvents &&
+              !reconcileCloneEventFiles(&g_cloneEventManifest))
+          {
+            errorMessage = "Could not reconcile target event files";
+            g_webSocketSlaveState = WSClientClose;
+          }
+          else
+          {
+            syncFailed = false;
+            failure = false;
+            busy = false;
+          }
         }
         break;
 
@@ -2131,6 +2178,39 @@ bool clientUpdateEventFilesLoop()
   }
 
   return (failure);
+}
+
+bool reconcileCloneEventFiles(const CloneEventManifest *manifest)
+{
+  if (!manifest || manifest->invalid)
+  {
+    return false;
+  }
+
+  while (true)
+  {
+    String staleEventFile;
+    Dir dir = LittleFS.openDir("/");
+    while (dir.next())
+    {
+      String fileName = dir.fileName();
+      if (cloneEventPathIsEventFile(stringObjToConstCharString(&fileName)) &&
+          !cloneEventManifestContains(manifest, stringObjToConstCharString(&fileName)))
+      {
+        staleEventFile = fileName;
+        break;
+      }
+    }
+
+    if (!staleEventFile.length())
+    {
+      return true;
+    }
+    if (!LittleFS.remove(staleEventFile))
+    {
+      return false;
+    }
+  }
 }
 
 
@@ -3494,6 +3574,11 @@ void webSocketClientEvent(WStype_t type, uint8_t * payload, size_t length)
               }
             }
           }
+          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_CLONE_PRUNE_EVENTS))
+          {
+            p = p.substring(p.indexOf(',') + 1);
+            g_slaveClonePruneTargetEvents = p.equals("1");
+          }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_SYNC_TIME)) /* From connected Master */
           {
             if (g_webSocketSlaveState == WSClientSyncClock)
@@ -3720,6 +3805,24 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
           if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_ALIVE))
           {
             g_socket_timeout = 10;
+          }
+          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_CLONE_PRUNE_EVENTS))
+          {
+            if (num != g_slave_socket_number)
+            {
+              if (commaIndex >= 0)
+              {
+                String setting = p.substring(commaIndex + 1);
+                if (setting.equals("0") || setting.equals("1"))
+                {
+                  g_masterClonePruneTargetEvents = setting.equals("1");
+                }
+              }
+
+              String msg = String(SOCK_COMMAND_CLONE_PRUNE_EVENTS) + "," +
+                           (g_masterClonePruneTargetEvents ? "1" : "0");
+              g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
+            }
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_SLAVE))
           {

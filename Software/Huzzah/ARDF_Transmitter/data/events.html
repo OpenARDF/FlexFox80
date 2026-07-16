@@ -201,6 +201,15 @@
             border-collapse: collapse;
         }
 
+        #cloneOptions {
+            max-width: 760px;
+            margin: 12px auto;
+            padding: 10px;
+            border: 1px solid #999;
+            text-align: left;
+            font-family: verdana;
+        }
+
     </style>
 </head>
 
@@ -305,6 +314,17 @@
             var eventData = selectedEventData();
             if (eventData) {
                 eventData[field] = value;
+            }
+        }
+
+        function cloneStatusEventName(eventName) {
+            return String(eventName || "").replace(/\s+Set\s+\d+-\d+\s*$/i, "").trim();
+        }
+
+        function setClonePruneTargetEvents() {
+            var checkbox = document.getElementById("clonePruneTargetEvents");
+            if (checkbox) {
+                sendToSocket("CLONE_PRUNE," + (checkbox.checked ? "1" : "0"));
             }
         }
 
@@ -862,6 +882,9 @@
                     setTimeout(function() {
                         sendToSocket("SW_VERSIONS");
                     }, 750);
+                    setTimeout(function() {
+                        sendToSocket("CLONE_PRUNE");
+                    }, 1000);
 
                 };
 
@@ -1336,6 +1359,15 @@
                             }
                             break;
 
+                        case "CLONE_PRUNE":
+                            {
+                                var checkbox = document.getElementById("clonePruneTargetEvents");
+                                if (checkbox && ((arr[1] == "0") || (arr[1] == "1"))) {
+                                    checkbox.checked = (arr[1] == "1");
+                                }
+                            }
+                            break;
+
                         case "VERS":
                             {
                                 if (typeof arr[1] != 'undefined') {
@@ -1528,13 +1560,21 @@
                         case "SUS":
                             {
                                 var role = (typeof arr[1] == "string") ? arr[1] : "";
+                                var event = cloneStatusEventName((typeof arr[2] == "string") ? arr[2] : "");
 
                                 if (role.length < 1) {
                                     console.log("Error: sync success returned no role");
                                 }
 
-                                if (role.length) {
-                                    var e = "Success: " + role + " synced.";
+                                if (event.length < 1) {
+                                    console.log("Error: sync success returned no event");
+                                }
+
+                                if (role.length || event.length) {
+                                    var e = role.length ? ("Success: " + role + " synced.") : "Success: transmitter synced.";
+                                    if (event.length) {
+                                        e += " Next up: " + event;
+                                    }
                                     var elem = document.getElementById("statusreport");
                                     if (elem != null) {
                                         elem.textContent = e;
@@ -1544,7 +1584,7 @@
                                     var x = document.getElementById("statusreport");
                                     if (x != null) x.style.display = "none";
                                 }
-                                console.log("Sync success:" + role);
+                                console.log("Sync success:" + role + ", next event: " + event);
 
                             }
                             break;
@@ -2521,7 +2561,7 @@
         <h1 id="mainHeading" style="font-family:verdana; font-size:30px; color:Black; text-align:center;">Transmitter Settings</h1>
         <p id="wifiVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
         <p id="ATMEGAVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
-        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.5.3 - 16 Jul 2026</p>
+        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.5.4 - 16 Jul 2026</p>
 
         <div>
             <table>
@@ -2558,6 +2598,17 @@
                     </td>
                 </tr>
             </table>
+
+            <div id="cloneOptions">
+                <label>
+                    <input type="checkbox" id="clonePruneTargetEvents" onchange="setClonePruneTargetEvents();">
+                    Remove target event files that are not present on this master
+                </label>
+                <p style="font-size:13px; margin-top:6px;">
+                    When selected, a successful clone makes the target's .event files match this master.
+                    Transmitter assignment (.me) files are always preserved.
+                </p>
+            </div>
 
             <table>
                 <tr>

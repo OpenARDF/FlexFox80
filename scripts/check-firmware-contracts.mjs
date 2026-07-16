@@ -163,6 +163,13 @@ const eventFileIntegrityPath = join(
   "ARDF_Transmitter",
   "event_file_integrity.h",
 );
+const cloneEventManifestPath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "clone_event_manifest.h",
+);
 const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
@@ -190,6 +197,7 @@ const espDefinitions = readFileSync(espDefinitionsPath, "utf8");
 const espEvent = readFileSync(espEventPath, "utf8");
 const roleAssignmentBounds = readFileSync(roleAssignmentBoundsPath, "utf8");
 const eventFileIntegrity = readFileSync(eventFileIntegrityPath, "utf8");
+const cloneEventManifest = readFileSync(cloneEventManifestPath, "utf8");
 
 const expectedAvrVersion = "0.201";
 const expectedEspVersion = "2.1";
@@ -1019,6 +1027,29 @@ if (
 }
 
 process.stdout.write("PASS cloned event files require checksum while legacy files remain compatible\n");
+
+if (
+  !espHeader.includes('#define SOCK_COMMAND_CLONE_PRUNE_EVENTS "CLONE_PRUNE"') ||
+  !espMain.includes("bool g_masterClonePruneTargetEvents = false;") ||
+  !espMain.includes("bool g_slaveClonePruneTargetEvents = false;") ||
+  !espMain.includes("cloneEventManifestReset(&g_cloneEventManifest)") ||
+  !espMain.includes("cloneEventManifestRecord(") ||
+  !/g_slaveClonePruneTargetEvents\s*&&\s*!reconcileCloneEventFiles/.test(espMain) ||
+  !espMain.includes("SOCK_COMMAND_CLONE_PRUNE_EVENTS) + \",\" +") ||
+  !cloneEventManifest.includes('static const char suffix[] = ".event";') ||
+  !cloneEventManifest.includes("cloneEventManifestContains") ||
+  !cloneEventManifest.includes("manifest->invalid = true;") ||
+  !espMain.includes("LittleFS.remove(staleEventFile)")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: opt-in clone reconciliation is not manifest-gated and fail-closed\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write(
+  "PASS clone cleanup is opt-in, manifest-gated, and restricted to .event files\n",
+);
 
 if (
   espMain.includes("g_webSocketServer.isRunning()") ||
