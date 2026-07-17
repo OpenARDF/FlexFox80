@@ -118,13 +118,17 @@ try {
 
 const deadline = Date.now() + verificationTimeoutMs;
 let after;
+let wrongImageAfterReboot;
 while (Date.now() < deadline) {
   await sleep(1500);
   try {
     const candidate = await readStatus(3000);
     if (candidate.restartPending || candidate.updateActive) continue;
     if (!Number.isInteger(candidate.uptimeMillis) || candidate.uptimeMillis >= before.uptimeMillis) continue;
-    if (!installedMd5Values.has(candidate.currentSketchMd5?.toLowerCase())) continue;
+    if (!installedMd5Values.has(candidate.currentSketchMd5?.toLowerCase())) {
+      wrongImageAfterReboot = candidate;
+      break;
+    }
     after = candidate;
     break;
   } catch {
@@ -132,6 +136,13 @@ while (Date.now() < deadline) {
   }
 }
 
+if (wrongImageAfterReboot) {
+  heartbeat.stop();
+  throw new Error(
+    `device rebooted but reports ESP ${wrongImageAfterReboot.version}, sketch MD5 ` +
+      `${wrongImageAfterReboot.currentSketchMd5}; the staged update was not installed`,
+  );
+}
 if (!after) {
   heartbeat.stop();
   throw new Error(
