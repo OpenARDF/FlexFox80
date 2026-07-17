@@ -180,6 +180,13 @@ const cloneKeepAliveSchedulePath = join(
   "ARDF_Transmitter",
   "clone_keepalive_schedule.h",
 );
+const linkbusCommandTransactionPath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "linkbus_command_transaction.h",
+);
 const firmwareUpdateIntegrityPath = join(
   repoRoot,
   "Software",
@@ -219,10 +226,11 @@ const roleAssignmentBounds = readFileSync(roleAssignmentBoundsPath, "utf8");
 const eventFileIntegrity = readFileSync(eventFileIntegrityPath, "utf8");
 const cloneEventManifest = readFileSync(cloneEventManifestPath, "utf8");
 const cloneKeepAliveSchedule = readFileSync(cloneKeepAliveSchedulePath, "utf8");
+const linkbusCommandTransaction = readFileSync(linkbusCommandTransactionPath, "utf8");
 const firmwareUpdateIntegrity = readFileSync(firmwareUpdateIntegrityPath, "utf8");
 
 const expectedAvrVersion = "0.201";
-const expectedEspVersion = "2.5";
+const expectedEspVersion = "2.6";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -305,6 +313,36 @@ if (
 }
 
 process.stdout.write("PASS target cloning keeps the AVR awake only while clone work remains active\n");
+
+const eventTransactionFunction = espMain.match(
+  /bool sendEventToATMEGA\(String \*errorTxt\)([\s\S]*?)\n}\n/,
+)?.[1];
+const eventTransactionCommandCalls =
+  eventTransactionFunction?.match(/sendLinkbusTransactionCommand\(/g)?.length ?? 0;
+if (
+  !espMain.includes('#include "linkbus_command_transaction.h"') ||
+  !espMain.includes("g_linkBusEventTransactionActive = true;") ||
+  !espMain.includes("g_linkBusEventTransactionActive = false;") ||
+  !espMain.includes("if (g_linkBusEventTransactionActive)") ||
+  !espMain.includes('String(LB_MESSAGE_VER_REQUEST), "preflight version"') ||
+  !espMain.includes('String(LB_MESSAGE_ESP_KEEPALIVE), "preflight keep-alive"') ||
+  !espMain.includes("linkbusLastFailure") ||
+  !eventTransactionFunction?.includes("sendLinkbusTransactionCommand") ||
+  eventTransactionCommandCalls !== 18 ||
+  eventTransactionFunction.includes("g_LBOutputBuff->put") ||
+  eventTransactionFunction.includes("LB_MESSAGE_PERM") ||
+  espMain.includes("g_LBOutputBuff->put(LB_MESSAGE_PERM)") ||
+  !linkbusCommandTransaction.includes("LINKBUS_COMMAND_LOCAL_DEADLINE_MILLIS 12000UL") ||
+  !linkbusCommandTransaction.includes("LINKBUS_COMMAND_NACKED") ||
+  !linkbusCommandTransaction.includes("!ackPending && ackTimeoutOccurred")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: ESP event programming must retain exclusive fail-fast Linkbus command ownership, fresh bidirectional preflight, diagnostics, and validated-only AVR persistence\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS ESP event programming is an exclusive fail-fast Linkbus transaction\n");
 
 if (
   espMain.match(/delete g_fileDataBuff;/g)?.length !== 3 ||

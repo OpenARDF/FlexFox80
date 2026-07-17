@@ -114,6 +114,14 @@ ASAN_OPTIONS="${ASAN_OPTIONS:+$ASAN_OPTIONS:}allocator_may_return_null=1" \
 # shellcheck disable=SC2086 # Flags are intentionally expanded into individual compiler arguments.
 "$cxx" $common_flags $sanitizer_flags \
 	-I "$repo_root/Software/Huzzah/ARDF_Transmitter" \
+	"$repo_root/Tests/Host/esp_linkbus_command_transaction_test.cpp" \
+	-o "$build_dir/esp-linkbus-command-transaction-tests"
+
+"$build_dir/esp-linkbus-command-transaction-tests"
+
+# shellcheck disable=SC2086 # Flags are intentionally expanded into individual compiler arguments.
+"$cxx" $common_flags $sanitizer_flags \
+	-I "$repo_root/Software/Huzzah/ARDF_Transmitter" \
 	"$repo_root/Tests/Host/esp_firmware_update_integrity_test.cpp" \
 	-o "$build_dir/esp-firmware-update-integrity-tests"
 

@@ -14,7 +14,7 @@ The runner writes executables only under the ignored `Software/AVR128DA48/tmp/ho
 
 `just test` also runs dependency-free source-contract checks for firmware declarations whose target-compiler interpretation is safety-relevant. These checks supplement compilation; they do not replace it.
 
-The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current release identity is ESP `2.5` plus AVR `0.201`, reported together as `SW_VERSIONS,2.5,0.201`.
+The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current candidate identity is ESP `2.6` plus AVR `0.201`, reported together as `SW_VERSIONS,2.6,0.201`.
 
 ## Current characterization boundary
 
@@ -75,6 +75,14 @@ The ESP clone keep-alive schedule regression compiles the same bounded schedule 
 - a 20-second cadence that remains due until it can be queued;
 - correct interval arithmetic across `millis()` wraparound; and
 - immediate heartbeat cancellation when clone work ends.
+
+The ESP Linkbus command-transaction regression compiles the same outcome decision used by event programming and covers:
+
+- no success while a command remains queued or ACK-pending;
+- immediate failure on a NAK, even if other work is queued;
+- conservative failure when an ACK arrives only after a retry;
+- a bounded 12-second local deadline; and
+- correct deadline arithmetic across `millis()` wraparound.
 
 The ESP firmware-update integrity regression compiles the exact guards used by the sketch-only WiFi updater and covers strict size bounds, strict CRC32 parsing, the standard CRC32 test vector, and rejection of filesystem or compressed-image filenames.
 

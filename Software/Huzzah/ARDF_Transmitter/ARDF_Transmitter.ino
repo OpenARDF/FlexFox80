@@ -63,6 +63,7 @@
 #include "clone_event_manifest.h"
 #include "clone_keepalive_schedule.h"
 #include "firmware_update_integrity.h"
+#include "linkbus_command_transaction.h"
 /* #include <Wire.h> */
 #include "Helpers.h"
 #include "CircularStringBuff.h"
@@ -216,6 +217,12 @@ CircularStringBuff *g_fileDataBuff = NULL;
 int g_linkBusAckPending = 0;
 int g_linkBusNacksReceived = 0;
 bool g_linkBusAckTimoutOccurred = false;
+bool g_linkBusEventTransactionActive = false;
+int g_linkBusCurrentAttemptCount = 0;
+int g_linkBusLastAttempts = 0;
+unsigned long g_linkBusLastValidFrameMillis = 0;
+String g_linkBusLastPhase = String("idle");
+String g_linkBusLastFailure = String("");
 
 Blinkies *lights;
 
@@ -512,6 +519,11 @@ void beginSlaveCloneKeepAlive()
 
 void serviceSlaveCloneKeepAlive()
 {
+  if (g_linkBusEventTransactionActive)
+  {
+    return;
+  }
+
   const uint32_t now = millis();
   if (cloneKeepAliveIsDue(&g_slaveCloneKeepAliveSchedule, now) &&
       g_LBOutputBuff && !g_LBOutputBuff->full())
@@ -550,6 +562,17 @@ void handleFirmwareUpdateStatus()
   response += String(millis());
   response += ",\"maximumUpdateBytes\":";
   response += String(firmwareUpdateMaximumSketchSize());
+  response += ",\"linkbusEventTransactionActive\":";
+  response += g_linkBusEventTransactionActive ? "true" : "false";
+  response += ",\"linkbusLastValidFrameMillis\":";
+  response += String(g_linkBusLastValidFrameMillis);
+  response += ",\"linkbusLastAttempts\":";
+  response += String(g_linkBusLastAttempts);
+  response += ",\"linkbusLastPhase\":\"";
+  response += g_linkBusLastPhase;
+  response += "\",\"linkbusLastFailure\":\"";
+  response += g_linkBusLastFailure;
+  response += "\"";
   response += "}";
   g_http_server.sendHeader("Cache-Control", "no-store");
   g_http_server.send(200, "application/json", response);
@@ -3659,6 +3682,7 @@ bool linkbusLoop()
       msg = g_LBOutputBuff->get();
       Serial.println(stringObjToConstCharString(&msg));
       g_linkBusAckPending++;
+      g_linkBusCurrentAttemptCount = 1;
       holdSentTime = millis() / 1000;
       linkBusAckTimeoutCountdown = 3;
       linkBusTimeoutCount = 0;
@@ -3683,6 +3707,7 @@ bool linkbusLoop()
           if (linkBusTimeoutCount < 3) /* Try sending the last message again */
           {
             g_linkBusAckTimoutOccurred = true;
+            g_linkBusCurrentAttemptCount++;
             linkBusAckTimeoutCountdown = 3;
             holdSentTime = millis() / 1000;
             Serial.println(stringObjToConstCharString(&msg));
@@ -5771,11 +5796,15 @@ void handleLBMessage(String message)
     payload = message.substring(firstDelimit + 1, message.indexOf(';'));
   }
 
+  g_linkBusLastValidFrameMillis = millis();
+
   bool cloneTimeReply = type.equals(LB_MESSAGE_TIME) && payload.startsWith("C,");
+  bool eventPreflightReply = g_linkBusEventTransactionActive && type.equals(LB_MESSAGE_VER);
 
   if (!g_slave_released) /* If connected to Master ignore most messages */
   {
-    if (!type.equals(LB_MESSAGE_ACK) && !type.equals(LB_MESSAGE_NACK) && !cloneTimeReply)
+    if (!type.equals(LB_MESSAGE_ACK) && !type.equals(LB_MESSAGE_NACK) &&
+        !cloneTimeReply && !eventPreflightReply)
     {
       return;
     }
@@ -5813,6 +5842,11 @@ void handleLBMessage(String message)
   }
   else if (type.equals(LB_MESSAGE_ESP))
   {
+    if (g_linkBusEventTransactionActive)
+    {
+      return;
+    }
+
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
     if (g_debug_prints_enabled)
     {
@@ -6000,314 +6034,223 @@ void handleLBMessage(String message)
 }
 
 
-bool sendEventToATMEGA(String * errorTxt)
+static String linkbusCommandFailureText(LinkbusCommandResult result)
 {
-  int serialIndex = 0;
-  bool done = false;
-  bool failure = true;
-  int role = 0;
-  int tx;
-  TxDataType* txData = NULL;
-  String msgOut;
-  int times2try = 5;
-  int last = 0;
-  LEDPattern ledPattern = RED_BLUE_ALTERNATING;
-  int blinkPeriodMillis = 100;
+  switch (result)
+  {
+    case LINKBUS_COMMAND_NACKED:
+      return String("AVR rejected command");
+
+    case LINKBUS_COMMAND_ACK_TIMEOUT:
+      return String("AVR acknowledgement retry or timeout");
+
+    case LINKBUS_COMMAND_LOCAL_TIMEOUT:
+      return String("local Linkbus deadline expired");
+
+    default:
+      return String("invalid Linkbus transaction state");
+  }
+}
+
+static void recordLinkbusCommandFailure(
+  const char *phase,
+  const String& reason,
+  String *errorTxt)
+{
+  g_linkBusLastPhase = phase ? phase : "unknown";
+  g_linkBusLastFailure = reason;
+  g_linkBusLastAttempts = g_linkBusCurrentAttemptCount;
 
   if (errorTxt)
   {
-    *errorTxt = String("");
+    *errorTxt = g_linkBusLastPhase + String(": ") + reason;
+    if (g_linkBusLastAttempts > 0)
+    {
+      *errorTxt += String(" (attempts ") + String(g_linkBusLastAttempts) + String(")");
+    }
   }
+}
 
-  g_linkBusAckTimoutOccurred = false;
+static bool waitForLinkbusTransactionOutcome(const char *phase, String *errorTxt)
+{
+  LinkbusCommandTransaction transaction = linkbusCommandTransactionBegin(millis());
+  LinkbusCommandResult result = LINKBUS_COMMAND_WAITING;
 
-  /*
-       Configure the ATMEGA appropriately for its role in the scheduled event.
-  */
-  while (!done)
+  g_linkBusLastPhase = phase ? phase : "unknown";
+  g_linkBusLastFailure = "";
+
+  while (result == LINKBUS_COMMAND_WAITING)
   {
     g_webSocketLocalClient.loop();
     linkbusLoop();
     yield();
-    lights->blinkLEDs(blinkPeriodMillis, ledPattern, true);
+    lights->blinkLEDs(100, RED_BLUE_ALTERNATING, true);
 
-    switch (serialIndex)
+    result = linkbusCommandTransactionObserve(
+      &transaction,
+      millis(),
+      g_LBOutputBuff->empty(),
+      g_linkBusAckPending != 0,
+      g_linkBusAckTimoutOccurred,
+      g_linkBusNacksReceived);
+  }
+
+  g_linkBusLastAttempts = g_linkBusCurrentAttemptCount;
+  if (result == LINKBUS_COMMAND_ACKNOWLEDGED)
+  {
+    return true;
+  }
+
+  /* Event programming now owns the queue, so no failed backlog may survive. */
+  g_LBOutputBuff->reset();
+  g_linkBusAckPending = 0;
+  recordLinkbusCommandFailure(phase, linkbusCommandFailureText(result), errorTxt);
+  g_linkBusAckTimoutOccurred = false;
+  g_linkBusNacksReceived = 0;
+  return false;
+}
+
+static bool drainLinkbusBeforeEvent(String *errorTxt)
+{
+  if (g_LBOutputBuff->empty() && !g_linkBusAckPending)
+  {
+    g_linkBusAckTimoutOccurred = false;
+    g_linkBusNacksReceived = 0;
+    return true;
+  }
+
+  return waitForLinkbusTransactionOutcome("preflight queue drain", errorTxt);
+}
+
+static bool sendLinkbusTransactionCommand(
+  const String& message,
+  const char *phase,
+  String *errorTxt)
+{
+  if (!g_LBOutputBuff || g_LBOutputBuff->full() ||
+      !g_LBOutputBuff->empty() || g_linkBusAckPending)
+  {
+    recordLinkbusCommandFailure(phase, String("Linkbus queue is not exclusive"), errorTxt);
+    return false;
+  }
+
+  g_linkBusAckTimoutOccurred = false;
+  g_linkBusNacksReceived = 0;
+  g_linkBusCurrentAttemptCount = 0;
+  g_LBOutputBuff->put(message);
+  return waitForLinkbusTransactionOutcome(phase, errorTxt);
+}
+
+bool sendEventToATMEGA(String *errorTxt)
+{
+  g_linkBusCurrentAttemptCount = 0;
+  if (errorTxt)
+  {
+    *errorTxt = "";
+  }
+
+  if (!g_activeEvent)
+  {
+    recordLinkbusCommandFailure("event validation", String("No active event"), errorTxt);
+    return true;
+  }
+
+  int tx = g_activeEvent->getTxSlotIndex();
+  int role = g_activeEvent->getTxRoleIndex();
+  TxDataType *txData = NULL;
+  if ((tx >= 0) && (role >= 0))
+  {
+    txData = g_activeEvent->getTxData(role, tx);
+  }
+
+  if (!txData)
+  {
+    recordLinkbusCommandFailure("event validation", String("Bad role settings"), errorTxt);
+    return true;
+  }
+
+  g_linkBusEventTransactionActive = true;
+  g_linkBusLastFailure = "";
+  bool success = drainLinkbusBeforeEvent(errorTxt);
+
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_ESP_KEEPALIVE), "preflight keep-alive", errorTxt);
+
+  if (success)
+  {
+    g_atmega_sw_version = "";
+    success = sendLinkbusTransactionCommand(
+      String(LB_MESSAGE_VER_REQUEST), "preflight version", errorTxt);
+    if (success && g_atmega_sw_version.length() <= 1)
     {
-      case 0: /* Prepare ATMEGA to receive event data */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            g_LBOutputBuff->put(LB_MESSAGE_PREP4DATA);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 1: /* send finish time */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            tx = g_activeEvent->getTxSlotIndex();
-            role = g_activeEvent->getTxRoleIndex();
-
-            if ((tx >= 0) && (role >= 0))
-            {
-              txData = g_activeEvent->getTxData(role, tx);
-
-              /* Finish time should be sent first */
-              msgOut = String(LB_MESSAGE_STARTFINISH_SET_FINISH + String(convertTimeStringToEpoch(g_activeEvent->getEventFinishDateTime())) + ";");
-              g_LBOutputBuff->put(msgOut);
-              serialIndex++;
-            }
-            else
-            {
-              if (errorTxt)
-              {
-                *errorTxt = String("Bad role settings");
-              }
-                
-              done = true;
-            }
-          }
-        }
-        break;
-
-      case 2: /* Message pattern */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            msgOut = String(LB_MESSAGE_PATTERN_SET + txData->pattern + ";");
-            g_LBOutputBuff->put(msgOut);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 3: /* Off time */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            msgOut = String(LB_MESSAGE_TIME_INTERVAL_SET0 + String(txData->offTime) + ";");
-            g_LBOutputBuff->put(msgOut);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 4: /* On time */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            msgOut = String(LB_MESSAGE_TIME_INTERVAL_SET1 + String(txData->onTime) + ";");
-            g_LBOutputBuff->put(msgOut);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 5: /* Offset time */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            msgOut = String(LB_MESSAGE_TIME_INTERVAL_SETD + String(txData->delayTime) + ";");
-            g_LBOutputBuff->put(msgOut);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 6: /* Station ID transmit interval */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            msgOut = String(LB_MESSAGE_TIME_INTERVAL_SETID + String(g_activeEvent->getIDIntervalForRole(role)) + ";");
-            g_LBOutputBuff->put(msgOut);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 7: /* Event band */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            String b;
-
-            if (g_activeEvent->getFrequencyForRole(role) <= 4000000L)
-            {
-              b = "80";
-            }
-            else
-            {
-              b = "2";
-            }
-
-            msgOut = String(LB_MESSAGE_TX_BAND_SET + b + ";");
-            g_LBOutputBuff->put(msgOut);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 8: /* Transmit power for role */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            msgOut = String(LB_MESSAGE_TX_POWER_SET + String(g_activeEvent->getPowerlevelForRole(role)) + ";");
-            g_LBOutputBuff->put(msgOut);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 9: /* Modulation format */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            msgOut = String(LB_MESSAGE_TX_MOD_SET + String(g_activeEvent->getEventModulation()) + ";");
-            g_LBOutputBuff->put(msgOut);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 10:    /* Frequency for role */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            msgOut = String(LB_MESSAGE_TX_FREQ_SET + String(g_activeEvent->getFrequencyForRole(role)) + ";");
-            g_LBOutputBuff->put(msgOut);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 11:    /* Station ID */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            msgOut = String(LB_MESSAGE_CALLSIGN_SET + g_activeEvent->getCallsign() + ";");
-            g_LBOutputBuff->put(msgOut);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 12:    /* Message code speed */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            msgOut = String(LB_MESSAGE_CODE_SPEED_SETPAT + String(g_activeEvent->getCodeSpeedForRole(role)) + ";");
-            g_LBOutputBuff->put(msgOut);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 13:    /* ID code speed */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            msgOut = String(LB_MESSAGE_CODE_SPEED_SETID + g_activeEvent->getCallsignSpeed() + ";");
-            g_LBOutputBuff->put(msgOut);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 14:    /* Start time */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            /* Start time is sent last */
-            msgOut = String(LB_MESSAGE_STARTFINISH_SET_START + String(convertTimeStringToEpoch(g_activeEvent->getEventStartDateTime())) + ";");
-            g_LBOutputBuff->put(msgOut);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 15:    /* Perm - Have ATMega save everything in EEPROM */
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            g_LBOutputBuff->put(LB_MESSAGE_PERM);
-            serialIndex++;
-          }
-        }
-        break;
-
-      case 16:
-        {
-          if (!g_LBOutputBuff->full())
-          {
-            g_LBOutputBuff->put(LB_MESSAGE_ACTIVATE_EVENT);
-            serialIndex++;
-            times2try = 10;
-          }
-        }
-        break;
-
-      case 17: /* Wait for confirmation */
-        {
-          if (times2try)
-          {
-            if (g_LBOutputBuff->empty() && !g_linkBusAckPending && !g_linkBusAckTimoutOccurred)
-            {
-              failure = false;
-              done = true;
-            }
-            else
-            {
-              if ((unsigned long)(millis() - last) > 1000)
-              {
-                last = millis();
-                times2try--;
-              }
-            }
-          }
-          else
-          {
-            if (errorTxt)
-            {
-              *errorTxt = String("Processor not responding");
-            }
-
-            done = true;
-            failure = true;
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-            if (g_debug_prints_enabled)
-            {
-              Serial.println("LB Buffer Timeout");
-            }
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-          }
-        }
-        break;
-
-      default:    /* Tell ATMEGA to begin executing the event */
-        {
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-          if (g_debug_prints_enabled)
-          {
-            Serial.println("Bad state in event sender");
-          }
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-          if (g_LBOutputBuff->full())
-          {
-            if (errorTxt)
-            {
-              *errorTxt = String("Error: LB buffer full!");
-            }
-
-            return (true);
-          }
-
-          done = true;
-        }
-        break;
+      recordLinkbusCommandFailure(
+        "preflight version", String("AVR version reply missing"), errorTxt);
+      success = false;
     }
   }
 
-  return (failure);
+  String band = g_activeEvent->getFrequencyForRole(role) <= 4000000L ? "80" : "2";
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_PREP4DATA), "prepare event", errorTxt);
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_STARTFINISH_SET_FINISH) +
+      String(convertTimeStringToEpoch(g_activeEvent->getEventFinishDateTime())) + ";",
+    "finish time", errorTxt);
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_PATTERN_SET) + txData->pattern + ";",
+    "message pattern", errorTxt);
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_TIME_INTERVAL_SET0) + String(txData->offTime) + ";",
+    "off interval", errorTxt);
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_TIME_INTERVAL_SET1) + String(txData->onTime) + ";",
+    "on interval", errorTxt);
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_TIME_INTERVAL_SETD) + String(txData->delayTime) + ";",
+    "slot offset", errorTxt);
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_TIME_INTERVAL_SETID) +
+      String(g_activeEvent->getIDIntervalForRole(role)) + ";",
+    "ID interval", errorTxt);
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_TX_BAND_SET) + band + ";", "event band", errorTxt);
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_TX_POWER_SET) +
+      String(g_activeEvent->getPowerlevelForRole(role)) + ";",
+    "transmit power", errorTxt);
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_TX_MOD_SET) +
+      String(g_activeEvent->getEventModulation()) + ";",
+    "modulation", errorTxt);
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_TX_FREQ_SET) +
+      String(g_activeEvent->getFrequencyForRole(role)) + ";",
+    "frequency", errorTxt);
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_CALLSIGN_SET) + g_activeEvent->getCallsign() + ";",
+    "station ID", errorTxt);
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_CODE_SPEED_SETPAT) +
+      String(g_activeEvent->getCodeSpeedForRole(role)) + ";",
+    "message speed", errorTxt);
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_CODE_SPEED_SETID) + g_activeEvent->getCallsignSpeed() + ";",
+    "ID speed", errorTxt);
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_STARTFINISH_SET_START) +
+      String(convertTimeStringToEpoch(g_activeEvent->getEventStartDateTime())) + ";",
+    "start time", errorTxt);
+
+  /* GO,2 validates completeness and saves changed values; do not persist first. */
+  success = success && sendLinkbusTransactionCommand(
+    String(LB_MESSAGE_ACTIVATE_EVENT), "activate event", errorTxt);
+
+  g_linkBusEventTransactionActive = false;
+  if (success)
+  {
+    g_linkBusLastPhase = "complete";
+    g_linkBusLastFailure = "";
+  }
+
+  return !success;
 }

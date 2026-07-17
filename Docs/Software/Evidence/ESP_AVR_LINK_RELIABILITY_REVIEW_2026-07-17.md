@@ -4,7 +4,7 @@
 
 **Paths:** B-LINK-04 and B-HTTP-03
 
-**Status:** Software failure mechanisms characterized; no firmware changed; ESP-only correction should be implemented and piloted first
+**Status:** ESP-only 2.6 correction implemented and host/build qualified; master/target pilot pending
 
 ## Scope and operating assumption
 
@@ -169,3 +169,43 @@ The pilot evidence must record phase timestamps and the new diagnostic state. A 
 ## Decision
 
 Proceed first with the ESP-only transaction containment and instrumentation. It addresses the observed intermittent failure mode without reopening repaired hardware or requiring the fleet's AVR processors to be reflashed. Defer semantic AVR ACKs and atomic commit until the next justified AVR service cycle.
+
+## ESP 2.6 implementation
+
+The low-risk Phase 1 containment is implemented without changing AVR source or the Linkbus wire protocol:
+
+- event programming takes exclusive ownership while clone keep-alive insertion is paused;
+- any existing queue work must drain before event programming begins;
+- an acknowledged `$ESP,Z;` keep-alive and a fresh `$VER?` reply plus ACK prove both directions immediately before configuration;
+- one event command is queued at a time and the next command is unreachable until the current command has completed cleanly;
+- any NAK fails the transaction, and a command that required an ACK retry is conservatively rejected even if a later ACK arrives;
+- a separate wrap-safe 12-second deadline prevents a transaction wait from becoming unbounded;
+- failed transaction-owned work is removed instead of being left for clone cleanup or shutdown;
+- the pre-validation `$PRM;` write is removed; successful `$GO,2;` retains the AVR's existing completeness check and changed-value persistence path; and
+- `/firmware/status` now exposes transaction activity, last valid AVR-frame time, phase, attempts, and retained failure reason.
+
+Detailed failure text continues through the existing target-to-master clone error path. Operational timeout/NAK flags are cleared after the failure is copied into the retained diagnostic fields, so a failed event operation does not poison a later unrelated Linkbus operation.
+
+The correction does not change the AVR's broad ACK semantics or make its event update atomic in RAM. Those Phase 2/3 limitations remain deferred.
+
+## Host and build evidence
+
+The dependency-free transaction test began red because the production helper did not exist. It now covers queued and pending work, clean ACK, NAK with queued follow-up work, retry-rescued ACK rejection, the exact local deadline, null input, and `millis()` wrap.
+
+The firmware source contract additionally requires exclusive ownership, clone-maintenance suppression, keep-alive and version preflight, retained diagnostics, one-command transaction use, and absence of the old `PRM` enqueue before activation.
+
+Two consecutive exact pinned ESP8266 builds complete with zero warnings and produce the same sketch size and SHA-256. Compared with the preceding ESP 2.5 source commit `8b5d78f`:
+
+| Resource | ESP 2.5 | ESP 2.6 candidate | Change |
+| --- | ---: | ---: | ---: |
+| Total sketch | 523,652 bytes | 524,592 bytes | +940 bytes |
+| IROM | 486,276 bytes | 486,660 bytes | +384 bytes |
+| IRAM | 27,676 bytes | 27,676 bytes | 0 |
+| Dynamic memory | 41,588 bytes | 42,184 bytes | +596 bytes |
+| DATA | 1,360 bytes | 1,360 bytes | 0 |
+| RODATA | 8,340 bytes | 8,896 bytes | +556 bytes |
+| BSS | 31,888 bytes | 31,928 bytes | +40 bytes |
+
+The candidate retains 39,736 bytes of dynamic-memory headroom and 5,092 bytes of IRAM headroom. The sketch binary is 528,752 bytes with SHA-256 `78eb0232c08e30ad1654d450e2a8444ee6fb009b163309e93154c638fa00ad1b`.
+
+Live qualification remains intentionally limited to sprint master and sprint fox 1 before any wider ESP deployment.
