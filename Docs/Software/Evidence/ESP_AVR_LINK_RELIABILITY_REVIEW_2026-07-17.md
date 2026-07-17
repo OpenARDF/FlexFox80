@@ -243,3 +243,11 @@ This proves that the accepted sketch survived the delayed-return/power-down cond
 At `2026-07-17T14:36:39Z`, the operator reported that the first master-to-target clone/sync succeeded. Two additional consecutive syncs under the requested no-power-cycle conditions also succeeded, for three successful operations in sequence with the target-only event cleanup option enabled. No ATMEGA communication error or shutdown was reported.
 
 The tether was no longer reachable when a post-clone diagnostic read was attempted, so no additional firmware-status telemetry is attributed to these three operations. The operator-observed result satisfies the critical sprint master/sprint fox 1 pilot gate. Wider deployment should retain identity-first preflight, exact sketch verification, and per-unit post-reboot ESP/AVR checks.
+
+## Fleet clone tail observation
+
+The operator subsequently reported 23 fleet sync/clone attempts: 19 succeeded on the first attempt and the remaining 4 succeeded on the second attempt. The first-attempt miss rate was therefore 4/23 (17.4%), with 4/4 recovery on retry. The result is consistent with the existing intermittent clone-tail issue and does not resemble persistent event-file corruption.
+
+On the four failed attempts, the target ESP was observed with both status LEDs solid. Source review shows that this is the normal `setupWiFiAPConnection()` failure indication after the slave returns from its clone path and cannot re-associate with the configured master; it is not a clone-phase-specific diagnostic. The clone state machine currently reports a generic sync error to the browser, so the phase that failed (master handshake, clock readback, file transfer, event programming, or cleanup) cannot be distinguished from the field message alone.
+
+This observation supports adding phase-specific retained clone diagnostics and bounded automatic retry to a future ESP-only maintenance slice. It does not justify an immediate firmware behavior change or an AVR reflash.
