@@ -237,3 +237,9 @@ At `2026-07-17T14:30:36Z`, the second ESP 2.6 pilot was verified on the operator
 - fresh WebSocket and `/firmware/status` reads reported no active transaction, `linkbusLastAttempts: 1`, `linkbusLastPhase: "complete"`, and an empty `linkbusLastFailure`.
 
 This proves that the accepted sketch survived the delayed-return/power-down condition and that neither an AVR update nor a repeated ESP write was necessary. A real master-to-target clone and its event/role result remain required before expanding the ESP 2.6 pilot to the fleet.
+
+## Pilot clone result
+
+At `2026-07-17T14:36:39Z`, the operator reported that the first master-to-target clone/sync succeeded. Two additional consecutive syncs under the requested no-power-cycle conditions also succeeded, for three successful operations in sequence with the target-only event cleanup option enabled. No ATMEGA communication error or shutdown was reported.
+
+The tether was no longer reachable when a post-clone diagnostic read was attempted, so no additional firmware-status telemetry is attributed to these three operations. The operator-observed result satisfies the critical sprint master/sprint fox 1 pilot gate. Wider deployment should retain identity-first preflight, exact sketch verification, and per-unit post-reboot ESP/AVR checks.
