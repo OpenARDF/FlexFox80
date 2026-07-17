@@ -1,6 +1,6 @@
 # FlexFox80 v1.0.0 Maintenance Release Record
 
-**Status:** Released and independently archive-verified on 2026-07-14
+**Status:** Withdrawn from GitHub on 2026-07-17 because AVR `0.201` is unsafe for scheduled operation
 
 **Hardware:** FlexFox Ver 2.1 (Mar 2022) only
 
@@ -12,7 +12,7 @@
 
 **Tagged release commit:** `b4b98165af2ece0ed442ce23311be07df57c0231`
 
-**GitHub release:** [FlexFox80 v1.0.0](https://github.com/OpenARDF/FlexFox80/releases/tag/v1.0.0)
+**GitHub release:** Deleted; the annotated tag remains only as an audit marker
 
 ## Critical safety advisory — 2026-07-17
 
@@ -20,7 +20,9 @@ Do not deploy or retain AVR `0.201` for scheduled operation. A field reproductio
 
 The root cause is corrected in development AVR `0.202`. It has passed source, host, contract, audit, and deterministic Release-build gates, but it still requires the documented dummy-loaded scheduled start/Sprint cycle/finish pilot before fleet use. See [AVR sleep/wake RTC counter regression](../../Evidence/AVR_SLEEP_WAKE_RTC_COUNTER_REGRESSION_2026-07-17.md).
 
-## Published release
+The v1.0.0 release page and all six downloadable assets were removed from GitHub. See [GitHub release withdrawal](../../Evidence/V1_0_0_GITHUB_RELEASE_WITHDRAWAL_2026-07-17.md). The retained tag is historical evidence, not an approved download or deployment source.
+
+## Historical published release
 
 - Annotated tag object: `1ce3b05909014ae8df50c0d246d042550ef47fb3`.
 - Tag target and package-manifest commit: `b4b98165af2ece0ed442ce23311be07df57c0231`.
@@ -28,7 +30,7 @@ The root cause is corrected in development AVR `0.202`. It has passed source, ho
 - All six GitHub assets were downloaded into a clean directory and matched the validated local files byte-for-byte.
 - The downloaded ZIP passed checksums, manifest identity, AVR HEX parsing, ESP checksum validation, LittleFS inspection, and tag-target comparison.
 
-See [GitHub release verification](../../Evidence/V1_0_0_GITHUB_RELEASE_VERIFICATION_2026-07-14.md) for the archived asset inventory and independent validation evidence.
+See [GitHub release verification](../../Evidence/V1_0_0_GITHUB_RELEASE_VERIFICATION_2026-07-14.md) for the historical asset inventory and independent validation evidence.
 
 ## Candidate evidence
 
