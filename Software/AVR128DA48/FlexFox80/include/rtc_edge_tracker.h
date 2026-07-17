@@ -69,6 +69,26 @@ static inline uint8_t rtcEdgeTrackerTake(volatile RtcEdgeTracker* tracker)
 	return elapsed;
 }
 
+static inline uint8_t rtcEdgeTrackerTakePortEdge(
+	volatile RtcEdgeTracker* tracker,
+	bool samplerRunning,
+	bool currentLevel)
+{
+	/*
+	 * In standby the sampler is deliberately stopped, so the PORT interrupt itself
+	 * is the only edge evidence. Do not advance one tracker counter without the
+	 * other: a second sleeping edge would otherwise wrap their difference to 255.
+	 * TIMERB_init() realigns the tracker before sampling resumes after wake.
+	 */
+	if(!samplerRunning)
+	{
+		return 1;
+	}
+
+	rtcEdgeTrackerObserve(tracker, currentLevel);
+	return rtcEdgeTrackerTake(tracker);
+}
+
 static inline uint8_t rtcEdgeTrackerGeneration(volatile RtcEdgeTracker* tracker)
 {
 	return tracker->observed;

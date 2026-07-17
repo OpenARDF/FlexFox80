@@ -14,7 +14,7 @@ The runner writes executables only under the ignored `Software/AVR128DA48/tmp/ho
 
 `just test` also runs dependency-free source-contract checks for firmware declarations whose target-compiler interpretation is safety-relevant. These checks supplement compilation; they do not replace it.
 
-The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current candidate identity is ESP `2.6` plus AVR `0.201`, reported together as `SW_VERSIONS,2.6,0.201`.
+The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current candidate identity is ESP `2.6` plus AVR `0.202`, reported together as `SW_VERSIONS,2.6,0.202`.
 
 ## Current characterization boundary
 
@@ -42,6 +42,13 @@ The Linkbus receive-boundary regression compiles the same guards used by the USA
 - rejection of writes to the message-ID position or a fourth field;
 - safe termination of a maximum-length third field;
 - rejection of a fourth comma-delimited field and zero-capacity buffers.
+
+The RTC edge-tracker regression compiles the same counter decisions used by the AVR's one-second interrupt and covers:
+
+- a PORT interrupt before or after the high-priority sampler observes an edge;
+- recovery of multiple observed edges and eight-bit counter wrap;
+- repeated one-second PORT wakes while the sampler is deliberately stopped for standby sleep; and
+- counter realignment followed by the first physical edge after the sampler restarts.
 
 The event-schedule state regression compiles the same pure decision used by the foreground schedule helpers and covers:
 

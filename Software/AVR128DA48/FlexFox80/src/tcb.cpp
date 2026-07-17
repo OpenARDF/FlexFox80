@@ -191,10 +191,13 @@ uint8_t rtcElapsedEdges()
 	 * Keep the shared tracker atomic with respect to the Level-1 TCB2 ISR; a TCB2
 	 * flag raised while masked remains pending and is serviced after re-enabling.
 	 */
+	bool sampler_running = TCB2.CTRLA & (1 << TCB_ENABLE_bp);
 	uint8_t interrupt_control = TCB2.INTCTRL;
 	TCB2.INTCTRL = 0;
-	rtcEdgeTrackerObserve(&g_rtc_edge_tracker, PORTA_get_pin_level(RTC_SQW));
-	uint8_t elapsed = rtcEdgeTrackerTake(&g_rtc_edge_tracker);
+	uint8_t elapsed = rtcEdgeTrackerTakePortEdge(
+		&g_rtc_edge_tracker,
+		sampler_running,
+		PORTA_get_pin_level(RTC_SQW));
 	TCB2.INTCTRL = interrupt_control;
 	return elapsed;
 }

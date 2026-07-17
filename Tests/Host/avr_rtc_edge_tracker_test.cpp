@@ -81,6 +81,39 @@ void restart_discards_sleep_gap_from_disabled_sampler()
 	expect(rtcEdgeTrackerTake(&tracker) == 1, "sleep_edge_fallback_remains_one_second");
 }
 
+void disabled_sampler_counts_each_port_wake_once()
+{
+	RtcEdgeTracker tracker = {};
+	tracker.observed = 10;
+	tracker.serviced = 10;
+	tracker.previousLevel = true;
+	std::uint32_t elapsedSeconds = 0;
+
+	for(std::uint32_t edge = 0; edge < 86400UL; ++edge)
+	{
+		elapsedSeconds += rtcEdgeTrackerTakePortEdge(&tracker, false, true);
+	}
+
+	expect(elapsedSeconds == 86400UL, "full_day_of_sleep_wakes_advances_one_second_per_edge");
+	expect(tracker.observed == 10, "disabled_sampler_does_not_change_observed_count");
+	expect(tracker.serviced == 10, "disabled_sampler_does_not_change_serviced_count");
+}
+
+void restarted_sampler_counts_the_next_physical_edge_once()
+{
+	RtcEdgeTracker tracker = {};
+	tracker.observed = 10;
+	tracker.serviced = 14;
+	tracker.previousLevel = true;
+
+	rtcEdgeTrackerReset(&tracker, true);
+	rtcEdgeTrackerObserve(&tracker, false);
+	expect(
+		rtcEdgeTrackerTakePortEdge(&tracker, true, true) == 1,
+		"restarted_sampler_counts_next_physical_edge_once");
+	expect(tracker.observed == tracker.serviced, "restarted_sampler_remains_aligned");
+}
+
 } // namespace
 
 int main()
@@ -90,6 +123,8 @@ int main()
 	blocked_port_interrupt_recovers_every_observed_edge();
 	counter_wrap_preserves_elapsed_edge_count();
 	restart_discards_sleep_gap_from_disabled_sampler();
+	disabled_sampler_counts_each_port_wake_once();
+	restarted_sampler_counts_the_next_physical_edge_once();
 
 	std::cout << "All AVR RTC edge tracker tests passed\n";
 	return EXIT_SUCCESS;

@@ -229,7 +229,7 @@ const cloneKeepAliveSchedule = readFileSync(cloneKeepAliveSchedulePath, "utf8");
 const linkbusCommandTransaction = readFileSync(linkbusCommandTransactionPath, "utf8");
 const firmwareUpdateIntegrity = readFileSync(firmwareUpdateIntegrityPath, "utf8");
 
-const expectedAvrVersion = "0.201";
+const expectedAvrVersion = "0.202";
 const expectedEspVersion = "2.6";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
@@ -931,12 +931,26 @@ if (
   !/ISR\(TCB2_INT_vect\)[\s\S]*rtcEdgeTrackerObserve\s*\(\s*&g_rtc_edge_tracker\s*,\s*PORTA_get_pin_level\(RTC_SQW\)\s*\)/.test(
     tcb,
   ) ||
-  !/uint8_t\s+rtcElapsedEdges\(\)[\s\S]*TCB2\.INTCTRL\s*=\s*0[\s\S]*rtcEdgeTrackerObserve[\s\S]*rtcEdgeTrackerTake[\s\S]*TCB2\.INTCTRL\s*=\s*interrupt_control/.test(
+  !/uint8_t\s+rtcElapsedEdges\(\)[\s\S]*sampler_running\s*=\s*TCB2\.CTRLA[\s\S]*TCB2\.INTCTRL\s*=\s*0[\s\S]*rtcEdgeTrackerTakePortEdge\s*\([\s\S]*sampler_running[\s\S]*TCB2\.INTCTRL\s*=\s*interrupt_control/.test(
     tcb,
   )
 ) {
   process.stderr.write(
-    "Firmware contract check failed: RTC edge observation is missing or not race-safe\n",
+    "Firmware contract check failed: RTC edge observation is missing, not race-safe, or does not separate sleeping wakes from the stopped sampler\n",
+  );
+  process.exit(1);
+}
+
+if (
+  !/int8_t\s+TIMERB_init\(\)[\s\S]*rtcEdgeTrackerReset\s*\([\s\S]*TCB2\.CTRLA\s*=[\s\S]*TCB_ENABLE_bp/.test(
+    tcb,
+  ) ||
+  !/int8_t\s+TIMERB_sleep\(\)[\s\S]*TCB2\.INTCTRL\s*=\s*0[\s\S]*TCB2\.CTRLA\s*=\s*0/.test(
+    tcb,
+  )
+) {
+  process.stderr.write(
+    "Firmware contract check failed: RTC sampler stop/restart does not retain the qualified sleep boundary\n",
   );
   process.exit(1);
 }

@@ -14,6 +14,12 @@
 
 **GitHub release:** [FlexFox80 v1.0.0](https://github.com/OpenARDF/FlexFox80/releases/tag/v1.0.0)
 
+## Critical safety advisory — 2026-07-17
+
+Do not deploy or retain AVR `0.201` for scheduled operation. A field reproduction with ten synchronized Sprint transmitters exposed a sleep/wake RTC-counter regression that can miss a future start and advance event time fast enough to finish far too early. Power cycling only re-synchronizes the clock temporarily; it does not correct the affected firmware.
+
+The root cause is corrected in development AVR `0.202`. It has passed source, host, contract, audit, and deterministic Release-build gates, but it still requires the documented dummy-loaded scheduled start/Sprint cycle/finish pilot before fleet use. See [AVR sleep/wake RTC counter regression](../../Evidence/AVR_SLEEP_WAKE_RTC_COUNTER_REGRESSION_2026-07-17.md).
+
 ## Published release
 
 - Annotated tag object: `1ce3b05909014ae8df50c0d246d042550ef47fb3`.
