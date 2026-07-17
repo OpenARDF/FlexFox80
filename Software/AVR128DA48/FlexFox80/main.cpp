@@ -375,6 +375,9 @@ ISR(PORTA_PORT_vect)
 						g_go_to_sleep_now = false;
 						g_sleeping = false;
 						g_awakenedBy = AWAKENED_BY_CLOCK;
+						/* The pre-start deadline has been consumed. A later WiFi shutdown
+						 * must not re-enter this already-expired sleep mode. */
+						g_sleepType = DO_NOT_SLEEP;
 						g_on_the_air = 0; /* This will cause this variable to be properly initialized in the fast interrupt */
 						g_timer_launched_new_event = true;
 					}
@@ -446,6 +449,10 @@ void handle_1sec_tasks(void)
 
 				if(temp_time >= g_event_start_epoch) /* Time for the event to start */
 				{
+					/* WiFi clients may intentionally keep the ESP powered across the
+					 * start. Retire the pre-start sleep mode before that delayed WiFi
+					 * shutdown can request sleep during the running event. */
+					g_sleepType = DO_NOT_SLEEP;
 					powerToTransmitter(ON);
 				
 // 					if(g_intra_cycle_delay_time)

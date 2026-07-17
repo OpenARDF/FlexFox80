@@ -14,7 +14,7 @@ The runner writes executables only under the ignored `Software/AVR128DA48/tmp/ho
 
 `just test` also runs dependency-free source-contract checks for firmware declarations whose target-compiler interpretation is safety-relevant. These checks supplement compilation; they do not replace it.
 
-The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current candidate identity is ESP `2.6` plus AVR `0.202`, reported together as `SW_VERSIONS,2.6,0.202`.
+The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current candidate identity is ESP `2.6` plus AVR `0.203`, reported together as `SW_VERSIONS,2.6,0.203`.
 
 ## Current characterization boundary
 
@@ -56,6 +56,11 @@ The event-schedule state regression compiles the same pure decision used by the 
 - `start-1`, `start`, and `start+1`;
 - `finish-1`, `finish`, and `finish+1`;
 - agreement between future, active, and overall-scheduled predicates using one supplied `now` value.
+
+The source contracts additionally require both the RTC pre-start wake and the
+scheduled-start transition to retire `SLEEP_UNTIL_START_TIME`. This preserves
+correct cycle timing when a connected Wi-Fi programming client intentionally
+keeps the ESP powered across the event start and disconnects later.
 
 The ESP role-assignment bounds regression compiles the same first-colon decision used by `Event::setTxAssignment()` and covers:
 

@@ -2,9 +2,9 @@
 
 **Affected release:** FlexFox80 v1.0.0, AVR `0.201`
 
-**Corrected development version:** AVR `0.202`
+**Corrected development version:** AVR `0.203`
 
-**Status:** Root cause reproduced; source, host, contract, audit, and two deterministic Release-build gates pass; connected-target scheduled-event qualification remains required
+**Status:** Both release-blocking scheduler failures reproduced and corrected; source, host, contract, audit, deterministic Release-build, and one-unit dummy-loaded scheduled-event/sleep qualification pass; synchronized fleet rehearsal remains required
 
 ## Field reproduction
 
@@ -31,7 +31,7 @@ The original RTC edge-recovery tests covered delayed normal-priority service, co
 
 The v1.0.0 hardware disposition explicitly deferred complete scheduled-start, scheduled-finish, sleep/wake, energized Sprint-cycle, and long-duration event tests. The focused edge-recovery result was valid for its tested awake condition but was not sufficient evidence for the untested standby condition.
 
-## Correction
+## First correction: standby RTC accounting
 
 `rtcElapsedEdges()` now determines whether `TCB2` is actually enabled and uses the shared `rtcEdgeTrackerTakePortEdge()` path:
 
@@ -39,11 +39,26 @@ The v1.0.0 hardware disposition explicitly deferred complete scheduled-start, sc
 - sampler stopped: treat the DS3231 port interrupt itself as exactly one physical second without modifying either tracker counter;
 - wake reinitialization: retain the existing `TIMERB_init()` reset that re-aligns the tracker before sampling resumes.
 
-No event duration, Sprint 12/48-second timing, RF keying, sleep policy, EEPROM field, Linkbus wire value, or ESP behavior changed. The corrected image is identified as AVR `0.202` so it cannot be confused with the affected published AVR `0.201` image.
+No event duration, Sprint 12/48-second timing, RF keying, EEPROM field, Linkbus wire value, or ESP behavior changed in this correction. The first corrected image was identified as AVR `0.202` so it could not be confused with the affected published AVR `0.201` image.
+
+## Connected-target finding: expired pre-start sleep state
+
+The first dummy-loaded `0.202` qualification exposed a second, independent scheduler defect. The ESP is intentionally allowed to remain powered while a WiFi station is associated so field programming is not interrupted. When the Moto remained associated across the scheduled start, the AVR commenced the event but retained `SLEEP_UNTIL_START_TIME`. After the Moto disconnected and the ESP's shutdown grace later expired, the ordinary WiFi shutdown path requested sleep using that stale, already-expired mode. The immediate RTC wake then reinitialized the running event's on-air state and rephased its Classic cycle.
+
+This explains the live sequence in which the first Classic transmission was correct, the next expected cycle was absent, and a roughly one-minute transmission appeared about two minutes late after wireless shutdown. It is not RTC drift and is distinct from the `1,255` standby accounting failure.
+
+AVR `0.203` retires the pre-start sleep mode in both places that consume the start deadline:
+
+- the RTC pre-start wake changes `g_sleepType` to `DO_NOT_SLEEP` before launching the event; and
+- the foreground scheduled-start path defensively makes the same transition before powering the transmitter.
+
+WiFi association still justifiably delays ESP power-off. The change only prevents a later WiFi shutdown from reusing an expired sleep deadline during an event that is already running.
 
 ## Regression and neighboring audit
 
 The direct host regression now applies 86,400 consecutive sleeping port wakes and requires exactly 86,400 elapsed software seconds while both tracker counters remain unchanged. It also verifies that the first physical edge after timer restart is counted once and leaves the tracker aligned.
+
+The firmware source contract additionally requires both scheduled-start paths to retire `SLEEP_UNTIL_START_TIME` before the running-event state can be launched. This locks the connected-across-start failure sequence to the corrected behavior.
 
 The audit rechecked every AVR change between the prior `0.200` baseline and v1.0.0 that can affect transmitting at the right time or for the right duration:
 
@@ -63,25 +78,40 @@ No second hardening regression that changes valid event start, finish, Sprint in
 - `just check`: pass, including host sanitizers, schedule boundaries, EEPROM layout, Linkbus bounds, ESP event transaction tests, and firmware source contracts.
 - Pinned AVR-GCC `7.3.0` / AVR-Dx_DFP `1.9.103` Release build: `reference-version-match`, zero warnings.
 - Two clean Release builds: all six artifact hashes byte-identical.
-- Resource use: flash text 41,020 bytes; initialized data 1,112 bytes; BSS 1,572 bytes.
+- Resource use: flash text 41,028 bytes; initialized data 1,112 bytes; BSS 1,572 bytes.
 - EEPROM initializer remains byte-identical to the established 274-byte image.
 
 Corrected candidate flash:
 
 ```text
-7070bce580223a138328522e3bd5434457be56c4d358e82778685343e54ed63a  FlexFox80.hex
+68007a3f7976e689a545e5da9f8156eda321332921f4921835c5f099d1a30adf  FlexFox80.hex
 ```
 
-## Required connected-target gate
+## Connected-target qualification
 
-AVR `0.202` is not approved for the Championship fleet until a dummy-loaded pilot passes all of the following using a future scheduled event without a post-programming or post-sync power cycle:
+The identified pilot (`Tx_7C2D6FD3`, MAC `86:A8:24:2F:96:5B`) was programmed through Atmel-ICE `J41800053674`. Independent readback verified AVR `0.203` flash, the preserved EEPROM image, and the untouched fuse image. Live telemetry reported `SW_VERSIONS,2.6,0.203` with advancing clock and normal temperature/battery reports.
 
-1. enter standby and remain there long enough to cross multiple RTC wakes;
-2. wake before the exact scheduled start and begin at the programmed epoch;
-3. execute repeated Sprint 12-second-on / 48-second-off cycles in correct slots;
-4. continue across an extended soak without compressed countdowns or premature finish;
-5. stop at the exact scheduled finish;
-6. pass a cold-power recovery run with the same retained event;
-7. preserve EEPROM and fuses, verify the programmed flash by independent readback, and confirm AVR `0.202` in live telemetry.
+A real Sprint event ran 12 seconds on / 48 seconds off for its complete eight-minute test window, crossing the original approximately five-minute premature-stop point. A main-power recovery while that event was active returned it to the correct assigned slot. A three-trial clock synchronization/readback test passed before the sleep qualification.
 
-Only after that pilot passes should the same identified AVR/ESP pair move to the ten-fox set, followed by a complete synchronized start/cycle/finish rehearsal before Championship use.
+The final Classic test was scheduled for 7:32-7:42 pm, with a future Sprint event at 7:45 pm. The Moto was disconnected after the AVR returned receiving-data status `236` followed by waiting-for-start status `255`. External input-current observations were:
+
+| Time | Current | Observation |
+|---|---:|---|
+| 7:24:30 | 1.7 mA | Pre-event standby after the intentional ESP-connected grace period |
+| 7:31:50 | 40.6 mA | Scheduled wake, ten seconds before start |
+| 7:32 | 971 mA | First Classic transmission |
+| after 7:33 | 1.7 mA | Inter-transmission standby |
+| 7:36:50 | 40.6 mA | Second scheduled wake |
+| 7:37 | 960 mA | Second Classic transmission |
+| after 7:38 | 40.4 mA | Deliberate final-cycle awake policy, which prevents event finish while asleep |
+| 7:42 | 152 mA | Classic finish and ESP startup to retrieve the next event |
+| 7:42:30 | 1.7 mA | Post-event standby with the future Sprint event scheduled |
+| 7:44:50 | 40.5 mA | Wake ten seconds before that future event |
+
+This passes pre-event sleep, exact scheduled wake/start, genuine inter-transmission sleep, repeated Classic timing, exact finish handling, and post-event sleep while another event remains scheduled. It also confirms that the connected-across-start correction prevents the delayed WiFi shutdown from rephasing the event.
+
+After the test, Sprint2 and Sprint3 were restored to their exact original epochs, the temporary `Classic80m.event` file was deleted, and a refreshed event sheet confirmed only the original six event files. The pilot's original EEPROM was restored. Final independent verification passed for AVR `0.203` flash, original EEPROM, and original fuses; the two transient backup files were then deleted.
+
+## Remaining fleet gate
+
+The one-unit pilot is complete, but AVR `0.203` is not yet approved for Championship deployment. Program the same identified AVR/ESP pair into the ten-fox set, then run a complete synchronized future start, repeated cycle, extended-duration, exact finish, and cold-power recovery rehearsal before Championship use. A substantially longer soak remains valuable even though the pilot crossed the original five-minute failure point.

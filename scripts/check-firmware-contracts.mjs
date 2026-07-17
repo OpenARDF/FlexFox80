@@ -229,7 +229,7 @@ const cloneKeepAliveSchedule = readFileSync(cloneKeepAliveSchedulePath, "utf8");
 const linkbusCommandTransaction = readFileSync(linkbusCommandTransactionPath, "utf8");
 const firmwareUpdateIntegrity = readFileSync(firmwareUpdateIntegrityPath, "utf8");
 
-const expectedAvrVersion = "0.202";
+const expectedAvrVersion = "0.203";
 const expectedEspVersion = "2.6";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
@@ -1005,6 +1005,26 @@ if (
 }
 
 process.stdout.write("PASS event boundaries share one ISR-aligned time decision\n");
+
+const scheduledStartBlock = avrMain.match(
+  /if\s*\(\s*temp_time\s*>=\s*g_event_start_epoch\s*\)\s*\/\* Time for the event to start \*\/\s*\{([\s\S]*?)g_event_commenced\s*=\s*true\s*;/,
+);
+if (
+  !scheduledStartBlock ||
+  !/g_sleepType\s*=\s*DO_NOT_SLEEP\s*;[\s\S]*powerToTransmitter\(ON\)/.test(
+    scheduledStartBlock[1],
+  ) ||
+  !/g_awakenedBy\s*=\s*AWAKENED_BY_CLOCK\s*;[\s\S]*g_sleepType\s*=\s*DO_NOT_SLEEP\s*;[\s\S]*g_timer_launched_new_event\s*=\s*true\s*;/.test(
+    rtcIsr[1],
+  )
+) {
+  process.stderr.write(
+    "Firmware contract check failed: scheduled start can retain an expired pre-start sleep mode\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS scheduled start retires pre-start sleep state\n");
 
 const eventStartAssignments = avrMain.match(/\bg_event_start_epoch\s*=/g) || [];
 const eventFinishAssignments = avrMain.match(/\bg_event_finish_epoch\s*=/g) || [];
