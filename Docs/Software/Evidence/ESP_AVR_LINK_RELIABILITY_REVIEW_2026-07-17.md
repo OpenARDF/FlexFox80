@@ -19,7 +19,7 @@ Several software behaviors can turn one transient missed response into a mislead
 1. `sendEventToATMEGA()` does not treat an AVR NAK as failure. It resets only the timeout flag at entry, and its success condition does not inspect `g_linkBusNacksReceived`.
 2. The ESP prequeues the complete 17-command event load. On failure it waits only about ten seconds, returns, and leaves the remaining commands in the shared queue.
 3. Clone keep-alives use that same queue. They are scheduled immediately and then every 20 seconds, including while event programming is in progress.
-4. AVR acknowledgements confirm that a recognized handler ran, not that the requested setting was successfully applied. Frequency, power, and event activation can report an internal error and still send `!ACK;`.
+4. AVR acknowledgements confirm that a recognized handler ran, not that the requested setting was successfully applied. Frequency can fail silently, while power and event activation can record an internal error; all can still send `!ACK;`.
 5. The ESP sends `PRM` before `GO,2`. `PRM` saves all current settings unconditionally, so an interrupted transfer can persist a partial configuration before `GO,2` checks whether every required field arrived.
 6. The AVR silently drops output when all four transmit buffers are occupied. The short 200-iteration foreground spin is not a baud-rate-scale wait, and most callers ignore the send result. A dropped ACK is therefore indistinguishable from a broken link at the ESP.
 7. ACK and NAK frames carry no command or sequence identity. A delayed or duplicated ACK can be attributed to the wrong pending command after recovery advances the queue.
