@@ -605,12 +605,15 @@ Use a small internal issue table or tracker with these fields:
 | R15 | A/B | Medium | AVR event boundaries | Foreground schedule decisions use one `now` and match the RTC ISR's `start <= now < finish` interval | [Event-boundary state](Evidence/AVR_EVENT_BOUNDARY_STATE_2026-07-13.md); red/green tests, exact builds, byte-verified target installation, preserved EEPROM/fuses, and normal telemetry/advancing-clock probe pass | A8 scheduled event-mode regression | Complete |
 | B-TIME-01 | B | High | ESP/Linkbus/AVR RTC | Rare field outlier; reset-dependent one-second system-time quantization reproduced | Corrected target/master pass reset gates; first two corrected clones transfer all files with 479–548 ms target lags | Characterize discrete tick-loss and broader convenient clone evidence; drift deferred | Implementing |
 | B-CLONE-02 | B | Medium | ESP clone file transfer | Operator estimates retry needed in 5–10% of clones; easy workaround | One six-of-nine-file bench stall followed by a successful retry; first two corrected clones pass | Characterize timeout/recovery independently of B-TIME-01 | Planned |
+| B-HTTP-03 | B | Medium | ESP startup/HTTP/Linkbus | Wi-Fi association can precede HTTP availability by almost three minutes | [ESP HTTP startup delay](Evidence/ESP_HTTP_STARTUP_DELAY_2026-07-16.md); live first response at 178.332 seconds matches the pre-HTTP master-search and AVR no-ACK retry budget | Identify the AVR no-ACK trigger; design an early readiness service that preserves automatic cloning | Characterized; fix planned |
 
 ## Release cutoff — 2026-07-14
 
 Because the deployed product has been highly reliable and release time is limited, R4 was the only planned firmware implementation remaining before the next release freeze. R4 passed its complete target gate on 2026-07-14, so the behavior freeze is now active. R2, R3, R5, the remaining R6 work, an R9 behavior change, residual `B-TIME-01` work, and `B-CLONE-02` are explicitly deferred. Their tracker status is preserved so a later thread does not mistake deferral for resolution.
 
 An additional firmware change before release requires a newly reproduced release-blocking regression. Documentation, deterministic builds, regression execution, artifact manifests, rollback preparation, release notes, and branch-readiness checks may continue without expanding firmware behavior. See [FlexFox80 release readiness plan](RELEASE_READINESS_PLAN_2026-07-14.md) for the completed R4 gate, release-candidate sequence, and deferred resume point.
+
+`B-HTTP-03` is a post-release hardening item rather than authorization for an immediate fleet reflash. Its correction must decouple HTTP readiness from the full AVR retry train, preserve automatic cloning priority, gate configuration until initialization is safe, and pass the pilot-master/target fault matrix in its evidence record before wider deployment.
 
 Specific field bugs should be added with distinct `B-` identifiers. At each Path A checkpoint:
 
