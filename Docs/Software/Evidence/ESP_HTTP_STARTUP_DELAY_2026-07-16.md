@@ -4,7 +4,7 @@
 
 **Path:** B-HTTP-03
 
-**Status:** Characterized from live timing and source inspection; AVR-ACK trigger and remediation remain planned
+**Status:** Live symptom confirmed; prior exact timeout attribution corrected; phase instrumentation and remediation remain planned
 
 ## Observed symptom
 
@@ -28,24 +28,17 @@ The sketch starts the HTTP server late in its top-level startup sequence. Before
 
 The relevant production paths are `loop()`, `setupWiFiAPConnection()`, `loadActiveEventFile()`, `sendEventToATMEGA()`, `linkbusLoop()`, and `setupHTTP_AP()` in `Software/Huzzah/ARDF_Transmitter/ARDF_Transmitter.ino`.
 
-## Why the delay can approach three minutes
+## Correction to the original timeout attribution
 
-The current target-side worst-case startup path closely explains the live 178.332-second observation:
+The live 178.332-second observation is valid, but the original source-derived explanation was not. `sendEventToATMEGA()` prequeues all 17 event commands, then waits only about ten seconds for the shared queue to drain. It does not remain inside the function for three three-second acknowledgement windows on every queued command.
 
-| Startup work | Current bound or retry cost |
-| --- | ---: |
-| Search for `Tx_Master` when it is unavailable | approximately 15.25 seconds (`tries > 60` at 250 ms intervals) |
-| Send the 17 queued AVR event-configuration commands without acknowledgments | up to approximately 153 seconds (three 3-second acknowledgment windows per command) |
-| Final event-programming confirmation after a Linkbus timeout | up to 10 seconds |
-| Approximate combined delay before HTTP setup | 178.25 seconds |
+If the first command is unanswered, the function can return failure after approximately ten seconds while most of the transaction remains queued. The abandoned backlog can still take roughly 17 times nine seconds to drain if every command is unanswered, and clone keep-alives can join the same queue, but that draining is not by itself proof that `g_http_server.begin()` was delayed for the whole interval.
 
-The retry countdown is aligned to integer `millis() / 1000` boundaries, so individual runs need not equal that arithmetic exactly. Nevertheless, the source-derived budget and the observed 178.332-second first response agree closely enough to identify the delayed pre-HTTP AVR programming path rather than browser startup as the controlling mechanism.
-
-Normal acknowledged AVR communication should drain the event queue much faster. Reaching the long bound implies that acknowledgments were unavailable for much or all of the boot-time event transfer.
+The almost exact numerical match between 178.332 seconds and the prior arithmetic was therefore coincidental. Do not use it as root-cause evidence. See [ESP-to-AVR Linkbus reliability review](ESP_AVR_LINK_RELIABILITY_REVIEW_2026-07-17.md) for the corrected transaction model.
 
 ## Remaining root-cause question
 
-The investigation explains both why Wi-Fi can look connected before HTTP is ready and why the unavailable interval can last several minutes. It does not yet prove why AVR acknowledgments were missing on each affected startup.
+The investigation explains why Wi-Fi can look connected before HTTP is ready. It does not yet identify which startup phase consumed the observed three minutes or prove why AVR acknowledgments were missing on each affected startup.
 
 The next investigation must distinguish at least:
 
@@ -55,7 +48,7 @@ The next investigation must distinguish at least:
 - startup baud-calibration or receive-state loss after the initial time exchange;
 - a transport or tether failure that happens to overlap application startup.
 
-Do not describe the AVR cause as closed until timestamped Linkbus or equivalent phase instrumentation shows which condition occurred.
+Required phase timestamps are ESP reset, first Linkbus wake request, first valid AVR frame, master-search entry/exit, event-transfer entry/exit, `WiFi.softAP()` entry/result, `g_http_server.begin()`, and first accepted HTTP request. Do not describe the AVR or HTTP cause as closed until that instrumentation distinguishes a late server start from a started but unreachable server.
 
 ## Planned remediation boundary
 
@@ -63,7 +56,7 @@ The correction should make application readiness independent of a complete AVR e
 
 1. start a minimal HTTP readiness/status service early and service it cooperatively during AVR synchronization, master discovery, and event loading;
 2. promote the full HTTP server earlier only if its event and clone operations can be gated safely until initialization completes;
-3. fail event programming as a transaction after the first conclusively failed Linkbus command instead of spending the full retry allowance on every remaining queued command; and
+3. fail event programming as a transaction after the first conclusively failed Linkbus command instead of returning with the remaining commands still queued; and
 4. explicitly control soft-AP persistence or advertisement only if doing so does not impair target discovery, automatic cloning, reconnect behavior, or established browser usability.
 
 Starting the full event UI early without state gating is not an acceptable shortcut. The page must not race automatic cloning, expose partially initialized event state, or permit commands that conflict with startup AVR programming.
