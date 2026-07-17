@@ -223,3 +223,17 @@ At `2026-07-17T14:17:40Z`, the protected Wi-Fi updater completed the first ESP 2
 - `/firmware/status` reported no active update or clone, no active event transaction, `linkbusLastAttempts: 1`, `linkbusLastPhase: "complete"`, and an empty `linkbusLastFailure`.
 
 The pilot changed only the ESP sketch. It did not update the AVR or replace the ESP filesystem. Sprint fox 1 remains the second required pilot before wider deployment.
+
+## Sprint fox 1 pilot installation
+
+At `2026-07-17T14:30:36Z`, the second ESP 2.6 pilot was verified on the operator-selected sprint fox 1, identified as `Tx_7C2D5963` (`32:22:2C:F0:74:7D`):
+
+- the read-only preflight identified a target running ESP 2.5 and AVR 0.201 and returned fresh AVR temperature and battery data;
+- the updater established its bounded AVR heartbeat and accepted the same 528,752-byte ESP 2.6 binary used on the master;
+- the unit did not return to HTTP within the updater's 240-second verification window, and the tether then reported the target network unreachable;
+- after one operator power cycle and tether reconnection, the target reported ESP 2.6 and AVR 0.201 without a second upload;
+- the installed sketch size and MD5 matched the master at 528,752 bytes and `893a3c947cdc8f302172a8f7558b0cb7`;
+- LittleFS protection remained enabled; and
+- fresh WebSocket and `/firmware/status` reads reported no active transaction, `linkbusLastAttempts: 1`, `linkbusLastPhase: "complete"`, and an empty `linkbusLastFailure`.
+
+This proves that the accepted sketch survived the delayed-return/power-down condition and that neither an AVR update nor a repeated ESP write was necessary. A real master-to-target clone and its event/role result remain required before expanding the ESP 2.6 pilot to the fleet.
