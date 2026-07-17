@@ -209,3 +209,17 @@ Two consecutive exact pinned ESP8266 builds complete with zero warnings and prod
 The candidate retains 39,736 bytes of dynamic-memory headroom and 5,092 bytes of IRAM headroom. The sketch binary is 528,752 bytes with SHA-256 `78eb0232c08e30ad1654d450e2a8444ee6fb009b163309e93154c638fa00ad1b`.
 
 Live qualification remains intentionally limited to sprint master and sprint fox 1 before any wider ESP deployment.
+
+## Sprint master pilot
+
+At `2026-07-17T14:17:40Z`, the protected Wi-Fi updater completed the first ESP 2.6 pilot on `Tx_Master` (`22:C8:8E:CF:AB:84`):
+
+- the read-only preflight identified the unit as a master running ESP 2.5 and AVR 0.201;
+- the updater established its bounded AVR heartbeat before accepting the sketch;
+- the accepted binary was 528,752 bytes with CRC32 `6a39b59b` and SHA-256 `78eb0232c08e30ad1654d450e2a8444ee6fb009b163309e93154c638fa00ad1b`;
+- post-reboot verification reported ESP 2.6, installed-sketch MD5 `893a3c947cdc8f302172a8f7558b0cb7`, and a reset uptime;
+- the protected endpoint continued to report LittleFS preservation;
+- a second live WebSocket probe identified the same unit as a master running ESP 2.6 and AVR 0.201 and returned fresh AVR temperature and battery data; and
+- `/firmware/status` reported no active update or clone, no active event transaction, `linkbusLastAttempts: 1`, `linkbusLastPhase: "complete"`, and an empty `linkbusLastFailure`.
+
+The pilot changed only the ESP sketch. It did not update the AVR or replace the ESP filesystem. Sprint fox 1 remains the second required pilot before wider deployment.
