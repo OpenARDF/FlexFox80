@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FlexFox Fleet Soak</title>
+  <style>
+    :root { color-scheme: light dark; font: 16px system-ui, sans-serif; }
+    body { margin: auto; max-width: 58rem; padding: 1rem; }
+    h1 { margin-bottom: .25rem; }
+    section { border: 1px solid #8888; border-radius: .6rem; margin: 1rem 0; padding: 1rem; }
+    button, select, input { font: inherit; margin: .25rem; padding: .55rem; }
+    button { min-height: 2.7rem; }
+    button.danger { background: #9d2020; color: white; }
+    button.primary { background: #1769aa; color: white; }
+    button:disabled { opacity: .45; }
+    .ok { color: #17823b; }
+    .error { color: #c62828; }
+    .muted { color: #777; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { border-bottom: 1px solid #8885; padding: .5rem; text-align: left; }
+    #log { max-height: 12rem; overflow: auto; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Fleet Soak</h1>
+  <p class="muted">This optional page manages only the twelve reserved Fleet Soak events.</p>
+
+  <section>
+    <h2>1. Prepare this master</h2>
+    <p id="masterStatus">Reading master status…</p>
+    <input id="eventFiles" type="file" accept=".event" multiple>
+    <button id="installSuite" class="primary">Install and activate selected suite</button>
+    <button id="cleanMaster" class="danger">Remove reserved events from master</button>
+    <p class="muted">Select the twelve <code>FS01-Sprint.event</code> through <code>FS12-Classic.event</code> files produced by the Fleet Soak generator.</p>
+  </section>
+
+  <section>
+    <h2>2. Prepare or clean targets</h2>
+    <label><input id="automaticAssignment" type="checkbox" checked> Automatically use the recommended unused assignment</label>
+    <p>
+      <button id="armProvision" class="primary">Arm target provisioning</button>
+      <button id="armCleanup" class="danger">Arm target cleanup</button>
+      <button id="disarm">Disarm</button>
+    </p>
+    <p id="modeStatus">Fleet Soak target operation is disarmed.</p>
+    <table>
+      <thead><tr><th>Target</th><th>Existing assignment evidence</th><th>Soak assignment</th><th>Result</th></tr></thead>
+      <tbody id="targets"></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Activity</h2>
+    <div id="log" aria-live="polite"></div>
+  </section>
+
+<script>
+"use strict";
+// Mirror the firmware allowlist so this optional page cannot select arbitrary event names.
+const reservedNames = Array.from({length: 12}, (_, index) =>
+  `FS${String(index + 1).padStart(2, "0")}-${index % 2 ? "Classic" : "Sprint"}.event`);
+const assignments = ["0:0", "0:1", "0:2", "0:3", "0:4", "1:0", "1:1", "1:2", "1:3", "1:4", "2:0", "3:0"];
+const rosterKey = "flexfoxFleetSoakRosterV1";
+// The roster is operator-side memory only; every target still reports its device evidence.
+const roster = JSON.parse(localStorage.getItem(rosterKey) || "{}");
+let mode = "OFF";
+let socket;
+
+const byId = id => document.getElementById(id);
+function note(message, className = "") {
+  const line = document.createElement("div");
+  line.textContent = `${new Date().toLocaleTimeString()} — ${message}`;
+  line.className = className;
+  byId("log").prepend(line);
+}
+function saveRoster() { localStorage.setItem(rosterKey, JSON.stringify(roster)); }
+function setModeText(text, className = "") {
+  byId("modeStatus").textContent = text;
+  byId("modeStatus").className = className;
+}
+
+async function responseText(response) {
+  const text = await response.text();
+  if (!response.ok) throw new Error(text || `HTTP ${response.status}`);
+  return text;
+}
+async function refreshStatus() {
+  try {
+    const response = await fetch(`/fleet-soak/status?cache=${Date.now()}`, {cache: "no-store"});
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const status = await response.json();
+    byId("masterStatus").textContent = status.suiteReady
+      ? `Ready: ${status.reservedEventCount} reserved and ${status.ordinaryEventCount} ordinary events; ${status.filesystemFreeBytes ?? "unknown"} bytes free.`
+      : `Not active: ${status.reservedEventCount} of 12 reserved events are installed; ${status.ordinaryEventCount} ordinary events; capacity ${status.eventCapacity}.`;
+    byId("masterStatus").className = status.suiteReady ? "ok" : "";
+    byId("armProvision").disabled = !status.suiteReady || status.operationActive;
+  } catch (error) {
+    byId("masterStatus").textContent = `Could not read master status: ${error.message}`;
+    byId("masterStatus").className = "error";
+  }
+}
+
+function crc32(bytes) {
+  let crc = 0xffffffff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+async function uploadFile(file) {
+  // Reuse the normal transactional event upload endpoint, including its size and CRC checks.
+  const content = new Uint8Array(await file.arrayBuffer());
+  const form = new FormData();
+  form.append("name", file, file.name);
+  const crc = crc32(content).toString(16).padStart(8, "0");
+  return responseText(await fetch(`/upload?size=${content.length}&crc32=${crc}`, {method: "POST", body: form}));
+}
+async function installSuite() {
+  const files = [...byId("eventFiles").files];
+  const names = files.map(file => file.name).sort();
+  if (names.length !== reservedNames.length || names.some((name, index) => name !== [...reservedNames].sort()[index])) {
+    note("Select exactly the twelve reserved Fleet Soak event files.", "error");
+    return;
+  }
+  byId("installSuite").disabled = true;
+  try {
+    await setMode("OFF");
+    for (const name of reservedNames) {
+      note(`Uploading ${name}…`);
+      await uploadFile(files.find(file => file.name === name));
+    }
+    const body = new URLSearchParams({confirm: "ACTIVATE_RESERVED_SUITE"});
+    note(await responseText(await fetch("/fleet-soak/activate", {method: "POST", body})), "ok");
+  } catch (error) {
+    note(`Suite installation stopped: ${error.message}`, "error");
+  } finally {
+    byId("installSuite").disabled = false;
+    await refreshStatus();
+  }
+}
+
+function inferredAssignment(sprint, classic) {
+  // Preserve familiar slots while spreading Sprint units across its slow and fast roles.
+  if (/^0:[0-4]$/.test(sprint)) return `1:${sprint[2]}`;
+  if (/^1:[0-4]$/.test(sprint)) return `0:${sprint[2]}`;
+  if (sprint === "2:0") return "2:0";
+  if (sprint === "3:0") return "3:0";
+  if (/^0:[0-4]$/.test(classic)) return classic;
+  if (classic === "1:0") return "3:0";
+  return "";
+}
+function availableAssignment(preferred, ssid) {
+  const used = new Set(Object.entries(roster).filter(([key]) => key !== ssid).map(([, value]) => value.assignment));
+  if (preferred && !used.has(preferred)) return preferred;
+  return assignments.find(value => !used.has(value)) || "";
+}
+function sendAssignment(ssid, assignment) {
+  if (!socket || socket.readyState !== WebSocket.OPEN || !assignments.includes(assignment)) return;
+  roster[ssid] = {...(roster[ssid] || {}), assignment};
+  saveRoster();
+  socket.send(`FLEET_SOAK_ASSIGN,${ssid},${assignment}`);
+  note(`Assigned ${ssid} to ${assignment}; provisioning started.`);
+}
+function showTarget(fields) {
+  const [, ssid, protocol, total, reserved, ready, sprint = "", classic = "", storedFleet = ""] = fields;
+  if (protocol !== "1") return;
+  const preferred = roster[ssid]?.assignment || (assignments.includes(storedFleet) ? storedFleet : "") || inferredAssignment(sprint, classic);
+  const assignment = availableAssignment(preferred, ssid);
+  roster[ssid] = {assignment, sprint, classic, storedFleet};
+  saveRoster();
+
+  let row = document.querySelector(`tr[data-ssid="${CSS.escape(ssid)}"]`);
+  if (!row) {
+    row = document.createElement("tr");
+    row.dataset.ssid = ssid;
+    row.innerHTML = "<td></td><td></td><td></td><td></td>";
+    byId("targets").append(row);
+  }
+  row.cells[0].textContent = `${ssid} (${total} events; ${reserved} reserved${ready === "1" ? "; ready" : ""})`;
+  row.cells[1].textContent = `Stored soak ${storedFleet || "—"}; Sprint ${sprint || "—"}; Classic ${classic || "—"}`;
+  const select = document.createElement("select");
+  for (const value of assignments) select.add(new Option(value, value, false, value === assignment));
+  const button = document.createElement("button");
+  button.textContent = "Assign and provision";
+  button.onclick = () => sendAssignment(ssid, select.value);
+  row.cells[2].replaceChildren(select, button);
+  row.cells[3].textContent = "Connected";
+  note(`Target connected: ${ssid}.`);
+  if (mode === "PROVISION" && byId("automaticAssignment").checked && assignment) sendAssignment(ssid, assignment);
+}
+function showResult(fields) {
+  const [, ssid, operation, outcome, ...details] = fields;
+  if (ssid === "MASTER" && operation === "MODE") {
+    if (outcome === "OK") {
+      mode = details[0] || "OFF";
+      setModeText(mode === "OFF" ? "Fleet Soak target operation is disarmed." :
+        `Fleet Soak ${mode.toLowerCase()} mode is armed. Connect one target at a time.`, mode === "OFF" ? "" : "ok");
+    } else {
+      mode = "OFF";
+      setModeText(`Fleet Soak mode was not armed: ${details.join(", ")}`, "error");
+    }
+  }
+  const row = document.querySelector(`tr[data-ssid="${CSS.escape(ssid)}"]`);
+  if (row) {
+    row.cells[3].textContent = `${operation}: ${outcome}${details.length ? ` — ${details.join(", ")}` : ""}`;
+    row.cells[3].className = outcome === "OK" ? "ok" : "error";
+  }
+  note(`${ssid}: ${operation} ${outcome}${details.length ? ` — ${details.join(", ")}` : ""}`, outcome === "OK" ? "ok" : "error");
+}
+function connectSocket() {
+  socket = new WebSocket(`ws://${location.hostname}:81/`);
+  socket.onopen = () => { note("Fleet Soak control connection opened.", "ok"); if (mode !== "OFF") socket.send(`FLEET_SOAK_MODE,${mode}`); };
+  socket.onmessage = event => {
+    const fields = String(event.data).split(",");
+    if (fields[0] === "FLEET_SOAK_INFO") showTarget(fields);
+    if (fields[0] === "FLEET_SOAK_RESULT") showResult(fields);
+  };
+  socket.onclose = () => { setModeText("Control connection lost; reconnecting…", "error"); setTimeout(connectSocket, 1500); };
+}
+async function setMode(nextMode) {
+  mode = nextMode;
+  if (socket?.readyState === WebSocket.OPEN) socket.send(`FLEET_SOAK_MODE,${mode}`);
+  setModeText(mode === "OFF" ? "Fleet Soak target operation is disarmed." : `Fleet Soak ${mode.toLowerCase()} mode is armed. Connect one target at a time.`, mode === "OFF" ? "" : "ok");
+}
+async function cleanMaster() {
+  if (!confirm("Remove only the twelve reserved Fleet Soak event files from this master? Assignment .me files will be retained.")) return;
+  try {
+    await setMode("OFF");
+    const body = new URLSearchParams({confirm: "REMOVE_RESERVED_EVENTS"});
+    note(await responseText(await fetch("/fleet-soak/cleanup", {method: "POST", body})), "ok");
+    await refreshStatus();
+  } catch (error) { note(`Master cleanup failed: ${error.message}`, "error"); }
+}
+
+byId("installSuite").onclick = installSuite;
+byId("cleanMaster").onclick = cleanMaster;
+byId("armProvision").onclick = () => setMode("PROVISION");
+byId("armCleanup").onclick = async () => {
+  await refreshStatus();
+  await setMode("CLEANUP");
+};
+byId("disarm").onclick = () => setMode("OFF");
+connectSocket();
+refreshStatus();
+setInterval(() => { if (socket?.readyState === WebSocket.OPEN) socket.send("ALIVE"); }, 5000);
+setInterval(refreshStatus, 10000);
+</script>
+</body>
+</html>

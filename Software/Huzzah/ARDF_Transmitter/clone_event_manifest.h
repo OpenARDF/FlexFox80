@@ -30,7 +30,7 @@
 
 #include <stddef.h>
 
-#define CLONE_EVENT_MANIFEST_CAPACITY 20
+#define CLONE_EVENT_MANIFEST_CAPACITY 25
 #define CLONE_EVENT_PATH_CAPACITY 64
 
 struct CloneEventManifest

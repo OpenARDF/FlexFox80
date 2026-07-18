@@ -72,9 +72,10 @@ function makeSelect(values, selectedIndex = 0) {
   return select;
 }
 
-function createPage() {
+function createPage(initialStorage = {}) {
   const elements = new Map();
   const listeners = new Map();
+  const storage = new Map(Object.entries(initialStorage));
   const timeouts = [];
   const intervals = [];
   const clearedIntervals = new Set();
@@ -116,6 +117,14 @@ function createPage() {
   };
   const window = {
     location: { hostname: "flexfox.test" },
+    localStorage: {
+      getItem(key) {
+        return storage.has(key) ? storage.get(key) : null;
+      },
+      setItem(key, value) {
+        storage.set(key, String(value));
+      },
+    },
     addEventListener(type, listener) {
       const registered = listeners.get(type) ?? [];
       registered.push(listener);
@@ -166,6 +175,7 @@ function createPage() {
     intervals,
     listeners,
     sockets,
+    storage,
     timeouts,
   };
 }
@@ -182,7 +192,9 @@ assert.ok(!source.includes("Date.getTime()"), "date fallback must call getTime o
 assert.match(html, /<html lang="en">/);
 assert.match(html, /<meta charset="utf-8">/);
 assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1">/);
-assert.match(html, /events\.html Version: 0\.5\.5 - 16 Jul 2026/);
+assert.match(html, /events\.html Version: 0\.5\.7 - 18 Jul 2026/);
+assert.match(html, /onpointerdown="clockSyncPressStart\(event\);"/);
+assert.match(html, /Long press Sync to toggle automatic synchronization\./);
 assert.match(html, /Transmitter assignment \(\.me\) files are always preserved\./);
 assert.ok(!source.includes('btn.id = "runButton"'), "event selection buttons must not reuse an id");
 assert.equal(
@@ -197,6 +209,28 @@ assert.match(
 );
 assert.ok(!source.includes("while (d == n)"), "clock synchronization must not busy-wait on the UI thread");
 console.log("PASS events.html JavaScript and critical HTML syntax parse");
+
+{
+  const page = createPage();
+  const heading = page.addElement("mainHeading");
+  const error = page.addElement("errorreport");
+  const status = page.addElement("statusreport");
+  error.textContent = "Error: stale transmitter failure";
+  error.style.display = "block";
+  status.textContent = "Success: stale transmitter synced";
+  status.style.display = "block";
+
+  page.context.webSocketStart();
+  const socket = page.sockets.at(-1);
+  socket.onmessage({ data: "SSID,Tx_7C2D6FD3" });
+
+  assert.equal(heading.textContent, "Tx_7C2D6FD3: Events Settings");
+  assert.equal(error.textContent, "");
+  assert.equal(error.style.display, "none");
+  assert.equal(status.textContent, "");
+  assert.equal(status.style.display, "none");
+  console.log("PASS a newly detected transmitter clears stale connection messages");
+}
 
 {
   const page = createPage();
@@ -563,4 +597,81 @@ console.log("PASS events.html JavaScript and critical HTML syntax parse");
   assert.match(sent.at(-1), /^SYNC,\d{4}-\d{2}-\d{2}T/);
   assert.equal(page.context.g_clockSyncTimer, 0);
   console.log("PASS clock synchronization waits for the next second without blocking the UI");
+}
+
+{
+  const page = createPage();
+  const syncButton = page.addElement("SyncButton");
+  page.context.loadAutomaticClockSyncPreference();
+
+  page.context.clockSyncPressStart({ button: 0 });
+  lastTimerWithDelay(page.timeouts, 700).callback();
+  assert.equal(page.context.g_automaticClockSyncEnabled, true);
+  assert.equal(page.storage.get("flexfox.events.autoClockSync"), "1");
+  assert.equal(syncButton.textContent, "Sync (Auto)");
+  assert.equal(syncButton.style.backgroundColor, "gray");
+  assert.equal(syncButton.attributes.get("aria-disabled"), "true");
+  assert.equal(syncButton.disabled, false, "automatic mode must retain long-press events");
+
+  const autoClickTimers = page.timeouts.length;
+  let autoClickPrevented = false;
+  assert.equal(page.context.clockSyncClick({ preventDefault: () => { autoClickPrevented = true; } }), false);
+  assert.equal(autoClickPrevented, true);
+  assert.equal(page.timeouts.length, autoClickTimers, "a short automatic-mode press must not sync");
+
+  page.context.clockSyncPressStart({ button: 0 });
+  lastTimerWithDelay(page.timeouts, 700).callback();
+  assert.equal(page.context.g_automaticClockSyncEnabled, false);
+  assert.equal(page.storage.get("flexfox.events.autoClockSync"), "0");
+  assert.equal(syncButton.textContent, "Sync");
+  assert.equal(syncButton.style.backgroundColor, "");
+  assert.equal(syncButton.attributes.get("aria-disabled"), "false");
+
+  assert.equal(page.context.clockSyncClick({ preventDefault() {} }), false, "the click following a long press must be consumed");
+  assert.equal(page.context.clockSyncClick({ preventDefault() {} }), true, "the next manual click must sync normally");
+  assert.ok(page.timeouts.at(-1).delay > 0 && page.timeouts.at(-1).delay <= 1000);
+  console.log("PASS a long press persistently toggles automatic clock synchronization");
+}
+
+{
+  const page = createPage({ "flexfox.events.autoClockSync": "1" });
+  const sent = [];
+  const syncButton = page.addElement("SyncButton");
+  page.context.sendToSocket = (message) => sent.push(message);
+
+  page.context.start();
+  assert.equal(page.context.g_automaticClockSyncEnabled, true);
+  assert.equal(syncButton.textContent, "Sync (Auto)");
+  const socket = page.sockets.at(-1);
+  socket.onopen({});
+  assert.equal(
+    page.timeouts.filter((timer) => timer.delay === 1500).length,
+    0,
+    "automatic sync must wait until the transmitter identifies itself",
+  );
+  socket.onmessage({ data: "SSID,Tx_7C2D6FD3" });
+
+  const automaticDelay = lastTimerWithDelay(page.timeouts, 1500);
+  automaticDelay.callback();
+  const clockEdgeDelay = page.timeouts.at(-1);
+  assert.ok(clockEdgeDelay.delay > 0 && clockEdgeDelay.delay <= 1000);
+  clockEdgeDelay.callback();
+  assert.equal(sent.filter((message) => /^SYNC,/.test(message)).length, 1);
+  assert.equal(page.context.g_automaticClockSyncPerformed, true);
+
+  const timersBeforeReschedule = page.timeouts.length;
+  page.context.scheduleAutomaticClockSync();
+  assert.equal(page.timeouts.length, timersBeforeReschedule, "a reconnect must not repeat page-load auto sync");
+  console.log("PASS the persisted automatic setting synchronizes once after page connection");
+}
+
+{
+  const page = createPage();
+  const errorReport = page.addElement("errorreport");
+  page.context.start();
+  page.sockets.at(-1).onmessage({ data: "EVENT_CAPACITY,26,25,1" });
+  assert.match(errorReport.textContent, /26 event files/);
+  assert.match(errorReport.textContent, /supported limit of 25/);
+  assert.match(errorReport.attributes.get("style"), /color:Red/);
+  console.log("PASS an event-capacity overflow is made visible in events.html");
 }

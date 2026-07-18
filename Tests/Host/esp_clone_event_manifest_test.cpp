@@ -19,6 +19,7 @@ void expect(bool condition, const char *name)
 
 int main()
 {
+	expect(CLONE_EVENT_MANIFEST_CAPACITY == 25, "manifest_supports_25_event_files");
 	CloneEventManifest manifest;
 	cloneEventManifestReset(&manifest);
 	expect(manifest.count == 0 && !manifest.invalid, "manifest_starts_empty_and_valid");

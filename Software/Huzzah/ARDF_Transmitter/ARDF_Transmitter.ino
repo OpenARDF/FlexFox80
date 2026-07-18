@@ -61,9 +61,11 @@
 #include "FirmwareUpdatePage.h"
 #include "AvrFirmwareUpdate.h"
 #include "AvrFirmwareUpdatePage.h"
+#include "FleetSoak.h"
 #include "Event.h"
 #include "clone_event_manifest.h"
 #include "clone_keepalive_schedule.h"
+#include "fleet_soak.h"
 #include "firmware_update_integrity.h"
 #include "linkbus_command_transaction.h"
 /* #include <Wire.h> */
@@ -180,6 +182,14 @@ bool g_masterClonePruneTargetEvents = false;
 bool g_slaveClonePruneTargetEvents = false;
 CloneEventManifest g_cloneEventManifest;
 CloneKeepAliveSchedule g_slaveCloneKeepAliveSchedule = {0, false, false};
+FleetSoakMode g_masterFleetSoakMode = FLEET_SOAK_MODE_OFF;
+FleetSoakMode g_slaveFleetSoakMode = FLEET_SOAK_MODE_OFF;
+String g_slaveFleetSoakAssignment;
+bool g_slaveFleetSoakCapabilitySeen = false;
+bool g_slaveFleetSoakSessionReady = false;
+int g_fleetSoakCandidateSocket = -1;
+String g_fleetSoakCandidateSsid;
+String g_fleetSoakCandidateAssignment;
 
 bool g_firmwareUpdateActive = false;
 bool g_firmwareUpdateSucceeded = false;
@@ -222,6 +232,8 @@ String g_atmega_sw_version = String("");
 int g_activeEventIndex = 0;
 EventFileRef g_eventList[MAXIMUM_NUMBER_OF_EVENTS];
 int g_numberOfEventFilesFound = 0;
+int g_numberOfEventFilesSeen = 0;
+bool g_eventListCapacityExceeded = false;
 int g_numberOfScheduledEvents = 0;
 bool g_sendEventSheet = true;
 TxCommState g_ESP_Comm_State = TX_WAKE_UP;
@@ -263,6 +275,9 @@ void handleAvrUpdatePage(void);
 void handleAvrUpdateStatus(void);
 void handleAvrUpdateResult(void);
 void handleAvrUpdateUpload(void);
+void handleFleetSoakStatus(void);
+void handleFleetSoakActivate(void);
+void handleFleetSoakCleanup(void);
 void handleAvrUpdateStart(void);
 void handleFileDownload(void);
 void fileDelete(void);
@@ -904,6 +919,107 @@ static bool currentEventFileIsActive(String *eventName)
   return false;
 }
 
+static bool fleetSoakHttpIsAvailable(void)
+{
+  if (fleetSoakPageIsAvailable(g_IamMaster))
+  {
+    return true;
+  }
+  g_masterFleetSoakMode = FLEET_SOAK_MODE_OFF;
+  g_http_server.send(404, "text/plain; charset=utf-8", "Fleet Soak is not installed on this master");
+  return false;
+}
+
+static bool fleetSoakOperationIsBusy(void)
+{
+  return firmwareUpdateCloneIsActive() || g_firmwareUpdateActive ||
+         g_firmwareRestartPending || g_linkBusEventTransactionActive;
+}
+
+void handleFleetSoakStatus(void)
+{
+  if (!fleetSoakHttpIsAvailable())
+  {
+    return;
+  }
+  FSInfo info;
+  const bool haveFilesystemInfo = LittleFS.info(info) && info.usedBytes <= info.totalBytes;
+  String response = "{";
+  response += String("\"protocolVersion\":") + FLEET_SOAK_PROTOCOL_VERSION;
+  response += String(",\"eventCapacity\":") + MAXIMUM_NUMBER_OF_EVENTS;
+  response += String(",\"eventCount\":") + fleetSoakEventFileCount();
+  response += String(",\"ordinaryEventCount\":") + fleetSoakOrdinaryEventCount();
+  response += String(",\"reservedEventCount\":") + fleetSoakReservedEventCount();
+  response += String(",\"suiteReady\":") + (fleetSoakSuiteIsReady() ? "true" : "false");
+  response += String(",\"mode\":") + g_masterFleetSoakMode;
+  response += String(",\"operationActive\":") + (fleetSoakOperationIsBusy() ? "true" : "false");
+  if (haveFilesystemInfo)
+  {
+    response += String(",\"filesystemFreeBytes\":") + (info.totalBytes - info.usedBytes);
+  }
+  response += "}";
+  g_http_server.send(200, "application/json; charset=utf-8", response);
+}
+
+void handleFleetSoakActivate(void)
+{
+  if (!fleetSoakHttpIsAvailable())
+  {
+    return;
+  }
+  if (g_http_server.arg("confirm") != "ACTIVATE_RESERVED_SUITE" ||
+      fleetSoakOperationIsBusy())
+  {
+    g_http_server.send(409, "text/plain; charset=utf-8", "Fleet Soak activation is not currently permitted");
+    return;
+  }
+  String activeEventName;
+  if (currentEventFileIsActive(&activeEventName))
+  {
+    g_http_server.send(409, "text/plain; charset=utf-8", "Fleet Soak cannot activate while an event is running");
+    return;
+  }
+  String error;
+  if (!fleetSoakActivateInstalledSuite(&error))
+  {
+    g_http_server.send(409, "text/plain; charset=utf-8", error);
+    return;
+  }
+  g_ESP_Comm_State = TX_READ_ALL_EVENTS_FILES;
+  g_http_server.send(200, "text/plain; charset=utf-8", "Fleet Soak suite activated");
+}
+
+void handleFleetSoakCleanup(void)
+{
+  if (!fleetSoakHttpIsAvailable())
+  {
+    return;
+  }
+  if (g_http_server.arg("confirm") != "REMOVE_RESERVED_EVENTS" ||
+      fleetSoakOperationIsBusy())
+  {
+    g_http_server.send(409, "text/plain; charset=utf-8", "Fleet Soak cleanup is not currently permitted");
+    return;
+  }
+  String activeEventName;
+  if (currentEventFileIsActive(&activeEventName))
+  {
+    g_http_server.send(409, "text/plain; charset=utf-8", "Fleet Soak cannot clean up while an event is running");
+    return;
+  }
+  int removedCount = 0;
+  String error;
+  if (!fleetSoakCleanupReservedEvents(&removedCount, &error))
+  {
+    g_http_server.send(409, "text/plain; charset=utf-8", error);
+    return;
+  }
+  g_masterFleetSoakMode = FLEET_SOAK_MODE_OFF;
+  g_ESP_Comm_State = TX_READ_ALL_EVENTS_FILES;
+  g_http_server.send(200, "text/plain; charset=utf-8",
+                     String("Fleet Soak cleanup complete; removed ") + removedCount + " reserved event files");
+}
+
 void handleAvrUpdateStart()
 {
   String error;
@@ -1155,6 +1271,10 @@ bool setupHTTP_AP()
       handleAvrUpdateResult,
       handleAvrUpdateUpload);
     g_http_server.on("/avr-update/start", HTTP_POST, handleAvrUpdateStart);
+
+    g_http_server.on("/fleet-soak/status", HTTP_GET, handleFleetSoakStatus);
+    g_http_server.on("/fleet-soak/activate", HTTP_POST, handleFleetSoakActivate);
+    g_http_server.on("/fleet-soak/cleanup", HTTP_POST, handleFleetSoakCleanup);
 
     g_http_server.on(
       "/upload.html",
@@ -1552,6 +1672,10 @@ void loop()
   else /* IamSlave */
   {
     g_slaveClonePruneTargetEvents = false;
+    g_slaveFleetSoakMode = FLEET_SOAK_MODE_OFF;
+    g_slaveFleetSoakAssignment = "";
+    g_slaveFleetSoakCapabilitySeen = false;
+    g_slaveFleetSoakSessionReady = false;
     cloneEventManifestReset(&g_cloneEventManifest);
     if (!g_onlyUpdateEvent)
     {
@@ -1583,7 +1707,41 @@ void loop()
           g_numberOfScheduledEvents = numberOfEventsScheduled(g_timeOfDayFromTx);
           linkbusLoop();
 
-          if (g_numberOfScheduledEvents)
+          if (g_slaveFleetSoakMode != FLEET_SOAK_MODE_OFF)
+          {
+            bool targetReady = true;
+            String resultDetail = g_slaveFleetSoakAssignment;
+            if (g_slaveFleetSoakMode == FLEET_SOAK_MODE_PROVISION)
+            {
+              if (g_numberOfScheduledEvents)
+              {
+                g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
+                if (!loadActiveEventFile(g_eventList[0].path))
+                {
+                  g_activeEventIndex = 0;
+                }
+                else
+                {
+                  targetReady = false;
+                  resultDetail = "Could not program the first scheduled Fleet Soak event";
+                }
+              }
+              else
+              {
+                targetReady = false;
+                resultDetail = "No Fleet Soak events are scheduled to run";
+              }
+            }
+
+            String msg = String(SOCK_COMMAND_FLEET_SOAK_RESULT) + "," + g_uniqueAPNameString + "," +
+                         fleetSoakModeText(g_slaveFleetSoakMode) + "," + (targetReady ? "OK" : "ERROR") + "," +
+                         resultDetail + "," + fleetSoakReservedEventCount();
+            g_webSocketLocalClient.sendTXT(stringObjToConstCharString(&msg));
+            blinkPeriodMillis = targetReady ? 500 : 100;
+            shutdownSlave();
+            g_webSocketServer.loop();
+          }
+          else if (g_numberOfScheduledEvents)
           {
             g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
             if (!loadActiveEventFile(g_eventList[0].path))
@@ -1711,6 +1869,13 @@ bool setAVRCloneQuietMode(bool quiet)
   return !g_linkBusAckTimoutOccurred && !g_linkBusNacksReceived;
 }
 
+static void clearFleetSoakCandidate(void)
+{
+  g_fleetSoakCandidateSocket = -1;
+  g_fleetSoakCandidateSsid = "";
+  g_fleetSoakCandidateAssignment = "";
+}
+
 void endMasterCloneSession()
 {
   if (g_masterCloneQuietPending || g_masterCloneQuietActive)
@@ -1722,6 +1887,84 @@ void endMasterCloneSession()
   g_masterCloneQuietActive = false;
   g_master_has_connected_slave = false;
   g_slave_socket_number = -1;
+  clearFleetSoakCandidate();
+}
+
+static const char *fleetSoakModeText(FleetSoakMode mode)
+{
+  if (mode == FLEET_SOAK_MODE_PROVISION)
+  {
+    return FLEET_SOAK_MODE_TEXT_PROVISION;
+  }
+  if (mode == FLEET_SOAK_MODE_CLEANUP)
+  {
+    return FLEET_SOAK_MODE_TEXT_CLEANUP;
+  }
+  return FLEET_SOAK_MODE_TEXT_OFF;
+}
+
+static int masterCloneFileCount(void)
+{
+  /* Ordinary clone behavior is untouched unless the optional page has armed a target. */
+  if (g_masterFleetSoakMode == FLEET_SOAK_MODE_PROVISION &&
+      g_slave_socket_number == g_fleetSoakCandidateSocket)
+  {
+    return fleetSoakSuiteIsReady() ? FLEET_SOAK_EVENT_COUNT : 0;
+  }
+  if (g_masterFleetSoakMode == FLEET_SOAK_MODE_CLEANUP &&
+      g_slave_socket_number == g_fleetSoakCandidateSocket)
+  {
+    return 0;
+  }
+  return g_numberOfEventFilesFound;
+}
+
+static String masterCloneFilePath(int index)
+{
+  if (g_masterFleetSoakMode == FLEET_SOAK_MODE_PROVISION &&
+      g_slave_socket_number == g_fleetSoakCandidateSocket)
+  {
+    if (index >= 0 && index < FLEET_SOAK_EVENT_COUNT)
+    {
+      return String(FLEET_SOAK_EVENT_PATHS[index]);
+    }
+    return "";
+  }
+  if (index >= 0 && index < g_numberOfEventFilesFound)
+  {
+    return g_eventList[index].path;
+  }
+  return "";
+}
+
+static void sendMasterCloneText(String message)
+{
+  /* Fleet sessions are target-specific; ordinary clone retains its broadcast behavior. */
+  if (g_masterFleetSoakMode != FLEET_SOAK_MODE_OFF && g_slave_socket_number >= 0)
+  {
+    g_webSocketServer.sendTXT(
+      (uint8_t)g_slave_socket_number,
+      stringObjToConstCharString(&message),
+      message.length());
+  }
+  else
+  {
+    g_webSocketServer.broadcastTXT(stringObjToConstCharString(&message), message.length());
+  }
+}
+
+static void sendFleetSoakTargetInfo(void)
+{
+  String sprintAssignment;
+  String classicAssignment;
+  String storedFleetAssignment;
+  fleetSoakOrdinaryAssignmentEvidence(&sprintAssignment, &classicAssignment);
+  fleetSoakStoredAssignmentEvidence(&storedFleetAssignment);
+  String message = String(SOCK_COMMAND_FLEET_SOAK_INFO) + "," + g_uniqueAPNameString + "," +
+                   FLEET_SOAK_PROTOCOL_VERSION + "," + fleetSoakEventFileCount() + "," +
+                   fleetSoakReservedEventCount() + "," + (fleetSoakSuiteIsReady() ? "1" : "0") + "," +
+                   sprintAssignment + "," + classicAssignment + "," + storedFleetAssignment;
+  g_webSocketLocalClient.sendTXT(stringObjToConstCharString(&message));
 }
 
 void serviceMasterCloneHandshake()
@@ -2417,11 +2660,15 @@ bool clientUpdateEventFilesLoop()
   bool syncFailed = true;
   bool busy = true;
   static unsigned long last;
+  const unsigned long fleetSessionStartedMillis = millis();
 
   last = millis();
   g_webSocketSlaveState = WSClientWaitingForFiles;
-  msg = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_WAITING_FOR_FILES;
-  g_webSocketLocalClient.sendTXT(stringObjToConstCharString(&msg));
+  if (!g_slaveFleetSoakCapabilitySeen || g_slaveFleetSoakSessionReady)
+  {
+    msg = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_WAITING_FOR_FILES;
+    g_webSocketLocalClient.sendTXT(stringObjToConstCharString(&msg));
+  }
 
   while (busy)
   {
@@ -2448,7 +2695,16 @@ bool clientUpdateEventFilesLoop()
           }
           else
           {
-            if (times2try)
+            if (g_slaveFleetSoakCapabilitySeen && !g_slaveFleetSoakSessionReady)
+            {
+              /* A Fleet Soak page may need operator input before assigning this target. */
+              if ((unsigned long)(millis() - fleetSessionStartedMillis) > 300000UL)
+              {
+                errorMessage = "Fleet Soak assignment timed out";
+                g_webSocketSlaveState = WSClientClose;
+              }
+            }
+            else if (times2try)
             {
               if ((unsigned long)(millis() - last) > 2000)
               {
@@ -2642,20 +2898,27 @@ bool clientUpdateEventFilesLoop()
                 else
                 {
                   bool fileReady = true;
-                  if (LittleFS.exists(updatedFileName))
+                  if (g_slaveFleetSoakMode == FLEET_SOAK_MODE_PROVISION)
                   {
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                    if (g_debug_prints_enabled)
-                    {
-                      Serial.println("Removing old file");
-                    }
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-                    fileReady = LittleFS.remove(updatedFileName);
+                    fileReady = fleetSoakStageReceivedEvent(updatedFileName, path, &errorMessage);
                   }
-
-                  if (fileReady)
+                  else
                   {
-                    fileReady = LittleFS.rename(path, updatedFileName);
+                    if (LittleFS.exists(updatedFileName))
+                    {
+#if TRANSMITTER_COMPILE_DEBUG_PRINTS
+                      if (g_debug_prints_enabled)
+                      {
+                        Serial.println("Removing old file");
+                      }
+#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+                      fileReady = LittleFS.remove(updatedFileName);
+                    }
+
+                    if (fileReady)
+                    {
+                      fileReady = LittleFS.rename(path, updatedFileName);
+                    }
                   }
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -2697,17 +2960,57 @@ bool clientUpdateEventFilesLoop()
 
       case WSClientFilesComplete:
         {
-          if (g_slaveClonePruneTargetEvents &&
-              !reconcileCloneEventFiles(&g_cloneEventManifest))
+          bool filesComplete = true;
+          if (g_slaveFleetSoakMode == FLEET_SOAK_MODE_PROVISION)
+          {
+            /* Fleet finalization has its own exact allowlist and never invokes broad pruning. */
+            if (g_cloneEventManifest.count != FLEET_SOAK_EVENT_COUNT)
+            {
+              errorMessage = "Fleet Soak transfer is incomplete";
+              filesComplete = false;
+            }
+            else
+            {
+              for (size_t index = 0; index < FLEET_SOAK_EVENT_COUNT; index++)
+              {
+                if (!cloneEventManifestContains(&g_cloneEventManifest, FLEET_SOAK_EVENT_PATHS[index]))
+                {
+                  errorMessage = String("Fleet Soak transfer omitted file ") + String(index + 1);
+                  filesComplete = false;
+                  break;
+                }
+              }
+            }
+            if (filesComplete &&
+                !fleetSoakFinalizeStagedSuite(g_slaveFleetSoakAssignment, &errorMessage))
+            {
+              filesComplete = false;
+            }
+          }
+          else if (g_slaveFleetSoakMode == FLEET_SOAK_MODE_CLEANUP)
+          {
+            int removedCount = 0;
+            if (!fleetSoakCleanupReservedEvents(&removedCount, &errorMessage))
+            {
+              filesComplete = false;
+            }
+          }
+          else if (g_slaveClonePruneTargetEvents &&
+                   !reconcileCloneEventFiles(&g_cloneEventManifest))
           {
             errorMessage = "Could not reconcile target event files";
-            g_webSocketSlaveState = WSClientClose;
+            filesComplete = false;
           }
-          else
+
+          if (filesComplete)
           {
             syncFailed = false;
             failure = false;
             busy = false;
+          }
+          else
+          {
+            g_webSocketSlaveState = WSClientClose;
           }
         }
         break;
@@ -3275,6 +3578,10 @@ void httpWebServerLoop(int blinkRate)
 
               if (sendEventSheet)
               {
+                msg = String(SOCK_COMMAND_EVENT_CAPACITY) + "," + g_numberOfEventFilesSeen + "," +
+                      MAXIMUM_NUMBER_OF_EVENTS + "," + (g_eventListCapacityExceeded ? "1" : "0");
+                g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
+
                 for (int i = 0; i < g_numberOfEventFilesFound; i++)
                 {
                   broadcastEventSummary(g_eventList[i]);
@@ -3482,9 +3789,9 @@ void httpWebServerLoop(int blinkRate)
           {
             case 0: /* Send File Name and open file for read */
               {
-                if (g_numberOfEventFilesFound > g_files_sent_to_slave)
+                if (masterCloneFileCount() > g_files_sent_to_slave)
                 {
-                  String fn = g_eventList[g_files_sent_to_slave].path;;
+                  String fn = masterCloneFilePath(g_files_sent_to_slave);
                   g_files_sent_to_slave++;
 
                   if (fn.length() > 0)
@@ -3513,7 +3820,7 @@ void httpWebServerLoop(int blinkRate)
 
                       blinkPeriodMillis = 100;
                       msgOut = String(SOCK_COMMAND_FILE_DATA) + "," + EVENT_FILE_NAME + "," + fn;
-                      g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msgOut), msgOut.length());
+                      sendMasterCloneText(msgOut);
                       checksum = 0;
                       eventFileStartFound = false;
                     }
@@ -3574,7 +3881,7 @@ void httpWebServerLoop(int blinkRate)
                     }
 
                     msgOut = String(SOCK_COMMAND_FILE_DATA) + "," + s;
-                    g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msgOut), msgOut.length());
+                    sendMasterCloneText(msgOut);
 
                     if (!s.equalsIgnoreCase(String(EVENT_FILE_END)))
                     {
@@ -3613,7 +3920,7 @@ void httpWebServerLoop(int blinkRate)
                 }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
                 msgOut = String(SOCK_COMMAND_FILE_DATA) + "," + EVENT_FILE_CHECKSUM + "," + String(checksum);
-                g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msgOut), msgOut.length());
+                sendMasterCloneText(msgOut);
                 activeFile.close();
               }
               break;
@@ -3627,7 +3934,7 @@ void httpWebServerLoop(int blinkRate)
                 }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
                 msgOut = String(SOCK_COMMAND_FILE_DATA) + ",EOF";
-                g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msgOut), msgOut.length());
+                sendMasterCloneText(msgOut);
               }
               break;
 
@@ -3636,7 +3943,7 @@ void httpWebServerLoop(int blinkRate)
                 if (serialIndex >= 100) /* Abort flag */
                 {
                   msgOut = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_FREE;
-                  g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msgOut), msgOut.length());
+                  sendMasterCloneText(msgOut);
                   blinkPeriodMillis = 100;
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
                   if (g_debug_prints_enabled)
@@ -4175,6 +4482,8 @@ void webSocketClientEvent(WStype_t type, uint8_t * payload, size_t length)
         }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
         g_slave_released = true;
+        g_slaveFleetSoakCapabilitySeen = false;
+        g_slaveFleetSoakSessionReady = false;
       }
       break;
 
@@ -4276,6 +4585,57 @@ void webSocketClientEvent(WStype_t type, uint8_t * payload, size_t length)
                 }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
               }
+            }
+          }
+          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_FLEET_SOAK_CAPABILITY))
+          {
+            int firstComma = p.indexOf(',');
+            int secondComma = p.indexOf(',', firstComma + 1);
+            const String versionText = secondComma > firstComma
+                                       ? p.substring(firstComma + 1, secondComma)
+                                       : p.substring(firstComma + 1);
+            if (versionText.toInt() == FLEET_SOAK_PROTOCOL_VERSION)
+            {
+              g_slaveFleetSoakCapabilitySeen = true;
+              sendFleetSoakTargetInfo();
+            }
+          }
+          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_FLEET_SOAK_SESSION))
+          {
+            int firstComma = p.indexOf(',');
+            int secondComma = p.indexOf(',', firstComma + 1);
+            String mode = secondComma > firstComma
+                          ? p.substring(firstComma + 1, secondComma)
+                          : p.substring(firstComma + 1);
+            String assignment = secondComma > firstComma ? p.substring(secondComma + 1) : String("");
+            mode.trim();
+            assignment.trim();
+
+            String activeEventName;
+            /* Refuse before staging or cleanup so a running field event cannot be disturbed. */
+            if (g_slaveFleetSoakCapabilitySeen && currentEventFileIsActive(&activeEventName))
+            {
+              String result = String(SOCK_COMMAND_FLEET_SOAK_RESULT) + "," + g_uniqueAPNameString + "," +
+                              mode + ",ERROR,Event is active: " + activeEventName;
+              g_webSocketLocalClient.sendTXT(stringObjToConstCharString(&result));
+              g_webSocketSlaveState = WSClientClose;
+            }
+            else if (g_slaveFleetSoakCapabilitySeen && mode.equals(FLEET_SOAK_MODE_TEXT_CLEANUP))
+            {
+              g_slaveFleetSoakMode = FLEET_SOAK_MODE_CLEANUP;
+              g_slaveFleetSoakAssignment = "";
+              g_slaveFleetSoakSessionReady = true;
+            }
+            else if (g_slaveFleetSoakCapabilitySeen && mode.equals(FLEET_SOAK_MODE_TEXT_PROVISION) &&
+                     fleetSoakAssignmentIsValid(assignment.c_str()))
+            {
+              g_slaveFleetSoakMode = FLEET_SOAK_MODE_PROVISION;
+              g_slaveFleetSoakAssignment = assignment;
+              g_slaveFleetSoakSessionReady = true;
+            }
+            else
+            {
+              g_webSocketSlaveState = WSClientClose;
             }
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_CLONE_PRUNE_EVENTS))
@@ -4470,6 +4830,20 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
         }
 
         g_numberOfSocketClients = g_webSocketServer.connectedClients(false);
+        if (g_masterFleetSoakMode != FLEET_SOAK_MODE_OFF)
+        {
+          if (fleetSoakPageIsAvailable(g_IamMaster))
+          {
+            String capability = String(SOCK_COMMAND_FLEET_SOAK_CAPABILITY) + "," +
+                                FLEET_SOAK_PROTOCOL_VERSION + "," +
+                                fleetSoakModeText(g_masterFleetSoakMode);
+            g_webSocketServer.sendTXT(num, stringObjToConstCharString(&capability), capability.length());
+          }
+          else
+          {
+            g_masterFleetSoakMode = FLEET_SOAK_MODE_OFF;
+          }
+        }
         g_LBOutputBuff->put(LB_MESSAGE_TEMP_REQUEST);
         g_LBOutputBuff->put(LB_MESSAGE_BATTERY_REQUEST);
         g_noActivityTimeoutSeconds = NO_ACTIVITY_TIMEOUT;
@@ -4510,6 +4884,131 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
           {
             g_socket_timeout = 10;
           }
+          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_FLEET_SOAK_MODE))
+          {
+            String requested = commaIndex >= 0 ? p.substring(commaIndex + 1) : String("");
+            requested.trim();
+            String result = String(SOCK_COMMAND_FLEET_SOAK_RESULT) + ",MASTER,MODE,ERROR,";
+
+            if (!fleetSoakPageIsAvailable(g_IamMaster))
+            {
+              g_masterFleetSoakMode = FLEET_SOAK_MODE_OFF;
+              result += "Fleet Soak page is not installed";
+            }
+            else if (fleetSoakOperationIsBusy())
+            {
+              result += "Another operation is active";
+            }
+            else if (requested.equals(FLEET_SOAK_MODE_TEXT_OFF))
+            {
+              g_masterFleetSoakMode = FLEET_SOAK_MODE_OFF;
+              clearFleetSoakCandidate();
+              result = String(SOCK_COMMAND_FLEET_SOAK_RESULT) + ",MASTER,MODE,OK,OFF";
+            }
+            else if (requested.equals(FLEET_SOAK_MODE_TEXT_PROVISION) && fleetSoakSuiteIsReady())
+            {
+              String activeEventName;
+              if (currentEventFileIsActive(&activeEventName))
+              {
+                result += String("Event is active: ") + activeEventName;
+              }
+              else
+              {
+                g_masterFleetSoakMode = FLEET_SOAK_MODE_PROVISION;
+                clearFleetSoakCandidate();
+                result = String(SOCK_COMMAND_FLEET_SOAK_RESULT) + ",MASTER,MODE,OK,PROVISION";
+              }
+            }
+            else if (requested.equals(FLEET_SOAK_MODE_TEXT_CLEANUP) &&
+                     fleetSoakReservedEventCount() == 0)
+            {
+              g_masterFleetSoakMode = FLEET_SOAK_MODE_CLEANUP;
+              clearFleetSoakCandidate();
+              result = String(SOCK_COMMAND_FLEET_SOAK_RESULT) + ",MASTER,MODE,OK,CLEANUP";
+            }
+            else if (requested.equals(FLEET_SOAK_MODE_TEXT_PROVISION))
+            {
+              result += "The complete reserved suite is not active";
+            }
+            else if (requested.equals(FLEET_SOAK_MODE_TEXT_CLEANUP))
+            {
+              result += "Clean the master before cleaning targets";
+            }
+            else
+            {
+              result += "Invalid Fleet Soak mode";
+            }
+            g_webSocketServer.broadcastTXT(stringObjToConstCharString(&result), result.length());
+          }
+          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_FLEET_SOAK_INFO))
+          {
+            /* Capability -> identity/capacity -> assignment keeps transfer authorization explicit. */
+            if (g_masterFleetSoakMode != FLEET_SOAK_MODE_OFF &&
+                (!g_master_has_connected_slave || num == g_slave_socket_number))
+            {
+              int firstComma = p.indexOf(',');
+              int secondComma = p.indexOf(',', firstComma + 1);
+              int thirdComma = p.indexOf(',', secondComma + 1);
+              int fourthComma = p.indexOf(',', thirdComma + 1);
+              int fifthComma = p.indexOf(',', fourthComma + 1);
+              String ssid = secondComma > firstComma ? p.substring(firstComma + 1, secondComma) : String("");
+              const int protocolVersion = thirdComma > secondComma
+                                          ? p.substring(secondComma + 1, thirdComma).toInt() : 0;
+              const int targetEventCount = fourthComma > thirdComma
+                                           ? p.substring(thirdComma + 1, fourthComma).toInt() : MAXIMUM_NUMBER_OF_EVENTS + 1;
+              const int targetReservedCount = fifthComma > fourthComma
+                                              ? p.substring(fourthComma + 1, fifthComma).toInt() : 0;
+              const int targetOrdinaryEventCount = targetEventCount - targetReservedCount;
+
+              if (ssid.length() && protocolVersion == FLEET_SOAK_PROTOCOL_VERSION &&
+                  targetReservedCount >= 0 && targetReservedCount <= FLEET_SOAK_EVENT_COUNT &&
+                  targetOrdinaryEventCount >= 0 &&
+                  (g_masterFleetSoakMode != FLEET_SOAK_MODE_PROVISION ||
+                   targetOrdinaryEventCount + FLEET_SOAK_EVENT_COUNT <= MAXIMUM_NUMBER_OF_EVENTS))
+              {
+                g_fleetSoakCandidateSocket = num;
+                g_fleetSoakCandidateSsid = ssid;
+                g_fleetSoakCandidateAssignment = "";
+                g_webSocketServer.broadcastTXT(stringObjToConstCharString(&p), p.length());
+                if (g_masterFleetSoakMode == FLEET_SOAK_MODE_CLEANUP)
+                {
+                  String session = String(SOCK_COMMAND_FLEET_SOAK_SESSION) + "," + FLEET_SOAK_MODE_TEXT_CLEANUP;
+                  g_webSocketServer.sendTXT(num, stringObjToConstCharString(&session), session.length());
+                }
+              }
+              else
+              {
+                String result = String(SOCK_COMMAND_FLEET_SOAK_RESULT) + "," + ssid +
+                                ",CONNECT,ERROR,Incompatible target or insufficient event capacity";
+                g_webSocketServer.broadcastTXT(stringObjToConstCharString(&result), result.length());
+              }
+            }
+          }
+          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_FLEET_SOAK_ASSIGN))
+          {
+            int firstComma = p.indexOf(',');
+            int secondComma = p.indexOf(',', firstComma + 1);
+            String ssid = secondComma > firstComma ? p.substring(firstComma + 1, secondComma) : String("");
+            String assignment = secondComma > firstComma ? p.substring(secondComma + 1) : String("");
+            ssid.trim();
+            assignment.trim();
+            if (g_masterFleetSoakMode == FLEET_SOAK_MODE_PROVISION &&
+                g_fleetSoakCandidateSocket >= 0 && ssid.equals(g_fleetSoakCandidateSsid) &&
+                fleetSoakAssignmentIsValid(assignment.c_str()))
+            {
+              g_fleetSoakCandidateAssignment = assignment;
+              String session = String(SOCK_COMMAND_FLEET_SOAK_SESSION) + "," +
+                               FLEET_SOAK_MODE_TEXT_PROVISION + "," + assignment;
+              g_webSocketServer.sendTXT((uint8_t)g_fleetSoakCandidateSocket,
+                                        stringObjToConstCharString(&session), session.length());
+            }
+            else
+            {
+              String result = String(SOCK_COMMAND_FLEET_SOAK_RESULT) + "," + ssid +
+                              ",ASSIGN,ERROR,Assignment rejected";
+              g_webSocketServer.broadcastTXT(stringObjToConstCharString(&result), result.length());
+            }
+          }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_CLONE_PRUNE_EVENTS))
           {
             if (num != g_slave_socket_number)
@@ -4536,7 +5035,9 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
 
             if (p.equals(SLAVE_CONNECT))
             {
-              if (!g_master_has_connected_slave)
+              const bool fleetCandidateAllowed = g_masterFleetSoakMode == FLEET_SOAK_MODE_OFF ||
+                                                  num == g_fleetSoakCandidateSocket;
+              if (!g_master_has_connected_slave && fleetCandidateAllowed)
               {
                 g_master_has_connected_slave = true;
                 g_files_sent_to_slave = 0;
@@ -4578,15 +5079,24 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
             }
             else if (p.equals(SLAVE_WAITING_FOR_FILES))
             {
+              const bool fleetSessionAllowed = g_masterFleetSoakMode == FLEET_SOAK_MODE_OFF ||
+                                               (num == g_fleetSoakCandidateSocket &&
+                                                num == g_slave_socket_number &&
+                                                (g_masterFleetSoakMode == FLEET_SOAK_MODE_CLEANUP ||
+                                                 fleetSoakAssignmentIsValid(g_fleetSoakCandidateAssignment.c_str())));
+              if (!fleetSessionAllowed)
+              {
+                msg = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_FREE;
+              }
               /* Check if event files need to be sent */
-              if (g_numberOfEventFilesFound > g_files_sent_to_slave)
+              else if (masterCloneFileCount() > g_files_sent_to_slave)
               {
                 if (g_ESP_Comm_State == TX_WAITING_FOR_INSTRUCTIONS)
                 {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
                   if (g_debug_prints_enabled)
                   {
-                    Serial.println(String("WSs: sending file #") + (g_files_sent_to_slave + 1) + " of " + g_numberOfEventFilesFound);
+                    Serial.println(String("WSs: sending file #") + (g_files_sent_to_slave + 1) + " of " + masterCloneFileCount());
                   }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
@@ -4616,7 +5126,24 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
               }
             }
 
-            if (msg.length()) g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
+            if (msg.length())
+            {
+              if (g_masterFleetSoakMode != FLEET_SOAK_MODE_OFF)
+              {
+                g_webSocketServer.sendTXT(num, stringObjToConstCharString(&msg), msg.length());
+              }
+              else
+              {
+                g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
+              }
+            }
+          }
+          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_FLEET_SOAK_RESULT))
+          {
+            if (num == g_slave_socket_number || num == g_fleetSoakCandidateSocket)
+            {
+              g_webSocketServer.broadcastTXT(stringObjToConstCharString(&p), p.length());
+            }
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_SLAVE_UPDATE_SUCCESS))
           {
@@ -4669,6 +5196,15 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
             }
 
             g_webSocketServer.broadcastTXT(stringObjToConstCharString(&p), p.length());
+            if (g_masterFleetSoakMode != FLEET_SOAK_MODE_OFF &&
+                (num == g_slave_socket_number || num == g_fleetSoakCandidateSocket))
+            {
+              String fleetResult = String(SOCK_COMMAND_FLEET_SOAK_RESULT) + "," +
+                                   g_fleetSoakCandidateSsid + "," +
+                                   fleetSoakModeText(g_masterFleetSoakMode) + ",ERROR," +
+                                   (commaIndex >= 0 ? p.substring(commaIndex + 1) : String("Target update failed"));
+              g_webSocketServer.broadcastTXT(stringObjToConstCharString(&fleetResult), fleetResult.length());
+            }
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_SYNC_TIME)) /* From connected browser */
           {
@@ -5404,6 +5940,9 @@ bool populateEventFileList(void)
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
   g_numberOfEventFilesFound = 0;
+  g_numberOfEventFilesSeen = 0;
+  g_eventListCapacityExceeded = false;
+  const bool fleetSoakReady = fleetSoakSuiteIsReady();
   Event eventSummary(false);
   Dir dir = LittleFS.openDir("/");
   while (dir.next())
@@ -5417,6 +5956,11 @@ bool populateEventFileList(void)
 
     if (fileName.endsWith(".event"))
     {
+      if (fleetSoakIsReservedEventPath(fileName.c_str()) && !fleetSoakReady)
+      {
+        continue; /* An incomplete Fleet Soak suite is never schedulable. */
+      }
+      g_numberOfEventFilesSeen++;
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
       if ( g_debug_prints_enabled )
       {
@@ -5426,6 +5970,7 @@ bool populateEventFileList(void)
 
       if (g_numberOfEventFilesFound >= MAXIMUM_NUMBER_OF_EVENTS)
       {
+        g_eventListCapacityExceeded = true;
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
         if (g_debug_prints_enabled)
         {
@@ -5745,6 +6290,16 @@ void handleFileDelete()
   }
   if (!abort && LittleFS.exists(stringObjToConstCharString(&path)))
   { /* If the file exists */
+    if (fleetSoakIsReservedEventPath(path.c_str()))
+    {
+      fleetSoakDeactivateSuite();
+      g_masterFleetSoakMode = FLEET_SOAK_MODE_OFF;
+    }
+    if (fleetSoakPathsEqual(path.c_str(), FLEET_SOAK_PAGE_PATH))
+    {
+      g_masterFleetSoakMode = FLEET_SOAK_MODE_OFF;
+      fleetSoakDeactivateSuite();
+    }
     LittleFS.remove(path);
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -5852,6 +6407,12 @@ void handleFileUpload()
     {
       g_fsUploadError = "Unsafe or invalid target filename";
       return;
+    }
+
+    if (fleetSoakIsReservedEventPath(g_fsUploadTargetPath.c_str()))
+    {
+      fleetSoakDeactivateSuite();
+      g_masterFleetSoakMode = FLEET_SOAK_MODE_OFF;
     }
 
     if (g_fsUploadIntegrityRequired &&

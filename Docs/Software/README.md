@@ -20,6 +20,7 @@ This directory documents the current AVR128DA48-based software architecture on t
 - [Source and generated-file boundaries](GENERATED_FILES.md) classifies product source, generated-derived files, IDE/build output, ESP assets, and CAD/manufacturing files.
 - [Build environment](BUILD_ENVIRONMENT.md) defines Mac and Windows roles, the portable AVR Release wrapper, evidence classes, and the reference-environment handoff checklist.
 - [WiFi-to-AVR access](WIFI_AVR_ACCESS.md) documents the supported HTTP/WebSocket/Linkbus path, safe probes, and the feasibility, reset-power constraint, recovery design, optional hardware changes, and decision gates for future AVR bootloading over WiFi.
+- [Fleet soak event suite](FLEET_SOAK_EVENTS.md) defines the optional master-only control page, reserved twelve-event Sprint/Classic schedule, per-target assignment workflow, exact cleanup boundary, and field verification procedure.
 - [Mac build environment evidence](Evidence/MAC_BUILD_ENVIRONMENT_2026-07-11.md) records the verified archived compiler and the remaining historical device-pack requirement.
 - [Wireless clone time synchronization investigation](Evidence/WIRELESS_TIME_SYNC_INVESTIGATION_2026-07-12.md) records the rare multi-unit timing symptom, confirmed false-success paths, read-only phase observer, ranked hypotheses, and measurement plan.
 - The repository-root [Codex mailbox](../../CODEX_MAILBOX.md) carries committed Mac/Windows requests and replies; durable results belong under `Evidence/`.

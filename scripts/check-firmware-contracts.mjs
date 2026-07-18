@@ -274,7 +274,7 @@ const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8"
 const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
 const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.204";
-const expectedEspVersion = "2.12";
+const expectedEspVersion = "2.13";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -467,7 +467,7 @@ if (
   !cloneKeepAliveSchedule.includes("CLONE_KEEPALIVE_INTERVAL_MILLIS 20000UL") ||
   !cloneKeepAliveSchedule.includes("schedule->queueImmediately = true;") ||
   !cloneKeepAliveSchedule.includes("schedule->active = false;") ||
-  slaveShutdownCalls !== 3
+  slaveShutdownCalls !== 4
 ) {
   process.stderr.write(
     "Firmware contract check failed: target cloning must use a bounded 20-second AVR heartbeat, retain detailed programming errors, and shut down once per outcome\n",

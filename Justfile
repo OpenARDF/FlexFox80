@@ -27,6 +27,9 @@ test:
     node ./Tests/Host/esp_firmware_update_page_test.mjs
     node ./Tests/Host/flexfox_http_test.mjs
     node ./Tests/Host/events_html_test.mjs
+    node ./Tests/Host/fleet_soak_event_generator_test.mjs
+    node ./Tests/Host/fleet_soak_page_test.mjs
+    node ./Tests/Host/fleet_soak_protocol_test.mjs
     node ./Tests/Host/release_checklist_validator_test.mjs
     node ./scripts/check-firmware-contracts.mjs
     node ./scripts/check-eeprom-layout.mjs
@@ -106,6 +109,10 @@ wifi-avr-update:
 # Install and hash-verify events.html or another named LittleFS web file (explicit confirmation required).
 wifi-web-deploy:
     node ./scripts/deploy-flexfox-web-file.mjs
+
+# Generate the alternating 12-event, ten-unit fleet soak bundle for an explicit UTC start.
+fleet-soak-events start:
+    node ./scripts/generate-flexfox-fleet-soak-events.mjs --start "{{start}}"
 
 # Build the ESP8266 sketch and LittleFS image with the qualified pinned profile.
 esp-build:

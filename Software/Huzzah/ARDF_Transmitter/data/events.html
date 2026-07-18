@@ -218,6 +218,12 @@
         var g_timer = 0;
         var g_timeUpdateTimer = 0;
         var g_clockSyncTimer = 0;
+        var g_clockSyncTimerAutomatic = false;
+        var g_automaticClockSyncTimer = 0;
+        var g_automaticClockSyncEnabled = false;
+        var g_automaticClockSyncPerformed = false;
+        var g_clockSyncLongPressTimer = 0;
+        var g_clockSyncLongPressHandled = false;
         var g_homeTimer = 0;
         var g_eventRadioBand = "";
         var g_timedOut = false;
@@ -234,6 +240,7 @@
         var g_lastSocketTxMessage;
         var g_transmitterTimeMs = 0;
         var g_transmitterTimeReceivedMs = 0;
+        var g_connectedTransmitterSSID = "";
         var g_websock = null;
         var g_timesync_rcvd = 0;
         var g_webSocketAliveTimer = 0;
@@ -246,6 +253,10 @@
         var g_eventSheetCacheSupported = false;
         var g_eventSelectionIdentitySupported = false;
         var g_renderedSelectedEvent = "";
+
+        var AUTOMATIC_CLOCK_SYNC_STORAGE_KEY = "flexfox.events.autoClockSync";
+        var CLOCK_SYNC_LONG_PRESS_MS = 700;
+        var AUTOMATIC_CLOCK_SYNC_DELAY_MS = 1500;
 
         ///////////////////////////////
         // Settings
@@ -347,6 +358,20 @@
 
         function cloneStatusEventName(eventName) {
             return String(eventName || "").replace(/\s+Set\s+\d+-\d+\s*$/i, "").trim();
+        }
+
+        function clearConnectionMessages() {
+            var errorReport = document.getElementById("errorreport");
+            if (errorReport != null) {
+                errorReport.textContent = "";
+                errorReport.style.display = "none";
+            }
+
+            var statusReport = document.getElementById("statusreport");
+            if (statusReport != null) {
+                statusReport.textContent = "";
+                statusReport.style.display = "none";
+            }
         }
 
         function setClonePruneTargetEvents() {
@@ -843,6 +868,15 @@
                 clearInterval(g_webSocketAliveTimer);
                 g_webSocketAliveTimer = 0;
             }
+            if (g_automaticClockSyncTimer) {
+                clearTimeout(g_automaticClockSyncTimer);
+                g_automaticClockSyncTimer = 0;
+            }
+            if (g_clockSyncTimer && g_clockSyncTimerAutomatic) {
+                clearTimeout(g_clockSyncTimer);
+                g_clockSyncTimer = 0;
+                g_clockSyncTimerAutomatic = false;
+            }
 
             var socket = g_websock;
             g_websock = null;
@@ -895,6 +929,7 @@
                     clearWebSocketReconnect();
                     g_lastPacketTime = 0;
                     g_delayedPackets = 0;
+                    g_connectedTransmitterSSID = "";
                     g_loading_data = true;
                     showConnectedState();
 
@@ -1332,6 +1367,23 @@
                             }
                             break;
 
+                        case "EVENT_CAPACITY":
+                            {
+                                var eventCount = Number(arr[1]);
+                                var eventCapacity = Number(arr[2]);
+                                var capacityExceeded = (arr[3] == "1") || (eventCount > eventCapacity);
+                                if (capacityExceeded) {
+                                    var elem = document.getElementById("errorreport");
+                                    if (elem != null) {
+                                        elem.textContent = "Error: This unit has " + eventCount +
+                                            " event files, exceeding the supported limit of " + eventCapacity +
+                                            ". Extra events are not loaded.";
+                                        elem.setAttribute("style", "font-family:verdana; font-size:25px; color:Red; font-weight:bold; text-align:center;");
+                                    }
+                                }
+                            }
+                            break;
+
                         case "EVENT_SELECTION":
                             {
                                 var eventName = arr[1];
@@ -1478,10 +1530,13 @@
                         case "SSID":
                             {
                                 if (typeof arr[1] != 'undefined') {
-                                    var t = arr[1] + ": Events Settings";
+                                    clearConnectionMessages();
+                                    g_connectedTransmitterSSID = String(arr[1]).trim();
+                                    var t = g_connectedTransmitterSSID + ": Events Settings";
                                     var h = document.getElementById("mainHeading");
                                     if (h != null) h.textContent = t;
                                     console.log(t);
+                                    scheduleAutomaticClockSync();
                                 }
                             }
                             break;
@@ -1671,6 +1726,7 @@
             setOverlay("Loading Events...");
             g_stillConnected = 200;
             g_webSocketStopping = false;
+            loadAutomaticClockSyncPreference();
             startTimeUpdates();
             webSocketStart();
         }
@@ -1727,12 +1783,130 @@
             }
         }
 
-        function syncClock() {
+        function storedAutomaticClockSyncPreference() {
+            try {
+                return window.localStorage.getItem(AUTOMATIC_CLOCK_SYNC_STORAGE_KEY) == "1";
+            } catch (err) {
+                console.warn("Unable to read automatic clock-sync preference:", err);
+                return false;
+            }
+        }
+
+        function storeAutomaticClockSyncPreference(enabled) {
+            try {
+                window.localStorage.setItem(AUTOMATIC_CLOCK_SYNC_STORAGE_KEY, enabled ? "1" : "0");
+            } catch (err) {
+                console.warn("Unable to save automatic clock-sync preference:", err);
+            }
+        }
+
+        function updateClockSyncButton() {
+            var button = document.getElementById("SyncButton");
+            if (!button) return;
+
+            button.textContent = g_automaticClockSyncEnabled ? "Sync (Auto)" : "Sync";
+            button.style.backgroundColor = g_automaticClockSyncEnabled ? "gray" : "";
+            button.setAttribute("aria-disabled", g_automaticClockSyncEnabled ? "true" : "false");
+            button.setAttribute("aria-pressed", g_automaticClockSyncEnabled ? "true" : "false");
+            button.setAttribute(
+                "title",
+                g_automaticClockSyncEnabled ?
+                    "Automatic clock sync is enabled. Long press to return to manual sync." :
+                    "Press to sync now. Long press to enable automatic sync."
+            );
+        }
+
+        function loadAutomaticClockSyncPreference() {
+            g_automaticClockSyncEnabled = storedAutomaticClockSyncPreference();
+            g_automaticClockSyncPerformed = false;
+            updateClockSyncButton();
+        }
+
+        function setAutomaticClockSync(enabled) {
+            var changed = (g_automaticClockSyncEnabled != enabled);
+            g_automaticClockSyncEnabled = enabled;
+            storeAutomaticClockSyncPreference(enabled);
+            updateClockSyncButton();
+
+            if (!enabled) {
+                if (g_automaticClockSyncTimer) {
+                    clearTimeout(g_automaticClockSyncTimer);
+                    g_automaticClockSyncTimer = 0;
+                }
+                if (g_clockSyncTimer && g_clockSyncTimerAutomatic) {
+                    clearTimeout(g_clockSyncTimer);
+                    g_clockSyncTimer = 0;
+                    g_clockSyncTimerAutomatic = false;
+                }
+            } else if (changed) {
+                g_automaticClockSyncPerformed = false;
+                scheduleAutomaticClockSync();
+            }
+        }
+
+        function scheduleAutomaticClockSync() {
+            if (!g_automaticClockSyncEnabled || g_automaticClockSyncPerformed || g_automaticClockSyncTimer) return;
+            if (!g_connectedTransmitterSSID) return;
+            if ((g_websock == null) || (g_websock.readyState !== 1)) return;
+
+            g_automaticClockSyncTimer = setTimeout(function() {
+                g_automaticClockSyncTimer = 0;
+                if (!g_automaticClockSyncEnabled || (g_websock == null) || (g_websock.readyState !== 1)) return;
+                g_automaticClockSyncPerformed = true;
+                syncClock(true);
+            }, AUTOMATIC_CLOCK_SYNC_DELAY_MS);
+        }
+
+        function clockSyncPressStart(evt) {
+            if (evt && (typeof evt.button == "number") && (evt.button != 0)) return;
+            if (evt && evt.currentTarget && evt.currentTarget.setPointerCapture &&
+                (typeof evt.pointerId == "number")) {
+                try {
+                    evt.currentTarget.setPointerCapture(evt.pointerId);
+                } catch (err) {
+                    console.warn("Unable to capture clock-sync pointer:", err);
+                }
+            }
+            if (g_clockSyncLongPressTimer) clearTimeout(g_clockSyncLongPressTimer);
+            g_clockSyncLongPressHandled = false;
+            g_clockSyncLongPressTimer = setTimeout(function() {
+                g_clockSyncLongPressTimer = 0;
+                g_clockSyncLongPressHandled = true;
+                setAutomaticClockSync(!g_automaticClockSyncEnabled);
+            }, CLOCK_SYNC_LONG_PRESS_MS);
+        }
+
+        function clockSyncPressEnd() {
+            if (g_clockSyncLongPressTimer) {
+                clearTimeout(g_clockSyncLongPressTimer);
+                g_clockSyncLongPressTimer = 0;
+            }
+        }
+
+        function clockSyncClick(evt) {
+            if (g_clockSyncLongPressHandled || g_automaticClockSyncEnabled) {
+                if (evt && evt.preventDefault) evt.preventDefault();
+                g_clockSyncLongPressHandled = false;
+                return false;
+            }
+
+            syncClock(false);
+            return true;
+        }
+
+        function suppressClockSyncContextMenu(evt) {
+            if (evt && evt.preventDefault) evt.preventDefault();
+            return false;
+        }
+
+        function syncClock(automatic) {
             if (g_clockSyncTimer) clearTimeout(g_clockSyncTimer);
+            g_clockSyncTimerAutomatic = (automatic === true);
 
             var delayToNextSecond = 1000 - (Date.now() % 1000);
             g_clockSyncTimer = setTimeout(function() {
                 g_clockSyncTimer = 0;
+                g_clockSyncTimerAutomatic = false;
                 var btext = "SYNC," + new Date().toISOString();
                 console.log(btext);
                 sendToSocket(btext);
@@ -2575,6 +2749,7 @@
         window.addEventListener("pageshow", function(evt) {
             if (evt && evt.persisted) {
                 g_webSocketStopping = false;
+                g_automaticClockSyncPerformed = false;
                 webSocketStart();
             }
         });
@@ -2606,7 +2781,7 @@
         <h1 id="mainHeading" style="font-family:verdana; font-size:30px; color:Black; text-align:center;">Transmitter Settings</h1>
         <p id="wifiVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
         <p id="ATMEGAVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
-        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.5.5 - 16 Jul 2026</p>
+        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.5.7 - 18 Jul 2026</p>
 
         <div>
             <table>
@@ -2639,7 +2814,17 @@
             <table>
                 <tr>
                     <td style="text-align:left; vertical-align:center;">
-                        <button id="SyncButton" class="incbutton" onclick="syncClock();">Sync</button>
+                        <button id="SyncButton" class="incbutton"
+                            style="touch-action:manipulation; -webkit-touch-callout:none; user-select:none;"
+                            onclick="clockSyncClick(event);"
+                            onpointerdown="clockSyncPressStart(event);"
+                            onpointerup="clockSyncPressEnd();"
+                            onpointercancel="clockSyncPressEnd();"
+                            onpointerleave="clockSyncPressEnd();"
+                            oncontextmenu="return suppressClockSyncContextMenu(event);">Sync</button>
+                        <p style="font-family:verdana; font-size:12px; color:Black;">
+                            Long press Sync to toggle automatic synchronization.
+                        </p>
                     </td>
                 </tr>
             </table>

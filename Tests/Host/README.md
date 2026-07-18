@@ -14,9 +14,11 @@ The runner writes executables only under the ignored `Software/AVR128DA48/tmp/ho
 
 `just test` also runs dependency-free source-contract checks for firmware declarations whose target-compiler interpretation is safety-relevant. These checks supplement compilation; they do not replace it.
 
-The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The bootloader-capable candidate identity is ESP `2.12` plus AVR `0.204`, reported together as `SW_VERSIONS,2.12,0.204`.
+The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current candidate identity is ESP `2.13` plus AVR `0.204`, reported together as `SW_VERSIONS,2.13,0.204`.
 
 The embedded firmware-update page regression also parses both browser scripts and requires the AVR path to retain the unique MAC-derived SSID-suffix authorization prompt and display measured LittleFS headroom.
+
+The fleet soak generator regression creates a deterministic twelve-event bundle for ten units and verifies the alternating Sprint/Classic schedule, quiet intervals, zero-based assignments, role definitions, frequencies, file limits, hashes, and clone-transfer checksums. It also covers overwrite and short-setup-time rejection.
 
 ## Current characterization boundary
 
@@ -99,6 +101,8 @@ The ESP Linkbus command-transaction regression compiles the same outcome decisio
 - correct deadline arithmetic across `millis()` wraparound.
 
 The ESP firmware-update integrity regression compiles the exact guards used by the sketch-only WiFi updater and covers strict size bounds, strict CRC32 parsing, the standard CRC32 test vector, and rejection of filesystem or compressed-image filenames.
+
+The Fleet Soak regressions compile the exact reserved-name and assignment boundaries, exercise deterministic generation of the twelve alternating Sprint/Classic events, and verify that the control page remains an optional asset using only soak-scoped activation and cleanup operations.
 
 Zero-capacity construction and allocation-failure behavior are intentionally not asserted yet. They are candidate red-green defect slices and must begin with recorded pre-fix evidence.
 
