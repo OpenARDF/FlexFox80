@@ -673,11 +673,15 @@ void avrUpdateResumeIfRequired(bool bootloaderAlreadyReady)
   for(;;) { delay(1000); yield(); }
 }
 
-void avrUpdateObserveApplicationVersion(const String& version)
+bool avrUpdateObserveApplicationVersion(const String& version)
 {
   AvrUpdateState state;
-  if(!avrUpdateLoadState(&state) || state.phase != AVR_UPDATE_VERIFYING_APPLICATION) return;
-  if(version != String(state.targetVersion)) return;
+  if(!avrUpdateLoadState(&state) || state.phase != AVR_UPDATE_VERIFYING_APPLICATION) return false;
+  if(version != String(state.targetVersion)) return false;
+  /* The physical success indication must mean that no live staged image remains,
+   * not merely that the application reported the requested version. If state
+   * persistence then needs a retry, the verified application can report again. */
+  if(LittleFS.exists(AVR_UPDATE_IMAGE_PATH) && !LittleFS.remove(AVR_UPDATE_IMAGE_PATH)) return false;
   state.phase = AVR_UPDATE_COMPLETE;
-  if(saveState(&state)) LittleFS.remove(AVR_UPDATE_IMAGE_PATH);
+  return saveState(&state);
 }

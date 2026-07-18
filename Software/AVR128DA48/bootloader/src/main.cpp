@@ -48,12 +48,15 @@
 #define RED_LED_PIN PIN6_bm
 #define GREEN_LED_PIN PIN5_bm
 #define LED_PINS (RED_LED_PIN | GREEN_LED_PIN)
+#define UPDATE_LED_HALF_PERIOD_TICKS 25000U
 #define USART_RX_ERROR_MASK (USART_PERR_bm | USART_FERR_bm | USART_BUFOVF_bm)
 #define RESET_FLAGS_MASK (RSTCTRL_UPDIRF_bm | RSTCTRL_SWRF_bm | RSTCTRL_WDRF_bm | RSTCTRL_EXTRF_bm | RSTCTRL_BORF_bm | RSTCTRL_PORF_bm)
 
 static uint8_t page_buffer[FLEXFOX_FLASH_PAGE_BYTES];
 static uint8_t last_nvm_error;
 static uint8_t last_usart_error;
+static uint16_t update_led_ticks;
+static bool update_led_error;
 
 static uint8_t read_and_clear_reset_flags(void)
 {
@@ -133,7 +136,35 @@ static void pins_init(bool preserve_wifi_session)
 static bool switch_is_held(void) { return (PORTC.IN & SWITCH_PIN) == 0U; }
 static void leds_off(void) { PORTC.OUTCLR = LED_PINS; }
 static void leds_toggle(void) { PORTC.OUTTGL = LED_PINS; }
-static void error_led(void) { PORTC.OUTSET = RED_LED_PIN; PORTC.OUTCLR = GREEN_LED_PIN; }
+static void update_led_start(void)
+{
+	/* Alternating colors are reserved for resident-bootloader work. Start from
+	 * a deterministic phase so every wait and recovery interval remains visible. */
+	PORTC.OUTSET = RED_LED_PIN;
+	PORTC.OUTCLR = GREEN_LED_PIN;
+	update_led_ticks = 0U;
+	update_led_error = false;
+}
+
+/* Called after a ten-microsecond delay in every bootloader wait loop. This
+ * keeps the progress indication alive during the ESP's long state-save gaps
+ * without enabling interrupts while Flash is being changed. */
+static void update_led_service_10us(void)
+{
+	if(update_led_error) return;
+	if(++update_led_ticks >= UPDATE_LED_HALF_PERIOD_TICKS)
+	{
+		update_led_ticks = 0U;
+		PORTC.OUTTGL = LED_PINS;
+	}
+}
+
+static void error_led(void)
+{
+	update_led_error = true;
+	PORTC.OUTSET = RED_LED_PIN;
+	PORTC.OUTCLR = GREEN_LED_PIN;
+}
 
 static void usart_init(void)
 {
@@ -161,6 +192,7 @@ static bool usart_read_timeout(uint8_t *value, uint16_t timeout_ms)
 	{
 		if(usart_rx_ready()) return usart_read_byte(value);
 		_delay_us(10);
+		update_led_service_10us();
 	}
 	return false;
 }
@@ -226,7 +258,6 @@ static bool read_page_payload(uint16_t *crc)
 	for(uint16_t index = 0; index < FLEXFOX_FLASH_PAGE_BYTES; index++)
 	{
 		if(!read_crc_byte(&page_buffer[index], crc)) return false;
-		if((index % 64U) == 0U) PORTC.OUTTGL = GREEN_LED_PIN;
 	}
 	return true;
 }
@@ -303,7 +334,6 @@ static void handle_erase(char command)
 {
 	uint32_t address;
 	if(!receive_address(command, &address, false)) return;
-	PORTC.OUTTGL = RED_LED_PIN;
 	if(erase_page(address))
 	{
 		if(address == FLEXFOX_APP_START_BYTES && !clear_persistent_update_request()) send_error("marker");
@@ -316,7 +346,6 @@ static void handle_write(char command)
 {
 	uint32_t address;
 	if(!receive_address(command, &address, true)) return;
-	PORTC.OUTTGL = RED_LED_PIN;
 	if(write_page(address)) send_ok("write");
 	else { usart_write_text("ERR nvm "); hex8(last_nvm_error); usart_write_text("\r\n"); error_led(); }
 }
@@ -375,12 +404,21 @@ int main(void)
 	bool stay = requested || (!power_start && switch_is_held()) || !app_looks_programmed() || serial_entry_requested();
 	if(!stay) { leds_off(); jump_to_application(); }
 
+	update_led_start();
 	usart_flush_rx(); send_banner(); usart_write_text("Waiting for updater\r\n");
 	for(;;)
 	{
-		if(!usart_rx_ready()) continue;
+		if(!usart_rx_ready())
+		{
+			_delay_us(10);
+			update_led_service_10us();
+			continue;
+		}
 		uint8_t byte;
 		if(!usart_read_byte(&byte)) { send_error("serial"); continue; }
+		/* Any valid command byte proves that the updater is retrying. Resume the
+		 * progress heartbeat; a new protocol/NVM error will latch red again. */
+		update_led_start();
 		if(byte == FLEXFOX_INFO_CHAR) send_banner();
 		else if(byte == FLEXFOX_UPDATE_REQUEST_CHAR) usart_write_text("BOOT\r\n");
 		else if(byte == FLEXFOX_RUN_APP_CHAR && app_looks_programmed()) jump_to_application();

@@ -211,6 +211,7 @@ uint32_t g_avrUpdateExpectedCrc32 = 0;
 uint32_t g_avrUpdateRunningCrc32 = 0xffffffffUL;
 String g_avrUpdateTargetVersion;
 String g_avrUpdateError;
+uint32_t g_avrUpdateCompletionIndicationUntil = 0;
 bool g_avrBootloaderAvailable = false;
 String g_avrBootloaderIdentity;
 
@@ -1020,6 +1021,20 @@ void handleFleetSoakCleanup(void)
                      String("Fleet Soak cleanup complete; removed ") + removedCount + " reserved event files");
 }
 
+static bool avrBootloaderIdentityIsCompatible(const String& identity)
+{
+  /* Keep compatibility tied to the protocol and fixed Flash geometry, while
+   * allowing reviewed behavior-only revisions of the resident BL0 bootloader. */
+  if(!identity.startsWith("BL0.")) return false;
+  const int versionEnd = identity.indexOf(',');
+  if(versionEnd <= 4 || identity.substring(versionEnd) != ",1,0x4000,512") return false;
+  for(int i = 4; i < versionEnd; i++)
+  {
+    if(!isDigit(identity.charAt(i))) return false;
+  }
+  return identity.substring(4, versionEnd).toInt() >= 1;
+}
+
 void handleAvrUpdateStart()
 {
   String error;
@@ -1062,14 +1077,14 @@ void handleAvrUpdateStart()
     drainLinkbusBeforeEvent(&error) &&
     sendLinkbusTransactionCommand(String(LB_MESSAGE_AVR_UPDATE_QUERY), "AVR bootloader capability", &error) &&
     g_avrBootloaderAvailable &&
-    g_avrBootloaderIdentity.startsWith("BL0.1,1,0x4000,512");
+    avrBootloaderIdentityIsCompatible(g_avrBootloaderIdentity);
   if(!applicationPreflight)
   {
     residentBootloader = avrUpdateResidentBootloaderPresent();
   }
   if(!applicationPreflight && !residentBootloader)
   {
-    if(!error.length()) error = "The AVR did not prove the required BL0.1 bootloader and 0x4000 application layout";
+    if(!error.length()) error = "The AVR did not prove a compatible BL0 bootloader and 0x4000 application layout";
     g_http_server.send(409, "text/plain; charset=utf-8", error);
     return;
   }
@@ -3304,7 +3319,17 @@ void httpWebServerLoop(int blinkRate)
       }
     }
 
-    if (g_firmwareUpdateActive || g_firmwareRestartPending)
+    const bool avrUpdateJustCompleted =
+      g_avrUpdateCompletionIndicationUntil &&
+      (int32_t)(g_avrUpdateCompletionIndicationUntil - millis()) > 0;
+    if (avrUpdateJustCompleted)
+    {
+      /* Both ESP LEDs blinking together is reserved for a fully committed AVR
+       * update: exact version observed, completion persisted, staged image gone. */
+      ledPattern = RED_BLUE_TOGETHER;
+      blinkPeriodMillis = 250;
+    }
+    else if (g_firmwareUpdateActive || g_firmwareRestartPending)
     {
       ledPattern = RED_BLUE_ALTERNATING;
       blinkPeriodMillis = 100;
@@ -3330,7 +3355,7 @@ void httpWebServerLoop(int blinkRate)
      */
     const bool serviceLEDsEnabled =
       g_LEDs_enabled || millis() < 120000UL ||
-      g_firmwareUpdateActive || g_firmwareRestartPending;
+      g_firmwareUpdateActive || g_firmwareRestartPending || avrUpdateJustCompleted;
     if (lights->blinkLEDs(blinkPeriodMillis, ledPattern, serviceLEDsEnabled))
     {
       if (!sentComsOFF)
@@ -6867,13 +6892,18 @@ void handleLBMessage(String message)
     if (payload.length() > 1)
     {
       g_atmega_sw_version = payload;
-      avrUpdateObserveApplicationVersion(payload);
+      if(avrUpdateObserveApplicationVersion(payload))
+      {
+        /* Keep the definitive all-done pattern visible long enough to observe
+         * even when the host route or browser has not reconnected yet. */
+        g_avrUpdateCompletionIndicationUntil = millis() + 60000UL;
+      }
     }
   }
   else if (type.equals(LB_MESSAGE_AVR_UPDATE))
   {
     g_avrBootloaderIdentity = payload;
-    g_avrBootloaderAvailable = payload.startsWith("BL0.1,1,0x4000,512");
+    g_avrBootloaderAvailable = avrBootloaderIdentityIsCompatible(payload);
   }
   else if (type.equals(LB_MESSAGE_OSC_CAL))
   {

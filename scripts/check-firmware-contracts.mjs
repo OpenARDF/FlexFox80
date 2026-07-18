@@ -274,7 +274,7 @@ const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8"
 const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
 const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.208";
-const expectedEspVersion = "2.16";
+const expectedEspVersion = "2.17";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -313,7 +313,7 @@ process.stdout.write("PASS WiFi updater is transactional and cannot select a fil
 if (
   !espMain.includes("avrUpdateResumeIfRequired();") ||
   !espMain.includes("LB_MESSAGE_AVR_UPDATE_START") ||
-  !espMain.includes("avrUpdateObserveApplicationVersion(payload);") ||
+  !espMain.includes("avrUpdateObserveApplicationVersion(payload)") ||
   !avrMain.includes("FLEXFOX_AVR_BOOT_APP_UPDATE_REQUEST") ||
   !avrMain.includes("LB_MESSAGE_UPDATE") ||
   !avrMain.includes("FLEXFOX_AVR_BOOT_HANDOFF_INFO_MAGIC") ||
@@ -370,6 +370,7 @@ if (
   !avrFirmwareUpdate.includes("LittleFS.remove(AVR_UPDATE_IMAGE_PATH)") ||
   !avrFirmwareUpdatePage.includes("final four characters") ||
   !avrFirmwareUpdatePage.includes("filesystemFreeBytes") ||
+  !avrFirmwareUpdatePage.includes(`id="version" value="${expectedAvrVersion}"`) ||
   !wifiAvrUpdater.includes("FLEXFOX_AVR_SSID_SUFFIX") ||
   !wifiAvrUpdater.includes("expectedSsidSuffix") ||
   !wifiAvrUpdater.includes("FLEXFOX_AVR_UPDATE_DRY_RUN") ||
@@ -390,6 +391,28 @@ if (
 }
 
 process.stdout.write("PASS wireless AVR updater retains recovery and unique-SSID authorization invariants\n");
+
+if (
+  !espMain.includes("avrBootloaderIdentityIsCompatible") ||
+  !espMain.includes('identity.substring(versionEnd) != ",1,0x4000,512"') ||
+  espMain.includes('startsWith("BL0.1,1,0x4000,512")') ||
+  !avrBootloader.includes("update_led_start()") ||
+  (avrBootloader.match(/update_led_service_10us\(\)/g)?.length ?? 0) < 2 ||
+  !avrBootloader.includes("update_led_error = true") ||
+  !avrBootloader.includes("PORTC.OUTTGL = LED_PINS") ||
+  !avrFirmwareUpdate.includes("bool avrUpdateObserveApplicationVersion") ||
+  !/LittleFS\.remove\(AVR_UPDATE_IMAGE_PATH\)[\s\S]*state\.phase = AVR_UPDATE_COMPLETE;[\s\S]*return saveState\(&state\);/.test(avrFirmwareUpdate) ||
+  !espMain.includes("g_avrUpdateCompletionIndicationUntil = millis() + 60000UL") ||
+  !espMain.includes("ledPattern = RED_BLUE_TOGETHER") ||
+  !espMain.includes("avrUpdateJustCompleted")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: wireless AVR progress, error, completion, or compatible BL0 identity indication is missing\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS wireless AVR updates retain explicit progress, error, and completion indications\n");
 
 const avrUpdateStartHandler = espMain.match(
   /void handleAvrUpdateStart\(\)\s*\{([\s\S]*?)\n\}\n\nvoid handleSuccess/,

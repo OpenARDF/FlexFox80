@@ -78,6 +78,6 @@ bool avrUpdateCanStageImage(uint32_t imageBytes, String *error);
 bool avrUpdateResidentBootloaderPresent(void);
 String avrUpdateStatusJson(const String& deviceSsid);
 void avrUpdateResumeIfRequired(bool bootloaderAlreadyReady = false);
-void avrUpdateObserveApplicationVersion(const String& version);
+bool avrUpdateObserveApplicationVersion(const String& version);
 
 #endif
