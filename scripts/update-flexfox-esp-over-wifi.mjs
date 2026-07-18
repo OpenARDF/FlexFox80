@@ -15,12 +15,20 @@ import {
 import { createBoundedFlexFoxHeartbeat } from "./lib/flexfox-heartbeat.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const espVersionHeader = readFileSync(
+  join(repoRoot, "Software", "Huzzah", "ARDF_Transmitter", "esp8266.h"),
+  "utf8",
+);
+const sourceVersion = espVersionHeader.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/)?.[1];
+if (!sourceVersion) {
+  throw new Error("could not read WIFI_SW_VERSION from the ESP firmware source");
+}
 const firmwarePath = resolve(
   process.env.FLEXFOX_FIRMWARE_BIN ??
     join(repoRoot, "Software", "Huzzah", "tmp", "esp-build", "ARDF_Transmitter.ino.bin"),
 );
 const baseUrl = normalizeFlexFoxUrl(process.env.FLEXFOX_URL);
-const expectedVersion = process.env.FLEXFOX_EXPECTED_ESP_VERSION ?? "2.6";
+const expectedVersion = process.env.FLEXFOX_EXPECTED_ESP_VERSION ?? sourceVersion;
 const confirmation = process.env.FLEXFOX_UPDATE_CONFIRM;
 const uploadTimeoutMs = Number.parseInt(
   process.env.FLEXFOX_UPDATE_UPLOAD_TIMEOUT_MS ?? "120000",

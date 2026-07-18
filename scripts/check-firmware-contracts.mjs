@@ -434,6 +434,8 @@ if (
   !heartbeatHelper.includes("heartbeatTimer = setInterval(poke, 5000)") ||
   !heartbeatHelper.includes("reconnectTimer = setTimeout(connect, 1500)") ||
   !wifiUpdater.includes('FLEXFOX_UPDATE_VERIFY_TIMEOUT_MS ?? "240000"') ||
+  !wifiUpdater.includes("FLEXFOX_EXPECTED_ESP_VERSION ?? sourceVersion") ||
+  !wifiUpdater.includes("WIFI_SW_VERSION") ||
   !wifiUpdater.includes("verificationTimeoutMs > 300000") ||
   !wifiUpdater.includes("wrongImageAfterReboot") ||
   !wifiUpdater.includes("the staged update was not installed") ||
