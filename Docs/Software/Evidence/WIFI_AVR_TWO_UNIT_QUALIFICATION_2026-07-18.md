@@ -55,10 +55,11 @@ Complete these gates separately for each unit:
 1. Connect the RF output to an appropriate dummy load and confirm that no antenna is connected.
 2. Join the unit's MAC-derived `Tx_...` SSID. If it advertises `Tx_Master`, retrieve and record the separate MAC-derived device SSID before authorizing an update.
 3. Establish the scoped Moto/DroidTether route and run `just wifi-probe`.
-4. Record SSID, ESP MAC, `MASTER` state, `SW_VERSIONS`, temperature, battery voltage, visible LED state, and whether RF is active.
-5. Download or otherwise hash-record every `.event` and `.me` file. Record the active event and role independently rather than inferring them from filenames.
-6. If one-time UPDI provisioning is needed, retain that unit's complete 512-byte EEPROM and fuse capture. Do not use another unit's EEPROM image.
-7. Refuse firmware work while an event or manual transmission is active. A future event may be deliberately suspended for the test, but its disposition must be recorded.
+4. Run `FLEXFOX_AVR_UPDATE_DRY_RUN=1 just wifi-avr-update`. Record the MAC-derived device SSID and AVR update state; the preflight must report that no image was staged.
+5. Record SSID, ESP MAC, `MASTER` state, `SW_VERSIONS`, temperature, battery voltage, visible LED state, and whether RF is active.
+6. Download or otherwise hash-record every `.event` and `.me` file. Record the active event and role independently rather than inferring them from filenames.
+7. If one-time UPDI provisioning is needed, retain that unit's complete 512-byte EEPROM and fuse capture. Do not use another unit's EEPROM image.
+8. Refuse firmware work while an event or manual transmission is active. A future event may be deliberately suspended for the test, but its disposition must be recorded.
 
 The read-only probe must pass immediately before any state-changing command. A missing Moto/ADB device, stale route, timeout, wrong SSID, unexpected version, active clone, or active firmware transaction stops the sequence without staging an image.
 
@@ -99,6 +100,7 @@ Reconnect to and verify the intended unit before every invocation. Supply the fi
 
 ```text
 FLEXFOX_AVR_UPDATE_CONFIRM=UPDATE-AVR-0.206 \
+FLEXFOX_EXPECTED_DEVICE_SSID=Tx_<unit-specific-eight-hex-characters> \
 FLEXFOX_AVR_SSID_SUFFIX=<unit-specific-final-four> \
 just wifi-avr-update
 ```

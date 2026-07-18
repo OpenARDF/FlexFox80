@@ -371,7 +371,12 @@ if (
   !avrFirmwareUpdatePage.includes("final four characters") ||
   !avrFirmwareUpdatePage.includes("filesystemFreeBytes") ||
   !wifiAvrUpdater.includes("FLEXFOX_AVR_SSID_SUFFIX") ||
-  !wifiAvrUpdater.includes("expectedSsidSuffix")
+  !wifiAvrUpdater.includes("expectedSsidSuffix") ||
+  !wifiAvrUpdater.includes("FLEXFOX_AVR_UPDATE_DRY_RUN") ||
+  !wifiAvrUpdater.includes("FLEXFOX_EXPECTED_DEVICE_SSID") ||
+  !wifiAvrUpdater.includes("preflightDeviceSsid") ||
+  !wifiAvrUpdater.includes("stagedDeviceSsid !== preflightDeviceSsid") ||
+  !wifiAvrUpdater.includes("no image was staged")
 ) {
   process.stderr.write(
     "Firmware contract check failed: wireless AVR updates must retain unique-SSID authorization, raw-pass blocking, dual-slot recovery, reset-vector-last programming, and installed-version verification\n",

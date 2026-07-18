@@ -5,6 +5,10 @@ import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createInterface } from "node:readline/promises";
+import {
+  normalizeMacDerivedDeviceSsid,
+  unattendedUpdateNeedsExpectedSsid,
+} from "./lib/flexfox-avr-update-identity.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const host = process.env.FLEXFOX_HOST || "73.73.73.73";
@@ -14,6 +18,9 @@ const manifestPath = resolve(process.env.FLEXFOX_AVR_MANIFEST || join(
   "Software", "AVR128DA48", "tmp", "avr-boot-chain",
   "FlexFox80-AVR-Release-Info.json",
 ));
+const dryRun = process.env.FLEXFOX_AVR_UPDATE_DRY_RUN === "1";
+const suppliedExpectedDeviceSsid = (process.env.FLEXFOX_EXPECTED_DEVICE_SSID || "").trim();
+const expectedDeviceSsid = normalizeMacDerivedDeviceSsid(suppliedExpectedDeviceSsid);
 
 function fail(message) {
   process.stderr.write(`FlexFox AVR WiFi update: ${message}\n`);
@@ -61,8 +68,14 @@ const actualCrc32 = `0x${crc32(image).toString(16).padStart(8, "0")}`;
 if(image.length !== manifest.imageBytes || actualSha256 !== manifest.imageSha256 || actualCrc32 !== manifest.imageCrc32) {
   fail("update image does not match its release manifest");
 }
-if(process.env.FLEXFOX_AVR_UPDATE_CONFIRM !== `UPDATE-AVR-${manifest.applicationVersion}`) {
+if(!dryRun && process.env.FLEXFOX_AVR_UPDATE_CONFIRM !== `UPDATE-AVR-${manifest.applicationVersion}`) {
   fail(`set FLEXFOX_AVR_UPDATE_CONFIRM=UPDATE-AVR-${manifest.applicationVersion} to authorize staging this exact image`);
+}
+if(suppliedExpectedDeviceSsid && !expectedDeviceSsid) {
+  fail("FLEXFOX_EXPECTED_DEVICE_SSID must be the complete MAC-derived Tx_XXXXXXXX device SSID");
+}
+if(unattendedUpdateNeedsExpectedSsid(dryRun, process.stdin.isTTY, expectedDeviceSsid)) {
+  fail("an unattended update must set FLEXFOX_EXPECTED_DEVICE_SSID to prevent staging on the wrong unit");
 }
 
 process.stdout.write(`Target: ${baseUrl}\n`);
@@ -75,6 +88,21 @@ if(!versionAtLeast(device.version, manifest.minimumEspVersion)) {
 }
 if(device.cloneActive || device.updateActive || device.restartPending || device.linkbusEventTransactionActive) {
   fail("device is busy with another firmware, clone, or Linkbus transaction");
+}
+const preflightResponse = await fetchWithTimeout(`${baseUrl}/avr-update/status`, { cache: "no-store" });
+if(!preflightResponse.ok) fail(`AVR update status returned HTTP ${preflightResponse.status}`);
+const preflight = await preflightResponse.json();
+const preflightDeviceSsid = normalizeMacDerivedDeviceSsid(preflight.deviceSsid);
+if(!preflightDeviceSsid) {
+  fail("device did not report its complete MAC-derived Tx_XXXXXXXX SSID before staging");
+}
+if(expectedDeviceSsid && preflightDeviceSsid !== expectedDeviceSsid) {
+  fail(`connected unit is ${preflight.deviceSsid}, not expected ${suppliedExpectedDeviceSsid}`);
+}
+process.stdout.write(`Device: ${preflight.deviceSsid}, ESP ${device.version}, AVR update state ${preflight.phase}\n`);
+if(dryRun) {
+  process.stdout.write("PASS: read-only AVR update preflight completed; no image was staged.\n");
+  process.exit(0);
 }
 
 const form = new FormData();
@@ -93,10 +121,14 @@ if(Number.isFinite(staged.filesystemFreeBytes)) {
   process.stdout.write(`LittleFS free after staging: ${Math.floor(staged.filesystemFreeBytes / 1024)} KiB\n`);
 }
 
-if(typeof staged.deviceSsid !== "string" || !staged.deviceSsid.startsWith("Tx_") || staged.deviceSsid.length < 7) {
+const stagedDeviceSsid = normalizeMacDerivedDeviceSsid(staged.deviceSsid);
+if(!stagedDeviceSsid) {
   fail("device did not report its unique MAC-derived Tx_ SSID");
 }
-const expectedSsidSuffix = staged.deviceSsid.slice(-4).toUpperCase();
+if(stagedDeviceSsid !== preflightDeviceSsid) {
+  fail(`device identity changed from ${preflight.deviceSsid} to ${staged.deviceSsid} while staging`);
+}
+const expectedSsidSuffix = preflightDeviceSsid.slice(-4);
 let suppliedSsidSuffix;
 if(process.stdin.isTTY) {
   const prompt = createInterface({ input: process.stdin, output: process.stdout });

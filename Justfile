@@ -25,6 +25,7 @@ test:
     node ./Tests/Host/eeprom_enum_layout_migration_test.mjs
     node ./Tests/Host/esp_root_page_test.mjs
     node ./Tests/Host/esp_firmware_update_page_test.mjs
+    node ./Tests/Host/wifi_avr_update_identity_test.mjs
     node ./Tests/Host/flexfox_http_test.mjs
     node ./Tests/Host/events_html_test.mjs
     node ./Tests/Host/fleet_soak_event_generator_test.mjs
