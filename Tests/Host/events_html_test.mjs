@@ -106,6 +106,7 @@ function createPage(initialStorage = {}) {
 
   let nextTimerId = 1;
   const document = {
+    activeElement: null,
     createElement: () => new FakeElement(),
     createTextNode: (text) => ({ textContent: String(text) }),
     getElementById: (id) => elements.get(id) ?? null,
@@ -171,6 +172,7 @@ function createPage(initialStorage = {}) {
     clearedIntervals,
     clearedTimeouts,
     context,
+    document,
     elements,
     intervals,
     listeners,
@@ -192,8 +194,14 @@ assert.ok(!source.includes("Date.getTime()"), "date fallback must call getTime o
 assert.match(html, /<html lang="en">/);
 assert.match(html, /<meta charset="utf-8">/);
 assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1">/);
-assert.match(html, /events\.html Version: 0\.5\.8 - 18 Jul 2026/);
+assert.match(html, /events\.html Version: 0\.6\.0 - 18 Jul 2026/);
+assert.match(source, /case 0xFA:[\s\S]*?text = "No event will run";/);
 assert.match(html, /onpointerdown="clockSyncPressStart\(event\);"/);
+assert.match(
+  html,
+  /<td style="text-align:center; vertical-align:middle;">[\s\S]*?<button id="SyncButton"/,
+  "the Sync control must remain horizontally centered",
+);
 assert.match(html, /Long press Sync to toggle automatic synchronization\./);
 assert.match(html, /Transmitter assignment \(\.me\) files are always preserved\./);
 assert.ok(!source.includes('btn.id = "runButton"'), "event selection buttons must not reuse an id");
@@ -421,6 +429,31 @@ console.log("PASS events.html JavaScript and critical HTML syntax parse");
   assert.equal(renderCount, 1);
   assert.equal(page.context.g_eventSheetLoaded, true);
   console.log("PASS cached event sheet survives row selection and summary refreshes");
+}
+
+{
+  const page = createPage();
+  const replacedRows = [];
+  const startEditor = page.addElement("datetimeStart");
+  page.context.g_selectedEvent = "Beta";
+  page.context.g_eventSheetLoaded = true;
+  page.context.g_eventTableData = [{ name: "Event" }];
+  page.context.replaceEventRow = (eventName) => replacedRows.push(eventName);
+  page.context.webSocketStart();
+  const socket = page.sockets.at(-1);
+
+  page.document.activeElement = startEditor;
+  socket.onmessage({
+    data: "EVENT_DATA,Beta,1.1,1784404680,1784404680,Fast 1 - OE,NZ0I,5000,3560000",
+  });
+  assert.deepEqual(replacedRows, [], "a focused native date/time editor must remain attached");
+
+  page.document.activeElement = null;
+  socket.onmessage({
+    data: "EVENT_DATA,Beta,1.1,1784404800,1784405400,Fast 1 - OE,NZ0I,5000,3560000",
+  });
+  assert.deepEqual(replacedRows, ["Beta"], "an idle selected row must still accept device refreshes");
+  console.log("PASS native date/time pickers survive selected-event refreshes");
 }
 
 {

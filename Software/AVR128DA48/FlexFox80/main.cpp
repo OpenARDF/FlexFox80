@@ -2342,6 +2342,10 @@ EC __attribute__((optimize("O0"))) launchEvent(SC* statusCode)
 	else
 	{
 		g_event_enabled = eventEnabled();
+		/* Applying a valid event is an explicit user action. Re-arm the shared
+		 * indicator timeout so the resulting slow/fast red state remains visible
+		 * even when the prior display period expired before this transaction. */
+		LEDS.init();
 	}
 
 	return( ec);

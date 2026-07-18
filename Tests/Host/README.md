@@ -14,7 +14,7 @@ The runner writes executables only under the ignored `Software/AVR128DA48/tmp/ho
 
 `just test` also runs dependency-free source-contract checks for firmware declarations whose target-compiler interpretation is safety-relevant. These checks supplement compilation; they do not replace it.
 
-The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current candidate identity is ESP `2.16` plus AVR `0.207`, reported together as `SW_VERSIONS,2.16,0.207`.
+The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current candidate identity is ESP `2.16` plus AVR `0.208`, reported together as `SW_VERSIONS,2.16,0.208`.
 
 The embedded firmware-update page regression also parses both browser scripts and requires the AVR path to retain the unique MAC-derived SSID-suffix authorization prompt and display measured LittleFS headroom.
 

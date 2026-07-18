@@ -273,7 +273,7 @@ const avrFirmwareUpdate = readFileSync(avrFirmwareUpdatePath, "utf8");
 const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8");
 const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
-const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.207";
+const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.208";
 const expectedEspVersion = "2.16";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
@@ -1193,6 +1193,7 @@ if (
   !noEventWillRunBody[1].includes("eventWillRunWithoutUserActionAt(") ||
   !noEventWillRunBody[1].includes("g_event_enabled") ||
   !avrMain.includes("if(g_start_event || !noEventWillRun())") ||
+  !/g_event_enabled\s*=\s*eventEnabled\(\);\s*\/\*[\s\S]*?\*\/\s*LEDS\.init\(\);/.test(avrMain) ||
   /if\s*\(\s*g_event_scheduled\s*\)\s*\{\s*g_enunciation_code_throttle/.test(avrMain)
 ) {
   process.stderr.write(

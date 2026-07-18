@@ -381,6 +381,14 @@
             }
         }
 
+        function selectedDateTimeEditorHasFocus(eventName) {
+            if (!eventName || (eventName != g_selectedEvent)) return false;
+
+            var activeEditor = document.activeElement;
+            return activeEditor &&
+                ((activeEditor.id == "datetimeStart") || (activeEditor.id == "datetimeFinish"));
+        }
+
         function replaceEventRow(eventName) {
             if (!eventName) return;
 
@@ -1033,6 +1041,12 @@
                                         }
                                         break;
 
+                                    case 0xFA: // STATUS_CODE_NO_EVENT_TO_RUN = 0xFA
+                                        {
+                                            text = "No event will run";
+                                        }
+                                        break;
+
                                     case 0xFB: // STATUS_CODE_EVENT_NEVER_ENDS = 0xFB
                                         {
                                             text = "Event never ends";
@@ -1355,7 +1369,12 @@
                                 };
 
                                 upsertEventData(eventLine);
-                                if (g_eventSheetLoaded) replaceEventRow(eventLine.name);
+                                /* A stale picker correction receives EVENT_DATA while Android's
+                                 * native chooser is open. Keep the focused input attached; replacing
+                                 * its row closes the chooser before the operator can select a time. */
+                                if (g_eventSheetLoaded && !selectedDateTimeEditorHasFocus(eventLine.name)) {
+                                    replaceEventRow(eventLine.name);
+                                }
                             }
                             break;
 
@@ -2754,7 +2773,7 @@
         <h1 id="mainHeading" style="font-family:verdana; font-size:30px; color:Black; text-align:center;">Transmitter Settings</h1>
         <p id="wifiVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
         <p id="ATMEGAVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
-        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.5.8 - 18 Jul 2026</p>
+        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.6.0 - 18 Jul 2026</p>
 
         <div>
             <table>
@@ -2786,7 +2805,7 @@
 
             <table>
                 <tr>
-                    <td style="text-align:left; vertical-align:center;">
+                    <td style="text-align:center; vertical-align:middle;">
                         <button id="SyncButton" class="incbutton"
                             style="touch-action:manipulation; -webkit-touch-callout:none; user-select:none;"
                             onclick="clockSyncClick(event);"
@@ -2795,7 +2814,7 @@
                             onpointercancel="clockSyncPressEnd();"
                             onpointerleave="clockSyncPressEnd();"
                             oncontextmenu="return suppressClockSyncContextMenu(event);">Sync</button>
-                        <p style="font-family:verdana; font-size:12px; color:Black;">
+                        <p style="font-family:verdana; font-size:12px; color:Black; text-align:center;">
                             Long press Sync to toggle automatic synchronization.
                         </p>
                     </td>

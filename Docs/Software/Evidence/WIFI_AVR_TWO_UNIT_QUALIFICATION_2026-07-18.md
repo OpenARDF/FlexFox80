@@ -1,10 +1,10 @@
 # WiFi AVR Two-Unit Qualification — 2026-07-18
 
-**Status:** Unit A wireless installation and post-power-cycle safety passed; file-preservation, UI, RF-event, interruption, and Unit B gates remain
+**Status:** Unit A proved the wireless transport with AVR 0.207 and exposed an Apply-time LED defect; AVR 0.208, file-preservation, RF-event, interruption, and Unit B gates remain
 
 ## Objective
 
-Qualify the ESP 2.16 / AVR 0.207 / BL0.1 combination on two identified, dummy-loaded FlexFox80 units before expanding the boot chain to the fleet. The test must prove wireless updating, normal transmitter behavior, and persistent event disabling through Apply. It must also prove the operator LED contract:
+Qualify the ESP 2.16 / AVR 0.208 / BL0.1 combination on two identified, dummy-loaded FlexFox80 units before expanding the boot chain to the fleet. The test must prove wireless updating, normal transmitter behavior, and persistent event disabling through Apply. It must also prove the operator LED contract:
 
 - slow red means an event will run without another user action;
 - fast red means no event can run until the user acts.
@@ -17,17 +17,17 @@ Retained future start and finish epochs are not enough to justify slow red after
 | --- | --- |
 | Source commit | Commit containing this qualification record |
 | ESP version | `2.16` |
-| AVR version | `0.207` |
+| AVR version | `0.208` |
 | Bootloader version | `BL0.1` |
 | ESP sketch | 557,984 bytes; SHA-256 `6eeb18fede38d705145ab66234a3f8ba4da483ffb5c91bd8153658e7ecd5736a` |
-| AVR wireless image | 43,008 bytes; CRC32 `0x34836fc8`; SHA-256 `c80bc7c7893f985bb10ff90a812de977f7f2fd692f37402a878ddae105d36829` |
-| AVR first-install HEX | SHA-256 `5b2a542afcbef721a13a84a5b5e9facfd0b4c83236bc869ac0e16a281960262e` |
-| AVR release manifest | SHA-256 `883183dcca374817d8a057c3c9845f3e0c43a83a232fa21ec6a9e1cd8a652abb` |
+| AVR wireless image | 43,008 bytes; CRC32 `0x6dc14ab5`; SHA-256 `1856561ecb1782f39efb628005fd0bcb899fbc79de74e5dea41246401f02b49f` |
+| AVR first-install HEX | SHA-256 `71c20fda8f50aace1c48c419e799ea796de8f1a5757ffc75dd18e8d78458893c` |
+| AVR release manifest | SHA-256 `248ee4458029433520f0eeac18cf857b309e8b825404392f924a31eec1b2006c` |
 | Boot layout | 2,512-byte bootloader in a 16,384-byte reservation; application at `0x4000` |
 | ESP resources | 53% sketch flash; 60% global RAM; 32,548 bytes dynamic-memory headroom; zero warnings |
-| AVR resources | 41,886 text + 1,150 data bytes; 1,576 BSS bytes; zero warnings |
+| AVR resources | 41,894 text + 1,150 data bytes; 1,576 BSS bytes; zero warnings |
 
-The working-tree candidate passed `just check` and `just secrets`; two consecutive exact AVR and ESP builds completed with zero warnings and identical sketch, wireless-image, first-install, and manifest hashes.
+The working-tree candidate passed `just check` and `just secrets`. Two consecutive exact AVR builds completed with zero warnings and identical wireless-image, first-install, and manifest hashes. ESP 2.16 remains the previously frozen sketch; the 0.208 change does not require a new ESP sketch.
 
 ## Unit identities and starting state
 
@@ -48,7 +48,7 @@ Do not proceed from a handwritten chassis label alone. Read each identity from t
 
 Unit A has a special final-state requirement. Do not reinstall its exact original future event. Keep its intended event file installed with a completed finish time so a later power cycle cannot restart the test event. Unit B's captured event files, assignments, master state, frequency, power, and callsign remain unit-specific; never restore them from Unit A's backup.
 
-### Unit A installation result
+### Unit A AVR 0.207 precursor result and release-blocking finding
 
 Unit A was identified live as `Tx_7C2D6FD3`, ESP MAC `86:A8:24:2F:96:5B`, `MASTER,0`, initially reporting `SW_VERSIONS,2.15,0.204`, 11.5 V battery, and 31-33 C temperature. The operator confirmed the dummy load and confirmed RF had stopped after an explicit browser `CLEAR` before either firmware write.
 
@@ -58,7 +58,11 @@ The AVR preflight identified the same complete SSID and staged no image. The sub
 
 An independent WebSocket probe then reported `SW_VERSIONS,2.16,0.207`, the same SSID and MAC, advancing clock reports, 11.5 V battery, 33 C temperature, and live AVR communication. After leaving `radio.html`, Unit A was physically power-cycled with no browser `CLEAR`; RF remained off and the AVR returned to fast red. A second independent probe again reported `SW_VERSIONS,2.16,0.207`, and `/avr-update/status` still reported complete, 84/84, and no staged image.
 
-This passes Unit A installation, installed-version verification, staged-image cleanup, and immediate post-power-cycle RF/LED safety. It does not yet pass the event-file hash gate, equal-time `events.html` Apply sequence, independent EEPROM equality readback, ordinary Classic/Sprint RF operation, controlled interruption test, final file disposition, or any Unit B gate.
+This passed the Unit A transport installation, installed-version verification, staged-image cleanup, and immediate post-power-cycle RF/LED safety for AVR 0.207. It did not qualify the successor candidate.
+
+Live `events.html` testing then exposed two issues. Android's native date/time chooser closed when the AVR's approximately one-second `EVENT_DATA` response replaced the selected row; `events.html` 0.5.9 retained the focused editor and the operator confirmed that the chooser remained open. A future event Apply completed and RF remained off, but both AVR LEDs stayed dark because the shared indicator timeout had expired before the transaction. Equal-time Apply still persisted the disabled schedule, produced fast red plus the expected dummy-load green indication, and kept RF off, but the page displayed `Undefined status - update file system` for AVR status `0xFA`.
+
+Those findings supersede AVR 0.207 as the fleet candidate. AVR 0.208 re-arms the mature LED state machine after every successful event Apply. `events.html` 0.6.0 maps `0xFA` to `No event will run`, preserves the focused date/time editor, and restores horizontal centering of the Sync control. Unit A must receive 0.208 and repeat the LED/schedule contract before its candidate installation gate can pass.
 
 ## Pre-test gates
 
@@ -113,15 +117,15 @@ Pass criteria include independent readback of the combined initial image, the un
 Reconnect to and verify the intended unit before every invocation. Supply the final four characters of the MAC-derived device SSID; do not use `Master` or digits copied from another unit.
 
 ```text
-FLEXFOX_AVR_UPDATE_CONFIRM=UPDATE-AVR-0.207 \
+FLEXFOX_AVR_UPDATE_CONFIRM=UPDATE-AVR-0.208 \
 FLEXFOX_EXPECTED_DEVICE_SSID=Tx_<unit-specific-eight-hex-characters> \
 FLEXFOX_AVR_SSID_SUFFIX=<unit-specific-final-four> \
 just wifi-avr-update
 ```
 
-Use an uninterrupted update on Unit A. On Unit B, first prove one uninterrupted update; a subsequent same-version update may be used for controlled interruption testing. Pass requires all 84 page slots to complete for the 43,008-byte image, the new application to report AVR 0.207, the recovery state to become `complete`, and the staged image to be removed only after version confirmation.
+Use an uninterrupted update on Unit A. On Unit B, first prove one uninterrupted update; a subsequent same-version update may be used for controlled interruption testing. Pass requires all 84 page slots to complete for the 43,008-byte image, the new application to report AVR 0.208, the recovery state to become `complete`, and the staged image to be removed only after version confirmation.
 
-The update handoff suspends RF, stores the current epoch as the completed EEPROM finish, verifies that write, and then enters BL0.1. Consequently, the first stable indication after AVR 0.207 starts should be fast red unless the operator deliberately loads and applies another runnable event.
+The update handoff suspends RF, stores the current epoch as the completed EEPROM finish, verifies that write, and then enters BL0.1. Consequently, the first stable indication after AVR 0.208 starts should be fast red unless the operator deliberately loads and applies another runnable event.
 
 ## LED and schedule contract
 
@@ -137,11 +141,11 @@ Run this sequence on both units using a temporary short event that cannot reach 
 8. Power-cycle and confirm that the equal EEPROM-backed start/finish state remains unable to run and fast red returns after startup. On the Atmel-ICE pilot, independently read back the two persisted event epochs and require exact equality.
 9. Repeat the browser check with both fields stale: select finish before changing start and confirm both fields advance to the same current-minute value and remain disabled.
 
-Any slow-red indication while the event is suspended, completed, invalid, or blocked by a persistent sleep override fails AVR 0.207. Any fast-red indication while a valid applied future event will start automatically also fails it.
+Any slow-red indication while the event is suspended, completed, invalid, or blocked by a persistent sleep override fails AVR 0.208. Any fast-red indication while a valid applied future event will start automatically also fails it. A successful Apply that leaves both red indications dark also fails 0.208, even when the LED display period had expired before Apply.
 
 ## Wireless-update recovery
 
-After both uninterrupted updates pass, repeat AVR 0.207 on one accessible pilot and interrupt power after programming has advanced beyond page zero but before completion. Keep the chassis accessible and the exact staged image available.
+After both uninterrupted updates pass, repeat AVR 0.208 on one accessible pilot and interrupt power after programming has advanced beyond page zero but before completion. Keep the chassis accessible and the exact staged image available.
 
 Pass criteria:
 
@@ -149,7 +153,7 @@ Pass criteria:
 - after power and WiFi return, BL0.1 and ESP recovery state resume without UPDI intervention or restaging;
 - progress continues from a safe recoverable state;
 - the complete image passes AVR-side page readback and final CRC;
-- AVR 0.207 boots and reports through ESP 2.16;
+- AVR 0.208 boots and reports through ESP 2.16;
 - the staged file is removed only after the reported version matches;
 - a subsequent power cycle boots normally with fast red and no RF output.
 
@@ -157,7 +161,7 @@ Do not count a lost browser connection as either failure or success. Use `/avr-u
 
 ## Two-unit functional run
 
-After both units report `SW_VERSIONS,2.16,0.207`:
+After both units report `SW_VERSIONS,2.16,0.208`:
 
 1. Assign different valid roles and frequencies so transmissions can be distinguished on the dummy loads or monitor receiver.
 2. Clone or install the same short future Classic event on both units and preserve their distinct `.me` assignments.
@@ -178,7 +182,7 @@ Before removing either unit from the bench:
 - restore each unit's own callsign, master state, frequency, power, and role assignment;
 - leave Unit A's intended event installed with a completed finish time, not its exact original future schedule;
 - apply Unit B's separately recorded disposition without copying Unit A's files;
-- confirm `SW_VERSIONS,2.16,0.207`, advancing time, normal temperature/battery telemetry, RF off, and fast red after a final power cycle;
+- confirm `SW_VERSIONS,2.16,0.208`, advancing time, normal temperature/battery telemetry, RF off, and fast red after a final power cycle;
 - preserve the per-unit pre-state, updater output, interruption point, final file hashes, and pass/fail results with this record.
 
 ## Release boundary
