@@ -53,23 +53,25 @@ The ESP translates AVR replies back to WebSocket messages including `TEMP`, `BAT
 
 ## Wireless AVR bootloading
 
-### Implementation status — ESP 2.17 / AVR 0.208 / bootloader BL0.2
+### Implementation status — ESP 2.18 / AVR 0.208 / bootloader BL0.3 candidate
 
-The bootloader transport and AVR 0.208 application installation are pilot-hardware-qualified, but the ESP 2.17 / BL0.2 feedback pair is not yet hardware- or fleet-qualified. AVR 0.208 retains the 0.203 scheduled-start sleep correction and 0.204 relocated bootloader handoff, capability query, and guarded update entry. It keeps equal start/finish epochs as a valid persistent disabled state and re-arms the existing LED state machine after every successful event Apply, including when the previous indicator period had expired: slow red means an event will run without further action, while fast red means no event can run until the user acts. It reuses SignalSlinger's tested AVR DA page protocol and reset-vector-last recovery model, adapted for the FlexFox power topology:
+The earlier BL0.1 transport and AVR 0.208 application installation have real pilot evidence. BL0.2 is superseded and must not be provisioned to the fleet: review found that reset-vector-last behavior was controlled only by the ESP, cold recovery could skip the normal ESP rail/reset sequence, an invalid staged image after programming began could leave the web recovery service unavailable, and startup accepted an unsafe single-byte serial entry request. BL0.3 protocol 2 moves the commit decision into the resident bootloader and closes those recovery gaps. ESP 2.18 / BL0.3 is source-, host-test-, and build-qualified, but it is not hardware- or fleet-qualified yet.
 
-ESP 2.17 retains the browser `CLEAR` correction introduced in 2.14 and the explicit persistent-disable path. In `events.html` 0.6.0, Apply sends equal start/finish epochs through the normal full event transaction; AVR 0.208 saves both values, stops RF, re-arms the LED indication, and reports `No event will run`. The page also keeps an active Android date/time chooser attached while its AVR refresh arrives and centers the Sync control. The guarded `$UPD,START,SSID;` AVR-update handoff remains stronger for firmware work: it independently suspends RF, stores the current epoch as the completed finish, verifies that EEPROM write, and only then resets into the resident bootloader.
+AVR 0.208 retains the scheduled-start sleep correction, relocated bootloader handoff, equal-time persistent disable, and LED re-arm after Apply. ESP 2.18 retains the browser `CLEAR`, event-picker, status, and Sync corrections while adding the protocol-2 updater, persistent diagnostics, and controlled fault-injection hooks. The guarded `$UPD,START,SSID;` handoff independently suspends RF, stores and verifies a completed finish epoch, marks recovery in EEPROM, and only then software-resets into the resident bootloader.
 
 - a 16 KiB resident Boot section occupies `0x0000–0x3FFF` (`BOOTSIZE=0x20`);
 - the FlexFox application is linked at `0x4000` (`CODESIZE=0x00`);
 - the bootloader reasserts AVR PA5 (`WIFI_ENABLE`) and releases PA6 (`WIFI_RESET`) immediately after reset;
-- ESP 2.17 stages a page-aligned application image and dual-slot recovery state in LittleFS before requesting bootloader entry;
+- ESP 2.18 stages a page-aligned FlexFox product image and dual-slot recovery state in LittleFS before requesting bootloader entry;
 - the ESP accepts update start only after the operator enters the final four characters of the unit's MAC-derived `Tx_...` device SSID;
 - the AVR application accepts the internal `$UPD,START,SSID;` handoff only while the event, manual transmission, and RF output are idle;
 - raw WebSocket `PASS` forwarding cannot send `$UPD` frames and bypass the dedicated update route;
-- bootloader traffic uses USART1 PC0/PC1 at the hardware-qualified 9600 baud with CRC-16 on every frame and AVR readback CRC on every page;
-- the application reset-vector page is erased first and written last, so interruption leaves the immutable bootloader in control;
+- bootloader traffic uses USART1 PC0/PC1; the candidate default is 38,400 baud, and ESP 2.18 can discover 9,600, 19,200, 38,400, 57,600, or 115,200 baud for qualification and recovery;
+- every protocol frame has CRC-16, every written page is immediately read back by the bootloader, and a protocol-2 begin frame binds the session to the complete image length and CRC-32;
+- the resident bootloader itself requires the reset-vector page to be erased first, observes every non-reset page in order, validates a FlexFox-specific product trailer and both payload/full-image CRC-32 values, and permits the reset-vector page only as the final commit;
 - EEPROM byte 511 is reserved as a pre-erase update marker, closing the power-loss window before the reset-vector page has been invalidated;
-- the staged file is retained until the new application reports the manifest's target version.
+- the staged file is retained until the new application reports the manifest's target version;
+- alternating AVR red/green means the resident bootloader is active, solid AVR red is a latched protocol/NVM failure, and simultaneous ESP red/blue for 60 seconds begins only after the exact application version is observed and completion is persisted.
 
 Build the complete one-time install and later wireless-update artifacts with:
 
@@ -79,7 +81,9 @@ AVR_DFP_ROOT=Software/AVR128DA48/tmp/AVR-Dx_DFP/1.9.103 \
 just avr-boot-chain-build
 ```
 
-The ignored output directory `Software/AVR128DA48/tmp/avr-boot-chain/` contains the combined first-install HEX, the page-aligned wireless update BIN, and release metadata with hashes, geometry, versions, and required fuses. The current exact build produces a 2,664-byte bootloader inside the 16,384-byte reservation and a 43,008-byte AVR 0.208 update image; recalculate these values from each release build.
+The ignored output directory `Software/AVR128DA48/tmp/avr-boot-chain/` contains the combined first-install HEX, the page-aligned wireless update BIN, and release metadata with hashes, geometry, versions, baud, and required fuses. The current exact build produces a 5,112-byte 38,400-baud bootloader inside the 16,384-byte reservation and an 85-page, 43,520-byte AVR 0.208 update image. The final 512-byte page is a FlexFox product trailer; recalculate all values from each release build.
+
+`just avr-bootloader-baud-matrix` builds and hashes all five supported UART variants, packages each with the identical application image, and restores the ordinary output to 38,400 baud. A test baud therefore cannot silently contaminate a later default package.
 
 One-time UPDI provisioning is deliberately destructive and double-gated. It captures EEPROM and fuses, erases and verifies the combined image, restores the unit-specific EEPROM with only newly reserved byte 511 forced to erased `0xFF`, writes only `CODESIZE` and `BOOTSIZE`, and independently re-reads the target:
 
@@ -98,7 +102,19 @@ FLEXFOX_AVR_UPDATE_CONFIRM=UPDATE-AVR-0.208 just wifi-avr-update
 
 The interactive workflow reports the unique device SSID and prompts for its final four characters. An explicitly unattended invocation must supply both `FLEXFOX_EXPECTED_DEVICE_SSID=Tx_<eight-hex-characters>` and `FLEXFOX_AVR_SSID_SUFFIX=<last-four>`. The exact expected SSID is checked before staging, preventing a valid image from being placed on the wrong unit when several FlexFoxes share the same default IP address. `just wifi-avr-preflight` reports the connected device identity and update state without staging an image.
 
-The host allows 30 minutes by default for all 84 pages, reset-vector finalization, ESP restart, and application-version confirmation. The ESP intentionally stops HTTP service while it owns the UART and programs the AVR, so status requests may receive no response during otherwise healthy programming. A host-side timeout is never permission to remove power: keep the unit powered and inspect `/avr-update/status`. The host reports a persisted page diagnostic as soon as HTTP returns. `FLEXFOX_AVR_VERIFY_TIMEOUT_MS` may override the window with an integer from 60,000 through 3,600,000 milliseconds.
+The host allows 30 minutes by default for all 85 pages, reset-vector finalization, ESP restart, and application-version confirmation. The ESP intentionally stops HTTP service while it owns the UART and programs the AVR, so status requests may receive no response during otherwise healthy programming. A host-side timeout is never permission to remove power: keep the unit powered and inspect `/avr-update/status`. `/avr-update/log` exposes a bounded persistent journal containing staging, detected bootloader identity/baud/diagnostic, verified pages, retries, commit, application verification, and completion. `FLEXFOX_AVR_VERIFY_TIMEOUT_MS` may override the window with an integer from 60,000 through 3,600,000 milliseconds.
+
+Hardware qualification is host-synchronized so the operator does not have to time an interruption. `FLEXFOX_AVR_QUALIFICATION_ESP_RESTART_PAGE=<page>` makes ESP 2.18 restart itself after that verified page. `FLEXFOX_AVR_QUALIFICATION_AVR_RESET_PAGE=<page>` pauses at an exact verified page while the host resets the AVR through the attached Atmel-ICE, then continues and requires autonomous replay. Each requires the matching `FLEXFOX_AVR_QUALIFICATION_CONFIRM` token. `FLEXFOX_AVR_QUALIFICATION_FINAL_READBACK=1` performs an independent post-success read of all Flash, EEPROM, and fuses and compares the complete 16 KiB Boot section, wireless image, recovery marker, `CODESIZE`, and `BOOTSIZE` with the release artifacts. Host status, journal, programmer output, readback binaries, and hashes are retained in the ignored per-run evidence directory.
+
+After installing ESP 2.18 and BL0.3 on the accessible pilot, the unattended bench sequence reduces those controls to one command. It waits for the saved network association between runs and performs an uninterrupted update, an ESP restart after page 8, an Atmel-ICE AVR reset near the image midpoint, and exact readback after every run:
+
+```text
+FLEXFOX_EXPECTED_DEVICE_SSID=Tx_<unit-specific-eight-hex-characters> \
+FLEXFOX_AVR_QUALIFICATION_CONFIRM=QUALIFY-BL0.3 \
+just wifi-avr-bootloader-qualification
+```
+
+The only interruption this harness cannot create is removal of all unit power. One separately coordinated off/on cycle during a staged update remains mandatory before fleet qualification.
 
 Do not provision the fleet merely because both firmware builds pass. Keep the pilot chassis accessible until boot, ordinary RF/event behavior, WiFi power-down/wake, a complete wireless update, and repeated physical power interruption during erase/write/final handoff have all passed.
 
@@ -115,9 +131,9 @@ The connected pilot completed both directions of a real wireless application upd
 
 This establishes one successful end-to-end update, downgrade, and genuine post-erase interruption recovery. It does not replace repeated power-loss testing at several page positions, normal WiFi wake/power-down regression, ordinary event/RF regression, or a second pilot before fleet rollout.
 
-The exact ESP 2.17 / BL0.2 / AVR 0.208 two-unit procedure, candidate hashes, per-unit preservation rules, LED checks, interruption gate, disabled-event Apply check, and final disposition are prepared in [WiFi AVR two-unit qualification](Evidence/WIFI_AVR_TWO_UNIT_QUALIFICATION_2026-07-18.md). The record preserves the successful Unit A 0.207 transport result, the Apply-time LED defect that required 0.208, and the independently verified 0.208 application installation whose lost network return path motivated BL0.2/ESP 2.17 feedback. Record the remaining hardware observations there rather than treating a quiet updater as complete qualification.
+The exact ESP 2.18 / BL0.3 / AVR 0.208 two-unit procedure, per-unit preservation rules, LED checks, automated interruption gates, disabled-event Apply check, and final disposition are prepared in [WiFi AVR two-unit qualification](Evidence/WIFI_AVR_TWO_UNIT_QUALIFICATION_2026-07-18.md). The record also preserves the successful earlier transport and independent AVR 0.208 readback evidence. Record the remaining hardware observations there rather than treating a quiet updater as complete qualification.
 
-BL0.2 intentionally uses integrity checks and deliberate operator authorization rather than cryptographic firmware signatures. The host verifies the release SHA-256, the ESP verifies the complete uploaded CRC-32, and every bootloader frame and programmed page is CRC-checked. Entry requires the final four characters of the unique MAC-derived ESP SSID, but that suffix is an operator-error interlock rather than a secret: it is readily visible to the person connected to the unit. This matches the deployment model in which the ESP is normally reachable for only two minutes after power-up, has short range, and is used predominantly in rural locations.
+BL0.3 intentionally uses integrity checks and deliberate operator authorization rather than cryptographic firmware signatures. The host verifies the release SHA-256, the ESP and resident bootloader independently validate the complete image CRC-32 and product trailer, and every frame and programmed page is CRC-checked. Entry requires the final four characters of the unique MAC-derived ESP SSID, but that suffix is an operator-error interlock rather than a secret: it is readily visible to the person connected to the unit. This matches the deployment model in which the ESP is normally reachable for only two minutes after power-up, has short range, and is used predominantly in rural locations.
 
 ### Feasibility decision
 
@@ -145,9 +161,9 @@ Every existing unit would consequently need one physical UPDI provisioning opera
 4. the expected interrupt-vector selection and boot/application handoff behavior;
 5. unchanged or deliberately migrated EEPROM and other unit-specific state.
 
-The selected layout reserves 32 512-byte pages (16 KiB), places the application at `0x4000`, and leaves 112 KiB for application code. Exact sizes and section boundaries are checked by the build/package scripts rather than copied from this note. The pinned ESP 2.12 build leaves 36,776 bytes of dynamic-memory headroom and 5,092 bytes of IRAM headroom; IRAM remains the tighter margin and must be checked on every release build.
+The selected layout reserves 32 512-byte pages (16 KiB), places the application at `0x4000`, and leaves 112 KiB for application code. Exact sizes and section boundaries are checked by the build/package scripts rather than copied from this note. The pinned ESP 2.18 build uses 559,160 sketch bytes and leaves 31,136 bytes of dynamic-memory headroom. IRAM uses 27,676 of 32,768 bytes, leaving 5,092 bytes, and remains the tighter executable margin to check on every release build.
 
-The qualified ESP profile provides a 1,024,000-byte LittleFS partition with 8 KiB allocation blocks. The current factory image measures 688,128 bytes free. A staged 42,496-byte AVR image plus its recovery state leaves 638,976 bytes free; even the transient old-image-plus-replacement case leaves 589,824 bytes. Before opening the staging file, ESP 2.12 reads `LittleFS.info()`, rounds the declared image size to whole filesystem blocks, and requires four additional free blocks (32 KiB on this profile) for metadata and recovery-state changes. The status endpoint and update page report measured total, used, and free bytes.
+The qualified ESP profile provides a 1,024,000-byte LittleFS partition with 8 KiB allocation blocks. Existing pilot evidence measured more than 500 KiB free while an earlier image was staged. The protocol-2 image is 43,520 bytes and the new persistent journal is capped at 32,768 bytes. Before opening the staging file, ESP 2.18 reads `LittleFS.info()`, rounds the declared image size to whole filesystem blocks, and requires four additional free blocks (32 KiB on this profile) for metadata and recovery-state changes. The status endpoint and update page report measured total, used, and free bytes; actual pilot free-space measurements remain a hardware gate.
 
 ### AVR reset cuts power to the ESP
 
@@ -157,16 +173,14 @@ The implementation does not assume that a live ESP or browser socket survives AV
 
 #### Rejected seamless-session alternative: direct entry without reset
 
-A direct application-to-bootloader jump could preserve the browser session, but it was not selected for BL0.2 because it carries more untestable C-runtime, stack, vector, and peripheral handoff state. The reset-based implementation accepts a temporary ESP power cycle and resumes from LittleFS instead.
+A direct application-to-bootloader jump could preserve the browser session, but it is not used because it carries more untestable C-runtime, stack, vector, and peripheral handoff state. The reset-based implementation accepts a temporary ESP/network interruption and resumes from LittleFS instead.
 
 1. The ESP receives the complete candidate into a temporary LittleFS file, validates it, and atomically promotes it to a staged update.
 2. The ESP sends an explicit bootloader-entry command over Linkbus.
-3. The AVR refuses entry while RF is active or power conditions are unsuitable, then forces the transmitter into a safe state, quiesces Linkbus, disables interrupts, and deliberately leaves `WIFI_ENABLE` asserted.
-4. The AVR transfers control to the bootloader without issuing a processor reset. The bootloader establishes its own stack, vector selection, peripheral state, and USART protocol before altering application Flash.
+3. The AVR refuses entry while RF is active, then forces the transmitter into a safe state, persists the recovery marker, quiesces Linkbus, and deliberately leaves `WIFI_ENABLE` asserted.
+4. The AVR issues a software reset. The bootloader detects the deliberate handoff in reset/GPR state, preserves the already-running ESP power/reset outputs only for that live handoff, and otherwise uses the normal cold rail/reset sequence.
 5. The ESP and bootloader transfer, write, acknowledge, and verify the complete application.
-6. Only after successful final verification does the AVR reset or otherwise enter the new application. A final reset may reboot the ESP and drop the browser connection, but the programming transaction is already complete.
-
-Execution does not have to begin at reset for code in the AVR Boot section to program the Application section. This direct handoff must nevertheless be treated as boot-chain code: it needs explicit assembly/linker review, generated-code inspection, and connected-target fault testing. It must not depend on ordinary C/C++ startup state accidentally remaining valid across the handoff.
+6. Only after the resident bootloader has accepted the reset page as the final commit may it enter the new application. The ESP then requires the exact reported application version before deleting the staged image and declaring completion.
 
 #### Cold-reset and interrupted-update recovery
 
@@ -198,7 +212,7 @@ Changing the default has product-level consequences:
 
 Alternatives include a calculated hold-up network on the regulator shutdown control or a self-hold/OR enable circuit shared by the AVR and ESP. Those options may retain default-off behavior or allow the ESP to hold its own power during an update, but they require an electrical design and fault analysis. Merely adding an ESP-to-AVR reset connection does not solve the existing power interruption by itself. Adding an ESP-to-UPDI connection is unnecessary for the preferred UART-bootloader architecture and would create a separate programming and electrical-protection problem.
 
-The pilot has now proved the selected reset-based handoff and one interrupted-update recovery. Repeat interruption and normal power-management testing before deciding whether seamless browser-session survival justifies a board revision or fleet rework.
+The pilot has proved the reset-based handoff and one interrupted-update recovery with the earlier protocol. BL0.3 must repeat those tests, including a true power removal, before deciding whether seamless browser-session survival justifies a board revision or fleet rework.
 
 ### Update protocol and safety requirements
 
@@ -234,7 +248,7 @@ Do not expand beyond the pilot until the project has verified all of the followi
 9. Pilot-unit and fault-injection tests covering resets or power loss before staging, during every page phase, after verification, and during first application boot.
 10. A one-time UPDI fleet-provisioning and rollback plan for every unit that should support later wireless updates.
 
-This remains a boot-chain, fuse-layout, release-integrity, and recovery project rather than a small extension of the WebSocket command set. BL0.2 is not fleet-qualified until the dedicated pilot and rollback tests are recorded.
+This remains a boot-chain, fuse-layout, release-integrity, and recovery project rather than a small extension of the WebSocket command set. BL0.3 is not fleet-qualified until the dedicated automated pilot, true power-interruption, rollback, and two-unit tests are recorded.
 
 ## Read-only Mac probe
 

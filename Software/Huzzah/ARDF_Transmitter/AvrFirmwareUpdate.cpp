@@ -30,15 +30,41 @@
 #include "Blinkies.h"
 
 #include <LittleFS.h>
+#include <cstring>
 
 extern Blinkies *lights;
+extern bool serviceAvrUpdateQualificationPause(uint16_t pageIndex, uint32_t address);
 
 static const uint32_t AVR_UPDATE_STATE_MAGIC = 0x31565541UL; /* AUV1 */
 static const uint16_t AVR_UPDATE_STATE_SCHEMA = 1U;
 static const uint8_t AVR_UPDATE_RECOVERY_ATTEMPTS = 3U;
 static const uint16_t AVR_UPDATE_PROBE_CAPTURE_BYTES = 96U;
+static const uint32_t AVR_UPDATE_JOURNAL_MAX_BYTES = 32768UL;
 static String g_avrUpdateProbeHex;
 static uint32_t g_avrUpdateProbeBytes;
+static uint32_t g_avrUpdateBootloaderBaud = AVR_UPDATE_BAUD;
+static int16_t g_qualificationEspRestartPage = -1;
+
+static void appendJournal(const String& event, uint32_t address = UINT32_MAX)
+{
+  File existing = LittleFS.open(AVR_UPDATE_JOURNAL_PATH, "r");
+  const bool full = existing && existing.size() >= AVR_UPDATE_JOURNAL_MAX_BYTES;
+  if(existing) existing.close();
+  if(full) return;
+  File journal = LittleFS.open(AVR_UPDATE_JOURNAL_PATH, "a");
+  if(!journal) return;
+  journal.print(millis());
+  journal.print(' ');
+  journal.print(event);
+  if(address != UINT32_MAX)
+  {
+    journal.print(" address=0x");
+    journal.print(address, HEX);
+  }
+  journal.print('\n');
+  journal.flush();
+  journal.close();
+}
 
 static char hexDigit(uint8_t value)
 {
@@ -89,6 +115,89 @@ static bool stateIsValid(const AvrUpdateState& state)
          state.pageCount == state.imageBytes / AVR_UPDATE_PAGE_SIZE;
 }
 
+static uint16_t readU16Le(const uint8_t *bytes)
+{
+  return (uint16_t)bytes[0] | ((uint16_t)bytes[1] << 8);
+}
+
+static uint32_t readU32Le(const uint8_t *bytes)
+{
+  return (uint32_t)bytes[0] | ((uint32_t)bytes[1] << 8) |
+         ((uint32_t)bytes[2] << 16) | ((uint32_t)bytes[3] << 24);
+}
+
+static bool validateImageTrailer(
+  File *file,
+  uint32_t imageBytes,
+  const String& targetVersion,
+  String *error)
+{
+  if(!file || !*file || imageBytes < 2UL * AVR_UPDATE_PAGE_SIZE)
+  {
+    if(error) *error = "AVR update image has no product trailer";
+    return false;
+  }
+  const uint32_t payloadBytes = imageBytes - AVR_UPDATE_PAGE_SIZE;
+  uint8_t trailer[FLEXFOX_AVR_UPDATE_TRAILER_VERSION_OFFSET + FLEXFOX_AVR_UPDATE_TRAILER_VERSION_BYTES];
+  if(!file->seek(payloadBytes, SeekSet) || file->read(trailer, sizeof(trailer)) != sizeof(trailer))
+  {
+    if(error) *error = "Unable to read the FlexFox AVR update trailer";
+    return false;
+  }
+  if(std::memcmp(trailer, FLEXFOX_AVR_UPDATE_TRAILER_MAGIC,
+                 FLEXFOX_AVR_UPDATE_TRAILER_MAGIC_BYTES) != 0 ||
+     readU16Le(trailer + FLEXFOX_AVR_UPDATE_TRAILER_FORMAT_OFFSET) !=
+       FLEXFOX_AVR_UPDATE_IMAGE_FORMAT_VERSION ||
+     readU16Le(trailer + FLEXFOX_AVR_UPDATE_TRAILER_PAGE_SIZE_OFFSET) != AVR_UPDATE_PAGE_SIZE ||
+     readU32Le(trailer + FLEXFOX_AVR_UPDATE_TRAILER_APP_START_OFFSET) != AVR_UPDATE_APP_START ||
+     readU32Le(trailer + FLEXFOX_AVR_UPDATE_TRAILER_PAYLOAD_BYTES_OFFSET) != payloadBytes)
+  {
+    if(error) *error = "AVR image is not a protocol-2 FlexFox80 update";
+    return false;
+  }
+  char trailerVersion[FLEXFOX_AVR_UPDATE_TRAILER_VERSION_BYTES];
+  std::memcpy(trailerVersion, trailer + FLEXFOX_AVR_UPDATE_TRAILER_VERSION_OFFSET,
+              sizeof(trailerVersion));
+  if(!std::memchr(trailerVersion, '\0', sizeof(trailerVersion)))
+  {
+    if(error) *error = "AVR update trailer version is not terminated";
+    return false;
+  }
+  trailerVersion[sizeof(trailerVersion) - 1U] = '\0';
+  if(!targetVersion.length() || targetVersion != String(trailerVersion))
+  {
+    if(error) *error = String("AVR target version does not match image trailer ") + trailerVersion;
+    return false;
+  }
+  if(!file->seek(0, SeekSet))
+  {
+    if(error) *error = "Unable to rewind AVR image for payload validation";
+    return false;
+  }
+  uint8_t buffer[128];
+  uint32_t remaining = payloadBytes;
+  uint32_t crc = 0xffffffffUL;
+  while(remaining)
+  {
+    const size_t requested = remaining < sizeof(buffer) ? remaining : sizeof(buffer);
+    if(file->read(buffer, requested) != requested)
+    {
+      if(error) *error = "AVR payload ended before its product trailer";
+      return false;
+    }
+    crc = avrUpdateCrc32(crc, buffer, requested);
+    remaining -= requested;
+    yield();
+  }
+  if((crc ^ 0xffffffffUL) !=
+     readU32Le(trailer + FLEXFOX_AVR_UPDATE_TRAILER_PAYLOAD_CRC32_OFFSET))
+  {
+    if(error) *error = "AVR payload CRC does not match its product trailer";
+    return false;
+  }
+  return file->seek(0, SeekSet);
+}
+
 static bool readStateFile(const char *path, AvrUpdateState *state)
 {
   File file = LittleFS.open(path, "r");
@@ -136,6 +245,7 @@ bool avrUpdateLoadState(AvrUpdateState *state)
 
 bool avrUpdateCommitStagedImage(uint32_t imageBytes, uint32_t imageCrc32, const String& targetVersion, String *error)
 {
+  g_qualificationEspRestartPage = -1;
   if(!imageBytes || imageBytes > AVR_UPDATE_MAX_IMAGE_BYTES || (imageBytes % AVR_UPDATE_PAGE_SIZE) != 0)
   {
     if(error) *error = "AVR image must contain complete 512-byte pages";
@@ -156,9 +266,16 @@ bool avrUpdateCommitStagedImage(uint32_t imageBytes, uint32_t imageCrc32, const 
     if(error) *error = "AVR image has no application reset vector";
     return false;
   }
+  if(!validateImageTrailer(&file, imageBytes, targetVersion, error))
+  {
+    file.close();
+    return false;
+  }
   file.close();
 
-  LittleFS.remove(AVR_UPDATE_IMAGE_PATH);
+  /* LittleFS rename atomically replaces an existing file of the same type.
+   * Do not remove the prior complete image first: that would create a power-loss
+   * window with neither the old nor new recovery image at the live path. */
   if(!LittleFS.rename(AVR_UPDATE_STAGING_PATH, AVR_UPDATE_IMAGE_PATH))
   {
     if(error) *error = "Unable to commit the staged AVR image";
@@ -182,6 +299,8 @@ bool avrUpdateCommitStagedImage(uint32_t imageBytes, uint32_t imageCrc32, const 
     return false;
   }
   LittleFS.remove(AVR_UPDATE_DIAGNOSTIC_PATH);
+  LittleFS.remove(AVR_UPDATE_JOURNAL_PATH);
+  appendJournal(String("staged version=") + state.targetVersion + " bytes=" + String(state.imageBytes));
   return true;
 }
 
@@ -202,11 +321,13 @@ bool avrUpdateMarkEnteringBootloader(String *error)
     if(error) *error = "Unable to persist bootloader-entry state";
     return false;
   }
+  appendJournal("entering-bootloader");
   return true;
 }
 
 bool avrUpdateRestoreStaged(String *error)
 {
+  g_qualificationEspRestartPage = -1;
   AvrUpdateState state;
   if(!avrUpdateLoadState(&state))
   {
@@ -220,6 +341,22 @@ bool avrUpdateRestoreStaged(String *error)
     if(error) *error = "Unable to restore staged state";
     return false;
   }
+  appendJournal("restored-staged");
+  return true;
+}
+
+bool avrUpdateArmQualificationEspRestart(uint16_t pageIndex, String *error)
+{
+  AvrUpdateState state;
+  if(!avrUpdateLoadState(&state) ||
+     (state.phase != AVR_UPDATE_STAGED && state.phase != AVR_UPDATE_ENTERING_BOOTLOADER) ||
+     pageIndex < 1U || pageIndex >= state.pageCount)
+  {
+    if(error) *error = "Qualification restart page is outside the staged non-reset image";
+    return false;
+  }
+  g_qualificationEspRestartPage = (int16_t)pageIndex;
+  appendJournal(String("qualification-restart-armed page=") + String(pageIndex));
   return true;
 }
 
@@ -241,7 +378,7 @@ bool avrUpdateCanStageImage(uint32_t imageBytes, String *error)
   AvrUpdateState existing;
   if(avrUpdateLoadState(&existing) &&
      (existing.phase == AVR_UPDATE_ENTERING_BOOTLOADER ||
-      existing.phase == AVR_UPDATE_PROGRAMMING ||
+      (existing.phase == AVR_UPDATE_PROGRAMMING && !LittleFS.exists(AVR_UPDATE_DIAGNOSTIC_PATH)) ||
       existing.phase == AVR_UPDATE_VERIFYING_APPLICATION))
   {
     if(error) *error = "An AVR update is already in its bootloader recovery phase";
@@ -279,6 +416,7 @@ static const char *phaseName(uint8_t phase)
     case AVR_UPDATE_PROGRAMMING: return "programming";
     case AVR_UPDATE_VERIFYING_APPLICATION: return "verifying-application";
     case AVR_UPDATE_COMPLETE: return "complete";
+    case AVR_UPDATE_RECOVERY_REQUIRED: return "recovery-required";
     default: return "none";
   }
 }
@@ -287,7 +425,8 @@ String avrUpdateStatusJson(const String& deviceSsid)
 {
   String identity = String(",\"deviceSsid\":\"") + deviceSsid + "\"" +
                     ",\"probeBytes\":" + String(g_avrUpdateProbeBytes) +
-                    ",\"probeHex\":\"" + g_avrUpdateProbeHex + "\"";
+                    ",\"probeHex\":\"" + g_avrUpdateProbeHex + "\"" +
+                    ",\"bootloaderBaud\":" + String(g_avrUpdateBootloaderBaud);
   FSInfo info;
   if(filesystemInfo(&info))
   {
@@ -381,6 +520,33 @@ static void writeAddressFrame(char command, uint32_t address)
   }
 }
 
+static void writePaced(const uint8_t *data, size_t length);
+
+static bool beginBootloaderSession(uint32_t imageBytes, uint32_t imageCrc32)
+{
+  uint8_t frame[11];
+  frame[0] = 'B';
+  frame[1] = (uint8_t)imageBytes;
+  frame[2] = (uint8_t)(imageBytes >> 8);
+  frame[3] = (uint8_t)(imageBytes >> 16);
+  frame[4] = (uint8_t)(imageBytes >> 24);
+  frame[5] = (uint8_t)imageCrc32;
+  frame[6] = (uint8_t)(imageCrc32 >> 8);
+  frame[7] = (uint8_t)(imageCrc32 >> 16);
+  frame[8] = (uint8_t)(imageCrc32 >> 24);
+  uint16_t crc = 0xffffU;
+  for(uint8_t i = 0; i < 9U; i++) crc = crc16Update(crc, frame[i]);
+  frame[9] = (uint8_t)crc;
+  frame[10] = (uint8_t)(crc >> 8);
+  for(uint8_t attempt = 0; attempt < 5U; attempt++)
+  {
+    writePaced(frame, sizeof(frame));
+    if(waitForResponse("OK begin", NULL)) return true;
+    delay(50);
+  }
+  return false;
+}
+
 static void writePaced(const uint8_t *data, size_t length)
 {
   while(length--)
@@ -445,8 +611,35 @@ static bool bootloaderPresent(void)
     Serial.write('?'); Serial.flush();
     String response;
     if(waitForResponse("FlexFox80 BL", &response, 500) &&
-       response.indexOf("app=0x4000") >= 0 && response.indexOf("page=512") >= 0) return true;
+       response.indexOf("proto=2") >= 0 && response.indexOf("app=0x4000") >= 0 &&
+       response.indexOf("page=512") >= 0 && response.indexOf("sessioncrc") >= 0 &&
+       response.indexOf("producttrailer") >= 0)
+    {
+      appendJournal(String("bootloader-identity ") + response);
+      Serial.write('D'); Serial.flush();
+      String diagnostic;
+      if(waitForResponse("OK diag", &diagnostic, 500))
+        appendJournal(String("bootloader-diagnostic ") + diagnostic);
+      return true;
+    }
     delay(100);
+  }
+  return false;
+}
+
+static bool findBootloaderAtSupportedBaud(void)
+{
+  static const uint32_t supportedBauds[] = {115200UL, 57600UL, 38400UL, 19200UL, 9600UL};
+  for(uint8_t index = 0; index < sizeof(supportedBauds) / sizeof(supportedBauds[0]); index++)
+  {
+    Serial.flush(); Serial.end(); delay(20);
+    Serial.begin(supportedBauds[index]); delay(100);
+    if(bootloaderPresent())
+    {
+      g_avrUpdateBootloaderBaud = supportedBauds[index];
+      appendJournal(String("bootloader-baud ") + String(g_avrUpdateBootloaderBaud));
+      return true;
+    }
   }
   return false;
 }
@@ -454,12 +647,7 @@ static bool bootloaderPresent(void)
 bool avrUpdateResidentBootloaderPresent(void)
 {
   resetProbeCapture();
-  Serial.flush();
-  Serial.end();
-  delay(20);
-  Serial.begin(AVR_UPDATE_BAUD);
-  delay(100);
-  return bootloaderPresent();
+  return findBootloaderAtSupportedBaud();
 }
 
 static bool applicationPresent(void)
@@ -544,6 +732,7 @@ static void recordOperationFailure(const char *operation, uint32_t address)
   diagnostic.print(g_avrUpdateProbeHex);
   diagnostic.flush();
   diagnostic.close();
+  appendJournal(String("failure operation=") + operation, address);
 }
 
 static void restartAfterOperationFailure(File *image, const char *operation, uint32_t address)
@@ -583,8 +772,23 @@ void avrUpdateResumeIfRequired(bool bootloaderAlreadyReady)
       while(!saveState(&state)) { delay(250); yield(); }
       return;
     }
-    /* Programming has begun and the reset vector may be invalid. Stay powered for recovery. */
-    for(;;) { delay(1000); yield(); }
+    /* The reset vector may already be invalid, but the resident bootloader is
+     * still the recovery root. Keep HTTP available so a complete replacement
+     * image can be staged without opening the chassis. */
+    if(image) image.close();
+    LittleFS.remove(AVR_UPDATE_DIAGNOSTIC_PATH);
+    File diagnostic = LittleFS.open(AVR_UPDATE_DIAGNOSTIC_PATH, "w");
+    if(diagnostic)
+    {
+      diagnostic.print("validate-image ");
+      diagnostic.print(validationFailure);
+      diagnostic.flush();
+      diagnostic.close();
+    }
+    state.phase = AVR_UPDATE_RECOVERY_REQUIRED;
+    (void)saveState(&state);
+    appendJournal(String("recovery-required reason=") + validationFailure);
+    return;
   }
   resetProbeCapture();
   /* A direct resident-bootloader probe leaves a proven UART session ready for
@@ -595,8 +799,7 @@ void avrUpdateResumeIfRequired(bool bootloaderAlreadyReady)
   uint8_t recoveryAttempts = 0;
   while(!bootloaderReady)
   {
-    Serial.flush(); Serial.end(); delay(20); Serial.begin(AVR_UPDATE_BAUD); delay(100);
-    bootloaderReady = bootloaderPresent();
+    bootloaderReady = findBootloaderAtSupportedBaud();
     if(!bootloaderReady)
     {
       Serial.flush(); Serial.end(); delay(20); Serial.begin(9600); delay(100);
@@ -637,8 +840,16 @@ void avrUpdateResumeIfRequired(bool bootloaderAlreadyReady)
   }
 
   state.phase = AVR_UPDATE_PROGRAMMING;
-  if(state.nextPage < 1 || state.nextPage > state.pageCount) state.nextPage = 1;
+  /* Protocol 2 deliberately replays every non-reset page after any ESP/AVR
+   * restart. The resident bootloader will not commit the reset page unless it
+   * has observed and read back the complete ordered session itself. */
+  state.nextPage = 1;
   while(!saveState(&state)) { delay(250); yield(); }
+  appendJournal(String("programming pages=") + String(state.pageCount));
+
+  if(!beginBootloaderSession(state.imageBytes, state.imageCrc32))
+    restartAfterOperationFailure(&image, "begin-session", AVR_UPDATE_APP_START);
+  appendJournal("bootloader-session-begun");
 
   uint8_t page[AVR_UPDATE_PAGE_SIZE];
   if(!erasePage(AVR_UPDATE_APP_START))
@@ -653,6 +864,17 @@ void avrUpdateResumeIfRequired(bool bootloaderAlreadyReady)
     if(!verifyPage(address, page)) restartAfterOperationFailure(&image, "verify", address);
     state.nextPage = pageIndex + 1;
     while(!saveState(&state)) { delay(250); yield(); }
+    appendJournal(String("page-verified index=") + String(pageIndex), address);
+    if(!serviceAvrUpdateQualificationPause(pageIndex, address))
+      restartAfterOperationFailure(&image, "qualification-reset-timeout", address);
+    if(g_qualificationEspRestartPage == (int16_t)pageIndex)
+    {
+      g_qualificationEspRestartPage = -1;
+      appendJournal(String("qualification-esp-restart page=") + String(pageIndex), address);
+      delay(100);
+      ESP.restart();
+      for(;;) { delay(1000); yield(); }
+    }
     yield();
   }
 
@@ -662,11 +884,13 @@ void avrUpdateResumeIfRequired(bool bootloaderAlreadyReady)
     restartAfterOperationFailure(&image, "write-reset-vector", AVR_UPDATE_APP_START);
   if(!verifyPage(AVR_UPDATE_APP_START, page))
     restartAfterOperationFailure(&image, "verify-reset-vector", AVR_UPDATE_APP_START);
+  appendJournal("reset-page-verified", AVR_UPDATE_APP_START);
   image.close();
 
   state.phase = AVR_UPDATE_VERIFYING_APPLICATION;
   state.nextPage = state.pageCount;
   while(!saveState(&state)) { delay(250); yield(); }
+  appendJournal("verifying-application");
   Serial.write('R'); Serial.flush();
   delay(500);
   ESP.restart();
@@ -683,5 +907,7 @@ bool avrUpdateObserveApplicationVersion(const String& version)
    * persistence then needs a retry, the verified application can report again. */
   if(LittleFS.exists(AVR_UPDATE_IMAGE_PATH) && !LittleFS.remove(AVR_UPDATE_IMAGE_PATH)) return false;
   state.phase = AVR_UPDATE_COMPLETE;
-  return saveState(&state);
+  if(!saveState(&state)) return false;
+  appendJournal(String("complete version=") + version);
+  return true;
 }

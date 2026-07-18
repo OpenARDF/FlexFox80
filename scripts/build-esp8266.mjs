@@ -16,6 +16,7 @@ import { spawnSync } from "node:child_process";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const sketchRoot = join(repoRoot, "Software", "Huzzah", "ARDF_Transmitter");
+const sharedAvrInclude = join(repoRoot, "Software", "AVR128DA48", "FlexFox80", "include");
 const tempRoot = join(repoRoot, "Software", "Huzzah", "tmp");
 const arduinoRoot = resolve(process.env.ESP_ARDUINO_DATA_ROOT || join(tempRoot, "arduino"));
 const outputRoot = join(tempRoot, "esp-build");
@@ -117,6 +118,8 @@ const compileOutput = cli([
   fqbn,
   "--build-path",
   join(outputRoot, "work"),
+  "--build-property",
+  `compiler.cpp.extra_flags=-I${sharedAvrInclude}`,
   "--output-dir",
   outputRoot,
   sketchRoot,

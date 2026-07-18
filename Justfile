@@ -22,7 +22,10 @@ policy-check:
 # Build and run dependency-light host characterization tests.
 test:
     ./scripts/run-host-tests.sh
+    node --check ./scripts/qualify-flexfox-avr-bootloader.mjs
+    node --check ./scripts/update-flexfox-avr-over-wifi.mjs
     node ./Tests/Host/eeprom_enum_layout_migration_test.mjs
+    node ./Tests/Host/avr_update_image_format_test.mjs
     node ./Tests/Host/esp_root_page_test.mjs
     node ./Tests/Host/esp_firmware_update_page_test.mjs
     node ./Tests/Host/wifi_avr_update_identity_test.mjs
@@ -57,6 +60,10 @@ avr-bootloader-build:
 # Build both halves and create the one-time initial provisioning image.
 avr-boot-chain-build: avr-bootloader-build avr-relocated-build
     node ./scripts/package-avr-boot-chain.mjs
+
+# Build qualification artifacts at every supported bootloader UART rate, then restore 38400 as the default.
+avr-bootloader-baud-matrix: avr-relocated-build
+    node ./scripts/build-avr-bootloader-baud-matrix.mjs
 
 # One-time destructive fleet provisioning; requires both explicit confirmation variables.
 avr-provision-boot-chain:
@@ -110,6 +117,10 @@ wifi-avr-update:
 # Identify the exact FlexFox and AVR update state without staging an image.
 wifi-avr-preflight:
     FLEXFOX_AVR_UPDATE_DRY_RUN=1 node ./scripts/update-flexfox-avr-over-wifi.mjs
+
+# Run the unattended pilot sequence: normal update, ESP restart, AVR reset, and exact Atmel-ICE readback.
+wifi-avr-bootloader-qualification:
+    node ./scripts/qualify-flexfox-avr-bootloader.mjs
 
 # Install and hash-verify events.html or another named LittleFS web file (explicit confirmation required).
 wifi-web-deploy:

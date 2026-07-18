@@ -11,6 +11,8 @@ const sourceRoot = join(repoRoot, "Software", "AVR128DA48", "bootloader");
 const outputRoot = join(repoRoot, "Software", "AVR128DA48", "tmp", "bootloader-release");
 const expectedCompilerVersion = "7.3.0";
 const expectedDfpVersion = "1.9.103";
+const requestedBaud = Number(process.env.FLEXFOX_BOOT_TEST_BAUD || 38400);
+const supportedTestBauds = new Set([9600, 19200, 38400, 57600, 115200]);
 
 function fail(message) {
   process.stderr.write(`AVR bootloader build: ${message}\n`);
@@ -66,10 +68,17 @@ const binary = join(outputRoot, "FlexFox80Bootloader.bin");
 const map = join(outputRoot, "FlexFox80Bootloader.map");
 
 const deviceFlags = ["-mmcu=avr128da48", "-B", dfpDevice];
+if(!Number.isInteger(requestedBaud) || !supportedTestBauds.has(requestedBaud)) {
+  fail("FLEXFOX_BOOT_TEST_BAUD must be one of 9600, 19200, 38400, 57600, or 115200");
+}
+const baudFlags = [
+  `-DFLEXFOX_BOOT_USART_BAUD=${requestedBaud}UL`,
+  `-DFLEXFOX_BOOT_USART_BAUD_TEXT="${requestedBaud}"`,
+];
 run(compiler, [
   "-DF_CPU=24000000UL", "-Os", "-ffunction-sections", "-fdata-sections", "-fno-exceptions",
   "-fno-threadsafe-statics", "-Wall", "-Wextra", "-I", "include", "-I", "../FlexFox80/include", "-I", "../FlexFox80/utils", "-I", dfpInclude,
-  ...deviceFlags, "-c", "-o", object, "src/main.cpp",
+  ...baudFlags, ...deviceFlags, "-c", "-o", object, "src/main.cpp",
 ]);
 run(compiler, [
   "-x", "assembler-with-cpp", "-c", ...deviceFlags,
@@ -92,6 +101,7 @@ const artifacts = [elf, hex, binary, map].map((path) => ({
 writeFileSync(join(outputRoot, "build-evidence.json"), `${JSON.stringify({
   compilerVersion, expectedCompilerVersion, dfpVersion, expectedDfpVersion,
   bootloaderBytes: bytes.length, maximumBootloaderBytes: 0x4000,
+  bootloaderBaud: requestedBaud,
   applicationStart: 0x4000, bootSizeFuse: 0x20, codeSizeFuse: 0,
   sizeOutput, artifacts,
 }, null, 2)}\n`);

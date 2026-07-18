@@ -274,7 +274,7 @@ const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8"
 const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
 const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.208";
-const expectedEspVersion = "2.17";
+const expectedEspVersion = "2.18";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -344,7 +344,7 @@ if (
   !avrBootloader.includes("NVMCTRL_CMD_EEERWR_gc") ||
   !avrBootloader.includes("address == FLEXFOX_APP_START_BYTES") ||
   !avrBootloader.includes("pins_init(bool preserve_wifi_session)") ||
-  !avrBootloader.includes("pins_init(requested)") ||
+  !avrBootloader.includes("pins_init(bootUpdatePreserveLiveEsp(app_request, power_start))") ||
   !avrBootloader.includes("if(preserve_wifi_session)") ||
   !avrBootloader.includes("PORTA.OUTSET = V3V3_POWER_ENABLE_PIN | WIFI_ENABLE_PIN | WIFI_RESET_PIN") ||
   !avrBootloader.includes("PORTA.OUTCLR = V3V3_POWER_ENABLE_PIN | WIFI_ENABLE_PIN | WIFI_RESET_PIN") ||
@@ -394,14 +394,15 @@ process.stdout.write("PASS wireless AVR updater retains recovery and unique-SSID
 
 if (
   !espMain.includes("avrBootloaderIdentityIsCompatible") ||
-  !espMain.includes('identity.substring(versionEnd) != ",1,0x4000,512"') ||
+  !espMain.includes('identity.substring(versionEnd) != ",2,0x4000,512"') ||
+  !espMain.includes("identity.substring(4, versionEnd).toInt() >= 3") ||
   espMain.includes('startsWith("BL0.1,1,0x4000,512")') ||
   !avrBootloader.includes("update_led_start()") ||
   (avrBootloader.match(/update_led_service_10us\(\)/g)?.length ?? 0) < 2 ||
   !avrBootloader.includes("update_led_error = true") ||
   !avrBootloader.includes("PORTC.OUTTGL = LED_PINS") ||
   !avrFirmwareUpdate.includes("bool avrUpdateObserveApplicationVersion") ||
-  !/LittleFS\.remove\(AVR_UPDATE_IMAGE_PATH\)[\s\S]*state\.phase = AVR_UPDATE_COMPLETE;[\s\S]*return saveState\(&state\);/.test(avrFirmwareUpdate) ||
+  !/LittleFS\.remove\(AVR_UPDATE_IMAGE_PATH\)[\s\S]*state\.phase = AVR_UPDATE_COMPLETE;[\s\S]*saveState\(&state\)[\s\S]*return true;/.test(avrFirmwareUpdate) ||
   !espMain.includes("g_avrUpdateCompletionIndicationUntil = millis() + 60000UL") ||
   !espMain.includes("ledPattern = RED_BLUE_TOGETHER") ||
   !espMain.includes("avrUpdateJustCompleted")
@@ -413,6 +414,37 @@ if (
 }
 
 process.stdout.write("PASS wireless AVR updates retain explicit progress, error, and completion indications\n");
+
+if (
+  !avrBootloader.includes("bootUpdateSessionBegin") ||
+  !avrBootloader.includes("bootUpdateSessionAllowsErase") ||
+  !avrBootloader.includes("bootUpdateSessionAllowsWrite") ||
+  !avrBootloader.includes("candidate_image_is_valid") ||
+  !avrBootloader.includes("candidate_crc32(update_session.image_bytes)") ||
+  !avrBootloader.includes("FLEXFOX_AVR_UPDATE_TRAILER_MAGIC") ||
+  !avrBootloader.includes("bootUpdateSessionMayRunApplication") ||
+  !avrBootloader.includes("send_diagnostic") ||
+  !avrBootloader.includes('usart_write_text(FLEXFOX_BOOT_USART_BAUD_TEXT)') ||
+  !avrFirmwareUpdate.includes("beginBootloaderSession(state.imageBytes, state.imageCrc32)") ||
+  !avrFirmwareUpdate.includes("state.nextPage = 1") ||
+  !avrFirmwareUpdate.includes("AVR_UPDATE_RECOVERY_REQUIRED") ||
+  !avrFirmwareUpdate.includes("AVR_UPDATE_JOURNAL_PATH") ||
+  !avrFirmwareUpdate.includes("LittleFS rename atomically replaces") ||
+  /LittleFS\.remove\(AVR_UPDATE_IMAGE_PATH\);\s*if\(!LittleFS\.rename\(AVR_UPDATE_STAGING_PATH/.test(avrFirmwareUpdate) ||
+  !espMain.includes('g_http_server.on("/avr-update/log"') ||
+  !wifiAvrUpdater.includes("inspectFlexFoxAvrUpdateImage") ||
+  !wifiAvrUpdater.includes("FLEXFOX_AVR_QUALIFICATION_ESP_RESTART_PAGE") ||
+  !wifiAvrUpdater.includes("FLEXFOX_AVR_QUALIFICATION_AVR_RESET_PAGE") ||
+  !wifiAvrUpdater.includes("FLEXFOX_AVR_QUALIFICATION_FINAL_READBACK") ||
+  !wifiAvrUpdater.includes('"atmelice_updi"')
+) {
+  process.stderr.write(
+    "Firmware contract check failed: protocol-2 bootloader session, product image, autonomous evidence, or recovery invariants are missing\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS protocol-2 bootloader owns commit safety and autonomous qualification evidence\n");
 
 const avrUpdateStartHandler = espMain.match(
   /void handleAvrUpdateStart\(\)\s*\{([\s\S]*?)\n\}\n\nvoid handleSuccess/,

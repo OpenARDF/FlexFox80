@@ -214,6 +214,9 @@ String g_avrUpdateError;
 uint32_t g_avrUpdateCompletionIndicationUntil = 0;
 bool g_avrBootloaderAvailable = false;
 String g_avrBootloaderIdentity;
+int16_t g_avrQualificationResetPage = -1;
+bool g_avrQualificationResetReady = false;
+bool g_avrQualificationResetContinue = false;
 
 static_assert(
   CLONE_EVENT_MANIFEST_CAPACITY == MAXIMUM_NUMBER_OF_EVENTS,
@@ -274,6 +277,9 @@ void handleFirmwareUpdateUpload(void);
 void serviceFirmwareUpdateRestart(void);
 void handleAvrUpdatePage(void);
 void handleAvrUpdateStatus(void);
+void handleAvrUpdateJournal(void);
+void handleAvrQualificationStatus(void);
+void handleAvrQualificationContinue(void);
 void handleAvrUpdateResult(void);
 void handleAvrUpdateUpload(void);
 void handleFleetSoakStatus(void);
@@ -785,6 +791,65 @@ void handleAvrUpdateStatus()
   g_http_server.send(200, "application/json", avrUpdateStatusJson(g_uniqueAPNameString));
 }
 
+void handleAvrUpdateJournal()
+{
+  g_http_server.sendHeader("Cache-Control", "no-store");
+  File journal = LittleFS.open(AVR_UPDATE_JOURNAL_PATH, "r");
+  if(!journal)
+  {
+    g_http_server.send(404, "text/plain; charset=utf-8", "No AVR update journal is available");
+    return;
+  }
+  g_http_server.streamFile(journal, "text/plain; charset=utf-8");
+  journal.close();
+}
+
+void handleAvrQualificationStatus()
+{
+  g_http_server.sendHeader("Cache-Control", "no-store");
+  g_http_server.send(200, "application/json",
+    String("{\"armedPage\":") + String(g_avrQualificationResetPage) +
+    ",\"resetReady\":" + (g_avrQualificationResetReady ? "true" : "false") + "}");
+}
+
+void handleAvrQualificationContinue()
+{
+  if(!g_avrQualificationResetReady ||
+     g_http_server.arg("confirm") != "CONTINUE-AFTER-AVR-RESET")
+  {
+    g_http_server.send(409, "text/plain; charset=utf-8", "No qualified AVR reset pause is active");
+    return;
+  }
+  g_avrQualificationResetContinue = true;
+  g_http_server.send(200, "text/plain; charset=utf-8", "AVR reset injection acknowledged");
+}
+
+/* Called only from the blocking AVR updater. Normal updates return immediately;
+ * an explicitly armed qualification run temporarily reopens HTTP so the host
+ * can synchronize an Atmel-ICE reset to an exact verified page. */
+bool serviceAvrUpdateQualificationPause(uint16_t pageIndex, uint32_t address)
+{
+  (void)address;
+  if(g_avrQualificationResetPage != (int16_t)pageIndex) return true;
+  g_avrQualificationResetReady = true;
+  g_avrQualificationResetContinue = false;
+  g_http_server.begin();
+  const uint32_t deadline = millis() + 60000UL;
+  while(!g_avrQualificationResetContinue && (int32_t)(deadline - millis()) > 0)
+  {
+    g_http_server.handleClient();
+    if(lights) lights->blinkLEDs(250, RED_BLUE_ALTERNATING, true);
+    delay(1);
+    yield();
+  }
+  g_http_server.stop();
+  const bool acknowledged = g_avrQualificationResetContinue;
+  g_avrQualificationResetPage = -1;
+  g_avrQualificationResetReady = false;
+  g_avrQualificationResetContinue = false;
+  return acknowledged;
+}
+
 void handleAvrUpdateResult()
 {
   g_http_server.sendHeader("Cache-Control", "no-store");
@@ -1027,17 +1092,20 @@ static bool avrBootloaderIdentityIsCompatible(const String& identity)
    * allowing reviewed behavior-only revisions of the resident BL0 bootloader. */
   if(!identity.startsWith("BL0.")) return false;
   const int versionEnd = identity.indexOf(',');
-  if(versionEnd <= 4 || identity.substring(versionEnd) != ",1,0x4000,512") return false;
+  if(versionEnd <= 4 || identity.substring(versionEnd) != ",2,0x4000,512") return false;
   for(int i = 4; i < versionEnd; i++)
   {
     if(!isDigit(identity.charAt(i))) return false;
   }
-  return identity.substring(4, versionEnd).toInt() >= 1;
+  return identity.substring(4, versionEnd).toInt() >= 3;
 }
 
 void handleAvrUpdateStart()
 {
   String error;
+  g_avrQualificationResetPage = -1;
+  g_avrQualificationResetReady = false;
+  g_avrQualificationResetContinue = false;
   String suppliedSuffix = g_http_server.arg("unlock");
   suppliedSuffix.trim();
   suppliedSuffix.toUpperCase();
@@ -1084,13 +1152,43 @@ void handleAvrUpdateStart()
   }
   if(!applicationPreflight && !residentBootloader)
   {
-    if(!error.length()) error = "The AVR did not prove a compatible BL0 bootloader and 0x4000 application layout";
+    if(!error.length()) error = "The AVR did not prove a protocol-2 BL0.3-or-newer bootloader and 0x4000 application layout";
     g_http_server.send(409, "text/plain; charset=utf-8", error);
     return;
   }
   if(!avrUpdateMarkEnteringBootloader(&error))
   {
     g_http_server.send(500, "text/plain; charset=utf-8", error);
+    return;
+  }
+  if(g_http_server.arg("qualificationConfirm") == "ARM-ESP-RESTART")
+  {
+    const long restartPage = g_http_server.arg("qualificationRestartPage").toInt();
+    if(restartPage < 1 || restartPage > 65535L ||
+       !avrUpdateArmQualificationEspRestart((uint16_t)restartPage, &error))
+    {
+      avrUpdateRestoreStaged(NULL);
+      g_http_server.send(400, "text/plain; charset=utf-8", error);
+      return;
+    }
+  }
+  else if(g_http_server.arg("qualificationConfirm") == "ARM-AVR-RESET")
+  {
+    const long resetPage = g_http_server.arg("qualificationResetPage").toInt();
+    AvrUpdateState qualificationState;
+    if(resetPage < 1 || resetPage > 65535L || !avrUpdateLoadState(&qualificationState) ||
+       resetPage >= qualificationState.pageCount)
+    {
+      avrUpdateRestoreStaged(NULL);
+      g_http_server.send(400, "text/plain; charset=utf-8", "Qualification AVR reset page is outside the staged non-reset image");
+      return;
+    }
+    g_avrQualificationResetPage = (int16_t)resetPage;
+  }
+  else if(g_http_server.arg("qualificationConfirm").length())
+  {
+    avrUpdateRestoreStaged(NULL);
+    g_http_server.send(400, "text/plain; charset=utf-8", "Unknown AVR update qualification request");
     return;
   }
 
@@ -1102,6 +1200,7 @@ void handleAvrUpdateStart()
                  sendLinkbusTransactionCommand(String(LB_MESSAGE_AVR_UPDATE_START), "AVR bootloader entry", &error);
   if(!success)
   {
+    g_avrQualificationResetPage = -1;
     avrUpdateRestoreStaged(NULL);
     g_linkBusLastFailure = error;
     g_http_server.send(409, "text/plain; charset=utf-8", error);
@@ -1280,6 +1379,9 @@ bool setupHTTP_AP()
 
     g_http_server.on("/avr-update", HTTP_GET, handleAvrUpdatePage);
     g_http_server.on("/avr-update/status", HTTP_GET, handleAvrUpdateStatus);
+    g_http_server.on("/avr-update/log", HTTP_GET, handleAvrUpdateJournal);
+    g_http_server.on("/avr-update/qualification/status", HTTP_GET, handleAvrQualificationStatus);
+    g_http_server.on("/avr-update/qualification/continue", HTTP_POST, handleAvrQualificationContinue);
     g_http_server.on(
       "/avr-update",
       HTTP_POST,

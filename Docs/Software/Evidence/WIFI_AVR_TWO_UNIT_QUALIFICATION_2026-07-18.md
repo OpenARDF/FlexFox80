@@ -1,10 +1,10 @@
 # WiFi AVR Two-Unit Qualification — 2026-07-18
 
-**Status:** Unit A AVR 0.208 application installation is independently verified; ESP 2.17 / BL0.2 feedback, equal-time Apply, file-preservation, RF-event, interruption, and Unit B gates remain
+**Status:** Earlier Unit A AVR 0.208 installation is independently verified; BL0.2 is superseded; ESP 2.18 / BL0.3 automated interruption, final readback, equal-time Apply, file-preservation, RF-event, and Unit B gates remain
 
 ## Objective
 
-Qualify the ESP 2.17 / AVR 0.208 / BL0.2 combination on two identified, dummy-loaded FlexFox80 units before expanding the boot chain to the fleet. The test must prove wireless updating, normal transmitter behavior, persistent event disabling through Apply, and unambiguous physical update feedback. It must also prove the operator LED contract:
+Qualify the ESP 2.18 / AVR 0.208 / BL0.3 protocol-2 combination on two identified, dummy-loaded FlexFox80 units before expanding the boot chain to the fleet. The test must prove wireless updating, autonomous recovery from ESP restart and AVR reset, true power-loss recovery, exact post-update Flash/EEPROM/fuse readback, normal transmitter behavior, persistent event disabling through Apply, and unambiguous physical update feedback. It must also prove the operator LED contract:
 
 - slow red means an event will run without another user action;
 - fast red means no event can run until the user acts.
@@ -16,18 +16,20 @@ Retained future start and finish epochs are not enough to justify slow red after
 | Item | Value |
 | --- | --- |
 | Source commit | Commit containing this qualification record |
-| ESP version | `2.17` |
+| ESP version | `2.18` |
 | AVR version | `0.208` |
-| Bootloader version | `BL0.2` |
-| ESP sketch | 554,088 bytes; SHA-256 `ffeabdb493100d7005878a47d41b851495057059bc78c49cc1f4d13a29f9e6ab` |
-| AVR wireless image | 43,008 bytes; CRC32 `0x6dc14ab5`; SHA-256 `1856561ecb1782f39efb628005fd0bcb899fbc79de74e5dea41246401f02b49f` |
-| AVR first-install HEX | SHA-256 `8e26cccf6e95281736da207a7c062e1d4b3168de50fc9e3c6685db7e3f70cfd1` |
-| AVR release manifest | SHA-256 `bd32bbc26418dec33bbbc7433fe9f7cdd0003a54d68ec711b9920e7747306e3c` |
-| Boot layout | 2,664-byte bootloader in a 16,384-byte reservation; application at `0x4000` |
-| ESP resources | 53% sketch flash; 60% global RAM; 32,536 bytes dynamic-memory headroom; zero warnings |
+| Bootloader version | `BL0.3`, protocol 2, 38,400 baud candidate |
+| ESP sketch | 559,160 bytes; SHA-256 `b45613c683815655a04c1a41521d94fb27e628ace7458e56527979eeb6f5cb93` |
+| AVR wireless image | 43,520 bytes; CRC32 `0xdcf1e479`; SHA-256 `c27442a55db0bd27a09129ce43fb58b36acca4cd16890e8a71b8d013feddfe81` |
+| AVR first-install HEX | SHA-256 `5b84d8b95942c58cef7dd3ddb54b7dc3db894847035327de285d0898ff453660` |
+| AVR release manifest | SHA-256 `2a507075e7d20b97e475f86d4740371555b3239ca2f02e2015b07a68522d7e13` |
+| Boot layout | 5,112-byte bootloader in a 16,384-byte reservation; application at `0x4000`; SHA-256 `6d0997d0732566d66060970d3b7026654d7336aaa00483ae903c49c9e2fb78bc` |
+| ESP resources | 53% sketch flash; 61% global RAM; 31,136 bytes dynamic-memory headroom; 5,092 bytes IRAM headroom; zero warnings |
 | AVR resources | 41,894 text + 1,150 data bytes; 1,576 BSS bytes; zero warnings |
 
-The ESP 2.17 / BL0.2 / AVR 0.208 candidate passed `just check` and `just secrets`. Two consecutive exact AVR and ESP builds completed with zero warnings and identical sketch, wireless-image, first-install, bootloader, and manifest hashes.
+The ESP 2.18 / BL0.3 / AVR 0.208 candidate has passed `just check`, `just secrets`, the complete host suite, all firmware contract checks, zero-warning ESP and AVR builds, a five-rate bootloader build/package matrix, and a second deterministic build with identical ESP sketch, bootloader, wireless image, first-install, and manifest hashes. The candidate remains unfrozen until the hardware gates pass.
+
+BL0.2 is retained only as historical evidence and must not be installed on additional units. Review found four fleet-significant gaps: reset-last was not enforced by the resident bootloader, a persistent POR/BOR recovery request could preserve the wrong ESP power state, a corrupt staged image after erase could suppress the recovery web service, and a single serial `U` could enter the startup boot path. BL0.3 enforces an ordered image-bound session, product trailer, payload/full-image CRC, bootloader-owned reset-page commit, normal cold ESP power sequencing, recoverable invalid-image service, and a CRC-framed `UBL2!` serial entry.
 
 ## Unit identities and starting state
 
@@ -72,7 +74,7 @@ Rather than infer success from those indications, an Atmel-ICE session independe
 
 The same EEPROM capture showed start `1784406000` and finish `1784406043`. The updater deliberately replaced finish with its safe handoff time, so the event is expired and cannot run but is no longer the equal-time disabled representation. Unit A must repeat equal-time Apply under 0.208 and receive an independent equality readback before that separate gate passes.
 
-BL0.1's page traffic and the normal ESP patterns were too ambiguous to serve as a physical completion contract. BL0.2 therefore alternates AVR red/green continuously during bootloader waits and recovery, and latches solid red on a protocol or NVM error until a valid retry begins. ESP 2.17 accepts compatible BL0 revisions by protocol and fixed Flash geometry rather than an exact version string. Only after it observes the exact target AVR version, persists `complete`, and removes the staged image does it blink ESP red and blue together for 60 seconds. That simultaneous pattern is the definitive physical all-done indication; the HTTP/host result must still independently report complete, all pages, no staged image, and the exact combined version.
+BL0.1's page traffic and the normal ESP patterns were too ambiguous to serve as a physical completion contract. BL0.2 introduced alternating AVR red/green during bootloader work and latched solid red on error, but is now superseded for the safety reasons above. BL0.3 retains those indications and adds a read-only diagnostic command. ESP 2.18 records the bootloader identity, detected baud, diagnostic, each verified page, recovery, reset-page commit, version verification, and completion in `/avr-update.log`. Only after it observes the exact target AVR version, persists `complete`, and removes the staged image does it blink ESP red and blue together for 60 seconds. That simultaneous pattern is the definitive physical all-done indication; the HTTP/host result and independent readback must still agree.
 
 ## Pre-test gates
 
@@ -95,7 +97,7 @@ The host staging workflow uses the same fixed-length, ESP8266-compatible multipa
 
 ### ESP sketch
 
-Install ESP 2.17 first. The protected updater must replace only the sketch and preserve LittleFS:
+Install ESP 2.18 first. The protected updater must replace only the sketch and preserve LittleFS:
 
 ```text
 FLEXFOX_UPDATE_CONFIRM='UPDATE FLEXFOX ESP' just wifi-esp-update
@@ -104,7 +106,7 @@ FLEXFOX_UPDATE_CONFIRM='UPDATE FLEXFOX ESP' just wifi-esp-update
 Pass criteria:
 
 - the updater reports the exact installed sketch MD5 derived from the frozen image;
-- uptime restarts and `/firmware/status` reports ESP 2.17;
+- uptime restarts and `/firmware/status` reports ESP 2.18;
 - `filesystemProtected` remains true;
 - all pre-test `.event` and `.me` hashes remain unchanged;
 - `just wifi-probe` still receives live AVR temperature and battery data.
@@ -133,9 +135,11 @@ FLEXFOX_AVR_SSID_SUFFIX=<unit-specific-final-four> \
 just wifi-avr-update
 ```
 
-Use an uninterrupted update on Unit A. On Unit B, first prove one uninterrupted update; a subsequent same-version update may be used for controlled interruption testing. Pass requires all 84 page slots to complete for the 43,008-byte image, the new application to report AVR 0.208, the recovery state to become `complete`, and the staged image to be removed only after version confirmation.
+Use an uninterrupted update on Unit A. On Unit B, first prove one uninterrupted update; subsequent same-version updates may be used for controlled interruption testing. Pass requires all 85 page slots to complete for the 43,520-byte image, the new application to report AVR 0.208, the recovery state to become `complete`, and the staged image to be removed only after version confirmation.
 
-The update handoff suspends RF, stores the current epoch as the completed EEPROM finish, verifies that write, and then enters BL0.2. During the transaction AVR red/green must alternate; solid AVR red indicates a stopped error. After the exact application version is observed and completion is committed, ESP red/blue must blink together for 60 seconds. The stable application indication after that should be fast red unless the operator deliberately loads and applies another runnable event.
+The update handoff suspends RF, stores the current epoch as the completed EEPROM finish, verifies that write, and then enters BL0.3. During the transaction AVR red/green must alternate; solid AVR red indicates a stopped error. After the exact application version is observed and completion is committed, ESP red/blue must blink together for 60 seconds. The stable application indication after that should be fast red unless the operator deliberately loads and applies another runnable event.
+
+For the Atmel-ICE pilot, enable `FLEXFOX_AVR_QUALIFICATION_FINAL_READBACK=1`. The host must save and verify the complete 128 KiB Flash capture, all 512 EEPROM bytes, all 16 fuse bytes, exact 16 KiB Boot section, exact 43,520-byte wireless image at `0x4000`, marker byte 511=`0xFF`, `CODESIZE=0x00`, and `BOOTSIZE=0x20` before it prints PASS.
 
 ## LED and schedule contract
 
@@ -155,15 +159,20 @@ Any slow-red indication while the event is suspended, completed, invalid, or blo
 
 ## Wireless-update recovery
 
-After both uninterrupted updates pass, repeat AVR 0.208 on one accessible pilot and interrupt power after programming has advanced beyond page zero but before completion. Keep the chassis accessible and the exact staged image available.
+After the uninterrupted update passes, run these same-version recovery cases on the Atmel-ICE pilot. Use separate updates so every injected failure has an independent journal and final readback:
+
+1. ESP self-restart after an early verified page, armed with `FLEXFOX_AVR_QUALIFICATION_ESP_RESTART_PAGE` and `ARM-ESP-RESTART`.
+2. Atmel-ICE AVR reset after a middle verified page, armed with `FLEXFOX_AVR_QUALIFICATION_AVR_RESET_PAGE` and `ARM-AVR-RESET`; the host must observe the exact pause, execute and record the reset, release the pause, and require autonomous replay.
+3. A real removal of unit power after programming is known to have advanced beyond page zero but before reset-page commit. This is the only case that cannot be simulated by software or Atmel-ICE and requires the operator to remove and restore power.
+4. If the first three pass, one final uninterrupted same-version update with exact readback establishes the bench disposition.
 
 Pass criteria:
 
 - RF remains safe throughout;
-- after power and WiFi return, BL0.2 and ESP recovery state resume without UPDI intervention or restaging;
-- progress continues from a safe recoverable state;
-- the complete image passes AVR-side page readback and final CRC;
-- AVR 0.208 boots and reports through ESP 2.17;
+- after restart/power and WiFi return, BL0.3 and ESP recovery state resume without UPDI programming or restaging;
+- protocol 2 deliberately starts a new session and replays every non-reset page rather than trusting volatile bootloader progress;
+- the complete image passes bootloader-owned page readback, product-trailer validation, payload CRC, and full-image CRC before reset-page commit;
+- AVR 0.208 boots and reports through ESP 2.18;
 - the staged file is removed only after the reported version matches;
 - a subsequent power cycle boots normally with fast red and no RF output.
 
@@ -171,7 +180,7 @@ Do not count a lost browser connection as either failure or success. Use `/avr-u
 
 ## Two-unit functional run
 
-After both units report `SW_VERSIONS,2.17,0.208`:
+After both units report `SW_VERSIONS,2.18,0.208`:
 
 1. Assign different valid roles and frequencies so transmissions can be distinguished on the dummy loads or monitor receiver.
 2. Clone or install the same short future Classic event on both units and preserve their distinct `.me` assignments.
@@ -192,7 +201,7 @@ Before removing either unit from the bench:
 - restore each unit's own callsign, master state, frequency, power, and role assignment;
 - leave Unit A's intended event installed with a completed finish time, not its exact original future schedule;
 - apply Unit B's separately recorded disposition without copying Unit A's files;
-- confirm `SW_VERSIONS,2.17,0.208`, advancing time, normal temperature/battery telemetry, RF off, and fast red after a final power cycle;
+- confirm `SW_VERSIONS,2.18,0.208`, advancing time, normal temperature/battery telemetry, RF off, and fast red after a final power cycle;
 - preserve the per-unit pre-state, updater output, interruption point, final file hashes, and pass/fail results with this record.
 
 ## Release boundary

@@ -4,15 +4,25 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  createFlexFoxAvrUpdateImage,
+  FLEXFOX_AVR_APP_START,
+  FLEXFOX_AVR_FLASH_SIZE,
+  FLEXFOX_AVR_IMAGE_FORMAT,
+  FLEXFOX_AVR_IMAGE_FORMAT_VERSION,
+  FLEXFOX_AVR_PAGE_SIZE,
+  flexFoxAvrCrc32,
+} from "./lib/flexfox-avr-update-image.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const tmpRoot = join(repoRoot, "Software", "AVR128DA48", "tmp");
 const bootHex = join(tmpRoot, "bootloader-release", "FlexFox80Bootloader.hex");
+const bootBuildEvidencePath = join(tmpRoot, "bootloader-release", "build-evidence.json");
 const appHex = join(tmpRoot, "avr-release-relocated", "FlexFox80.hex");
 const outputRoot = join(tmpRoot, "avr-boot-chain");
-const appStart = 0x4000;
-const pageSize = 512;
-const flashSize = 131072;
+const appStart = FLEXFOX_AVR_APP_START;
+const pageSize = FLEXFOX_AVR_PAGE_SIZE;
+const flashSize = FLEXFOX_AVR_FLASH_SIZE;
 const avrDefinitions = readFileSync(join(repoRoot, "Software", "AVR128DA48", "FlexFox80", "defs.h"), "utf8");
 const espDefinitions = readFileSync(join(repoRoot, "Software", "Huzzah", "ARDF_Transmitter", "esp8266.h"), "utf8");
 const bootloaderConfig = readFileSync(join(repoRoot, "Software", "AVR128DA48", "bootloader", "include", "bootloader_config.h"), "utf8");
@@ -85,8 +95,15 @@ function encodeHex(memory) {
   return `${lines.join("\n")}\n`;
 }
 
-for (const path of [bootHex, appHex]) if (!existsSync(path)) fail(`missing ${path}; run just avr-boot-chain-build`);
+for (const path of [bootHex, bootBuildEvidencePath, appHex]) {
+  if (!existsSync(path)) fail(`missing ${path}; run just avr-boot-chain-build`);
+}
 if (!applicationVersion || !minimumEspVersion || !bootloaderVersion) fail("unable to read release versions from firmware sources");
+const bootBuildEvidence = JSON.parse(readFileSync(bootBuildEvidencePath, "utf8"));
+if (![9600, 19200, 38400, 57600, 115200].includes(bootBuildEvidence.bootloaderBaud) ||
+    bootBuildEvidence.applicationStart !== appStart) {
+  fail("bootloader build evidence has unsupported UART or application geometry");
+}
 const boot = parseHex(bootHex);
 const app = parseHex(appHex);
 if ([...boot.keys()].some((address) => address >= appStart)) fail("bootloader overlaps application section");
@@ -101,16 +118,16 @@ for (const [address, value] of app) {
 
 const maximumAppAddress = Math.max(...app.keys());
 const appLength = Math.ceil((maximumAppAddress - appStart + 1) / pageSize) * pageSize;
-const appBinary = Buffer.alloc(appLength, 0xff);
-for (const [address, value] of app) appBinary[address - appStart] = value;
-const crc32Table = Array.from({ length: 256 }, (_, value) => {
-  let crc = value;
-  for (let bit = 0; bit < 8; bit++) crc = (crc & 1) ? (0xedb88320 ^ (crc >>> 1)) : (crc >>> 1);
-  return crc >>> 0;
-});
-let crc32 = 0xffffffff;
-for (const byte of appBinary) crc32 = crc32Table[(crc32 ^ byte) & 0xff] ^ (crc32 >>> 8);
-crc32 = (crc32 ^ 0xffffffff) >>> 0;
+const appPayload = Buffer.alloc(appLength, 0xff);
+for (const [address, value] of app) appPayload[address - appStart] = value;
+const payloadCrc32 = flexFoxAvrCrc32(appPayload);
+const appBinary = createFlexFoxAvrUpdateImage(appPayload, applicationVersion);
+const trailer = appBinary.subarray(appPayload.length);
+const crc32 = flexFoxAvrCrc32(appBinary);
+
+for (let index = 0; index < trailer.length; index++) {
+  combined.set(appStart + appPayload.length + index, trailer[index]);
+}
 
 rmSync(outputRoot, { recursive: true, force: true });
 mkdirSync(outputRoot, { recursive: true });
@@ -119,10 +136,12 @@ const initialName = `FlexFox80-AVR-First-Install-${applicationVersion}.hex`;
 writeFileSync(join(outputRoot, updateName), appBinary);
 writeFileSync(join(outputRoot, initialName), encodeHex(combined));
 const manifest = {
-  format: "flexfox-avr-update-v1", product: "FlexFox80", applicationVersion,
-  bootloaderVersion, protocolVersion: 1, target: "avr128da48",
+  format: FLEXFOX_AVR_IMAGE_FORMAT, product: "FlexFox80", applicationVersion,
+  bootloaderVersion, protocolVersion: 2, bootloaderBaud: bootBuildEvidence.bootloaderBaud, target: "avr128da48",
   minimumEspVersion,
-  applicationStart: appStart, pageSize, flashSize, imageBytes: appBinary.length,
+  applicationStart: appStart, pageSize, flashSize, imageFormatVersion: FLEXFOX_AVR_IMAGE_FORMAT_VERSION,
+  applicationPayloadBytes: appPayload.length, applicationPayloadCrc32: `0x${payloadCrc32.toString(16).padStart(8, "0")}`,
+  trailerBytes: trailer.length, imageBytes: appBinary.length,
   imageCrc32: `0x${crc32.toString(16).padStart(8, "0")}`,
   imageSha256: createHash("sha256").update(appBinary).digest("hex"),
   updateFile: updateName, initialInstallFile: initialName,

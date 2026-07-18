@@ -30,16 +30,19 @@
 
 #include <Arduino.h>
 
+#include "avr_update_contract.h"
+
 #define AVR_UPDATE_IMAGE_PATH "/avr-update.bin"
 #define AVR_UPDATE_STAGING_PATH "/avr-update.bin.staging"
 #define AVR_UPDATE_STATE_A_PATH "/avr-update.state.a"
 #define AVR_UPDATE_STATE_B_PATH "/avr-update.state.b"
 #define AVR_UPDATE_STATE_TEMP_PATH "/avr-update.state.tmp"
 #define AVR_UPDATE_DIAGNOSTIC_PATH "/avr-update.diag"
+#define AVR_UPDATE_JOURNAL_PATH "/avr-update.log"
 #define AVR_UPDATE_APP_START 0x4000UL
 #define AVR_UPDATE_PAGE_SIZE 512U
 #define AVR_UPDATE_FLASH_SIZE 131072UL
-#define AVR_UPDATE_BAUD 9600UL
+#define AVR_UPDATE_BAUD 38400UL
 #define AVR_UPDATE_MAX_IMAGE_BYTES (AVR_UPDATE_FLASH_SIZE - AVR_UPDATE_APP_START)
 #define AVR_UPDATE_FS_RESERVE_BLOCKS 4U
 
@@ -50,7 +53,8 @@ enum AvrUpdatePhase : uint8_t
   AVR_UPDATE_ENTERING_BOOTLOADER = 2,
   AVR_UPDATE_PROGRAMMING = 3,
   AVR_UPDATE_VERIFYING_APPLICATION = 4,
-  AVR_UPDATE_COMPLETE = 5
+  AVR_UPDATE_COMPLETE = 5,
+  AVR_UPDATE_RECOVERY_REQUIRED = 6
 };
 
 struct AvrUpdateState
@@ -79,5 +83,6 @@ bool avrUpdateResidentBootloaderPresent(void);
 String avrUpdateStatusJson(const String& deviceSsid);
 void avrUpdateResumeIfRequired(bool bootloaderAlreadyReady = false);
 bool avrUpdateObserveApplicationVersion(const String& version);
+bool avrUpdateArmQualificationEspRestart(uint16_t pageIndex, String *error);
 
 #endif
