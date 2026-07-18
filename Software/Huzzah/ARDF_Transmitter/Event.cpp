@@ -193,6 +193,16 @@ bool Event::isNotDisabledEvent(unsigned long currentEpoch)
 }
 
 
+bool Event::isExplicitlyDisabledEvent(void)
+{
+  unsigned long startEpoch = convertTimeStringToEpoch(this->eventData->event_start_date_time);
+  unsigned long finishEpoch = convertTimeStringToEpoch(this->eventData->event_finish_date_time);
+
+  /* Equal, valid timestamps are the cross-processor disabled-event contract. */
+  return startEpoch && (startEpoch == finishEpoch);
+}
+
+
 String Event::getTxDescriptiveName(String role_tx)          /* role_tx = "r:t" */
 {
   String theName = "";

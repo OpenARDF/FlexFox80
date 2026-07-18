@@ -90,6 +90,12 @@ static inline bool eventScheduledAt(
 	return (position == EVENT_SCHEDULE_FUTURE) || (position == EVENT_SCHEDULE_ACTIVE);
 }
 
+/* Equal, nonzero epochs are the persisted representation of a disabled event. */
+static inline bool eventEpochsExplicitlyDisabled(uint32_t start, uint32_t finish)
+{
+	return start && (start == finish);
+}
+
 /*
  * Operator indications care whether the stored schedule can run without a new
  * action, not merely whether its time window is still current. A suspended

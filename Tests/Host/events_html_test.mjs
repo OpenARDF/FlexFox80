@@ -192,11 +192,13 @@ assert.ok(!source.includes("Date.getTime()"), "date fallback must call getTime o
 assert.match(html, /<html lang="en">/);
 assert.match(html, /<meta charset="utf-8">/);
 assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1">/);
-assert.match(html, /events\.html Version: 0\.5\.7 - 18 Jul 2026/);
+assert.match(html, /events\.html Version: 0\.5\.8 - 18 Jul 2026/);
 assert.match(html, /onpointerdown="clockSyncPressStart\(event\);"/);
 assert.match(html, /Long press Sync to toggle automatic synchronization\./);
 assert.match(html, /Transmitter assignment \(\.me\) files are always preserved\./);
 assert.ok(!source.includes('btn.id = "runButton"'), "event selection buttons must not reuse an id");
+assert.ok(!source.includes('value = "Enable"'), "selected events must always retain the Apply action");
+assert.ok(!source.includes("enableStartFinishTimes"), "stale times must be repaired by their pickers");
 assert.equal(
   [...source.matchAll(/setAttribute\("id", "datetimeFinishCell"\)/g)].length,
   1,
@@ -526,6 +528,84 @@ console.log("PASS events.html JavaScript and critical HTML syntax parse");
   assert.doesNotThrow(() => lastTimerWithDelay(page.timeouts, 750).callback());
   assert.ok(sent.some((message) => /^FINISH_TIME,\d{4}-\d{2}-\d{2}T/.test(message)));
   console.log("PASS cleared or invalid datetime fields fall back without throwing");
+}
+
+{
+  const page = createPage();
+  const sent = [];
+  const start = page.addElement("datetimeStart");
+  const finish = page.addElement("datetimeFinish");
+  const futureStart = Date.now() + 3_600_000;
+  start.value = page.context.epochToLocalDateTimeFormat(futureStart);
+  finish.value = page.context.epochToLocalDateTimeFormat(futureStart - 1_800_000);
+  page.context.sendToSocket = (message) => sent.push(message);
+
+  page.context.newFinishTime();
+  lastTimerWithDelay(page.timeouts, 750).callback();
+
+  assert.equal(finish.value, start.value, "finish before start must clamp to exact equality");
+  assert.equal(page.context.g_selectedEventFinish, new Date(start.value).getTime());
+  assert.ok(sent.some((message) => message.startsWith("FINISH_TIME,")));
+  assert.ok(!sent.some((message) => message.startsWith("START_TIME,")));
+  assert.equal(page.context.statusMessageText(start.value, finish.value), "Disabled");
+  console.log("PASS finish before start becomes the explicit equal-time disabled state");
+}
+
+{
+  const page = createPage();
+  const sent = [];
+  const start = page.addElement("datetimeStart");
+  const finish = page.addElement("datetimeFinish");
+  start.value = page.context.epochToLocalDateTimeFormat(Date.now() - 2_592_000_000);
+  finish.value = page.context.epochToLocalDateTimeFormat(Date.now() - 86_400_000);
+  page.context.sendToSocket = (message) => sent.push(message);
+
+  page.context.refreshPastTimeOnSelection("finish");
+  lastTimerWithDelay(page.timeouts, 750).callback();
+
+  assert.equal(start.value, finish.value);
+  assert.equal(page.context.g_selectedEventStart, page.context.g_selectedEventFinish);
+  assert.ok(new Date(start.value).getTime() >= Date.now() - 60_000);
+  assert.deepEqual(
+    sent.map((message) => message.split(",", 1)[0]),
+    ["START_TIME", "FINISH_TIME"],
+  );
+  assert.equal(page.context.statusMessageText(start.value, finish.value), "Disabled");
+  console.log("PASS selecting finish when both times are stale advances both to disabled now");
+}
+
+{
+  const page = createPage();
+  const sent = [];
+  const start = page.addElement("datetimeStart");
+  page.addElement("datetimeFinish").value = page.context.epochToLocalDateTimeFormat(Date.now() + 3_600_000);
+  start.value = page.context.epochToLocalDateTimeFormat(Date.now() - 2_592_000_000);
+  page.context.sendToSocket = (message) => sent.push(message);
+
+  page.context.refreshPastTimeOnSelection("start");
+  lastTimerWithDelay(page.timeouts, 750).callback();
+
+  assert.ok(new Date(start.value).getTime() >= Date.now() - 60_000);
+  assert.ok(sent.some((message) => message.startsWith("START_TIME,")));
+  console.log("PASS selecting a stale time picker advances it to the current minute");
+}
+
+{
+  const page = createPage();
+  const status = page.addElement("statusCell");
+  const button = page.addElement("activeRunButton");
+  page.context.g_selectedEvent = "Disabled Event";
+  page.context.g_selectedEventStart = 2_000_000_000_000;
+  page.context.g_selectedEventFinish = 2_000_000_000_000;
+  page.context.g_event_changes_saved = true;
+
+  page.context.updateTextFormatting();
+
+  assert.equal(status.textContent, "Disabled");
+  assert.match(status.attributes.get("style"), /font-weight:bold; color:red/);
+  assert.equal(button.value, "Apply");
+  assert.equal(button.disabled, false);
+  console.log("PASS disabled events remain applicable and are called out in bold red");
 }
 
 {

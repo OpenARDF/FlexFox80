@@ -2241,15 +2241,17 @@ bool __attribute__((optimize("O0"))) eventEnabled()
 	int32_t dif;
 
 	now = time(null);
-	dif = timeDif(now, g_event_finish_epoch);
 	g_go_to_sleep_now = false;
-
-	if(dif >= 0) /* Event has already finished */
+	if(!eventScheduledAt(
+		now,
+		g_event_start_epoch,
+		g_event_finish_epoch,
+		MINIMUM_VALID_EPOCH))
 	{
 		g_sleepType = SLEEP_FOREVER;
 		setWakeTimeFromForeground(MAX_TIME);
 		g_wifi_enable_delay = 2;
-		return(false); /* completed events are never enabled */
+		return(false);
 	}
 	
 	powerToTransmitter(ON);
@@ -2353,9 +2355,21 @@ EC activateEventUsingCurrentSettings(SC* statusCode)
 		return( ERROR_CODE_EVENT_MISSING_START_TIME);
 	}
 
-	if(g_event_start_epoch >= g_event_finish_epoch)   /* Finish must be later than start */
+	if(g_event_start_epoch > g_event_finish_epoch)   /* A reversed window is malformed. */
 	{
 		return( ERROR_CODE_EVENT_NOT_CONFIGURED);
+	}
+
+	if(eventEpochsExplicitlyDisabled(g_event_start_epoch, g_event_finish_epoch))
+	{
+		/* Equal epochs are a valid request to persistently disable the event. */
+		suspendEvent();
+		g_waiting_for_next_event = false;
+		if(statusCode)
+		{
+			*statusCode = STATUS_CODE_NO_EVENT_TO_RUN;
+		}
+		return( ERROR_CODE_NO_ERROR);
 	}
 
 	if(!g_on_air_seconds)

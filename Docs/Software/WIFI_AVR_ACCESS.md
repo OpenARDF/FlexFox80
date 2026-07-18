@@ -53,16 +53,16 @@ The ESP translates AVR replies back to WebSocket messages including `TEMP`, `BAT
 
 ## Wireless AVR bootloading
 
-### Implementation status — ESP 2.15 / AVR 0.206 / bootloader BL0.1
+### Implementation status — ESP 2.16 / AVR 0.207 / bootloader BL0.1
 
-The first complete implementation is source-, build-, and pilot-hardware-qualified, but not yet fleet-qualified. AVR 0.206 retains the 0.203 scheduled-start sleep correction and 0.204 relocated bootloader handoff, capability query, and guarded update entry. It also restores the operator LED contract after a runtime suspend: slow red means an event will run without further action, while fast red means no event can run until the user acts. It reuses SignalSlinger's tested AVR DA page protocol and reset-vector-last recovery model, adapted for the FlexFox power topology:
+The bootloader transport is source-, build-, and pilot-hardware-qualified, but the ESP 2.16 / AVR 0.207 pair is source- and build-qualified only and is not yet fleet-qualified. AVR 0.207 retains the 0.203 scheduled-start sleep correction and 0.204 relocated bootloader handoff, capability query, and guarded update entry. It restores the operator LED contract after a runtime suspend and makes equal start/finish epochs a valid persistent disabled state: slow red means an event will run without further action, while fast red means no event can run until the user acts. It reuses SignalSlinger's tested AVR DA page protocol and reset-vector-last recovery model, adapted for the FlexFox power topology:
 
-ESP 2.15 retains the browser `CLEAR` correction introduced in 2.14, reusing the AVR's established `$KEY,^;` operator-stop path. The prior `$GO,0;` mapping changed the reported status to ready-for-data but did not suspend an event already running. `CLEAR` now disables RF immediately and keeps WiFi awake. This runtime stop does not by itself rewrite the AVR's EEPROM finish epoch; allow the original finish to pass or deliberately install a completed schedule before relying on a power cycle. The guarded `$UPD,START,SSID;` AVR-update handoff remains stronger: it independently suspends RF, stores the current epoch as the completed finish, verifies that EEPROM write, and only then resets into the resident bootloader.
+ESP 2.16 retains the browser `CLEAR` correction introduced in 2.14 and adds an explicit persistent-disable path. In `events.html`, Apply sends equal start/finish epochs through the normal full event transaction; AVR 0.207 saves both values, stops RF, and reports no event to run. The guarded `$UPD,START,SSID;` AVR-update handoff remains stronger for firmware work: it independently suspends RF, stores the current epoch as the completed finish, verifies that EEPROM write, and only then resets into the resident bootloader.
 
 - a 16 KiB resident Boot section occupies `0x0000–0x3FFF` (`BOOTSIZE=0x20`);
 - the FlexFox application is linked at `0x4000` (`CODESIZE=0x00`);
 - the bootloader reasserts AVR PA5 (`WIFI_ENABLE`) and releases PA6 (`WIFI_RESET`) immediately after reset;
-- ESP 2.12 stages a page-aligned application image and dual-slot recovery state in LittleFS before requesting bootloader entry;
+- ESP 2.16 stages a page-aligned application image and dual-slot recovery state in LittleFS before requesting bootloader entry;
 - the ESP accepts update start only after the operator enters the final four characters of the unit's MAC-derived `Tx_...` device SSID;
 - the AVR application accepts the internal `$UPD,START,SSID;` handoff only while the event, manual transmission, and RF output are idle;
 - raw WebSocket `PASS` forwarding cannot send `$UPD` frames and bypass the dedicated update route;
@@ -79,7 +79,7 @@ AVR_DFP_ROOT=Software/AVR128DA48/tmp/AVR-Dx_DFP/1.9.103 \
 just avr-boot-chain-build
 ```
 
-The ignored output directory `Software/AVR128DA48/tmp/avr-boot-chain/` contains the combined first-install HEX, the page-aligned wireless update BIN, and release metadata with hashes, geometry, versions, and required fuses. The current exact build produces a 2,512-byte bootloader inside the 16,384-byte reservation and a 43,008-byte AVR 0.206 update image; recalculate these values from each release build.
+The ignored output directory `Software/AVR128DA48/tmp/avr-boot-chain/` contains the combined first-install HEX, the page-aligned wireless update BIN, and release metadata with hashes, geometry, versions, and required fuses. The current exact build produces a 2,512-byte bootloader inside the 16,384-byte reservation and a 43,008-byte AVR 0.207 update image; recalculate these values from each release build.
 
 One-time UPDI provisioning is deliberately destructive and double-gated. It captures EEPROM and fuses, erases and verifies the combined image, restores the unit-specific EEPROM with only newly reserved byte 511 forced to erased `0xFF`, writes only `CODESIZE` and `BOOTSIZE`, and independently re-reads the target:
 
@@ -93,7 +93,7 @@ just avr-provision-boot-chain
 After the matching ESP and boot chain are installed on a qualified pilot, a later update can use the `/avr-update` page or the guarded host workflow:
 
 ```text
-FLEXFOX_AVR_UPDATE_CONFIRM=UPDATE-AVR-0.206 just wifi-avr-update
+FLEXFOX_AVR_UPDATE_CONFIRM=UPDATE-AVR-0.207 just wifi-avr-update
 ```
 
 The interactive workflow reports the unique device SSID and prompts for its final four characters. An explicitly unattended invocation must supply both `FLEXFOX_EXPECTED_DEVICE_SSID=Tx_<eight-hex-characters>` and `FLEXFOX_AVR_SSID_SUFFIX=<last-four>`. The exact expected SSID is checked before staging, preventing a valid image from being placed on the wrong unit when several FlexFoxes share the same default IP address. `just wifi-avr-preflight` reports the connected device identity and update state without staging an image.
@@ -113,7 +113,7 @@ The connected pilot completed both directions of a real wireless application upd
 
 This establishes one successful end-to-end update, downgrade, and genuine post-erase interruption recovery. It does not replace repeated power-loss testing at several page positions, normal WiFi wake/power-down regression, ordinary event/RF regression, or a second pilot before fleet rollout.
 
-The exact ESP 2.15 / AVR 0.206 two-unit procedure, candidate hashes, per-unit preservation rules, LED checks, interruption gate, and final disposition are prepared in [WiFi AVR two-unit qualification](Evidence/WIFI_AVR_TWO_UNIT_QUALIFICATION_2026-07-18.md). Record the hardware observations there rather than treating a successful updater message as complete qualification.
+The exact ESP 2.16 / AVR 0.207 two-unit procedure, candidate hashes, per-unit preservation rules, LED checks, interruption gate, disabled-event Apply check, and final disposition are prepared in [WiFi AVR two-unit qualification](Evidence/WIFI_AVR_TWO_UNIT_QUALIFICATION_2026-07-18.md). Record the hardware observations there rather than treating a successful updater message as complete qualification.
 
 BL0.1 intentionally uses integrity checks and deliberate operator authorization rather than cryptographic firmware signatures. The host verifies the release SHA-256, the ESP verifies the complete uploaded CRC-32, and every bootloader frame and programmed page is CRC-checked. Entry requires the final four characters of the unique MAC-derived ESP SSID, but that suffix is an operator-error interlock rather than a secret: it is readily visible to the person connected to the unit. This matches the deployment model in which the ESP is normally reachable for only two minutes after power-up, has short range, and is used predominantly in rural locations.
 

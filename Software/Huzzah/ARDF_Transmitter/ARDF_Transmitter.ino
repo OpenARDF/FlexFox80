@@ -5584,8 +5584,10 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
 
               saveDefaultsFile();
 
-              if (g_activeEvent->isNotDisabledEvent(g_timeOfDayFromTx))
+              if (g_activeEvent->isNotDisabledEvent(g_timeOfDayFromTx) ||
+                  g_activeEvent->isExplicitlyDisabledEvent())
               {
+                /* Apply equal start/finish too, so an explicit disable reaches AVR EEPROM. */
                 g_ESP_Comm_State = TX_RECD_START_EVENT_REQUEST;
               }
               else /* If event will never run then reply with an error message */

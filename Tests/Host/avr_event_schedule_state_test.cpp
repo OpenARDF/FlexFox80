@@ -92,6 +92,15 @@ void schedule_predicates_share_the_same_position()
 	expect(
 		!eventScheduledAt(finishEpoch, startEpoch, finishEpoch, minimumValidEpoch),
 		"scheduled_predicate_rejects_finish");
+	expect(
+		eventEpochsExplicitlyDisabled(startEpoch, startEpoch),
+		"equal_nonzero_epochs_are_explicitly_disabled");
+	expect(
+		!eventEpochsExplicitlyDisabled(0, 0),
+		"zero_epochs_are_not_an_explicit_disable");
+	expect(
+		!eventEpochsExplicitlyDisabled(startEpoch, finishEpoch),
+		"ordered_epochs_are_not_explicitly_disabled");
 }
 
 void operator_run_indication_requires_an_enabled_schedule()

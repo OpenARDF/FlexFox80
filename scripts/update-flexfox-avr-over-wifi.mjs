@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 
-import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createInterface } from "node:readline/promises";
+import {
+  crc32,
+  digest,
+  fetchWithTimeout,
+  multipartFileBody,
+} from "./lib/flexfox-http.mjs";
 import {
   normalizeMacDerivedDeviceSsid,
   unattendedUpdateNeedsExpectedSsid,
@@ -27,15 +32,6 @@ function fail(message) {
   process.exit(2);
 }
 
-function crc32(buffer) {
-  let crc = 0xffffffff;
-  for(const byte of buffer) {
-    crc ^= byte;
-    for(let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
 function versionAtLeast(actual, required) {
   const a = actual.split(".").map(Number);
   const b = required.split(".").map(Number);
@@ -43,16 +39,6 @@ function versionAtLeast(actual, required) {
     if((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) > (b[i] || 0);
   }
   return true;
-}
-
-async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(url, { ...options, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
-  }
 }
 
 if(!existsSync(manifestPath)) fail(`release manifest is missing: ${manifestPath}; run just avr-boot-chain-build`);
@@ -63,7 +49,7 @@ if(manifest.format !== "flexfox-avr-update-v1" || manifest.applicationStart !== 
 const imagePath = resolve(dirname(manifestPath), manifest.updateFile);
 if(!existsSync(imagePath)) fail(`update image is missing: ${imagePath}`);
 const image = readFileSync(imagePath);
-const actualSha256 = createHash("sha256").update(image).digest("hex");
+const actualSha256 = digest("sha256", image);
 const actualCrc32 = `0x${crc32(image).toString(16).padStart(8, "0")}`;
 if(image.length !== manifest.imageBytes || actualSha256 !== manifest.imageSha256 || actualCrc32 !== manifest.imageCrc32) {
   fail("update image does not match its release manifest");
@@ -105,11 +91,14 @@ if(dryRun) {
   process.exit(0);
 }
 
-const form = new FormData();
-form.append("firmware", new Blob([image], { type: "application/octet-stream" }), basename(imagePath));
+const multipart = multipartFileBody("firmware", basename(imagePath), image);
 const stageUrl = `${baseUrl}/avr-update?confirm=STAGE&size=${image.length}&crc32=${actualCrc32.slice(2)}&version=${encodeURIComponent(manifest.applicationVersion)}`;
 process.stdout.write("Staging and validating the complete image in ESP flash...\n");
-const stageResponse = await fetchWithTimeout(stageUrl, { method: "POST", body: form }, 120000);
+const stageResponse = await fetchWithTimeout(stageUrl, {
+  method: "POST",
+  headers: multipart.headers,
+  body: multipart.body,
+}, 120000);
 const stageText = await stageResponse.text();
 if(!stageResponse.ok) fail(`staging failed with HTTP ${stageResponse.status}: ${stageText}`);
 const stagedResponse = await fetchWithTimeout(`${baseUrl}/avr-update/status`, { cache: "no-store" });

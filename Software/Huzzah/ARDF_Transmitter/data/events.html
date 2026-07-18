@@ -457,17 +457,7 @@
             x = document.getElementById("statusreport");
             if (x != null) x.style.display = "none";
 
-            x = document.getElementById("activeRunButton");
-
-            if (x != null) {
-                if (x.value == "Enable") {
-                    enableStartFinishTimes();
-                    newStartTime();
-                    newFinishTime();
-                } else {
-                    executeEvent();
-                }
-            }
+            executeEvent();
         }
 
         function eventStopSelect(selection) {
@@ -620,6 +610,7 @@
                     i.setAttribute("id", "datetimeStart");
                     i.setAttribute("type", "datetime-local");
                     i.setAttribute("style", "font-family:verdana; font-size:15px; font-weight:bold; color:blue;");
+                    i.setAttribute("onfocus", "refreshPastTimeOnSelection('start');");
                     i.setAttribute("oninput", "newStartTime();");
                     i.setAttribute("value", epochToLocalDateTimeFormat(rowData.start));
                     console.log("Start time text =", i.value);
@@ -638,6 +629,7 @@
                     i.setAttribute("id", "datetimeFinish");
                     i.setAttribute("type", "datetime-local");
                     i.setAttribute("style", "font-family:verdana; font-size:15px; font-weight:bold; color:blue;");
+                    i.setAttribute("onfocus", "refreshPastTimeOnSelection('finish');");
                     i.setAttribute("oninput", "newFinishTime();");
                     i.setAttribute("value", epochToLocalDateTimeFormat(rowData.finish));
                     console.log("Finish time text =", i.value);
@@ -658,7 +650,7 @@
 
                 cellText = document.createTextNode(stat);
                 cell0.setAttribute("border", "1px solid black");
-                cell0.setAttribute("style", "font-family:verdana; font-size:15px; font-weight:bold; color:black;");
+                formatStatusCell(cell0, stat);
                 cell0.appendChild(cellText);
                 row.appendChild(cell0);
 
@@ -2133,44 +2125,17 @@
             }
         }
 
-        function enableStartFinishTimes() {
-            var dtsText = document.getElementById("datetimeStart");
+        function refreshPastTimeOnSelection(timeName) {
+            var isStart = (timeName == "start");
+            var picker = document.getElementById(isStart ? "datetimeStart" : "datetimeFinish");
+            if (!picker) return;
 
-            if (dtsText) {
-                var dtfText = document.getElementById("datetimeFinish");
-
-                if (dtfText) {
-                    var dts = dtsText.value;
-                    var dtf = dtfText.value;
-                    var now = new Date().getTime();
-                    now += 90000;
-                    now = now - (now % 60000);
-
-                    var locals = forceValueToLocalTime(dts);
-                    var localsEpoch = new Date(dts);
-                    localsEpoch = localsEpoch.getTime();
-
-                    var localf = forceValueToLocalTime(dtf);
-                    var localfEpoch = new Date(dtf);
-                    localfEpoch = localfEpoch.getTime();
-
-                    if (localsEpoch > now) {
-                        localfEpoch = localsEpoch + 36000000;
-                        var local = epochToLocalDateTimeFormat(localfEpoch);
-                        applyNewFinishTime(local);
-                    } else {
-                        var dif = 36000000;
-                        if (localfEpoch > localsEpoch) {
-                            dif = localfEpoch - localsEpoch;
-                        }
-
-                        localsEpoch = now;
-                        var local = epochToLocalDateTimeFormat(localsEpoch);
-                        applyNewStartTime(local);
-                        localfEpoch = localsEpoch + dif;
-                        local = epochToLocalDateTimeFormat(localfEpoch);
-                        applyNewFinishTime(local);
-                    }
+            var selectedEpoch = validateTimeStructure(picker.value) ? new Date(picker.value).getTime() : 0;
+            if (selectedEpoch < new Date().getTime()) {
+                if (isStart) {
+                    newStartTime();
+                } else {
+                    newFinishTime();
                 }
             }
         }
@@ -2207,8 +2172,8 @@
 
                     if (localEpoch < now) {
                         local = epochToLocalDateTimeFormat(now);
+                        localEpoch = new Date(local).getTime();
                         utc = localTimeToUTC(local, false);
-                        localEpoch = now;
                     } else {
                         utc = localTimeToUTC(local, false);
                     }
@@ -2297,50 +2262,57 @@
                 var msgText = "";
                 var now = new Date().getTime();
                 var localfEpoch;
+                var finishWasPast = false;
 
                 if (!validateTimeStructure(dtf)) {
                     localfEpoch = now;
                     localf = epochToLocalDateTimeFormat(localfEpoch);
+                    finishWasPast = true;
                 } else {
                     localf = forceValueToLocalTime(dtf);
                     localfEpoch = new Date(dtf).getTime();
+                    finishWasPast = (localfEpoch < now);
                 }
 
-                var utc;
-
-                if (now > localfEpoch) {
+                if (finishWasPast) {
                     localf = epochToLocalDateTimeFormat(now);
-                    utc = localTimeToUTC(localf, false);
-                } else {
-                    utc = localTimeToUTC(localf, false);
+                    localfEpoch = new Date(localf).getTime();
                 }
+
+                var dtsText = document.getElementById("datetimeStart");
+                var localsEpoch = now;
+                var startWasPast = true;
+                if (dtsText && validateTimeStructure(dtsText.value)) {
+                    localsEpoch = new Date(dtsText.value).getTime();
+                    startWasPast = (localsEpoch < now);
+                }
+
+                var updateStart = finishWasPast && startWasPast;
+                if (updateStart) {
+                    /* Touching either stale picker produces the same disabled state. */
+                    localf = epochToLocalDateTimeFormat(now);
+                    localfEpoch = new Date(localf).getTime();
+                } else if (localsEpoch > localfEpoch) {
+                    /* Equality is the deliberate disabled-event representation. */
+                    localf = epochToLocalDateTimeFormat(localsEpoch);
+                    localfEpoch = localsEpoch;
+                }
+
+                var utc = localTimeToUTC(localf, false);
 
                 g_finishtimeDateUpdateTimer = setTimeout(function() {
-                    applyNewFinishTime(localf);
-                    msgText = "FINISH_TIME," + utc;
-
-                    console.log(msgText);
-                    sendToSocket(msgText);
-
-                    var dtsText = document.getElementById("datetimeStart");
-                    var localsEpoch = now;
-                    if (dtsText) {
-                        var dts = dtsText.value;
-                        var locals;
-                        if (!validateTimeStructure(dts)) {
-                            locals = epochToLocalDateTimeFormat(localsEpoch);
-                        } else {
-                            locals = forceValueToLocalTime(dts);
-                            localsEpoch = new Date(dts).getTime();
-                        }
-                    }
-
-                    if (localsEpoch > localfEpoch) {
+                    if (updateStart) {
                         applyNewStartTime(localf);
                         msgText = "START_TIME," + utc;
                         console.log(msgText);
                         sendToSocket(msgText);
                     }
+
+                    applyNewFinishTime(localf);
+                    msgText = "FINISH_TIME," + utc;
+
+                    console.log(msgText);
+                    sendToSocket(msgText);
 
                 }, 750);
             }
@@ -2438,6 +2410,13 @@
             return statusMsg;
         }
 
+        function formatStatusCell(statusCell, statusText) {
+            if (!statusCell) return;
+
+            statusCell.setAttribute("style", "font-family:verdana; font-size:15px; font-weight:bold; color:" +
+                (statusText == "Disabled" ? "red" : "black") + ";");
+        }
+
 
         function updateTextFormatting() {
             var callsignText = document.getElementById("callText");
@@ -2459,27 +2438,21 @@
             if (g_selectedEvent) {
                 var stat = statusMessageText(g_selectedEventStart, g_selectedEventFinish);
                 var statusEl = document.getElementById("statusCell");
-                if (statusEl != null) statusEl.textContent = stat;
+                if (statusEl != null) {
+                    statusEl.textContent = stat;
+                    formatStatusCell(statusEl, stat);
+                }
 
                 var runButton = document.getElementById("activeRunButton");
 
                 if (runButton) {
-                    if (stat == "Disabled") {
-                        runButton.value = "Enable";
-                        runButton.disabled = false;
-                        runButton.style.backgroundColor = "orange";
+                    runButton.value = "Apply";
+                    if (!g_event_changes_saved) {
+                        runButton.disabled = true;
+                        runButton.style.backgroundColor = "gray";
                     } else {
-                        runButton.value = "Apply";
-                    }
-
-                    if (runButton.value == "Apply") {
-                        if (!g_event_changes_saved) {
-                            runButton.disabled = true;
-                            runButton.style.backgroundColor = "gray";
-                        } else {
-                            runButton.disabled = false;
-                            runButton.style.backgroundColor = "#4CAF50";
-                        }
+                        runButton.disabled = false;
+                        runButton.style.backgroundColor = "#4CAF50";
                     }
                 }
             }
@@ -2781,7 +2754,7 @@
         <h1 id="mainHeading" style="font-family:verdana; font-size:30px; color:Black; text-align:center;">Transmitter Settings</h1>
         <p id="wifiVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
         <p id="ATMEGAVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
-        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.5.7 - 18 Jul 2026</p>
+        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.5.8 - 18 Jul 2026</p>
 
         <div>
             <table>

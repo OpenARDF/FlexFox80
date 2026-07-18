@@ -209,6 +209,7 @@ class Event {
     static bool extractLineData(String s, EventLineData* result);
     static bool isSoonerEvent(EventFileRef a, EventFileRef b, unsigned long currentEpoch);
     bool isNotDisabledEvent(unsigned long currentEpoch);
+    bool isExplicitlyDisabledEvent(void);
 
   private:
 

@@ -273,8 +273,8 @@ const avrFirmwareUpdate = readFileSync(avrFirmwareUpdatePath, "utf8");
 const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8");
 const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
-const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.206";
-const expectedEspVersion = "2.15";
+const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.207";
+const expectedEspVersion = "2.16";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -376,7 +376,9 @@ if (
   !wifiAvrUpdater.includes("FLEXFOX_EXPECTED_DEVICE_SSID") ||
   !wifiAvrUpdater.includes("preflightDeviceSsid") ||
   !wifiAvrUpdater.includes("stagedDeviceSsid !== preflightDeviceSsid") ||
-  !wifiAvrUpdater.includes("no image was staged")
+  !wifiAvrUpdater.includes("no image was staged") ||
+  !wifiAvrUpdater.includes("multipartFileBody") ||
+  wifiAvrUpdater.includes("new FormData")
 ) {
   process.stderr.write(
     "Firmware contract check failed: wireless AVR updates must retain unique-SSID authorization, raw-pass blocking, dual-slot recovery, reset-vector-last programming, and installed-version verification\n",
@@ -502,6 +504,8 @@ if (
   eventTransactionFunction.includes("g_LBOutputBuff->put") ||
   eventTransactionFunction.includes("LB_MESSAGE_PERM") ||
   espMain.includes("g_LBOutputBuff->put(LB_MESSAGE_PERM)") ||
+  !espMain.includes("g_activeEvent->isExplicitlyDisabledEvent()") ||
+  !espEvent.includes("bool Event::isExplicitlyDisabledEvent(void)") ||
   !linkbusCommandTransaction.includes("LINKBUS_COMMAND_LOCAL_DEADLINE_MILLIS 12000UL") ||
   !linkbusCommandTransaction.includes("LINKBUS_COMMAND_NACKED") ||
   !linkbusCommandTransaction.includes("!ackPending && ackTimeoutOccurred")
@@ -1321,6 +1325,21 @@ if (
 }
 
 process.stdout.write("PASS foreground on-air state stores are atomic to ISR owners\n");
+
+if (
+  !eventEnabledBody?.[1].includes("eventScheduledAt(") ||
+  !activateEventBody?.[1].includes("g_event_start_epoch > g_event_finish_epoch") ||
+  !activateEventBody?.[1].includes("eventEpochsExplicitlyDisabled(") ||
+  !activateEventBody?.[1].includes("STATUS_CODE_NO_EVENT_TO_RUN") ||
+  !activateEventBody?.[1].includes("suspendEvent();")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: equal event epochs are not retained as a safe explicit disabled state\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS equal event epochs persist as a safe explicit disabled state\n");
 
 if (!/if\s*\(\s*g_report_seconds\s*&&\s*!g_clone_quiet\s*\)/.test(avrMain)) {
   process.stderr.write(
