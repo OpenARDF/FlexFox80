@@ -1,6 +1,6 @@
 # WiFi AVR Two-Unit Qualification — 2026-07-18
 
-**Status:** ESP 2.16 / AVR 0.207 candidate built; hardware results pending
+**Status:** Unit A wireless installation and post-power-cycle safety passed; file-preservation, UI, RF-event, interruption, and Unit B gates remain
 
 ## Objective
 
@@ -41,12 +41,24 @@ Do not proceed from a handwritten chassis label alone. Read each identity from t
 | AVR serial | Pending retained provisioning record | Pending readback |
 | Initial `SW_VERSIONS` | `2.15,0.204` after precursor ESP installation | Pending readback |
 | Initial `MASTER` state | `0` | Pending readback |
-| Dummy load confirmed | Pending operator observation | Pending operator observation |
+| Dummy load confirmed | Yes; operator confirmed before both firmware writes | Pending operator observation |
 | Event files and `.me` assignments captured | Pending | Pending |
 | AVR EEPROM and fuses captured if provisioning | Existing record; verify before reuse | Pending if provisioning |
 | Boot chain already present | Yes | Pending probe |
 
 Unit A has a special final-state requirement. Do not reinstall its exact original future event. Keep its intended event file installed with a completed finish time so a later power cycle cannot restart the test event. Unit B's captured event files, assignments, master state, frequency, power, and callsign remain unit-specific; never restore them from Unit A's backup.
+
+### Unit A installation result
+
+Unit A was identified live as `Tx_7C2D6FD3`, ESP MAC `86:A8:24:2F:96:5B`, `MASTER,0`, initially reporting `SW_VERSIONS,2.15,0.204`, 11.5 V battery, and 31-33 C temperature. The operator confirmed the dummy load and confirmed RF had stopped after an explicit browser `CLEAR` before either firmware write.
+
+The protected ESP updater accepted the frozen 557,984-byte sketch, returned HTTP 200, rebooted into ESP 2.16, proved the uptime reset, and continued to report LittleFS protection. Pre-update hashes of the unit's `.event` and `.me` files were not captured, so this run does not satisfy the file-preservation gate even though no filesystem update was requested.
+
+The AVR preflight identified the same complete SSID and staged no image. The subsequent identity-locked AVR transaction validated the 43,008-byte image with CRC32 `0x34836fc8`, left 536 KiB free while staged, and visibly progressed through red/green AVR page activity. The original host verifier expired after ten minutes while programming was still active; the operator did not interrupt power. The device subsequently reported `phase=complete`, `nextPage=84`, `pageCount=84`, `staged=false`, target version `0.207`, and 598,016 LittleFS bytes free. This was a host false negative, not a device failure. The host default verification window is therefore 30 minutes for subsequent qualification runs, and persisted programming diagnostics are surfaced immediately when HTTP service returns.
+
+An independent WebSocket probe then reported `SW_VERSIONS,2.16,0.207`, the same SSID and MAC, advancing clock reports, 11.5 V battery, 33 C temperature, and live AVR communication. After leaving `radio.html`, Unit A was physically power-cycled with no browser `CLEAR`; RF remained off and the AVR returned to fast red. A second independent probe again reported `SW_VERSIONS,2.16,0.207`, and `/avr-update/status` still reported complete, 84/84, and no staged image.
+
+This passes Unit A installation, installed-version verification, staged-image cleanup, and immediate post-power-cycle RF/LED safety. It does not yet pass the event-file hash gate, equal-time `events.html` Apply sequence, independent EEPROM equality readback, ordinary Classic/Sprint RF operation, controlled interruption test, final file disposition, or any Unit B gate.
 
 ## Pre-test gates
 

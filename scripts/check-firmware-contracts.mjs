@@ -378,6 +378,9 @@ if (
   !wifiAvrUpdater.includes("stagedDeviceSsid !== preflightDeviceSsid") ||
   !wifiAvrUpdater.includes("no image was staged") ||
   !wifiAvrUpdater.includes("multipartFileBody") ||
+  !wifiAvrUpdater.includes("defaultVerifyTimeoutMs = 30 * 60 * 1000") ||
+  !wifiAvrUpdater.includes("FLEXFOX_AVR_VERIFY_TIMEOUT_MS must be an integer") ||
+  !wifiAvrUpdater.includes("status.diagnostic") ||
   wifiAvrUpdater.includes("new FormData")
 ) {
   process.stderr.write(

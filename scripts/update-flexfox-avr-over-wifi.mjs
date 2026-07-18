@@ -26,10 +26,18 @@ const manifestPath = resolve(process.env.FLEXFOX_AVR_MANIFEST || join(
 const dryRun = process.env.FLEXFOX_AVR_UPDATE_DRY_RUN === "1";
 const suppliedExpectedDeviceSsid = (process.env.FLEXFOX_EXPECTED_DEVICE_SSID || "").trim();
 const expectedDeviceSsid = normalizeMacDerivedDeviceSsid(suppliedExpectedDeviceSsid);
+const defaultVerifyTimeoutMs = 30 * 60 * 1000;
 
 function fail(message) {
   process.stderr.write(`FlexFox AVR WiFi update: ${message}\n`);
   process.exit(2);
+}
+
+const verifyTimeoutMs = Number(
+  process.env.FLEXFOX_AVR_VERIFY_TIMEOUT_MS || defaultVerifyTimeoutMs,
+);
+if(!Number.isInteger(verifyTimeoutMs) || verifyTimeoutMs < 60000 || verifyTimeoutMs > 3600000) {
+  fail("FLEXFOX_AVR_VERIFY_TIMEOUT_MS must be an integer from 60000 through 3600000");
 }
 
 function versionAtLeast(actual, required) {
@@ -146,7 +154,8 @@ try {
   process.stdout.write("The ESP powered down before the HTTP response completed; continuing recovery polling.\n");
 }
 
-const deadline = Date.now() + Number(process.env.FLEXFOX_AVR_VERIFY_TIMEOUT_MS || 600000);
+process.stdout.write(`Waiting up to ${Math.ceil(verifyTimeoutMs / 60000)} minutes for programming and application verification...\n`);
+const deadline = Date.now() + verifyTimeoutMs;
 while(Date.now() < deadline) {
   await new Promise((resolvePromise) => setTimeout(resolvePromise, 5000));
   try {
@@ -158,10 +167,13 @@ while(Date.now() < deadline) {
       process.stdout.write(`PASS: AVR ${manifest.applicationVersion} programmed, booted, and reported its installed version.\n`);
       process.exit(0);
     }
+    if(status.diagnostic) {
+      fail(`AVR programming stopped at page ${status.nextPage}/${status.pageCount}: ${status.diagnostic}; keep power connected and retry only after inspection`);
+    }
     if(status.phase === "staged") fail("AVR rejected bootloader entry; verify that the event and manual transmitter are idle");
   } catch(error) {
     /* Power cycling and AP reassociation are expected during the transaction. */
   }
 }
 
-fail("verification timed out; keep power connected and reconnect to the FlexFox AP to inspect /avr-update/status");
+fail(`verification window expired after ${Math.ceil(verifyTimeoutMs / 60000)} minutes; programming may still be active, so keep power connected and reconnect to inspect /avr-update/status`);

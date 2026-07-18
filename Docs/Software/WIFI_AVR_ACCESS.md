@@ -98,6 +98,8 @@ FLEXFOX_AVR_UPDATE_CONFIRM=UPDATE-AVR-0.207 just wifi-avr-update
 
 The interactive workflow reports the unique device SSID and prompts for its final four characters. An explicitly unattended invocation must supply both `FLEXFOX_EXPECTED_DEVICE_SSID=Tx_<eight-hex-characters>` and `FLEXFOX_AVR_SSID_SUFFIX=<last-four>`. The exact expected SSID is checked before staging, preventing a valid image from being placed on the wrong unit when several FlexFoxes share the same default IP address. `just wifi-avr-preflight` reports the connected device identity and update state without staging an image.
 
+The host allows 30 minutes by default for all 84 pages, reset-vector finalization, ESP restart, and application-version confirmation. The ESP intentionally stops HTTP service while it owns the UART and programs the AVR, so status requests may receive no response during otherwise healthy programming. A host-side timeout is never permission to remove power: keep the unit powered and inspect `/avr-update/status`. The host reports a persisted page diagnostic as soon as HTTP returns. `FLEXFOX_AVR_VERIFY_TIMEOUT_MS` may override the window with an integer from 60,000 through 3,600,000 milliseconds.
+
 Do not provision the fleet merely because both firmware builds pass. Keep the pilot chassis accessible until boot, ordinary RF/event behavior, WiFi power-down/wake, a complete wireless update, and repeated physical power interruption during erase/write/final handoff have all passed.
 
 ### Pilot qualification result — 2026-07-18
