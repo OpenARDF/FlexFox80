@@ -138,6 +138,7 @@ enum LBMessageID : uint32_t
 	LB_MESSAGE_KEY = LINKBUS_ID3('K', 'E', 'Y'),		/* Key down/up */
 	LB_MESSAGE_RESET = LINKBUS_ID3('R', 'S', 'T'),		/* Processor reset */
 	LB_MESSAGE_WIFI = LINKBUS_ID2('W', 'I'),			/* Enable/disable WiFi */
+	LB_MESSAGE_UPDATE = LINKBUS_ID3('U', 'P', 'D'),	/* Enter resident bootloader after ESP authorization and safety checks */
 	LB_INVALID_MESSAGE = 0xFFFFFFFFUL					/* This value must never overlap a valid message ID */
 };
 
@@ -147,6 +148,7 @@ enum LBMessageID : uint32_t
 #define LB_MESSAGE_STATUSCODE_LABEL "SC"
 #define LB_MESSAGE_BAND_LABEL "BND"
 #define LB_MESSAGE_VER_LABEL "VER"
+#define LB_MESSAGE_UPDATE_LABEL "UPD"
 #define LB_MESSAGE_SET_FREQ_LABEL "FRE"
 #define LB_MESSAGE_TX_POWER_LABEL "POW"
 #define LB_MESSAGE_ACK "!ACK;"

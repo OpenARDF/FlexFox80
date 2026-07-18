@@ -8,7 +8,14 @@ import { spawnSync } from "node:child_process";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const projectRoot = join(repoRoot, "Software", "AVR128DA48", "FlexFox80");
-const outputRoot = join(repoRoot, "Software", "AVR128DA48", "tmp", "avr-release");
+const applicationStartText = process.env.FLEXFOX_AVR_APP_START || "0";
+const applicationStart = Number(applicationStartText);
+if (!Number.isInteger(applicationStart) || applicationStart < 0 || applicationStart >= 131072 || (applicationStart % 512) !== 0) {
+  process.stderr.write(`AVR Release build: FLEXFOX_AVR_APP_START must be a 512-byte-aligned flash address, got ${applicationStartText}\n`);
+  process.exit(2);
+}
+const outputName = applicationStart ? "avr-release-relocated" : "avr-release";
+const outputRoot = join(repoRoot, "Software", "AVR128DA48", "tmp", outputName);
 const expectedCompilerVersion = "7.3.0";
 const expectedDfpVersion = "1.9.103";
 const allowVersionMismatch = process.env.AVR_ALLOW_VERSION_MISMATCH === "1";
@@ -178,6 +185,7 @@ const hex = join(outputRoot, "FlexFox80.hex");
 const eep = join(outputRoot, "FlexFox80.eep");
 const lss = join(outputRoot, "FlexFox80.lss");
 const srec = join(outputRoot, "FlexFox80.srec");
+const binary = join(outputRoot, "FlexFox80.bin");
 
 run(compiler, [
   "-o",
@@ -188,6 +196,7 @@ run(compiler, [
   "-Wl,-lm",
   "-Wl,--end-group",
   "-Wl,--gc-sections",
+  ...(applicationStart ? [`-Wl,--section-start=.text=0x${applicationStart.toString(16)}`] : []),
   ...deviceFlags,
 ]);
 run(objcopy, ["-O", "ihex", "-R", ".eeprom", "-R", ".fuse", "-R", ".lock", "-R", ".signature", "-R", ".user_signatures", elf, hex]);
@@ -195,13 +204,19 @@ run(objcopy, ["-j", ".eeprom", "--set-section-flags=.eeprom=alloc,load", "--chan
 const listing = run(objdump, ["-h", "-S", elf], { quiet: true });
 writeFileSync(lss, listing.stdout);
 run(objcopy, ["-O", "srec", "-R", ".eeprom", "-R", ".fuse", "-R", ".lock", "-R", ".signature", "-R", ".user_signatures", elf, srec]);
+run(objcopy, ["-O", "binary", "-R", ".eeprom", "-R", ".fuse", "-R", ".lock", "-R", ".signature", "-R", ".user_signatures", elf, binary]);
 const sizeResult = run(size, [elf]);
+
+const mapText = readFileSync(map, "utf8");
+if (applicationStart && !mapText.includes(`0x000000000000${applicationStart.toString(16).padStart(4, "0")}`)) {
+  fail(`link map does not contain the relocated application start 0x${applicationStart.toString(16)}`);
+}
 
 function sha256(path) {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
 
-const artifacts = [elf, hex, eep, map, lss, srec]
+const artifacts = [elf, hex, eep, map, lss, srec, binary]
   .filter((path) => existsSync(path))
   .map((path) => ({ file: basename(path), sha256: sha256(path) }));
 const evidence = {
@@ -210,6 +225,8 @@ const evidence = {
   expectedCompilerVersion,
   dfpVersion,
   expectedDfpVersion,
+  applicationStart,
+  applicationStartHex: `0x${applicationStart.toString(16)}`,
   sizeOutput: sizeResult.stdout.trim(),
   warningCount: warnings.length,
   warnings,

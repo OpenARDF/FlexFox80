@@ -14,6 +14,13 @@ const pagePath = join(
   "ARDF_Transmitter",
   "FirmwareUpdatePage.h",
 );
+const avrPagePath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "AvrFirmwareUpdatePage.h",
+);
 const source = readFileSync(pagePath, "utf8");
 const pageMatch = source.match(
   /static const char FIRMWARE_UPDATE_PAGE_HTML\[\] PROGMEM = R"FIRMWAREPAGE\(([\s\S]*?)\)FIRMWAREPAGE";/,
@@ -122,4 +129,20 @@ assert.equal(
 assert.equal(elements.message.textContent, "Uploading. Keep power connected...");
 assert.ok(listeners.has("window:pagehide"));
 
-console.log("PASS firmware update page validates size, image magic, and CRC32 before upload");
+const avrSource = readFileSync(avrPagePath, "utf8");
+const avrPageMatch = avrSource.match(
+  /static const char AVR_FIRMWARE_UPDATE_PAGE_HTML\[\] PROGMEM = R"AVRPAGE\(([\s\S]*?)\)AVRPAGE";/,
+);
+assert.ok(avrPageMatch, "AVR update page must remain a testable flash-resident raw string");
+const avrHtml = avrPageMatch[1];
+assert.match(avrHtml, /final four characters/);
+assert.match(avrHtml, /id="deviceSsid"/);
+assert.match(avrHtml, /id="unlock"/);
+assert.match(avrHtml, /body:"confirm=START&unlock="/);
+assert.match(avrHtml, /filesystemFreeBytes/);
+assert.doesNotMatch(avrHtml, /front switch/i);
+const avrScripts = [...avrHtml.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)];
+assert.equal(avrScripts.length, 1);
+new vm.Script(avrScripts[0][1], { filename: `${avrPagePath}:AVR_FIRMWARE_UPDATE_PAGE_HTML` });
+
+console.log("PASS firmware update pages validate images and retain unique-SSID AVR authorization");

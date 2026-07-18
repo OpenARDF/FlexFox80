@@ -31,6 +31,7 @@ const driverInitHeaderPath = join(
 );
 const wifiProbePath = join(repoRoot, "scripts", "probe-flexfox-wifi.mjs");
 const wifiUpdaterPath = join(repoRoot, "scripts", "update-flexfox-esp-over-wifi.mjs");
+const wifiAvrUpdaterPath = join(repoRoot, "scripts", "update-flexfox-avr-over-wifi.mjs");
 const webDeployerPath = join(repoRoot, "scripts", "deploy-flexfox-web-file.mjs");
 const heartbeatHelperPath = join(repoRoot, "scripts", "lib", "flexfox-heartbeat.mjs");
 const clockObserverPath = join(repoRoot, "scripts", "observe-flexfox-clock.mjs");
@@ -91,6 +92,22 @@ const avrDefinitionsPath = join(
   "AVR128DA48",
   "FlexFox80",
   "defs.h",
+);
+const avrBootloaderPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "bootloader",
+  "src",
+  "main.cpp",
+);
+const avrUpdateContractPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "include",
+  "avr_update_contract.h",
 );
 const eventScheduleStatePath = join(
   repoRoot,
@@ -194,11 +211,33 @@ const firmwareUpdateIntegrityPath = join(
   "ARDF_Transmitter",
   "firmware_update_integrity.h",
 );
+const avrFirmwareUpdatePath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "AvrFirmwareUpdate.cpp",
+);
+const avrFirmwareUpdateHeaderPath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "AvrFirmwareUpdate.h",
+);
+const avrFirmwareUpdatePagePath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "AvrFirmwareUpdatePage.h",
+);
 const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
 const wifiProbe = readFileSync(wifiProbePath, "utf8");
 const wifiUpdater = readFileSync(wifiUpdaterPath, "utf8");
+const wifiAvrUpdater = readFileSync(wifiAvrUpdaterPath, "utf8");
 const webDeployer = readFileSync(webDeployerPath, "utf8");
 const heartbeatHelper = readFileSync(heartbeatHelperPath, "utf8");
 const clockObserver = readFileSync(clockObserverPath, "utf8");
@@ -214,6 +253,8 @@ const driverIsr = readFileSync(driverIsrPath, "utf8");
 const goertzel = readFileSync(goertzelPath, "utf8");
 const avrMain = readFileSync(avrMainPath, "utf8");
 const avrDefinitions = readFileSync(avrDefinitionsPath, "utf8");
+const avrBootloader = readFileSync(avrBootloaderPath, "utf8");
+const avrUpdateContract = readFileSync(avrUpdateContractPath, "utf8");
 const eventScheduleState = readFileSync(eventScheduleStatePath, "utf8");
 const tcb = readFileSync(tcbPath, "utf8");
 const ds3231 = readFileSync(ds3231Path, "utf8");
@@ -228,9 +269,12 @@ const cloneEventManifest = readFileSync(cloneEventManifestPath, "utf8");
 const cloneKeepAliveSchedule = readFileSync(cloneKeepAliveSchedulePath, "utf8");
 const linkbusCommandTransaction = readFileSync(linkbusCommandTransactionPath, "utf8");
 const firmwareUpdateIntegrity = readFileSync(firmwareUpdateIntegrityPath, "utf8");
+const avrFirmwareUpdate = readFileSync(avrFirmwareUpdatePath, "utf8");
+const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8");
+const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
-const expectedAvrVersion = "0.203";
-const expectedEspVersion = "2.6";
+const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.204";
+const expectedEspVersion = "2.12";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -265,6 +309,125 @@ if (
 }
 
 process.stdout.write("PASS WiFi updater is transactional and cannot select a filesystem update\n");
+
+if (
+  !espMain.includes("avrUpdateResumeIfRequired();") ||
+  !espMain.includes("LB_MESSAGE_AVR_UPDATE_START") ||
+  !espMain.includes("avrUpdateObserveApplicationVersion(payload);") ||
+  !avrMain.includes("FLEXFOX_AVR_BOOT_APP_UPDATE_REQUEST") ||
+  !avrMain.includes("LB_MESSAGE_UPDATE") ||
+  !avrMain.includes("FLEXFOX_AVR_BOOT_HANDOFF_INFO_MAGIC") ||
+  !avrMain.includes("FLEXFOX_AVR_UPDATE_EEPROM_MARKER_ADDRESS") ||
+  !avrMain.includes("LB_MESSAGE_UPDATE_LABEL, g_tempStr") ||
+  !avrMain.includes('strcmp(lb_buff->fields[LB_MSG_FIELD2], "SSID")') ||
+  !avrMain.includes("setEventFinishEpoch(time(null));") ||
+  !avrMain.includes("updateEEPROMVar(Event_finish_epoch") ||
+  (avrMain.match(/while\(NVMCTRL\.STATUS & NVMCTRL_EEBUSY_bm\)/g)?.length ?? 0) < 2 ||
+  !avrMain.includes("avr_eeprom_write_byte(FLEXFOX_AVR_UPDATE_EEPROM_MARKER_ADDRESS") ||
+  !avrMain.includes("EepromManager::ee_vars.event_finish_epoch") ||
+  !espMain.includes("LB_MESSAGE_AVR_UPDATE_QUERY") ||
+  !espMain.includes("g_avrBootloaderAvailable") ||
+  !espMain.includes("currentEventFileIsActive") ||
+  !espMain.includes("Cancel the active event file before updating the AVR") ||
+  !espMain.includes("ESP.restart();") ||
+  !espMain.includes("g_uniqueAPNameString") ||
+  !espMain.includes('g_http_server.arg("unlock")') ||
+  !espMain.includes("suppliedSuffix != expectedSuffix") ||
+  !espMain.includes('!guardedMessage.startsWith("$UPD")') ||
+  !espMain.includes("avrUpdateCanStageImage(g_avrUpdateExpectedSize") ||
+  !avrFirmwareUpdateHeader.includes("AVR_UPDATE_APP_START 0x4000UL") ||
+  !avrFirmwareUpdateHeader.includes("AVR_UPDATE_PAGE_SIZE 512U") ||
+  !avrFirmwareUpdateHeader.includes("AVR_UPDATE_FS_RESERVE_BLOCKS 4U") ||
+  !avrUpdateContract.includes("FLEXFOX_AVR_UPDATE_EEPROM_MARKER_ADDRESS 511U") ||
+  !avrBootloader.includes("persistent_update_requested()") ||
+  !avrBootloader.includes("clear_persistent_update_request()") ||
+  !avrBootloader.includes("NVMCTRL_CMD_EEERWR_gc") ||
+  !avrBootloader.includes("address == FLEXFOX_APP_START_BYTES") ||
+  !avrBootloader.includes("pins_init(bool preserve_wifi_session)") ||
+  !avrBootloader.includes("pins_init(requested)") ||
+  !avrBootloader.includes("if(preserve_wifi_session)") ||
+  !avrBootloader.includes("PORTA.OUTSET = V3V3_POWER_ENABLE_PIN | WIFI_ENABLE_PIN | WIFI_RESET_PIN") ||
+  !avrBootloader.includes("PORTA.OUTCLR = V3V3_POWER_ENABLE_PIN | WIFI_ENABLE_PIN | WIFI_RESET_PIN") ||
+  !avrBootloader.includes("PORTB.OUTSET = MAIN_POWER_ENABLE_PIN") ||
+  !avrBootloader.includes("PORTA.OUTSET = V3V3_POWER_ENABLE_PIN") ||
+  !avrBootloader.includes("PORTA.OUTSET = WIFI_ENABLE_PIN") ||
+  !avrBootloader.includes("PORTA.OUTSET = WIFI_RESET_PIN") ||
+  !avrFirmwareUpdate.includes("AVR_UPDATE_STATE_A_PATH") ||
+  !avrFirmwareUpdate.includes("AVR_UPDATE_STATE_B_PATH") ||
+  !avrFirmwareUpdate.includes("deviceSsid") ||
+  !avrFirmwareUpdate.includes("LittleFS.info") ||
+  !avrFirmwareUpdate.includes("requiredFreeBytes") ||
+  !avrFirmwareUpdate.includes("An AVR update is already in its bootloader recovery phase") ||
+  !avrFirmwareUpdate.includes("AVR_UPDATE_RECOVERY_ATTEMPTS") ||
+  !avrFirmwareUpdate.includes('Serial.print("$ESP,Z;\\n")') ||
+  !avrFirmwareUpdate.includes("lights->blinkLEDs(100, RED_BLUE_ALTERNATING, true)") ||
+  !avrFirmwareUpdate.includes("state.phase != AVR_UPDATE_STAGED && state.phase != AVR_UPDATE_PROGRAMMING") ||
+  !avrFirmwareUpdate.includes("Preserve a programming-phase record and image") ||
+  !avrFirmwareUpdate.includes("state.phase = AVR_UPDATE_STAGED") ||
+  !avrFirmwareUpdate.includes("filesystemFreeBytes") ||
+  !avrFirmwareUpdate.includes('restartAfterOperationFailure(&image, "erase-reset-vector", AVR_UPDATE_APP_START)') ||
+  !avrFirmwareUpdate.includes("state.phase = AVR_UPDATE_VERIFYING_APPLICATION") ||
+  !avrFirmwareUpdate.includes("LittleFS.remove(AVR_UPDATE_IMAGE_PATH)") ||
+  !avrFirmwareUpdatePage.includes("final four characters") ||
+  !avrFirmwareUpdatePage.includes("filesystemFreeBytes") ||
+  !wifiAvrUpdater.includes("FLEXFOX_AVR_SSID_SUFFIX") ||
+  !wifiAvrUpdater.includes("expectedSsidSuffix")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: wireless AVR updates must retain unique-SSID authorization, raw-pass blocking, dual-slot recovery, reset-vector-last programming, and installed-version verification\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS wireless AVR updater retains recovery and unique-SSID authorization invariants\n");
+
+const avrUpdateStartHandler = espMain.match(
+  /void handleAvrUpdateStart\(\)\s*\{([\s\S]*?)\n\}\n\nvoid handleSuccess/,
+);
+if (
+  !avrUpdateStartHandler ||
+  (avrUpdateStartHandler[1].match(/drainLinkbusBeforeEvent\(&error\)/g)?.length ?? 0) !== 1 ||
+  avrUpdateStartHandler[1].indexOf("sendLinkbusTransactionCommand(String(LB_MESSAGE_AVR_UPDATE_START)") >
+    avrUpdateStartHandler[1].indexOf('g_http_server.send(202') ||
+  !avrUpdateStartHandler[1].includes("avrUpdateResumeIfRequired(residentBootloader);") ||
+  !/avrUpdateResumeIfRequired\(residentBootloader\);[\s\S]*g_http_server\.begin\(\);/.test(
+    avrUpdateStartHandler[1],
+  ) ||
+  !avrFirmwareUpdate.includes("bool bootloaderReady = bootloaderAlreadyReady;")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: AVR START must retain its exclusive queue, resident bootloader session, and bounded HTTP recovery\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS wireless AVR handoff cannot race a redundant Linkbus queue drain\n");
+
+if (
+  !avrFirmwareUpdate.includes("uint32_t remaining = state.imageBytes;") ||
+  !avrFirmwareUpdate.includes("if(count != requested)") ||
+  !avrFirmwareUpdate.includes('diagnostic.print("validate-image ")') ||
+  /while\s*\(\s*image->available\(\)\s*\)/.test(avrFirmwareUpdate)
+) {
+  process.stderr.write(
+    "Firmware contract check failed: staged AVR resume validation must read the exact persisted image length and retain failure evidence\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS staged AVR resume validation is exact-length and diagnostic\n");
+
+if (
+  !avrFirmwareUpdate.includes("if(avrUpdateLoadState(&previousState)) state.generation = previousState.generation;") ||
+  !avrFirmwareUpdate.includes("LittleFS.remove(AVR_UPDATE_DIAGNOSTIC_PATH);")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: a replacement AVR staging transaction must advance the existing dual-slot generation and clear stale diagnostics\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS replacement AVR staging advances dual-slot recovery generation\n");
 
 if (
   !heartbeatHelper.includes('socket.send("!&")') ||
@@ -374,7 +537,8 @@ process.stdout.write("PASS ESP UART writes keep dynamic text out of printf forma
 if (
   !espMain.includes("recoverInterruptedFileUploads();") ||
   !espMain.includes('g_fsUploadTargetPath + ".__uploading"') ||
-  !espMain.includes('g_fsUploadTargetPath + ".__upload_backup"') ||
+  !espMain.includes('g_fsUploadTargetPath + ".__bak"') ||
+  !espMain.includes('g_fsUploadTargetPath.length() + sizeof(".__uploading") - 1U > 31U') ||
   !espMain.includes("g_fsUploadReceivedSize != g_fsUploadExpectedSize") ||
   !espMain.includes("g_fsUploadExpectedCrc32") ||
   !espMain.includes("LittleFS.rename(g_fsUploadStagingPath, g_fsUploadTargetPath)") ||

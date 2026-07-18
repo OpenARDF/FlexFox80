@@ -42,10 +42,26 @@ secrets:
 avr-build:
     node ./scripts/build-avr-release.mjs
 
+# Build the bootloader-capable application at the permanent 0x4000 app address.
+avr-relocated-build:
+    FLEXFOX_AVR_APP_START=0x4000 node ./scripts/build-avr-release.mjs
+
+# Build the resident AVR bootloader for the 16 KiB BOOT section.
+avr-bootloader-build:
+    node ./scripts/build-avr-bootloader.mjs
+
+# Build both halves and create the one-time initial provisioning image.
+avr-boot-chain-build: avr-bootloader-build avr-relocated-build
+    node ./scripts/package-avr-boot-chain.mjs
+
+# One-time destructive fleet provisioning; requires both explicit confirmation variables.
+avr-provision-boot-chain:
+    ./scripts/provision-flexfox-avr-boot-chain.sh
+
 # Read the attached AVR identity through Atmel-ICE without programming it.
 # Entering UPDI programming mode may briefly reset a running transmitter.
 avr-probe:
-    avrdude -c atmelice_updi -p 128da48 -P usb -n -v
+    avrdude -c atmelice_updi -p 128da48 -P usb -B 10 -n -v
 
 # Probe the running FlexFox through its read-only WiFi/WebSocket path.
 wifi-probe:
@@ -82,6 +98,10 @@ wifi-role-assignment-test:
 # Install and verify a sketch through the protected WiFi updater (explicit confirmation required).
 wifi-esp-update:
     node ./scripts/update-flexfox-esp-over-wifi.mjs
+
+# Stage, authorize with the unique ESP SSID suffix, program, and version-verify AVR firmware.
+wifi-avr-update:
+    node ./scripts/update-flexfox-avr-over-wifi.mjs
 
 # Install and hash-verify events.html or another named LittleFS web file (explicit confirmation required).
 wifi-web-deploy:

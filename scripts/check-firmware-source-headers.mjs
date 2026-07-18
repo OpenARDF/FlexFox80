@@ -34,6 +34,7 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const avrRoot = join(repoRoot, "Software", "AVR128DA48", "FlexFox80");
+const avrBootloaderRoot = join(repoRoot, "Software", "AVR128DA48", "bootloader");
 const espRoot = join(repoRoot, "Software", "Huzzah", "ARDF_Transmitter");
 
 const externalAvrHeaders = new Set([
@@ -52,6 +53,12 @@ const sourceFiles = [
   ...readdirSync(join(avrRoot, "src"))
     .filter((name) => name.endsWith(".cpp"))
     .map((name) => join(avrRoot, "src", name)),
+  ...readdirSync(join(avrBootloaderRoot, "include"))
+    .filter((name) => name.endsWith(".h"))
+    .map((name) => join(avrBootloaderRoot, "include", name)),
+  ...readdirSync(join(avrBootloaderRoot, "src"))
+    .filter((name) => name.endsWith(".cpp"))
+    .map((name) => join(avrBootloaderRoot, "src", name)),
   ...readdirSync(espRoot)
     .filter((name) => /\.(?:cpp|h|ino)$/.test(name))
     .map((name) => join(espRoot, name)),

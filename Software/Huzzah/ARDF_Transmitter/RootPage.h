@@ -59,7 +59,8 @@ static const char ROOT_PAGE_HTML[] PROGMEM = R"ROOTPAGE(
     <a href="/delete.html">Delete a file</a>
     <a href="/test.html">Testing support</a>
     <a href="/radio.html">Radio mode</a>
-    <a href="/firmware">Update WiFi firmware</a>
+    <a href="/firmware">Update WiFi firmware</a><br>
+    <a href="/avr-update">Update AVR firmware</a>
   </nav>
   <p class="warning">Use file deletion with caution.</p>
   <p><small>ESP8266 control page with automatic keep-alive.</small></p>

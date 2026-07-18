@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <avr/sleep.h>
+#include <avr/eeprom.h>
 #include <atomic.h>
 
 #include "linkbus.h"
@@ -54,6 +55,8 @@
 #include "event_schedule_state.h"
 #include "event_time_state.h"
 #include "rtc_sync_guard.h"
+#include "avr_update_contract.h"
+#include "rstctrl.h"
 
 #include <cpuint.h>
 #include <ccp.h>
@@ -132,6 +135,10 @@ static volatile uint16_t g_clone_quiet_timeout_seconds = 0;
 static volatile uint8_t g_wifi_enable_delay = 0;
 static volatile bool g_shutting_down_wifi = false;
 static volatile bool g_wifi_ready = false;
+static volatile bool g_bootloader_reset_pending = false;
+static uint8_t g_bootloader_protocol = 0;
+static uint8_t g_bootloader_version_major = 0;
+static uint8_t g_bootloader_version_minor = 0;
 static volatile uint16_t g_hardware_error = (uint16_t)HARDWARE_OK;
 
 extern Frequency_Hz g_tx_frequency;
@@ -1052,6 +1059,15 @@ bool fanIsOn(void)
 int main(void)
 {
 	time_t holdTime = 0;
+	if((GPR.GPR1 & 0xF0U) == FLEXFOX_AVR_BOOT_HANDOFF_INFO_MAGIC)
+	{
+		g_bootloader_protocol = GPR.GPR1 & FLEXFOX_AVR_BOOT_HANDOFF_INFO_PROTOCOL_MASK;
+		g_bootloader_version_major = GPR.GPR2;
+		g_bootloader_version_minor = GPR.GPR3;
+	}
+	GPR.GPR1 = 0;
+	GPR.GPR2 = 0;
+	GPR.GPR3 = 0;
 	
 	atmel_start_init();
 	LEDS.blink(LEDS_OFF, true);
@@ -1115,6 +1131,16 @@ int main(void)
 	
 	while (1) {
 		handleLinkBusMsgs();
+		if(g_bootloader_reset_pending)
+		{
+			/* Allow the final Linkbus ACK to leave the UART before reset removes ESP power. */
+			while(linkbusTxInProgress()) { }
+			util_delay_ms(0);
+			while(util_delay_ms(25)) { }
+			GPR.GPR1 = FLEXFOX_AVR_BOOT_APP_UPDATE_REQUEST;
+			RSTCTRL_reset();
+			while(1) { }
+		}
 		serviceCloneSyncReport();
 		
 		if(g_handle_counted_presses)
@@ -1432,6 +1458,76 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 
 		switch(msg_id)
 		{
+			case LB_MESSAGE_UPDATE:
+			{
+				if(lb_buff->type == LINKBUS_MSG_QUERY)
+				{
+					if(g_bootloader_protocol)
+					{
+						sprintf(g_tempStr, "BL%u.%u,%u,0x4000,512",
+						        g_bootloader_version_major,
+						        g_bootloader_version_minor,
+						        g_bootloader_protocol);
+						lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_UPDATE_LABEL, g_tempStr);
+					}
+					else
+					{
+						send_ack = false;
+						lb_send_text((char *)LB_MESSAGE_NACK);
+					}
+					break;
+				}
+
+				if(!g_bootloader_protocol || lb_buff->type != LINKBUS_MSG_COMMAND ||
+				   strcmp(lb_buff->fields[LB_MSG_FIELD1], "START") != 0 ||
+				   strcmp(lb_buff->fields[LB_MSG_FIELD2], "SSID") != 0)
+				{
+					send_ack = false;
+					lb_send_text((char *)LB_MESSAGE_NACK);
+				}
+				else
+				{
+					/*
+					 * The ESP accepts this command only after the operator has cancelled
+					 * the active .event file and supplied this unit's SSID suffix. End
+					 * the AVR's already-loaded EEPROM copy as part of the same handoff;
+					 * otherwise a reset can restart a schedule which the ESP has already
+					 * cancelled.
+					 */
+					suspendEvent();
+					g_text_buff.reset();
+					g_enable_manual_transmissions = false;
+					setEventFinishEpoch(time(null));
+					g_ee_mgr.updateEEPROMVar(Event_finish_epoch, (void *)&g_event_finish_epoch);
+					while(NVMCTRL.STATUS & NVMCTRL_EEBUSY_bm) { }
+					if(eeprom_read_dword(&(EepromManager::ee_vars.event_finish_epoch)) !=
+					   (uint32_t)g_event_finish_epoch)
+					{
+						send_ack = false;
+						lb_send_text((char *)LB_MESSAGE_NACK);
+						break;
+					}
+					avr_eeprom_write_byte(FLEXFOX_AVR_UPDATE_EEPROM_MARKER_ADDRESS,
+					                      FLEXFOX_AVR_UPDATE_EEPROM_MARKER);
+					while(NVMCTRL.STATUS & NVMCTRL_EEBUSY_bm) { }
+					if(eeprom_read_byte((const uint8_t *)FLEXFOX_AVR_UPDATE_EEPROM_MARKER_ADDRESS) !=
+					   FLEXFOX_AVR_UPDATE_EEPROM_MARKER)
+					{
+						send_ack = false;
+						lb_send_text((char *)LB_MESSAGE_NACK);
+					}
+					else
+					{
+						keyTransmitter(OFF);
+						powerToTransmitter(OFF);
+						g_WiFi_shutdown_seconds = 0;
+						g_sleepType = DO_NOT_SLEEP;
+						g_bootloader_reset_pending = true;
+					}
+				}
+			}
+			break;
+
 			case LB_MESSAGE_WIFI:
 			{
 				bool result;

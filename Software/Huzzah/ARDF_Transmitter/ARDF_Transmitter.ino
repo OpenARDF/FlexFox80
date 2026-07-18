@@ -59,6 +59,8 @@
 #include "Transmitter.h"
 #include "RootPage.h"
 #include "FirmwareUpdatePage.h"
+#include "AvrFirmwareUpdate.h"
+#include "AvrFirmwareUpdatePage.h"
 #include "Event.h"
 #include "clone_event_manifest.h"
 #include "clone_keepalive_schedule.h"
@@ -115,6 +117,7 @@ unsigned int g_localPort = 2390;                            /* local port to lis
 ESP8266WebServer g_http_server(80);                         /* HTTP server on port 80 */
 WebSocketsServer g_webSocketServer = WebSocketsServer(81);  /* create a websocket server on port 81 */
 String g_AP_NameString;
+String g_uniqueAPNameString;
 WebSocketsClient g_webSocketLocalClient;
 bool g_webSocketServerStarted = false;
 
@@ -189,6 +192,18 @@ unsigned long g_firmwareUpdateLastKeepAliveMillis = 0;
 unsigned long g_firmwareRestartAtMillis = 0;
 String g_firmwareUpdateError;
 
+File g_avrUpdateUploadFile;
+bool g_avrUpdateUploadActive = false;
+bool g_avrUpdateUploadSucceeded = false;
+size_t g_avrUpdateExpectedSize = 0;
+size_t g_avrUpdateReceivedSize = 0;
+uint32_t g_avrUpdateExpectedCrc32 = 0;
+uint32_t g_avrUpdateRunningCrc32 = 0xffffffffUL;
+String g_avrUpdateTargetVersion;
+String g_avrUpdateError;
+bool g_avrBootloaderAvailable = false;
+String g_avrBootloaderIdentity;
+
 static_assert(
   CLONE_EVENT_MANIFEST_CAPACITY == MAXIMUM_NUMBER_OF_EVENTS,
   "Clone manifest must hold every supported event file");
@@ -244,6 +259,11 @@ void handleFirmwareUpdateStatus(void);
 void handleFirmwareUpdateResult(void);
 void handleFirmwareUpdateUpload(void);
 void serviceFirmwareUpdateRestart(void);
+void handleAvrUpdatePage(void);
+void handleAvrUpdateStatus(void);
+void handleAvrUpdateResult(void);
+void handleAvrUpdateUpload(void);
+void handleAvrUpdateStart(void);
 void handleFileDownload(void);
 void fileDelete(void);
 void fileDeleteWithMessage(String msg);
@@ -265,6 +285,8 @@ void endSlaveCloneKeepAlive(void);
 void serviceMasterCloneHandshake(void);
 void endMasterCloneSession(void);
 bool reconcileCloneEventFiles(const CloneEventManifest *manifest);
+static bool drainLinkbusBeforeEvent(String *errorTxt);
+static bool sendLinkbusTransactionCommand(const String& message, const char *phase, String *errorTxt);
 
 void setup()
 {
@@ -273,6 +295,7 @@ void setup()
   lights = new Blinkies();
 
   startLittleFS();                  /* Start the LittleFS and list all contents */
+  avrUpdateResumeIfRequired();      /* Resume autonomously if AVR reset removed ESP power mid-update. */
   recoverInterruptedFileUploads(); /* Restore a live file if power failed during a staged replacement. */
   if (!readDefaultsFile())        /* Read default settings from file system */
   {
@@ -734,6 +757,243 @@ void serviceFirmwareUpdateRestart()
   }
 }
 
+void handleAvrUpdatePage()
+{
+  g_http_server.sendHeader("Cache-Control", "no-store");
+  g_http_server.send_P(200, PSTR("text/html; charset=utf-8"), AVR_FIRMWARE_UPDATE_PAGE_HTML);
+}
+
+void handleAvrUpdateStatus()
+{
+  g_http_server.sendHeader("Cache-Control", "no-store");
+  g_http_server.send(200, "application/json", avrUpdateStatusJson(g_uniqueAPNameString));
+}
+
+void handleAvrUpdateResult()
+{
+  g_http_server.sendHeader("Cache-Control", "no-store");
+  if(g_avrUpdateUploadSucceeded)
+  {
+    g_http_server.send(200, "text/html; charset=utf-8",
+      "<!doctype html><html><body><h1>AVR image staged</h1><p>The complete image passed its CRC check and is stored for power-loss recovery.</p><p><a href='/avr-update'>Continue to SSID authorization</a></p></body></html>");
+    return;
+  }
+  String response = "AVR update image rejected. The running AVR was not changed.";
+  if(g_avrUpdateError.length()) response += String("\n") + g_avrUpdateError;
+  g_http_server.send(400, "text/plain; charset=utf-8", response);
+}
+
+void handleAvrUpdateUpload()
+{
+  HTTPUpload& upload = g_http_server.upload();
+  if(upload.status == UPLOAD_FILE_START)
+  {
+    g_avrUpdateUploadActive = false;
+    g_avrUpdateUploadSucceeded = false;
+    g_avrUpdateError = "";
+    g_avrUpdateExpectedSize = 0;
+    g_avrUpdateReceivedSize = 0;
+    g_avrUpdateExpectedCrc32 = 0;
+    g_avrUpdateRunningCrc32 = 0xffffffffUL;
+    g_avrUpdateTargetVersion = g_http_server.arg("version");
+    LittleFS.remove(AVR_UPDATE_STAGING_PATH);
+
+    if(g_firmwareUpdateActive || g_firmwareRestartPending || firmwareUpdateCloneIsActive() || g_linkBusEventTransactionActive)
+    {
+      g_avrUpdateError = "Finish the current firmware, clone, or event transaction first";
+      return;
+    }
+    if(upload.name != "firmware" || !firmwareUpdateHasBinExtension(upload.filename.c_str()))
+    {
+      g_avrUpdateError = "Only an uncompressed FlexFox80 AVR .bin is accepted";
+      return;
+    }
+    if(g_http_server.arg("confirm") != "STAGE" || !g_avrUpdateTargetVersion.length())
+    {
+      g_avrUpdateError = "Staging confirmation or target version is missing";
+      return;
+    }
+    if(!firmwareUpdateParseSize(g_http_server.arg("size").c_str(), AVR_UPDATE_MAX_IMAGE_BYTES, &g_avrUpdateExpectedSize) ||
+       !g_avrUpdateExpectedSize || (g_avrUpdateExpectedSize % AVR_UPDATE_PAGE_SIZE) != 0)
+    {
+      g_avrUpdateError = "AVR image size is invalid or not page aligned";
+      return;
+    }
+    if(!firmwareUpdateParseCrc32(g_http_server.arg("crc32").c_str(), &g_avrUpdateExpectedCrc32))
+    {
+      g_avrUpdateError = "AVR image CRC32 is missing or invalid";
+      return;
+    }
+    if(!avrUpdateCanStageImage(g_avrUpdateExpectedSize, &g_avrUpdateError))
+    {
+      return;
+    }
+    g_avrUpdateUploadFile = LittleFS.open(AVR_UPDATE_STAGING_PATH, "w");
+    if(!g_avrUpdateUploadFile)
+    {
+      g_avrUpdateError = "Unable to create the persistent staging file";
+      return;
+    }
+    g_avrUpdateUploadActive = true;
+    firmwareUpdateKeepAvrAwake();
+  }
+  else if(upload.status == UPLOAD_FILE_WRITE)
+  {
+    if(!g_avrUpdateUploadActive) return;
+    if(upload.currentSize > g_avrUpdateExpectedSize - g_avrUpdateReceivedSize ||
+       g_avrUpdateUploadFile.write(upload.buf, upload.currentSize) != upload.currentSize)
+    {
+      g_avrUpdateError = "Persistent AVR staging write failed or exceeded declared size";
+      g_avrUpdateUploadActive = false;
+      g_avrUpdateUploadFile.close();
+      LittleFS.remove(AVR_UPDATE_STAGING_PATH);
+      return;
+    }
+    g_avrUpdateRunningCrc32 = avrUpdateCrc32(g_avrUpdateRunningCrc32, upload.buf, upload.currentSize);
+    g_avrUpdateReceivedSize += upload.currentSize;
+    firmwareUpdateKeepAvrAwake();
+  }
+  else if(upload.status == UPLOAD_FILE_END)
+  {
+    if(!g_avrUpdateUploadActive) return;
+    g_avrUpdateUploadFile.flush();
+    g_avrUpdateUploadFile.close();
+    g_avrUpdateUploadActive = false;
+    const uint32_t receivedCrc32 = g_avrUpdateRunningCrc32 ^ 0xffffffffUL;
+    if(upload.totalSize != g_avrUpdateExpectedSize || g_avrUpdateReceivedSize != g_avrUpdateExpectedSize)
+    {
+      g_avrUpdateError = "Upload ended before the declared AVR image size was received";
+    }
+    else if(receivedCrc32 != g_avrUpdateExpectedCrc32)
+    {
+      g_avrUpdateError = "AVR image CRC32 did not match the complete uploaded file";
+    }
+    else if(!avrUpdateCommitStagedImage(g_avrUpdateExpectedSize, receivedCrc32, g_avrUpdateTargetVersion, &g_avrUpdateError))
+    {
+    }
+    else
+    {
+      g_avrUpdateUploadSucceeded = true;
+      return;
+    }
+    LittleFS.remove(AVR_UPDATE_STAGING_PATH);
+  }
+  else if(upload.status == UPLOAD_FILE_ABORTED)
+  {
+    if(g_avrUpdateUploadFile) g_avrUpdateUploadFile.close();
+    g_avrUpdateUploadActive = false;
+    g_avrUpdateError = "AVR upload was interrupted before validation completed";
+    LittleFS.remove(AVR_UPDATE_STAGING_PATH);
+  }
+  delay(0);
+}
+
+static bool currentEventFileIsActive(String *eventName)
+{
+  populateEventFileList();
+  const unsigned long currentEpoch = g_timeOfDayFromTx;
+  for(int index = 0; index < g_numberOfEventFilesFound; index++)
+  {
+    const EventFileRef& event = g_eventList[index];
+    if(event.startDateTimeEpoch <= currentEpoch && currentEpoch < event.finishDateTimeEpoch)
+    {
+      if(eventName) *eventName = event.ename;
+      return true;
+    }
+  }
+  return false;
+}
+
+void handleAvrUpdateStart()
+{
+  String error;
+  String suppliedSuffix = g_http_server.arg("unlock");
+  suppliedSuffix.trim();
+  suppliedSuffix.toUpperCase();
+  if(g_uniqueAPNameString.length() < 4)
+  {
+    g_http_server.send(503, "text/plain; charset=utf-8", "The unique ESP update identity is unavailable");
+    return;
+  }
+  String expectedSuffix = g_uniqueAPNameString.substring(g_uniqueAPNameString.length() - 4);
+  expectedSuffix.toUpperCase();
+  if(suppliedSuffix.length() != 4 || suppliedSuffix != expectedSuffix)
+  {
+    g_http_server.send(403, "text/plain; charset=utf-8",
+                       "AVR update authorization must match the last four characters of this ESP's unique Tx_ SSID");
+    return;
+  }
+  if(g_http_server.arg("confirm") != "START" || firmwareUpdateCloneIsActive() ||
+     g_firmwareUpdateActive || g_firmwareRestartPending || g_linkBusEventTransactionActive ||
+     !avrUpdateHasStagedImage())
+  {
+    error = "AVR update cannot start while another operation is active or no validated image is staged";
+    g_http_server.send(409, "text/plain; charset=utf-8", error);
+    return;
+  }
+  String activeEventName;
+  if(currentEventFileIsActive(&activeEventName))
+  {
+    error = String("Cancel the active event file before updating the AVR: ") + activeEventName;
+    g_http_server.send(409, "text/plain; charset=utf-8", error);
+    return;
+  }
+
+  g_avrBootloaderAvailable = false;
+  g_avrBootloaderIdentity = "";
+  bool residentBootloader = false;
+  const bool applicationPreflight =
+    drainLinkbusBeforeEvent(&error) &&
+    sendLinkbusTransactionCommand(String(LB_MESSAGE_AVR_UPDATE_QUERY), "AVR bootloader capability", &error) &&
+    g_avrBootloaderAvailable &&
+    g_avrBootloaderIdentity.startsWith("BL0.1,1,0x4000,512");
+  if(!applicationPreflight)
+  {
+    residentBootloader = avrUpdateResidentBootloaderPresent();
+  }
+  if(!applicationPreflight && !residentBootloader)
+  {
+    if(!error.length()) error = "The AVR did not prove the required BL0.1 bootloader and 0x4000 application layout";
+    g_http_server.send(409, "text/plain; charset=utf-8", error);
+    return;
+  }
+  if(!avrUpdateMarkEnteringBootloader(&error))
+  {
+    g_http_server.send(500, "text/plain; charset=utf-8", error);
+    return;
+  }
+
+  /* The capability transaction already drained the queue and returned with its
+   * ACK consumed.  Send START immediately while that exclusive condition still
+   * holds.  Sending the HTTP response and delaying first lets ordinary Linkbus
+   * traffic refill the queue, causing a redundant second drain to time out. */
+  bool success = residentBootloader ||
+                 sendLinkbusTransactionCommand(String(LB_MESSAGE_AVR_UPDATE_START), "AVR bootloader entry", &error);
+  if(!success)
+  {
+    avrUpdateRestoreStaged(NULL);
+    g_linkBusLastFailure = error;
+    g_http_server.send(409, "text/plain; charset=utf-8", error);
+  }
+  else
+  {
+    g_http_server.sendHeader("Connection", "close");
+    g_http_server.send(202, "text/plain; charset=utf-8",
+      "Bootloader entry authorized by the unique ESP SSID suffix; programming will resume automatically.");
+    /* Keep the UART session that just proved either the running application or
+     * resident bootloader.  Rebooting the ESP here can lose the otherwise-good
+     * AVR bootloader link on installed FlexFox hardware.  Persistent state still
+     * resumes safely after an actual interruption. */
+    delay(150);
+    g_http_server.stop();
+    avrUpdateResumeIfRequired(residentBootloader);
+    /* Successful programming restarts the ESP and never returns.  A bounded
+     * pre-erase recovery return must restore service so status and retry remain
+     * available without requiring a power cycle. */
+    g_http_server.begin();
+  }
+}
+
 void handleSuccess()
 {
   String message = "<html><head><title>Success</title></head><body><p><a href=\"/\">[HOME]</a></p><h1 style=\"font-family:verdana;font-size:30px;color:Black;text-align:left;\">File uploaded successfully!</h1></body></html>";
@@ -826,22 +1086,16 @@ bool setupHTTP_AP()
 
   /*  WiFi.mode(WIFI_AP); */
 
-  if (g_IamMaster)
-  {
-    g_AP_NameString = MASTER_SSID;
-  }
-  else
-  {
-    /* Create a somewhat unique SSID */
-    uint8_t mac[WL_MAC_ADDR_LENGTH];
-    WiFi.softAPmacAddress(mac);
-    String macID = String(mac[WL_MAC_ADDR_LENGTH - 4], HEX) +
-                   String(mac[WL_MAC_ADDR_LENGTH - 3], HEX) +
-                   String(mac[WL_MAC_ADDR_LENGTH - 2], HEX) +
-                   String(mac[WL_MAC_ADDR_LENGTH - 1], HEX);
-    macID.toUpperCase();
-    g_AP_NameString = String("Tx_" + macID);
-  }
+  /* Keep an immutable per-ESP identity even while master mode advertises Tx_Master. */
+  uint8_t mac[WL_MAC_ADDR_LENGTH];
+  WiFi.softAPmacAddress(mac);
+  String macID = String(mac[WL_MAC_ADDR_LENGTH - 4], HEX) +
+                 String(mac[WL_MAC_ADDR_LENGTH - 3], HEX) +
+                 String(mac[WL_MAC_ADDR_LENGTH - 2], HEX) +
+                 String(mac[WL_MAC_ADDR_LENGTH - 1], HEX);
+  macID.toUpperCase();
+  g_uniqueAPNameString = String("Tx_" + macID);
+  g_AP_NameString = g_IamMaster ? MASTER_SSID : g_uniqueAPNameString;
 
   IPAddress apIP = stringToIP(g_softAP_IP_addr);
 
@@ -892,6 +1146,15 @@ bool setupHTTP_AP()
       HTTP_POST,
       handleFirmwareUpdateResult,
       handleFirmwareUpdateUpload);
+
+    g_http_server.on("/avr-update", HTTP_GET, handleAvrUpdatePage);
+    g_http_server.on("/avr-update/status", HTTP_GET, handleAvrUpdateStatus);
+    g_http_server.on(
+      "/avr-update",
+      HTTP_POST,
+      handleAvrUpdateResult,
+      handleAvrUpdateUpload);
+    g_http_server.on("/avr-update/start", HTTP_POST, handleAvrUpdateStart);
 
     g_http_server.on(
       "/upload.html",
@@ -2738,7 +3001,12 @@ void httpWebServerLoop(int blinkRate)
       }
     }
 
-    if (g_numberOfSocketClients)
+    if (g_firmwareUpdateActive || g_firmwareRestartPending)
+    {
+      ledPattern = RED_BLUE_ALTERNATING;
+      blinkPeriodMillis = 100;
+    }
+    else if (g_numberOfSocketClients)
     {
       ledPattern = RED_BLUE_ALTERNATING;
     }
@@ -2751,7 +3019,16 @@ void httpWebServerLoop(int blinkRate)
       ledPattern = RED_LED_ONLY;
     }
 
-    if (lights->blinkLEDs(blinkPeriodMillis, ledPattern, g_LEDs_enabled))
+    /*
+     * Keep the initial service window observable even when the saved operating
+     * preference disables LEDs.  This makes darkness a useful indication that
+     * AVR power has actually been removed from the ESP.  Firmware transfer and
+     * the short validated-reboot delay remain visible regardless of uptime.
+     */
+    const bool serviceLEDsEnabled =
+      g_LEDs_enabled || millis() < 120000UL ||
+      g_firmwareUpdateActive || g_firmwareRestartPending;
+    if (lights->blinkLEDs(blinkPeriodMillis, ledPattern, serviceLEDsEnabled))
     {
       if (!sentComsOFF)
       {
@@ -3807,7 +4084,7 @@ void startLittleFS()
 void recoverInterruptedFileUploads()
 {
   static const String stagingSuffix = ".__uploading";
-  static const String backupSuffix = ".__upload_backup";
+  static const String backupSuffix = ".__bak";
 
   while (true)
   {
@@ -4891,7 +5168,13 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
           {
             int firstComma = p.indexOf(',');
             String msgOut = (p.substring(firstComma + 1));
-            g_LBOutputBuff->put(msgOut);
+            String guardedMessage = msgOut;
+            guardedMessage.trim();
+            guardedMessage.toUpperCase();
+            if(!guardedMessage.startsWith("$UPD"))
+            {
+              g_LBOutputBuff->put(msgOut);
+            }
           }
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
           else if (g_debug_prints_enabled)
@@ -5562,6 +5845,7 @@ void handleFileUpload()
 
     if (!g_fsUploadTargetPath.length() ||
         g_fsUploadTargetPath.length() > 64 ||
+        g_fsUploadTargetPath.length() + sizeof(".__uploading") - 1U > 31U ||
         g_fsUploadTargetPath.indexOf('/') >= 0 ||
         g_fsUploadTargetPath.indexOf('\\') >= 0 ||
         g_fsUploadTargetPath.indexOf("..") >= 0)
@@ -5584,7 +5868,7 @@ void handleFileUpload()
     }
 
     g_fsUploadStagingPath = g_fsUploadTargetPath + ".__uploading";
-    g_fsUploadBackupPath = g_fsUploadTargetPath + ".__upload_backup";
+    g_fsUploadBackupPath = g_fsUploadTargetPath + ".__bak";
     LittleFS.remove(g_fsUploadStagingPath);
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
     if (g_debug_prints_enabled)
@@ -6014,7 +6298,13 @@ void handleLBMessage(String message)
     if (payload.length() > 1)
     {
       g_atmega_sw_version = payload;
+      avrUpdateObserveApplicationVersion(payload);
     }
+  }
+  else if (type.equals(LB_MESSAGE_AVR_UPDATE))
+  {
+    g_avrBootloaderIdentity = payload;
+    g_avrBootloaderAvailable = payload.startsWith("BL0.1,1,0x4000,512");
   }
   else if (type.equals(LB_MESSAGE_OSC_CAL))
   {

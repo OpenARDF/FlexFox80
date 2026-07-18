@@ -267,6 +267,9 @@ typedef enum
 #define LB_MESSAGE_PREP4DATA "$GO,0;"               /* Tell ATMEGA to prepare to receive event data */
 #define LB_MESSAGE_WIFI_OFF "$WI,0;"                /* Tell ATMEGA to power off WiFi */
 #define LB_MESSAGE_WIFI_COMS_OFF "$WI,2;"           /* Tell ATMEGA to disable linkbus to support ESP8266 programming (no exit without power cycle) */
+#define LB_MESSAGE_AVR_UPDATE_START "$UPD,START,SSID;" /* Enter resident AVR bootloader after ESP SSID-suffix authorization */
+#define LB_MESSAGE_AVR_UPDATE_QUERY "$UPD?"          /* Prove the resident bootloader handed off to this application */
+#define LB_MESSAGE_AVR_UPDATE "UPD"
 
 #define LB_MESSAGE_KEYDOWN "$KEY,[;"                /* Tell ATMEGA to key transmitter continuously */
 #define LB_MESSAGE_KEYUP "$KEY,];"                  /* Tell ATMEGA to key transmitter continuously */

@@ -40,6 +40,9 @@
 
 #define GUARDSIZE sizeof(uint32_t)
 
+/* AVR-Dx EEPROM writes use the mapped NVM controller path, not avr-libc's legacy helper. */
+void avr_eeprom_write_byte(uint16_t index, uint8_t value);
+
 struct EE_prom
 {
 	uint16_t eeprom_initialization_flag;
