@@ -1221,7 +1221,13 @@ int main(void)
 				}
 				else 
 				{
-					if(g_event_scheduled)
+					/*
+					 * Slow red promises that the event will run without another user
+					 * action. Include the pending automatic boot launch, but do not
+					 * advertise a suspended event merely because its EEPROM window
+					 * remains current.
+					 */
+					if(g_start_event || !noEventWillRun())
 					{
 						g_enunciation_code_throttle = throttleValue(8);
 						LEDS.sendCode((char*)"E  ");
@@ -3319,11 +3325,17 @@ Frequency_Hz getFrequencySetting(void)
 
 bool noEventWillRun(void)
 {
-	bool result;
-	
-	result = !eventScheduled() || !g_event_enabled || ((g_sleepType == SLEEP_USER_OVERRIDE) || (g_sleepType == SLEEP_FOREVER));
-	
-	return result;
+	time_t now = time(null);
+	bool eventWillRun = eventWillRunWithoutUserActionAt(
+		now,
+		g_event_start_epoch,
+		g_event_finish_epoch,
+		MINIMUM_VALID_EPOCH,
+		g_event_enabled);
+
+	return !eventWillRun ||
+		(g_sleepType == SLEEP_USER_OVERRIDE) ||
+		(g_sleepType == SLEEP_FOREVER);
 }
 
 bool eventScheduledForNow(void)

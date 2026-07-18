@@ -273,8 +273,8 @@ const avrFirmwareUpdate = readFileSync(avrFirmwareUpdatePath, "utf8");
 const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8");
 const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
-const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.204";
-const expectedEspVersion = "2.14";
+const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.206";
+const expectedEspVersion = "2.15";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -1171,6 +1171,27 @@ if (
 }
 
 process.stdout.write("PASS event boundaries share one ISR-aligned time decision\n");
+
+const noEventWillRunBody = avrMain.match(
+  /bool\s+noEventWillRun\s*\(void\)\s*\{([\s\S]*?)\n\}/,
+);
+if (
+  !eventScheduleState.includes("eventWillRunWithoutUserActionAt(") ||
+  !noEventWillRunBody ||
+  !noEventWillRunBody[1].includes("eventWillRunWithoutUserActionAt(") ||
+  !noEventWillRunBody[1].includes("g_event_enabled") ||
+  !avrMain.includes("if(g_start_event || !noEventWillRun())") ||
+  /if\s*\(\s*g_event_scheduled\s*\)\s*\{\s*g_enunciation_code_throttle/.test(avrMain)
+) {
+  process.stderr.write(
+    "Firmware contract check failed: AVR red LED does not distinguish runnable and suspended schedules\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write(
+  "PASS AVR red LED advertises only events runnable without user action\n",
+);
 
 const scheduledStartBlock = avrMain.match(
   /if\s*\(\s*temp_time\s*>=\s*g_event_start_epoch\s*\)\s*\/\* Time for the event to start \*\/\s*\{([\s\S]*?)g_event_commenced\s*=\s*true\s*;/,

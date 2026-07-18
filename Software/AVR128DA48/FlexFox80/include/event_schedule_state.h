@@ -90,4 +90,19 @@ static inline bool eventScheduledAt(
 	return (position == EVENT_SCHEDULE_FUTURE) || (position == EVENT_SCHEDULE_ACTIVE);
 }
 
+/*
+ * Operator indications care whether the stored schedule can run without a new
+ * action, not merely whether its time window is still current. A suspended
+ * event retains its epochs for recovery and inspection but is not runnable.
+ */
+static inline bool eventWillRunWithoutUserActionAt(
+	uint32_t now,
+	uint32_t start,
+	uint32_t finish,
+	uint32_t minimumValidEpoch,
+	bool eventEnabled)
+{
+	return eventEnabled && eventScheduledAt(now, start, finish, minimumValidEpoch);
+}
+
 #endif /* EVENT_SCHEDULE_STATE_H_INCLUDED */

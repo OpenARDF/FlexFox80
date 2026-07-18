@@ -95,7 +95,7 @@ Do not start the fleet soak solely from the generated manifest. The master event
 
 The host regression test reconstructs a fixed-date bundle and verifies all twelve files, UTC timing, role layouts, frequencies, cycle timing, file framing, filesystem limits, hashes, and clone checksums. It also verifies that the generator rejects an accidental overwrite and a start with insufficient setup time.
 
-The ESP event registry and clone manifest are both bounded at 25 files. `events.html` reports an explicit error if more than 25 `.event` files are present rather than silently presenting a complete-looking list. The qualified ESP 2.14 build uses 53% of sketch flash and 60% of global RAM, leaving 32,548 bytes for stack and heap. The optional page is 11,549 bytes and a generated twelve-event suite is about 23.7 KB raw; allowing one 8 KiB LittleFS block per file still adds only about 120 KiB to the master.
+The ESP event registry and clone manifest are both bounded at 25 files. `events.html` reports an explicit error if more than 25 `.event` files are present rather than silently presenting a complete-looking list. The qualified ESP 2.15 build uses 53% of sketch flash and 60% of global RAM, leaving 32,544 bytes for stack and heap. The optional page is 11,549 bytes and a generated twelve-event suite is about 23.7 KB raw; allowing one 8 KiB LittleFS block per file still adds only about 120 KiB to the master.
 
 Run it as part of the normal repository checks:
 
@@ -105,7 +105,7 @@ just test
 
 ## Hardware qualification before fleet use
 
-The host checks and firmware build do not make this fleet-ready by themselves. Use dummy loads for the first pilot and require these results before installing ESP 2.14 broadly:
+The host checks and firmware build do not make this fleet-ready by themselves. Use dummy loads for the first pilot and require these results before installing ESP 2.15 broadly:
 
 1. With `/fleet-soak.html` absent and then present but disarmed, perform an ordinary `events.html` clone and verify byte-for-byte ordinary `.event`/`.me` behavior.
 2. Attempt provisioning while the pilot target is running an ordinary event and verify that the target reports the active event and refuses both provisioning and cleanup.

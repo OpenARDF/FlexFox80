@@ -94,6 +94,42 @@ void schedule_predicates_share_the_same_position()
 		"scheduled_predicate_rejects_finish");
 }
 
+void operator_run_indication_requires_an_enabled_schedule()
+{
+	expect(
+		eventWillRunWithoutUserActionAt(
+			startEpoch - 1,
+			startEpoch,
+			finishEpoch,
+			minimumValidEpoch,
+			true),
+		"enabled_future_event_will_run_without_action");
+	expect(
+		eventWillRunWithoutUserActionAt(
+			startEpoch,
+			startEpoch,
+			finishEpoch,
+			minimumValidEpoch,
+			true),
+		"enabled_active_event_will_run_without_action");
+	expect(
+		!eventWillRunWithoutUserActionAt(
+			startEpoch - 1,
+			startEpoch,
+			finishEpoch,
+			minimumValidEpoch,
+			false),
+		"suspended_future_event_requires_user_action");
+	expect(
+		!eventWillRunWithoutUserActionAt(
+			finishEpoch,
+			startEpoch,
+			finishEpoch,
+			minimumValidEpoch,
+			true),
+		"finished_event_requires_user_action");
+}
+
 } // namespace
 
 int main()
@@ -101,6 +137,7 @@ int main()
 	invalid_windows_are_rejected();
 	exact_boundaries_match_the_rtc_isr_contract();
 	schedule_predicates_share_the_same_position();
+	operator_run_indication_requires_an_enabled_schedule();
 
 	std::cout << "All AVR event schedule state tests passed\n";
 	return EXIT_SUCCESS;
