@@ -55,7 +55,7 @@ Complete these gates separately for each unit:
 1. Connect the RF output to an appropriate dummy load and confirm that no antenna is connected.
 2. Join the unit's MAC-derived `Tx_...` SSID. If it advertises `Tx_Master`, retrieve and record the separate MAC-derived device SSID before authorizing an update.
 3. Establish the scoped Moto/DroidTether route and run `just wifi-probe`.
-4. Run `FLEXFOX_AVR_UPDATE_DRY_RUN=1 just wifi-avr-update`. Record the MAC-derived device SSID and AVR update state; the preflight must report that no image was staged.
+4. Run `just wifi-avr-preflight`. Record the MAC-derived device SSID and AVR update state; the preflight must report that no image was staged.
 5. Record SSID, ESP MAC, `MASTER` state, `SW_VERSIONS`, temperature, battery voltage, visible LED state, and whether RF is active.
 6. Download or otherwise hash-record every `.event` and `.me` file. Record the active event and role independently rather than inferring them from filenames.
 7. If one-time UPDI provisioning is needed, retain that unit's complete 512-byte EEPROM and fuse capture. Do not use another unit's EEPROM image.

@@ -107,6 +107,10 @@ wifi-esp-update:
 wifi-avr-update:
     node ./scripts/update-flexfox-avr-over-wifi.mjs
 
+# Identify the exact FlexFox and AVR update state without staging an image.
+wifi-avr-preflight:
+    FLEXFOX_AVR_UPDATE_DRY_RUN=1 node ./scripts/update-flexfox-avr-over-wifi.mjs
+
 # Install and hash-verify events.html or another named LittleFS web file (explicit confirmation required).
 wifi-web-deploy:
     node ./scripts/deploy-flexfox-web-file.mjs
