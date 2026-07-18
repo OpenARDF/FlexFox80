@@ -53,9 +53,11 @@ The ESP translates AVR replies back to WebSocket messages including `TEMP`, `BAT
 
 ## Wireless AVR bootloading
 
-### Implementation status — ESP 2.12 / AVR 0.204 / bootloader BL0.1
+### Implementation status — ESP 2.14 / AVR 0.204 / bootloader BL0.1
 
 The first complete implementation is source-, build-, and pilot-hardware-qualified, but not yet fleet-qualified. AVR 0.204 contains the 0.203 scheduled-start sleep correction and adds the relocated bootloader handoff, capability query, and guarded update entry. It reuses SignalSlinger's tested AVR DA page protocol and reset-vector-last recovery model, adapted for the FlexFox power topology:
+
+ESP 2.14 also corrects the browser `CLEAR` command to reuse the AVR's established `$KEY,^;` operator-stop path. The prior `$GO,0;` mapping changed the reported status to ready-for-data but did not suspend an event already running. `CLEAR` now disables RF immediately and keeps WiFi awake. This runtime stop does not by itself rewrite the AVR's EEPROM finish epoch; allow the original finish to pass or deliberately install a completed schedule before relying on a power cycle. The guarded `$UPD,START,SSID;` AVR-update handoff remains stronger: it independently suspends RF, stores the current epoch as the completed finish, verifies that EEPROM write, and only then resets into the resident bootloader.
 
 - a 16 KiB resident Boot section occupies `0x0000–0x3FFF` (`BOOTSIZE=0x20`);
 - the FlexFox application is linked at `0x4000` (`CODESIZE=0x00`);

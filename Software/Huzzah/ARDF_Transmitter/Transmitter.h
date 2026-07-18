@@ -285,6 +285,7 @@ typedef enum
 #define LB_MESSAGE_KEYDOWN "$KEY,[;"                /* Tell ATMEGA to key transmitter continuously */
 #define LB_MESSAGE_KEYUP "$KEY,];"                  /* Tell ATMEGA to key transmitter continuously */
 #define LB_MESSAGE_KEY "$KEY,"                      /* Tell ATMEGA to key transmitter continuously */
+#define LB_MESSAGE_SUSPEND_EVENT "$KEY,^;"           /* Stop an active event and keep WiFi available */
 
 typedef enum
 {

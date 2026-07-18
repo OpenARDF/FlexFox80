@@ -5370,7 +5370,13 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_CLEAR_ACTIVE_EVENT))
           {
-            g_LBOutputBuff->put(LB_MESSAGE_PREP4DATA);
+            /*
+             * GO,0 only prepares the AVR for event data; it does not suspend an
+             * event which is already running. Reuse the AVR's established
+             * operator-stop path so CLEAR immediately disables RF while keeping
+             * WiFi awake for the next browser or maintenance operation.
+             */
+            g_LBOutputBuff->put(LB_MESSAGE_SUSPEND_EVENT);
             if (g_activeEvent)
             {
               delete(g_activeEvent);

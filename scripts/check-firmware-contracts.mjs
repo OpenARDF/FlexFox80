@@ -274,7 +274,7 @@ const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8"
 const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
 const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.204";
-const expectedEspVersion = "2.13";
+const expectedEspVersion = "2.14";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -1476,6 +1476,30 @@ if (
 process.stdout.write(
   "PASS active event loading rereads same-path files replaced by cloning\n",
 );
+
+const clearActiveEventBody = espMain.match(
+  /else if \(msgHeader\.equalsIgnoreCase\(SOCK_COMMAND_CLEAR_ACTIVE_EVENT\)\)\s*\{([\s\S]*?)\n\s*\}\n\s*else if/,
+);
+const avrKeyMessageBody = avrMain.match(
+  /case LB_MESSAGE_KEY:\s*\{([\s\S]*?)\n\s*\}\n\s*break;/,
+);
+if (
+  !clearActiveEventBody ||
+  !avrKeyMessageBody ||
+  !espHeader.includes('#define LB_MESSAGE_SUSPEND_EVENT "$KEY,^;"') ||
+  !clearActiveEventBody[1].includes("g_LBOutputBuff->put(LB_MESSAGE_SUSPEND_EVENT);") ||
+  clearActiveEventBody[1].includes("g_LBOutputBuff->put(LB_MESSAGE_PREP4DATA);") ||
+  !avrKeyMessageBody[1].includes("else if(c == '^')") ||
+  !avrKeyMessageBody[1].includes("suspendEvent();") ||
+  !avrKeyMessageBody[1].includes("g_WiFi_shutdown_seconds = 0;")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: CLEAR must reuse the AVR stop-and-keep-WiFi event path\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS ESP CLEAR command reuses the AVR stop-and-keep-WiFi event path\n");
 
 if (
   espMain.includes("g_webSocketServer.isRunning()") ||
