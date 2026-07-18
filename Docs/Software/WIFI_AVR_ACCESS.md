@@ -113,6 +113,8 @@ The connected pilot completed both directions of a real wireless application upd
 
 This establishes one successful end-to-end update, downgrade, and genuine post-erase interruption recovery. It does not replace repeated power-loss testing at several page positions, normal WiFi wake/power-down regression, ordinary event/RF regression, or a second pilot before fleet rollout.
 
+The exact ESP 2.15 / AVR 0.206 two-unit procedure, candidate hashes, per-unit preservation rules, LED checks, interruption gate, and final disposition are prepared in [WiFi AVR two-unit qualification](Evidence/WIFI_AVR_TWO_UNIT_QUALIFICATION_2026-07-18.md). Record the hardware observations there rather than treating a successful updater message as complete qualification.
+
 BL0.1 intentionally uses integrity checks and deliberate operator authorization rather than cryptographic firmware signatures. The host verifies the release SHA-256, the ESP verifies the complete uploaded CRC-32, and every bootloader frame and programmed page is CRC-checked. Entry requires the final four characters of the unique MAC-derived ESP SSID, but that suffix is an operator-error interlock rather than a secret: it is readily visible to the person connected to the unit. This matches the deployment model in which the ESP is normally reachable for only two minutes after power-up, has short range, and is used predominantly in rural locations.
 
 ### Feasibility decision
