@@ -1457,12 +1457,13 @@ bool setupHTTP_AP()
   /* Keep an immutable per-ESP identity even while master mode advertises Tx_Master. */
   uint8_t mac[WL_MAC_ADDR_LENGTH];
   WiFi.softAPmacAddress(mac);
-  String macID = String(mac[WL_MAC_ADDR_LENGTH - 4], HEX) +
-                 String(mac[WL_MAC_ADDR_LENGTH - 3], HEX) +
-                 String(mac[WL_MAC_ADDR_LENGTH - 2], HEX) +
-                 String(mac[WL_MAC_ADDR_LENGTH - 1], HEX);
-  macID.toUpperCase();
-  g_uniqueAPNameString = String("Tx_" + macID);
+  char macID[9];
+  /* Format bytes, not integers, so every MAC-derived identity has exactly
+   * eight uppercase hex digits even when a byte contains a leading zero. */
+  snprintf(macID, sizeof(macID), "%02X%02X%02X%02X",
+           mac[WL_MAC_ADDR_LENGTH - 4], mac[WL_MAC_ADDR_LENGTH - 3],
+           mac[WL_MAC_ADDR_LENGTH - 2], mac[WL_MAC_ADDR_LENGTH - 1]);
+  g_uniqueAPNameString = String("Tx_") + macID;
   g_AP_NameString = g_IamMaster ? MASTER_SSID : g_uniqueAPNameString;
 
   IPAddress apIP = stringToIP(g_softAP_IP_addr);

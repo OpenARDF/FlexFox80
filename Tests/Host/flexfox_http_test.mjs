@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   crc32,
   digest,
@@ -41,5 +44,12 @@ assert.throws(() => multipartFileBody("name", "../events.html", check), /unsafe 
 assert.equal(normalizeFlexFoxUrl().href, "http://73.73.73.73/");
 assert.equal(normalizeFlexFoxUrl("http://73.73.73.73/events.html?x=1").href, "http://73.73.73.73/");
 assert.throws(() => normalizeFlexFoxUrl("https://73.73.73.73/"), /must use http/);
+
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const updater = readFileSync(join(repoRoot, "scripts", "update-flexfox-esp-over-wifi.mjs"), "utf8");
+assert.match(updater, /FLEXFOX_EXPECTED_PREUPDATE_DEVICE_SSID/);
+assert.match(updater, /FLEXFOX_RECONNECT_SSID/);
+assert.match(updater, /beforeDeviceSsid !== expectedPreUpdateDeviceSsid/);
+assert.match(updater, /after\.deviceSsid !== expectedDeviceSsid/);
 
 console.log("PASS FlexFox HTTP deployment helpers frame uploads and verify normalized sketch hashes");

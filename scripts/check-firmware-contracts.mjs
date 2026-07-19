@@ -395,6 +395,8 @@ if (
   !espMain.includes('\\\"filesystemMounted\\\":') ||
   !espMain.includes('response += ",\\\"recoveryMode\\\":";') ||
   !espMain.includes('response += "\\\",\\\"deviceSsid\\\":\\\"";') ||
+  !espMain.includes("char macID[9];") ||
+  !espMain.includes('snprintf(macID, sizeof(macID), "%02X%02X%02X%02X"') ||
   !espMain.includes('response += ",\\\"filesystemRecoveryReason\\\":\\\"";') ||
   !espMain.includes('g_littleFsRecoveryReason = "startup-watchdog";') ||
   !espMain.includes('g_littleFsRecoveryReason = "mount-failed";') ||
@@ -416,7 +418,10 @@ if (
   !wifiUpdater.includes("before.recoveryMode === true") ||
   !wifiUpdater.includes("await readLegacyDeviceSsid()") ||
   !wifiUpdater.includes('socket.send("SSID")') ||
-  !wifiUpdater.includes("beforeDeviceSsid !== expectedDeviceSsid") ||
+  !wifiUpdater.includes("FLEXFOX_EXPECTED_PREUPDATE_DEVICE_SSID") ||
+  !wifiUpdater.includes("FLEXFOX_RECONNECT_SSID") ||
+  !wifiUpdater.includes("beforeDeviceSsid !== expectedPreUpdateDeviceSsid") ||
+  !wifiUpdater.includes("after.deviceSsid !== expectedDeviceSsid") ||
   !wifiUpdater.includes("function requestMotoReassociation()") ||
   !wifiUpdater.includes('"connect-network"') ||
   !wifiUpdater.includes("lastReassociationMillis") ||

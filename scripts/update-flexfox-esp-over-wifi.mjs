@@ -30,7 +30,13 @@ const firmwarePath = resolve(
 );
 const baseUrl = normalizeFlexFoxUrl(process.env.FLEXFOX_URL);
 const expectedVersion = process.env.FLEXFOX_EXPECTED_ESP_VERSION ?? sourceVersion;
-const expectedDeviceSsid = process.env.FLEXFOX_EXPECTED_DEVICE_SSID;
+const expectedDeviceSsid = String(process.env.FLEXFOX_EXPECTED_DEVICE_SSID ?? "").trim();
+const expectedPreUpdateDeviceSsid = String(
+  process.env.FLEXFOX_EXPECTED_PREUPDATE_DEVICE_SSID ?? expectedDeviceSsid,
+).trim();
+const reconnectSsid = String(
+  process.env.FLEXFOX_RECONNECT_SSID ?? expectedDeviceSsid,
+).trim();
 const expectFilesystemRecovery = process.env.FLEXFOX_EXPECTED_FILESYSTEM_RECOVERY === "1";
 const adbSerial = String(process.env.FLEXFOX_ADB_SERIAL ?? "").trim();
 const adbPath = String(process.env.FLEXFOX_ADB ?? "adb").trim();
@@ -62,6 +68,15 @@ if (!statSync(firmwarePath).isFile()) {
 }
 if (expectedDeviceSsid && !/^Tx_[0-9A-F]{8}$/.test(expectedDeviceSsid)) {
   throw new Error("FLEXFOX_EXPECTED_DEVICE_SSID must be the exact MAC-derived Tx_ plus eight uppercase hex digits");
+}
+if (expectedPreUpdateDeviceSsid && !/^Tx_[0-9A-F]{1,8}$/.test(expectedPreUpdateDeviceSsid)) {
+  throw new Error("FLEXFOX_EXPECTED_PREUPDATE_DEVICE_SSID must be an exact legacy or canonical MAC-derived Tx_ identity");
+}
+if (reconnectSsid && reconnectSsid !== "Tx_Master" && !/^Tx_[0-9A-F]{8}$/.test(reconnectSsid)) {
+  throw new Error("FLEXFOX_RECONNECT_SSID must be Tx_Master or an exact canonical device SSID");
+}
+if (reconnectSsid && !adbSerial) {
+  throw new Error("FLEXFOX_RECONNECT_SSID requires FLEXFOX_ADB_SERIAL");
 }
 if (expectFilesystemRecovery) {
   const evidencePath = join(dirname(firmwarePath), "build-evidence.json");
@@ -118,13 +133,13 @@ async function readLegacyDeviceSsid(timeoutMs = 5000) {
 }
 
 function requestMotoReassociation() {
-  if (!adbSerial || !expectedDeviceSsid) return;
+  if (!adbSerial || !reconnectSsid) return;
   spawnSync(
     adbPath,
     [
       "-s", adbSerial,
       "shell", "cmd", "wifi", "connect-network",
-      expectedDeviceSsid, "open", "-r", "none",
+      reconnectSsid, "open", "-r", "none",
     ],
     { encoding: "utf8", timeout: 15000 },
   );
@@ -139,9 +154,9 @@ if (before.filesystemProtected !== true) {
   throw new Error("device did not confirm that its firmware endpoint protects LittleFS");
 }
 const beforeDeviceSsid = before.deviceSsid ||
-  (expectedDeviceSsid ? await readLegacyDeviceSsid() : undefined);
-if (expectedDeviceSsid && beforeDeviceSsid !== expectedDeviceSsid) {
-  throw new Error(`connected device is ${beforeDeviceSsid}; expected ${expectedDeviceSsid}`);
+  (expectedPreUpdateDeviceSsid ? await readLegacyDeviceSsid() : undefined);
+if (expectedPreUpdateDeviceSsid && beforeDeviceSsid !== expectedPreUpdateDeviceSsid) {
+  throw new Error(`connected device is ${beforeDeviceSsid}; expected ${expectedPreUpdateDeviceSsid}`);
 }
 if (before.cloneActive || before.updateActive || before.restartPending) {
   throw new Error(`device is busy: ${JSON.stringify(before)}`);
