@@ -3,6 +3,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
 import {
   crc32,
   digest,
@@ -31,6 +32,8 @@ const baseUrl = normalizeFlexFoxUrl(process.env.FLEXFOX_URL);
 const expectedVersion = process.env.FLEXFOX_EXPECTED_ESP_VERSION ?? sourceVersion;
 const expectedDeviceSsid = process.env.FLEXFOX_EXPECTED_DEVICE_SSID;
 const expectFilesystemRecovery = process.env.FLEXFOX_EXPECTED_FILESYSTEM_RECOVERY === "1";
+const adbSerial = String(process.env.FLEXFOX_ADB_SERIAL ?? "").trim();
+const adbPath = String(process.env.FLEXFOX_ADB ?? "adb").trim();
 const confirmation = process.env.FLEXFOX_UPDATE_CONFIRM;
 const uploadTimeoutMs = Number.parseInt(
   process.env.FLEXFOX_UPDATE_UPLOAD_TIMEOUT_MS ?? "120000",
@@ -114,6 +117,19 @@ async function readLegacyDeviceSsid(timeoutMs = 5000) {
   });
 }
 
+function requestMotoReassociation() {
+  if (!adbSerial || !expectedDeviceSsid) return;
+  spawnSync(
+    adbPath,
+    [
+      "-s", adbSerial,
+      "shell", "cmd", "wifi", "connect-network",
+      expectedDeviceSsid, "open", "-r", "none",
+    ],
+    { encoding: "utf8", timeout: 15000 },
+  );
+}
+
 let before = await readStatus();
 if (before.uptimeMillis < 10000) {
   await sleep(10000 - before.uptimeMillis);
@@ -177,7 +193,12 @@ try {
 const deadline = Date.now() + verificationTimeoutMs;
 let after;
 let wrongImageAfterReboot;
+let lastReassociationMillis = 0;
 while (Date.now() < deadline) {
+  if (adbSerial && Date.now() - lastReassociationMillis >= 3000) {
+    requestMotoReassociation();
+    lastReassociationMillis = Date.now();
+  }
   await sleep(1500);
   try {
     const candidate = await readStatus(3000);

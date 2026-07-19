@@ -373,6 +373,9 @@ if (
   !wifiUpdater.includes("await readLegacyDeviceSsid()") ||
   !wifiUpdater.includes('socket.send("SSID")') ||
   !wifiUpdater.includes("beforeDeviceSsid !== expectedDeviceSsid") ||
+  !wifiUpdater.includes("function requestMotoReassociation()") ||
+  !wifiUpdater.includes('"connect-network"') ||
+  !wifiUpdater.includes("lastReassociationMillis") ||
   !espFilesystemRecoveryQualifier.includes("QUALIFY ESP FILESYSTEM RECOVERY") ||
   !espFilesystemRecoveryQualifier.includes("install(recoveryImage, true)") ||
   !espFilesystemRecoveryQualifier.includes("install(normalImage, false)")
