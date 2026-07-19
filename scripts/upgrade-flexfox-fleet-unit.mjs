@@ -433,6 +433,11 @@ function verifyIdentity(replies, artifacts, requireCurrentVersions) {
   }
 }
 
+function probeReportsAvrVersion(replies, expectedVersion) {
+  const versions = String(replies.SW_VERSIONS ?? "").split(",");
+  return versions.length === 2 && versions[1] === expectedVersion;
+}
+
 async function runVerifiedProbe(artifacts, requireCurrentVersions, timeoutMs = 12000) {
   let lastError;
   for (let attempt = 1; attempt <= 3; attempt++) {
@@ -464,17 +469,34 @@ async function remoteFileMatches(file) {
 }
 
 async function deployWebFile(file) {
-  await runProcess("just", ["wifi-web-deploy"], {
-    env: {
-      ...process.env,
-      FLEXFOX_URL: httpUrl,
-      FLEXFOX_WEBSOCKET_URL: webSocketUrl,
-      FLEXFOX_WEB_FILE: file.path,
-      FLEXFOX_WEB_CONFIRM: "UPDATE FLEXFOX WEB FILE",
-    },
-    timeoutMs: 180000,
-  });
-  if (!(await remoteFileMatches(file))) fail(`/${file.name} failed final readback verification`);
+  let lastError;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      await runProcess("just", ["wifi-web-deploy"], {
+        env: {
+          ...process.env,
+          FLEXFOX_URL: httpUrl,
+          FLEXFOX_WEBSOCKET_URL: webSocketUrl,
+          FLEXFOX_WEB_FILE: file.path,
+          FLEXFOX_WEB_CONFIRM: "UPDATE FLEXFOX WEB FILE",
+        },
+        timeoutMs: 180000,
+      });
+      if (await remoteFileMatches(file)) return;
+      lastError = new Error(`/${file.name} failed final readback verification`);
+    } catch (error) {
+      lastError = error;
+    }
+
+    log(`WARN: /${file.name} deployment response was interrupted; recovering the exact-SSID link.`);
+    await waitForFirmwareStatus();
+    if (await remoteFileMatches(file)) {
+      log(`PASS: /${file.name} checksum matches despite the interrupted deployment response.`);
+      return;
+    }
+    if (attempt === 1) log(`Retrying /${file.name} once after checksum mismatch.`);
+  }
+  throw lastError;
 }
 
 async function main() {
@@ -530,9 +552,12 @@ async function main() {
       result: espStatusMatchesArtifact(initialStatus, artifacts.esp) ? "would-skip" : "would-update",
     };
     summary.phases.avr = {
-      result: wirelessOnly
-        ? "would-update-through-resident-bootloader"
-        : "would-verify-or-provision-with-atmel-ice",
+      result:
+        wirelessOnly && probeReportsAvrVersion(initialReplies, artifacts.avr.version)
+          ? "would-skip-already-current"
+          : wirelessOnly
+            ? "would-update-through-resident-bootloader"
+            : "would-verify-or-provision-with-atmel-ice",
     };
     summary.phases.web = {};
     for (const file of artifacts.webFiles) {
@@ -569,7 +594,10 @@ async function main() {
   }
   recordSummary();
 
-  if (wirelessOnly) {
+  if (wirelessOnly && probeReportsAvrVersion(initialReplies, artifacts.avr.version)) {
+    summary.phases.avr = { result: "skipped-already-current" };
+    log(`PASS: AVR ${artifacts.avr.version} already reports as installed; skipping wireless rewrite.`);
+  } else if (wirelessOnly) {
     log(
       `Updating AVR wirelessly through the resident ${artifacts.avr.bootloaderVersion} ` +
         `to ${artifacts.avr.version}...`,

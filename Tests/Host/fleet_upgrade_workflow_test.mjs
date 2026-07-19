@@ -123,6 +123,8 @@ for (const recipe of [
 }
 assert.equal(workflowSource.includes("FLEXFOX_FLEET_UPGRADE_CONFIRM"), true);
 assert.equal(workflowSource.includes("FLEXFOX_FLEET_WIRELESS_ONLY"), true);
+assert.equal(workflowSource.includes("skipped-already-current"), true);
+assert.equal(workflowSource.includes("deployment response was interrupted"), true);
 assert.equal(workflowSource.includes("FLEXFOX_PROVISION_SKIP_IF_CURRENT"), true);
 assert.equal(workflowSource.includes("runWithWifiRecovery"), true);
 assert.equal(workflowSource.includes("remoteFileMatches"), true);
