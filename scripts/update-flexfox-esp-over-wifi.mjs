@@ -149,6 +149,9 @@ if (before.cloneActive || before.updateActive || before.restartPending) {
 if (!Number.isInteger(before.maximumUpdateBytes) || firmware.length > before.maximumUpdateBytes) {
   throw new Error(`firmware is ${firmware.length} bytes; device limit is ${before.maximumUpdateBytes}`);
 }
+const imageWasAlreadyInstalled = installedMd5Values.has(
+  String(before.currentSketchMd5 ?? "").toLowerCase(),
+);
 
 console.log(`Target: ${baseUrl.href}`);
 console.log(`Before: ESP ${before.version}, sketch ${before.currentSketchBytes} bytes, MD5 ${before.currentSketchMd5}`);
@@ -203,7 +206,11 @@ while (Date.now() < deadline) {
   try {
     const candidate = await readStatus(3000);
     if (candidate.restartPending || candidate.updateActive) continue;
-    if (!Number.isInteger(candidate.uptimeMillis) || candidate.uptimeMillis >= before.uptimeMillis) continue;
+    if (!Number.isInteger(candidate.uptimeMillis)) continue;
+    /* A changed exact MD5 proves the new boot even if slow AP/HTTP startup makes
+     * its observed uptime exceed the old image's short pre-update uptime. When
+     * reinstalling the same bytes, retain the stricter uptime-reset proof. */
+    if (imageWasAlreadyInstalled && candidate.uptimeMillis >= before.uptimeMillis) continue;
     if (!installedMd5Values.has(candidate.currentSketchMd5?.toLowerCase())) {
       wrongImageAfterReboot = candidate;
       break;

@@ -653,6 +653,8 @@ if (
   !wifiUpdater.includes("WIFI_SW_VERSION") ||
   !wifiUpdater.includes("verificationTimeoutMs > 300000") ||
   !wifiUpdater.includes("wrongImageAfterReboot") ||
+  !wifiUpdater.includes("imageWasAlreadyInstalled") ||
+  !wifiUpdater.includes("if (imageWasAlreadyInstalled && candidate.uptimeMillis >= before.uptimeMillis) continue;") ||
   !wifiUpdater.includes("the staged update was not installed") ||
   !wifiUpdater.includes("createBoundedFlexFoxHeartbeat") ||
   !wifiUpdater.includes("heartbeat?.stop()") ||
