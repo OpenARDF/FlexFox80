@@ -16,6 +16,11 @@ assert.equal(existsSync(baselinePagePath), false, "Fleet Soak must remain absent
 assert.match(source, /const reservedNames = Array\.from\(\{length: 12\}/);
 assert.match(source, /id="scheduleStart" type="datetime-local"/);
 assert.match(source, /Prepare master and arm fox provisioning/);
+assert.match(source, /id="nextAssignment" class="instruction"/);
+assert.match(source, /id="provisionConfirmation" class="confirmation muted"/);
+assert.match(source, /TURN ON NOW: \$\{plan\.label\.toUpperCase\(\)\}/);
+assert.match(source, /\$\{entry\.label\.toUpperCase\(\)\} COMPLETE/);
+assert.match(source, /The page will not advance to the next role/);
 assert.match(source, /FLEET_SOAK_MODE,\$\{mode\}/);
 assert.match(source, /FLEET_SOAK_ASSIGN,\$\{entry\.ssid\},\$\{entry\.assignment\}/);
 assert.match(source, /\{label: "Slow 1", assignment: "0:0", frequency: "3\.520 MHz"\}/);

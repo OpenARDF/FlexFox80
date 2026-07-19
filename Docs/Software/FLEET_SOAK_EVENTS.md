@@ -83,7 +83,7 @@ Deleting `/fleet-soak.html` disarms Fleet Soak controls and deactivates the rese
 
 1. Install `/fleet-soak.html` on the master and open it.
 2. Enter the local first-event start date/time, at least 30 minutes in the future, and use **Prepare master and arm fox provisioning**. The page synchronizes the master clock, generates and installs the twelve-event suite, activates it, resets the run roster, and arms provisioning.
-3. Power one target at a time in this exact order: Slow 1, Slow 2, Slow 3, Slow 4, Slow 5, Fast 1, Fast 2, Fast 3, Fast 4, Fast 5. Wait for `Provision: OK` before powering the next fox. The Fleet Soak transfer synchronizes each target clock before installing its reserved suite.
+3. Follow the page's prominent **TURN ON NOW** instruction and power one target at a time in this exact order: Slow 1, Slow 2, Slow 3, Slow 4, Slow 5, Fast 1, Fast 2, Fast 3, Fast 4, Fast 5. The page holds the current role on failure and advances only after explicitly confirming that the named fox is complete and can be turned off. The Fleet Soak transfer synchronizes each target clock before installing its reserved suite.
 4. On every unit, verify that all twelve events are present and that its assignment is the same in every event. Fleet Soak provisioning creates its own reserved `.me` files; ordinary `.me` files are not changed.
 5. Confirm the schedule start and finish times, the absence of overlaps, and the intended quiet intervals on representative targets.
 6. Connect appropriate antennas or dummy loads and perform the normal RF safety and authorization checks.

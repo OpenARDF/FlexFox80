@@ -17,6 +17,8 @@
     .ok { color: #17823b; }
     .error { color: #c62828; }
     .muted { color: #777; }
+    .instruction { border: 2px solid #1769aa; border-radius: .5rem; font-size: 1.3rem; font-weight: 700; padding: .8rem; }
+    .confirmation { font-size: 1.1rem; font-weight: 700; }
     table { border-collapse: collapse; width: 100%; }
     td, th { border-bottom: 1px solid #8885; padding: .5rem; text-align: left; }
     #log { max-height: 12rem; overflow: auto; white-space: pre-wrap; }
@@ -40,7 +42,8 @@
 
   <section>
     <h2>2. Prepare or clean targets</h2>
-    <p id="nextAssignment">Provisioning order has not started.</p>
+    <p id="nextAssignment" class="instruction">Provisioning order has not started.</p>
+    <p id="provisionConfirmation" class="confirmation muted">No fox has completed provisioning yet.</p>
     <p>
       <button id="armProvision" class="primary">Re-arm target provisioning</button>
       <button id="armCleanup" class="danger">Arm target cleanup</button>
@@ -324,24 +327,41 @@ function resetProvisioningState(runStartUtc) {
   assignmentsSent.clear();
   saveProvisioningState();
   byId("targets").replaceChildren();
+  byId("provisionConfirmation").textContent = "No fox has completed provisioning yet.";
+  byId("provisionConfirmation").className = "confirmation muted";
   updateNextAssignment();
 }
 function completedProvisionCount() {
   return provisioningState.entries.filter(entry => entry.status === "ok").length;
 }
 function updateNextAssignment() {
+  if (!provisioningState.runStartUtc) {
+    byId("nextAssignment").textContent =
+      "Provisioning order has not started. Prepare the master before turning on Slow 1.";
+    byId("nextAssignment").className = "instruction muted";
+    return;
+  }
   const completed = completedProvisionCount();
   const plan = provisioningPlan[completed];
   if (!plan) {
-    byId("nextAssignment").textContent = "All ten foxes are provisioned; target provisioning is disarmed.";
-    byId("nextAssignment").className = "ok";
+    byId("nextAssignment").textContent = "ALL TEN FOXES COMPLETE — target provisioning is disarmed.";
+    byId("nextAssignment").className = "instruction ok";
     return;
   }
   const active = provisioningState.entries.find(entry => entry.status !== "ok");
-  byId("nextAssignment").textContent = active
-    ? `Waiting for ${active.ssid} to finish as ${active.label} (${active.assignment}, ${active.frequency}).`
-    : `Next powered fox: ${plan.label} (${plan.assignment}, ${plan.frequency}).`;
-  byId("nextAssignment").className = active?.status === "error" ? "error" : "";
+  if (active?.status === "error") {
+    byId("nextAssignment").textContent =
+      `KEEP ON: ${active.label.toUpperCase()} — retry ${active.ssid}; this role has not advanced.`;
+    byId("nextAssignment").className = "instruction error";
+  } else if (active) {
+    byId("nextAssignment").textContent =
+      `KEEP ON: ${active.label.toUpperCase()} — provisioning ${active.ssid} (${active.assignment}, ${active.frequency}).`;
+    byId("nextAssignment").className = "instruction";
+  } else {
+    byId("nextAssignment").textContent =
+      `TURN ON NOW: ${plan.label.toUpperCase()} (${plan.assignment}, ${plan.frequency})`;
+    byId("nextAssignment").className = "instruction";
+  }
 }
 function setModeText(text, className = "") {
   byId("modeStatus").textContent = text;
@@ -492,6 +512,9 @@ function provisioningEntryForTarget(ssid, sprint, classic, storedFleet) {
   provisioningState.entries.push(entry);
   activeProvisionSsid = ssid;
   saveProvisioningState();
+  byId("provisionConfirmation").textContent =
+    `Detected ${ssid} as ${entry.label}. Keep it powered until completion is confirmed.`;
+  byId("provisionConfirmation").className = "confirmation";
   updateNextAssignment();
   return entry;
 }
@@ -543,6 +566,15 @@ function showResult(fields) {
       entry.status = outcome === "OK" ? "ok" : "error";
       activeProvisionSsid = outcome === "OK" ? "" : ssid;
       saveProvisioningState();
+      if (outcome === "OK") {
+        byId("provisionConfirmation").textContent =
+          `${entry.label.toUpperCase()} COMPLETE — ${ssid} provisioned as ${entry.assignment} at ${entry.frequency}. Turn it off.`;
+        byId("provisionConfirmation").className = "confirmation ok";
+      } else {
+        byId("provisionConfirmation").textContent =
+          `${entry.label.toUpperCase()} FAILED — keep ${ssid} on and retry. The page will not advance to the next role.`;
+        byId("provisionConfirmation").className = "confirmation error";
+      }
       updateNextAssignment();
       if (outcome === "OK" && completedProvisionCount() === provisioningPlan.length) {
         note("All ten foxes are provisioned. Target provisioning is now disarmed.", "ok");
