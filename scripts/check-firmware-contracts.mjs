@@ -131,6 +131,22 @@ const wifiPowerLeasePath = join(
   "include",
   "wifi_power_lease.h",
 );
+const temperatureContractPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "include",
+  "temperature_contract.h",
+);
+const adcPath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "src",
+  "adc.cpp",
+);
 const tcbPath = join(
   repoRoot,
   "Software",
@@ -280,6 +296,8 @@ const avrBootloader = readFileSync(avrBootloaderPath, "utf8");
 const avrUpdateContract = readFileSync(avrUpdateContractPath, "utf8");
 const eventScheduleState = readFileSync(eventScheduleStatePath, "utf8");
 const wifiPowerLease = readFileSync(wifiPowerLeasePath, "utf8");
+const temperatureContract = readFileSync(temperatureContractPath, "utf8");
+const adc = readFileSync(adcPath, "utf8");
 const tcb = readFileSync(tcbPath, "utf8");
 const ds3231 = readFileSync(ds3231Path, "utf8");
 const ds3231Header = readFileSync(ds3231HeaderPath, "utf8");
@@ -298,8 +316,8 @@ const avrFirmwareUpdate = readFileSync(avrFirmwareUpdatePath, "utf8");
 const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8");
 const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
-const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.209";
-const expectedEspVersion = "2.24";
+const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.210";
+const expectedEspVersion = "2.25";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -316,6 +334,30 @@ if (
 }
 
 process.stdout.write(`PASS combined firmware version reports ${expectedEspVersion},${expectedAvrVersion}\n`);
+
+if (
+  !temperatureContract.includes("#define TEMPERATURE_MINIMUM_C (-20)") ||
+  !temperatureContract.includes("#define TEMPERATURE_MAXIMUM_C 120") ||
+  !temperatureContract.includes("temperatureCelsiusFromAdc(") ||
+  !temperatureContract.includes("temperatureCelsiusFromText(") ||
+  !adc.includes("(void)ADC0_read();") ||
+  !adc.includes("g_temperature_sample_ready = false;") ||
+  !adc.includes("calibration and validation happen on read") ||
+  !avrMain.includes("ADCTemperature") ||
+  !avrMain.includes("conversionTimeoutTicks = 3") ||
+  !avrMain.includes("ADC0_markTemperatureUnavailable();") ||
+  !avrMain.includes("if(temperatureC(&temp))") ||
+  !avrMain.includes("TEMPERATURE_UNAVAILABLE_TEXT") ||
+  !espMain.includes("temperatureCelsiusFromText(payload.c_str(), &temperature)") ||
+  !espMain.includes("String value = TEMPERATURE_UNAVAILABLE_TEXT")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: temperature availability, range, ADC ownership, or display filtering regressed\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS temperature telemetry has bounded ADC ownership and explicit unavailability\n");
 
 if (
   !espMain.includes("Update.begin(g_firmwareUpdateExpectedSize, U_FLASH)") ||

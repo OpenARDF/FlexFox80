@@ -656,6 +656,20 @@
             }
         }, 100);
 
+        function updateTemperatureDisplay(payload) {
+            var display = document.getElementById("temperature");
+            if (display == null) return;
+
+            var match = String(payload || "").trim().match(/^(-?\d+(?:\.\d+)?)C$/);
+            var celsius = match ? Number(match[1]) : NaN;
+            if (!isFinite(celsius) || (celsius < -20) || (celsius > 120)) {
+                display.textContent = "Temp: unavailable";
+                return;
+            }
+
+            display.textContent = "Temp: " + match[1] + "C";
+        }
+
         function webSocketStart() {
             var websocketcreated = true;
             var host = String(window.location.hostname);
@@ -694,6 +708,7 @@
                     console.log("websock open");
                     websocketcreated = true;
                     g_stillConnected = Math.max(200, g_stillConnected);
+                    updateTemperatureDisplay();
 
                     setTimeout(function() {
                         sendSocketAlive();
@@ -1106,9 +1121,7 @@
 
                         case "TEMP":
                             {
-                                var t = "Temp: " + arr[1];
-                                document.getElementById("temperature").innerHTML = t;
-                                //              console.log(t);
+                                updateTemperatureDisplay(arr[1]);
                             }
                             break;
 
@@ -1789,7 +1802,7 @@
         <h1 id="mainHeading" style="font-family:verdana; font-size:30px; color:Black; text-align:center;">Transmitter Test</h1>
         <p id="wifiVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
         <p id="ATMEGAVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
-        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">test.html Version: 0.81 - 30 May 2022</p>
+        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">radio.html Version: 0.82 - 19 Jul 2026</p>
 
         <div>
             <table>

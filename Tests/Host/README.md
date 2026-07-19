@@ -14,9 +14,11 @@ The runner writes executables only under the ignored `Software/AVR128DA48/tmp/ho
 
 `just test` also runs dependency-free source-contract checks for firmware declarations whose target-compiler interpretation is safety-relevant. These checks supplement compilation; they do not replace it.
 
-The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current candidate identity is ESP `2.24` plus AVR `0.209`, reported together as `SW_VERSIONS,2.24,0.209`.
+The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current candidate identity is ESP `2.25` plus AVR `0.210`, reported together as `SW_VERSIONS,2.25,0.210`.
 
 The WiFi power-lease regression proves the ESP-only maintenance lease expires exactly at 300 seconds, can be renewed, returns to zero on ordinary activity, and remains separate from the unchanged 120-second normal timeout. The filesystem startup-policy regression proves only an exact in-progress marker enters recovery and that its RTC storage does not overlap eboot's command area.
+
+The temperature-contract regression covers the shared inclusive `-20C` through `120C` range, strict decimal payload parsing, the AVR DA factory-calibration equation, output preservation while unavailable, and overflow-resistant rejection of invalid ADC/calibration inputs. Browser tests additionally require all temperature displays to show unavailable for absent, malformed, or out-of-range data and to clear stale values on a new socket connection.
 
 The embedded firmware-update page regression also parses both browser scripts and requires the AVR path to retain the unique MAC-derived SSID-suffix authorization prompt and display measured LittleFS headroom.
 

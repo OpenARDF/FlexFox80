@@ -29,6 +29,8 @@
 #ifndef ADC_H_
 #define ADC_H_
 
+#include "temperature_contract.h"
+
 typedef enum {
 	ADCAudioInput,
 	ADCExternalBatteryVoltage,
@@ -42,6 +44,8 @@ void ADC0_setADCChannel(ADC_Active_Channel_t chan);
 void ADC0_startConversion(void);
 bool ADC0_conversionDone(void);
 int ADC0_read(void);
-int16_t temperatureC(void);
+void ADC0_recordTemperatureResult(uint16_t adcResult);
+void ADC0_markTemperatureUnavailable(void);
+bool temperatureC(int16_t* temperatureC);
 
 #endif /* ADC_H_ */

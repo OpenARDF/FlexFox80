@@ -206,6 +206,9 @@
     <Compile Include="include\adc.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="include\temperature_contract.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="include\atmel_start_pins.h">
       <SubType>compile</SubType>
     </Compile>

@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   normalizeMacDerivedDeviceSsid,
   unattendedUpdateNeedsExpectedSsid,
@@ -18,4 +21,10 @@ assert.equal(unattendedUpdateNeedsExpectedSsid(false, false, "TX_7C2D6FD3"), fal
 assert.equal(unattendedUpdateNeedsExpectedSsid(false, true, ""), false);
 assert.equal(unattendedUpdateNeedsExpectedSsid(true, false, ""), false);
 
-console.log("PASS AVR WiFi updater identity guards are exact and unattended-safe");
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const updater = readFileSync(join(repoRoot, "scripts", "update-flexfox-avr-over-wifi.mjs"), "utf8");
+assert.match(updater, /process\.env\.FLEXFOX_ADB_SERIAL \|\| qualificationAdbSerial/);
+assert.match(updater, /"cmd", "wifi", "connect-network"/);
+assert.match(updater, /Date\.now\(\) - lastReassociationMillis >= 3000/);
+
+console.log("PASS AVR WiFi updater identity guards and Moto reassociation are unattended-safe");

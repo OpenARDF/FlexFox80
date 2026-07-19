@@ -61,12 +61,11 @@ export function parseProbeReplies(output) {
 }
 
 export function probeTemperatureIsPlausible(value) {
-  // AVR startup can transiently report an impossible ADC temperature. Keep
-  // that known behavior out of fleet PASS evidence without changing firmware.
+  // Enforce the same inclusive physical range as the AVR and ESP.
   const match = String(value ?? "").trim().match(/^(-?\d+(?:\.\d+)?)C$/);
   if (!match) return false;
   const temperatureC = Number(match[1]);
-  return Number.isFinite(temperatureC) && temperatureC > -200 && temperatureC < 150;
+  return Number.isFinite(temperatureC) && temperatureC >= -20 && temperatureC <= 120;
 }
 
 export function expectedMasterValue(ssid) {

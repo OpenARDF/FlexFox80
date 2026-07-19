@@ -194,7 +194,7 @@ assert.ok(!source.includes("Date.getTime()"), "date fallback must call getTime o
 assert.match(html, /<html lang="en">/);
 assert.match(html, /<meta charset="utf-8">/);
 assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1">/);
-assert.match(html, /events\.html Version: 0\.6\.0 - 18 Jul 2026/);
+assert.match(html, /events\.html Version: 0\.6\.1 - 19 Jul 2026/);
 assert.match(source, /case 0xFA:[\s\S]*?text = "No event will run";/);
 assert.match(html, /onpointerdown="clockSyncPressStart\(event\);"/);
 assert.match(
@@ -218,7 +218,32 @@ assert.match(
   "finish and callsign controls must retain their semantic ids",
 );
 assert.ok(!source.includes("while (d == n)"), "clock synchronization must not busy-wait on the UI thread");
+for (const pageName of ["events.html", "radio.html", "test.html"]) {
+  const pageSource = readFileSync(join(repoRoot, "Software", "Huzzah", "ARDF_Transmitter", "data", pageName), "utf8");
+  assert.match(pageSource, /function updateTemperatureDisplay\(payload\)/);
+  assert.match(pageSource, /\(celsius < -20\) \|\| \(celsius > 120\)/);
+  assert.match(pageSource, /display\.textContent = "Temp: unavailable"/);
+  assert.match(pageSource, /case "TEMP":[\s\S]*?updateTemperatureDisplay\(arr\[1\]\)/);
+}
 console.log("PASS events.html JavaScript and critical HTML syntax parse");
+
+{
+  const page = createPage();
+  const temperature = page.addElement("temperature");
+  page.context.updateTemperatureDisplay("25.0C");
+  assert.equal(temperature.textContent, "Temp: 25.0C");
+
+  for (const invalid of [undefined, "NA", "230.0C", "-20.1C", "120.1C", "25C junk"]) {
+    page.context.updateTemperatureDisplay(invalid);
+    assert.equal(temperature.textContent, "Temp: unavailable");
+  }
+
+  temperature.textContent = "Temp: 42.0C";
+  page.context.webSocketStart();
+  page.sockets.at(-1).onopen({});
+  assert.equal(temperature.textContent, "Temp: unavailable");
+  console.log("PASS temperature displays reject invalid values and clear stale readings on connection");
+}
 
 {
   const page = createPage();

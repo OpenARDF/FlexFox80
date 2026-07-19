@@ -38,7 +38,8 @@ const qualificationAvrResetPage = Number(process.env.FLEXFOX_AVR_QUALIFICATION_A
 const qualificationFinalReadback = process.env.FLEXFOX_AVR_QUALIFICATION_FINAL_READBACK === "1";
 const qualificationExternalPowerLoss = process.env.FLEXFOX_AVR_QUALIFICATION_EXTERNAL_POWER_LOSS === "1";
 const qualificationAdbSerial = (process.env.FLEXFOX_AVR_QUALIFICATION_ADB_SERIAL || "").trim();
-const qualificationAdbPath = process.env.FLEXFOX_ADB || "adb";
+const adbSerial = (process.env.FLEXFOX_ADB_SERIAL || qualificationAdbSerial).trim();
+const adbPath = process.env.FLEXFOX_ADB || "adb";
 const defaultVerifyTimeoutMs = 30 * 60 * 1000;
 const stageTimeoutMs = Number(process.env.FLEXFOX_AVR_STAGE_TIMEOUT_MS || 5 * 60 * 1000);
 const supportedBootloaderBauds = new Set([9600, 19200, 38400, 57600, 115200]);
@@ -113,13 +114,13 @@ if(qualificationAvrResetPage || qualificationFinalReadback) {
     fail("qualification AVR reset requires avrdude on PATH");
   }
 }
-if(qualificationAdbSerial) {
-  const adbProbe = spawnSync(qualificationAdbPath, ["-s", qualificationAdbSerial, "get-state"], {
+if(adbSerial) {
+  const adbProbe = spawnSync(adbPath, ["-s", adbSerial, "get-state"], {
     encoding: "utf8",
     timeout: 10000,
   });
   if(adbProbe.error || adbProbe.status !== 0 || adbProbe.stdout.trim() !== "device") {
-    fail(`qualification ADB device ${qualificationAdbSerial} is unavailable`);
+    fail(`ADB device ${adbSerial} is unavailable`);
   }
 }
 if(!dryRun && process.env.FLEXFOX_AVR_UPDATE_CONFIRM !== `UPDATE-AVR-${manifest.applicationVersion}`) {
@@ -313,11 +314,11 @@ async function captureEvidence(status) {
 }
 
 function qualificationAdbRequest(path, method = "GET", formBody = "") {
-  if(!qualificationAdbSerial) return null;
+  if(!adbSerial) return null;
   const argumentsList = [
     /* Qualification only: the Moto remains reachable over RNDIS/ADB while its
      * WiFi route and the Mac's DroidTether route reform after ESP power loss. */
-    "-s", qualificationAdbSerial, "shell", "curl", "--silent", "--show-error", "--fail-with-body",
+    "-s", adbSerial, "shell", "curl", "--silent", "--show-error", "--fail-with-body",
     "--connect-timeout", "2", "--max-time", "4",
   ];
   if(method === "POST") {
@@ -328,13 +329,28 @@ function qualificationAdbRequest(path, method = "GET", formBody = "") {
     );
   }
   argumentsList.push(`${baseUrl}${path}`);
-  const request = spawnSync(qualificationAdbPath, argumentsList, {
+  const request = spawnSync(adbPath, argumentsList, {
     encoding: "utf8",
     timeout: 8000,
     maxBuffer: 1024 * 1024,
   });
   if(request.error || request.status !== 0) return null;
   return request.stdout.trim();
+}
+
+function requestMotoReassociation() {
+  if(!adbSerial) return;
+  /* Android deliberately declines to autojoin this open AP. Repeat the exact
+   * SSID request while AVR resets make the AP disappear and return. */
+  spawnSync(
+    adbPath,
+    [
+      "-s", adbSerial,
+      "shell", "cmd", "wifi", "connect-network",
+      preflight.deviceSsid, "open", "-r", "none",
+    ],
+    { encoding: "utf8", timeout: 15000 },
+  );
 }
 let suppliedSsidSuffix;
 if(process.stdin.isTTY) {
@@ -377,7 +393,12 @@ const deadline = Date.now() + verifyTimeoutMs;
 let avrResetInjected = false;
 let avrResetDroppedEspPower = false;
 let externalPowerLossReady = false;
+let lastReassociationMillis = 0;
 while(Date.now() < deadline) {
+  if(adbSerial && Date.now() - lastReassociationMillis >= 3000) {
+    requestMotoReassociation();
+    lastReassociationMillis = Date.now();
+  }
   await new Promise((resolvePromise) => setTimeout(
     resolvePromise,
     qualificationAvrResetPage && !avrResetInjected ? 1000 : 5000,

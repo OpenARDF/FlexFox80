@@ -203,13 +203,15 @@ static volatile SleepType g_sleepType = SLEEP_FOREVER;
 // static uint16_t g_ADCFilterThreshold[NUMBER_OF_POLLED_ADC_CHANNELS] = { 500, 500, 500, 500 };
 // static volatile bool g_adcUpdated[NUMBER_OF_POLLED_ADC_CHANNELS] = { false, false, false, false };
 // static volatile uint16_t g_lastConversionResult[NUMBER_OF_POLLED_ADC_CHANNELS];
-#define NUMBER_OF_POLLED_ADC_CHANNELS 3
-static ADC_Active_Channel_t g_adcChannelOrder[NUMBER_OF_POLLED_ADC_CHANNELS] = { ADCExternalBatteryVoltage, ADC12VRegulatedVoltage, ADCTXAdjustableVoltage };
-enum ADC_Result_Order { EXTERNAL_BATTERY_VOLTAGE, REGULATED_12V, PA_VOLTAGE };
-static const uint16_t g_adcChannelConversionPeriod_ticks[NUMBER_OF_POLLED_ADC_CHANNELS] = { TIMER2_5_8HZ, TIMER2_0_5HZ, TIMER2_0_5HZ };
-static volatile uint16_t g_adcCountdownCount[NUMBER_OF_POLLED_ADC_CHANNELS] = { 100, 1000, 2000 };
+#define NUMBER_OF_POLLED_ADC_CHANNELS 4
+#define ADC_TEMPERATURE_PERIOD_TICKS 300U
+static ADC_Active_Channel_t g_adcChannelOrder[NUMBER_OF_POLLED_ADC_CHANNELS] = { ADCExternalBatteryVoltage, ADC12VRegulatedVoltage, ADCTXAdjustableVoltage, ADCTemperature };
+enum ADC_Result_Order { EXTERNAL_BATTERY_VOLTAGE, REGULATED_12V, PA_VOLTAGE, INTERNAL_TEMPERATURE };
+static const uint16_t g_adcChannelConversionPeriod_ticks[NUMBER_OF_POLLED_ADC_CHANNELS] = { TIMER2_5_8HZ, TIMER2_0_5HZ, TIMER2_0_5HZ, ADC_TEMPERATURE_PERIOD_TICKS };
+/* Make temperature the first conversion so it is available during startup. */
+static volatile uint16_t g_adcCountdownCount[NUMBER_OF_POLLED_ADC_CHANNELS] = { 100, 1000, 2000, 10 };
 //static uint16_t g_ADCFilterThreshold[NUMBER_OF_POLLED_ADC_CHANNELS] = { 500, 500, 500 };
-static volatile bool g_adcUpdated[NUMBER_OF_POLLED_ADC_CHANNELS] = { false, false, false };
+static volatile bool g_adcUpdated[NUMBER_OF_POLLED_ADC_CHANNELS] = { false, false, false, false };
 static volatile uint16_t g_lastConversionResult[NUMBER_OF_POLLED_ADC_CHANNELS];
 static volatile bool g_timer_launched_new_event = false;
 
@@ -610,6 +612,7 @@ ISR(TCB0_INT_vect)
     {
 		static bool conversionInProcess = false;
 		static int8_t indexConversionInProcess = 0;
+		static uint8_t conversionTimeoutTicks = 0;
 		static uint16_t codeInc = 0;
 		bool repeat, finished;
 		static uint16_t switch_closures_count_period = 0;
@@ -979,6 +982,7 @@ ISR(TCB0_INT_vect)
 				ADC0_setADCChannel(g_adcChannelOrder[indexConversionInProcess]);
 				ADC0_startConversion();
 				conversionInProcess = true;
+				conversionTimeoutTicks = 3; /* 10 ms at the 300 Hz task rate */
 			}
 		}
 		else if(ADC0_conversionDone())   /* wait for conversion to complete */
@@ -986,7 +990,11 @@ ISR(TCB0_INT_vect)
 			static uint16_t holdConversionResult;
 			uint16_t hold = ADC0_read(); //ADC;
 			
-			if((hold > 10) && (hold < 4090))
+			if(g_adcChannelOrder[indexConversionInProcess] == ADCTemperature)
+			{
+				ADC0_recordTemperatureResult(hold);
+			}
+			else if((hold > 10) && (hold < 4090))
 			{
 				holdConversionResult = hold; // (uint16_t)(((uint32_t)hold * ADC_REF_VOLTAGE_mV) >> 10);    /* millivolts at ADC pin */
 				uint16_t lastResult = g_lastConversionResult[indexConversionInProcess];
@@ -1029,6 +1037,16 @@ ISR(TCB0_INT_vect)
 				hold = g_lastConversionResult[indexConversionInProcess];
 			}
 
+			conversionInProcess = false;
+		}
+		else if(conversionTimeoutTicks && !(--conversionTimeoutTicks))
+		{
+			/* Recover rather than leaving ADC sampling wedged indefinitely. */
+			if(g_adcChannelOrder[indexConversionInProcess] == ADCTemperature)
+			{
+				ADC0_markTemperatureUnavailable();
+			}
+			ADC0_setADCChannel(ADCShutdown);
 			conversionInProcess = false;
 		}
     }
@@ -1289,9 +1307,9 @@ int main(void)
 		
 		if(!g_check_temperature)
 		{
-			int16_t temp = temperatureC();
+			int16_t temp;
 			
-			if((temp > -200) && (temp < 150)) // sanity check
+			if(temperatureC(&temp))
 			{
 				if(fanIsOn())
 				{
@@ -1307,6 +1325,11 @@ int main(void)
 						setFan(ON);
 					}
 				}			
+			}
+			else
+			{
+				/* Unknown temperature is not evidence that cooling is unnecessary. */
+				setFan(ON);
 			}
 				
 			g_check_temperature = 10;
@@ -2186,8 +2209,16 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 // 					lb_broadcast_num(v, "!TEM");
 // 				}
 				
-				dtostrf(temperatureC(), 4, 1, g_tempStr);
-				g_tempStr[5] = '\0';
+				int16_t temperature;
+				if(temperatureC(&temperature))
+				{
+					dtostrf(temperature, 4, 1, g_tempStr);
+					g_tempStr[5] = '\0';
+				}
+				else
+				{
+					strcpy(g_tempStr, TEMPERATURE_UNAVAILABLE_TEXT);
+				}
 
 				lb_broadcast_str(g_tempStr, "!TEM");
 				

@@ -81,6 +81,14 @@ ASAN_OPTIONS="${ASAN_OPTIONS:+$ASAN_OPTIONS:}allocator_may_return_null=1" \
 
 # shellcheck disable=SC2086 # Flags are intentionally expanded into individual compiler arguments.
 "$cxx" $common_flags $sanitizer_flags \
+	-I "$repo_root/Software/AVR128DA48/FlexFox80/include" \
+	"$repo_root/Tests/Host/avr_temperature_contract_test.cpp" \
+	-o "$build_dir/avr-temperature-contract-tests"
+
+"$build_dir/avr-temperature-contract-tests"
+
+# shellcheck disable=SC2086 # Flags are intentionally expanded into individual compiler arguments.
+"$cxx" $common_flags $sanitizer_flags \
 	-I "$repo_root/Software/AVR128DA48/bootloader/include" \
 	-I "$repo_root/Software/AVR128DA48/FlexFox80/include" \
 	"$repo_root/Tests/Host/avr_boot_update_session_test.cpp" \

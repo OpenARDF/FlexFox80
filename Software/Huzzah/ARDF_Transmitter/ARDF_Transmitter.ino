@@ -69,6 +69,7 @@
 #include "firmware_update_integrity.h"
 #include "filesystem_startup_policy.h"
 #include "linkbus_command_transaction.h"
+#include "temperature_contract.h"
 /* #include <Wire.h> */
 #include "Helpers.h"
 #include "CircularStringBuff.h"
@@ -7112,6 +7113,8 @@ void handleLBMessage(String message)
   }
   else if (type.equals(LB_MESSAGE_TEMP))
   {
+    double temperature;
+    bool available = false;
 #ifdef PROTOTYPE_HARDWARE
     int16_t rawtemp = payload.toInt();
     bool negative =  rawtemp & 0x8000;
@@ -7119,30 +7122,28 @@ void handleLBMessage(String message)
     {
       rawtemp &= 0x7FFF;
     }
-    float temp = (rawtemp >> 8) + (0.25 * ((rawtemp & 0x00C0) >> 6)) + 0.05;
+    temperature = (rawtemp >> 8) + (0.25 * ((rawtemp & 0x00C0) >> 6)) + 0.05;
     if (negative)
     {
-      temp = -temp;
+      temperature = -temperature;
     }
-
-    char dataStr[6];    /* allow for possible negative sign */
-    dtostrf(temp, 4, 1, dataStr);
-    dataStr[5] = '\0';
-
-    if (g_numberOfSocketClients)
-    {
-      String msg = String(String(SOCK_COMMAND_TEMPERATURE) + "," + dataStr + "C");
-
-      g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
-      /*      if (g_debug_prints_enabled)
-              {
-                Serial.println(msg);
-              } */
-    }
+    available = (temperature >= TEMPERATURE_MINIMUM_C) &&
+      (temperature <= TEMPERATURE_MAXIMUM_C);
 #else
+    available = temperatureCelsiusFromText(payload.c_str(), &temperature);
+#endif
+
     if (g_numberOfSocketClients)
     {
-      String msg = String(String(SOCK_COMMAND_TEMPERATURE) + "," + payload + "C");
+      String value = TEMPERATURE_UNAVAILABLE_TEXT;
+      if (available)
+      {
+        char dataStr[8];
+        dtostrf(temperature, 1, 1, dataStr);
+        value = dataStr;
+        value += "C";
+      }
+      String msg = String(String(SOCK_COMMAND_TEMPERATURE) + "," + value);
 
       g_webSocketServer.broadcastTXT(stringObjToConstCharString(&msg), msg.length());
       /*      if (g_debug_prints_enabled)
@@ -7150,7 +7151,6 @@ void handleLBMessage(String message)
                 Serial.println(msg);
               } */
     }
-#endif
   }
   else if (type.equals(LB_MESSAGE_BATTERY))
   {

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { probeTemperatureIsPlausible } from "./lib/flexfox-fleet-upgrade.mjs";
+
 const baseUrl = new URL(process.env.FLEXFOX_URL ?? "http://73.73.73.73/");
 const timeoutMs = Number.parseInt(process.env.FLEXFOX_PROBE_TIMEOUT_MS ?? "12000", 10);
 const monitorMode = process.env.FLEXFOX_PROBE_MONITOR === "1";
@@ -41,6 +43,14 @@ function messageType(message) {
   return message.split(",", 1)[0].toUpperCase();
 }
 
+function validTemperatureObserved() {
+  return messages.some((message) => {
+    if (messageType(message) !== "TEMP") return false;
+    const delimiter = message.indexOf(",");
+    return delimiter >= 0 && probeTemperatureIsPlausible(message.slice(delimiter + 1));
+  });
+}
+
 function closeSocket() {
   if (heartbeat) clearInterval(heartbeat);
   if (finishTimer) clearTimeout(finishTimer);
@@ -51,7 +61,8 @@ function reportLivePathIfComplete() {
   if (livePathReported) return;
 
   const observed = new Set(messages.map(messageType));
-  if (["SSID", "MAC", "SW_VERSIONS", "MASTER", "TEMP", "BAT"].every((type) => observed.has(type))) {
+  if (["SSID", "MAC", "SW_VERSIONS", "MASTER", "BAT"].every((type) => observed.has(type)) &&
+      validTemperatureObserved()) {
     livePathReported = true;
     console.log("PASS WiFi-to-AVR read-only path returned temperature and battery data");
     if (monitorMode) console.log("MONITOR Sending !& every 5 seconds; stop with Ctrl-C");
@@ -119,6 +130,9 @@ try {
   }
   if (missingAvr.length > 0) {
     throw new Error(`missing live AVR replies: ${missingAvr.join(", ")}`);
+  }
+  if (!validTemperatureObserved()) {
+    throw new Error("AVR temperature is unavailable, malformed, or outside -20C through 120C");
   }
 
   reportLivePathIfComplete();

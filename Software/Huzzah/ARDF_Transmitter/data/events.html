@@ -861,6 +861,20 @@
             }, 5000);
         }
 
+        function updateTemperatureDisplay(payload) {
+            var display = document.getElementById("temperature");
+            if (display == null) return;
+
+            var match = String(payload || "").trim().match(/^(-?\d+(?:\.\d+)?)C$/);
+            var celsius = match ? Number(match[1]) : NaN;
+            if (!isFinite(celsius) || (celsius < -20) || (celsius > 120)) {
+                display.textContent = "Temp: unavailable";
+                return;
+            }
+
+            display.textContent = "Temp: " + match[1] + "C";
+        }
+
         function stopWebSocketForNavigation() {
             g_webSocketStopping = true;
             clearWebSocketReconnect();
@@ -931,6 +945,7 @@
                     g_delayedPackets = 0;
                     g_connectedTransmitterSSID = "";
                     g_loading_data = true;
+                    updateTemperatureDisplay();
                     showConnectedState();
 
                     sendToSocket("EVENT_NAME,NEW!");
@@ -1530,11 +1545,7 @@
 
                         case "TEMP":
                             {
-                                if (typeof arr[1] != 'undefined') {
-                                    var t = "Temp: " + arr[1];
-                                    var x = document.getElementById("temperature");
-                                    if (x != null) x.textContent = t;
-                                }
+                                updateTemperatureDisplay(arr[1]);
                             }
                             break;
 
@@ -2773,7 +2784,7 @@
         <h1 id="mainHeading" style="font-family:verdana; font-size:30px; color:Black; text-align:center;">Transmitter Settings</h1>
         <p id="wifiVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
         <p id="ATMEGAVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
-        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.6.0 - 18 Jul 2026</p>
+        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.6.1 - 19 Jul 2026</p>
 
         <div>
             <table>

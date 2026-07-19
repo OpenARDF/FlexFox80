@@ -32,7 +32,9 @@
 #include <stdbool.h>
 #include <driver_init.h>
 #include <compiler.h>
+#include <atomic.h>
 #include "Goertzel.h"
+#include "temperature_contract.h"
 
 #define SAMPLE_RATE 24096
 #define Goertzel_N 201
@@ -61,6 +63,8 @@ typedef enum {
 	} ADC_Init_t;
 	
 static ADC_Init_t g_adc_initialization = ADC_NOT_INITIALIZED;
+static volatile uint16_t g_temperature_adc_result = 0;
+static volatile bool g_temperature_sample_ready = false;
 
 void ADC0_setADCChannel(ADC_Active_Channel_t chan)
 {
@@ -134,6 +138,11 @@ void ADC0_startConversion(void)
 	if(g_adc_initialization != ADC_NOT_INITIALIZED)
 	{
 		ADC0.INTCTRL = 0x00; /* Disable interrupt */
+		/* A result-ready flag can belong to the previously selected channel. */
+		if(ADC0.INTFLAGS & ADC_RESRDY_bm)
+		{
+			(void)ADC0_read();
+		}
 		ADC0.COMMAND = ADC_STCONV_bm; /* Start conversion */
 	}
 }
@@ -149,35 +158,55 @@ int ADC0_read(void)
 	return ADC0.RES; 	/* Reading the result also clears the interrupt flag */
 }
 
-int16_t temperatureC(void)
+void ADC0_recordTemperatureResult(uint16_t adcResult)
 {
-	uint16_t sigrow_offset = SIGROW.TEMPSENSE1; // Read unsigned value from signature row
-	uint16_t sigrow_slope = SIGROW.TEMPSENSE0; // Read unsigned value from signature row
-	static uint32_t wait = 10000;
-	uint16_t adc_reading;
-	int16_t temperature_in_C = -273.15;
-	uint8_t holdMux;
-	
-	holdMux = ADC0.MUXPOS;
-	ADC0_SYSTEM_init(SINGLE_CONVERSION);
-	ADC0.MUXPOS = ADC_MUXPOS_TEMPSENSE_gc;
-	ADC0_startConversion();
-	
-	while((!ADC0_conversionDone()) && wait--);
-	
-	if(wait)
+	/* Keep the timer ISR short; calibration and validation happen on read. */
+	g_temperature_adc_result = adcResult;
+	g_temperature_sample_ready = true;
+}
+
+void ADC0_markTemperatureUnavailable(void)
+{
+	g_temperature_sample_ready = false;
+}
+
+bool temperatureC(int16_t* temperature)
+{
+	if(temperature == 0)
 	{
-		adc_reading = ADC0.RES;
-		int32_t temp = sigrow_offset - adc_reading;
-		temp *= sigrow_slope; // Result will overflow 16-bit variable
-		temp += 0x0800; // Add 4096/2 to get correct rounding on division below
-		temp >>= 12; // Round off to nearest degree in Kelvin, by dividing with 2^12 (4096)
-		temperature_in_C += (int16_t)temp;
+		return false;
 	}
-	
-	ADC0.MUXPOS = holdMux; /* Restore ADC registers */
-	
-	return(temperature_in_C);
+
+	bool sampleReady;
+	uint16_t adcResult;
+	ENTER_CRITICAL(temperature_read);
+	sampleReady = g_temperature_sample_ready;
+	adcResult = g_temperature_adc_result;
+	EXIT_CRITICAL(temperature_read);
+
+	if(!sampleReady)
+	{
+		return false;
+	}
+
+	/* No numeric sentinel is ever returned for an absent or invalid sample. */
+	if(!temperatureCelsiusFromAdc(
+		adcResult,
+		SIGROW.TEMPSENSE1,
+		SIGROW.TEMPSENSE0,
+		temperature))
+	{
+		/* Do not let a rejected sample remain internally marked as ready. */
+		ENTER_CRITICAL(temperature_invalidate);
+		if(g_temperature_adc_result == adcResult)
+		{
+			g_temperature_sample_ready = false;
+		}
+		EXIT_CRITICAL(temperature_invalidate);
+		return false;
+	}
+
+	return true;
 }
 
 
