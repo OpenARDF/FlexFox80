@@ -17,10 +17,10 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const payload = Buffer.alloc(3 * FLEXFOX_AVR_PAGE_SIZE, 0xff);
 payload.set([0x0c, 0x94, 0x5b, 0x21], 0);
 for(let index = 512; index < payload.length; index++) payload[index] = index & 0xff;
-const image = createFlexFoxAvrUpdateImage(payload, "0.208");
+const image = createFlexFoxAvrUpdateImage(payload, "0.209");
 const info = inspectFlexFoxAvrUpdateImage(image);
 
-assert.equal(info.applicationVersion, "0.208");
+assert.equal(info.applicationVersion, "0.209");
 assert.equal(info.applicationPayloadBytes, payload.length);
 assert.equal(info.imageBytes, payload.length + FLEXFOX_AVR_PAGE_SIZE);
 assert.equal(image.subarray(payload.length, payload.length + 8).toString("ascii"), FLEXFOX_AVR_TRAILER_MAGIC);
@@ -41,7 +41,7 @@ for(const [name, offset] of [
   console.log(`PASS ${name} mutation is rejected`);
 }
 
-assert.throws(() => createFlexFoxAvrUpdateImage(Buffer.alloc(513), "0.208"), /complete/);
+assert.throws(() => createFlexFoxAvrUpdateImage(Buffer.alloc(513), "0.209"), /complete/);
 assert.throws(() => createFlexFoxAvrUpdateImage(payload, ""), /version/);
 console.log("PASS malformed payload geometry and version are rejected");
 

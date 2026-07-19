@@ -31,6 +31,11 @@ const driverInitHeaderPath = join(
 );
 const wifiProbePath = join(repoRoot, "scripts", "probe-flexfox-wifi.mjs");
 const wifiUpdaterPath = join(repoRoot, "scripts", "update-flexfox-esp-over-wifi.mjs");
+const espFilesystemRecoveryQualifierPath = join(
+  repoRoot,
+  "scripts",
+  "qualify-flexfox-esp-filesystem-recovery.mjs",
+);
 const wifiAvrUpdaterPath = join(repoRoot, "scripts", "update-flexfox-avr-over-wifi.mjs");
 const webDeployerPath = join(repoRoot, "scripts", "deploy-flexfox-web-file.mjs");
 const heartbeatHelperPath = join(repoRoot, "scripts", "lib", "flexfox-heartbeat.mjs");
@@ -117,6 +122,14 @@ const eventScheduleStatePath = join(
   "include",
   "event_schedule_state.h",
 );
+const wifiPowerLeasePath = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "FlexFox80",
+  "include",
+  "wifi_power_lease.h",
+);
 const tcbPath = join(
   repoRoot,
   "Software",
@@ -161,6 +174,13 @@ const espDefinitionsPath = join(
   "Huzzah",
   "ARDF_Transmitter",
   "esp8266.h",
+);
+const filesystemStartupPolicyPath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "filesystem_startup_policy.h",
 );
 const espEventPath = join(
   repoRoot,
@@ -237,6 +257,7 @@ const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
 const wifiProbe = readFileSync(wifiProbePath, "utf8");
 const wifiUpdater = readFileSync(wifiUpdaterPath, "utf8");
+const espFilesystemRecoveryQualifier = readFileSync(espFilesystemRecoveryQualifierPath, "utf8");
 const wifiAvrUpdater = readFileSync(wifiAvrUpdaterPath, "utf8");
 const webDeployer = readFileSync(webDeployerPath, "utf8");
 const heartbeatHelper = readFileSync(heartbeatHelperPath, "utf8");
@@ -256,12 +277,14 @@ const avrDefinitions = readFileSync(avrDefinitionsPath, "utf8");
 const avrBootloader = readFileSync(avrBootloaderPath, "utf8");
 const avrUpdateContract = readFileSync(avrUpdateContractPath, "utf8");
 const eventScheduleState = readFileSync(eventScheduleStatePath, "utf8");
+const wifiPowerLease = readFileSync(wifiPowerLeasePath, "utf8");
 const tcb = readFileSync(tcbPath, "utf8");
 const ds3231 = readFileSync(ds3231Path, "utf8");
 const ds3231Header = readFileSync(ds3231HeaderPath, "utf8");
 const espMain = readFileSync(espMainPath, "utf8");
 const espHeader = readFileSync(espHeaderPath, "utf8");
 const espDefinitions = readFileSync(espDefinitionsPath, "utf8");
+const filesystemStartupPolicy = readFileSync(filesystemStartupPolicyPath, "utf8");
 const espEvent = readFileSync(espEventPath, "utf8");
 const roleAssignmentBounds = readFileSync(roleAssignmentBoundsPath, "utf8");
 const eventFileIntegrity = readFileSync(eventFileIntegrityPath, "utf8");
@@ -273,8 +296,8 @@ const avrFirmwareUpdate = readFileSync(avrFirmwareUpdatePath, "utf8");
 const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8");
 const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
-const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.208";
-const expectedEspVersion = "2.23";
+const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.209";
+const expectedEspVersion = "2.24";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -309,6 +332,81 @@ if (
 }
 
 process.stdout.write("PASS WiFi updater is transactional and cannot select a filesystem update\n");
+
+if (
+  !espMain.includes("LittleFSConfig config;") ||
+  !espMain.includes("config.setAutoFormat(false);") ||
+  !espMain.includes("!LittleFS.setConfig(config) || !LittleFS.begin()") ||
+  !espMain.includes("filesystemStartupMayProceed()") ||
+  !espMain.includes("filesystemStartupMarkerWasInterrupted(&marker)") ||
+  !espMain.includes("filesystemStartupMarkerInProgress()") ||
+  !espMain.includes("filesystemStartupMarkerClear()") ||
+  !filesystemStartupPolicy.includes("FILESYSTEM_STARTUP_RTC_OFFSET_WORDS 120U") ||
+  !filesystemStartupPolicy.includes("FILESYSTEM_STARTUP_RTC_IN_PROGRESS") ||
+  !filesystemStartupPolicy.includes("FLEXFOX_FILESYSTEM_RECOVERY_QUALIFICATION 0") ||
+  !espMain.includes("#if FLEXFOX_FILESYSTEM_RECOVERY_QUALIFICATION") ||
+  !espMain.includes('g_littleFsRecoveryReason = "qualification";') ||
+  !espMain.includes("if (!g_littleFsMounted)") ||
+  !espMain.includes("g_littleFsRecoveryMode = true;") ||
+  !espMain.includes('\\\"filesystemMounted\\\":') ||
+  !espMain.includes('response += ",\\\"recoveryMode\\\":";') ||
+  !espMain.includes('response += "\\\",\\\"deviceSsid\\\":\\\"";') ||
+  !espMain.includes('response += ",\\\"filesystemRecoveryReason\\\":\\\"";') ||
+  !espMain.includes('g_littleFsRecoveryReason = "startup-watchdog";') ||
+  !espMain.includes('g_littleFsRecoveryReason = "mount-failed";') ||
+  !espMain.includes('g_littleFsRecoveryReason = "startup-marker-unavailable";') ||
+  !espMain.includes("if (g_littleFsMounted)") ||
+  !espMain.includes("FILESYSTEM_RECOVERY_PAGE_HTML")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: LittleFS startup must be non-formatting, checked, watchdog-escapable, and recovery-service gated\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS LittleFS mount failures preserve data and expose sketch-resident recovery\n");
+
+if (
+  !wifiUpdater.includes("FLEXFOX_EXPECTED_FILESYSTEM_RECOVERY") ||
+  !wifiUpdater.includes("recoveryQualification !== true") ||
+  !wifiUpdater.includes("before.recoveryMode === true") ||
+  !wifiUpdater.includes("before.deviceSsid !== expectedDeviceSsid") ||
+  !espFilesystemRecoveryQualifier.includes("QUALIFY ESP FILESYSTEM RECOVERY") ||
+  !espFilesystemRecoveryQualifier.includes("install(recoveryImage, true)") ||
+  !espFilesystemRecoveryQualifier.includes("install(normalImage, false)")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: filesystem recovery qualification must be exact-target, qualification-artifact gated, and self-restoring\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS filesystem recovery qualification is exact-target and self-restoring\n");
+
+if (
+  !wifiPowerLease.includes("WIFI_NORMAL_SHUTDOWN_SECONDS 120U") ||
+  !wifiPowerLease.includes("WIFI_UPDATE_SHUTDOWN_SECONDS 300U") ||
+  !avrMain.includes("static volatile uint8_t g_WiFi_shutdown_seconds") ||
+  !avrMain.includes("static volatile uint16_t g_wifi_update_lease_seconds") ||
+  !avrMain.includes('strcmp(lb_buff->fields[LB_MSG_FIELD1], "LEASE")') ||
+  !avrMain.includes("wifiUpdateLeaseTick(&g_wifi_update_lease_seconds)") ||
+  !avrMain.includes("ENTER_CRITICAL(wifi_update_lease_renew)") ||
+  !avrMain.includes("ENTER_CRITICAL(wifi_update_lease_release)") ||
+  !avrMain.includes("ENTER_CRITICAL(wifi_update_lease_read)") ||
+  !avrMain.includes("g_go_to_sleep_now && !wifiUpdateLeaseActive()") ||
+  !avrMain.includes("releaseWifiUpdateLease();") ||
+  !espHeader.includes('LB_MESSAGE_ESP_UPDATE_LEASE "$UPD,LEASE;"') ||
+  !espMain.includes("avrSoftwareVersionAtLeast(0, 209)") ||
+  !espMain.includes("firmwareUpdateReleaseAvrLease();") ||
+  !espMain.includes('guardedMessage.startsWith("$UPD")')
+) {
+  process.stderr.write(
+    "Firmware contract check failed: update-only WiFi extension must remain internal, version-gated, five-minute bounded, and releasable to the normal two-minute lease\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS AVR WiFi maintenance lease is internal, bounded, and returns to two minutes\n");
 
 if (
   !espMain.includes("avrUpdateResumeIfRequired();") ||
@@ -552,7 +650,8 @@ if (
   !wifiUpdater.includes("wrongImageAfterReboot") ||
   !wifiUpdater.includes("the staged update was not installed") ||
   !wifiUpdater.includes("createBoundedFlexFoxHeartbeat") ||
-  !wifiUpdater.includes("heartbeat.stop()") ||
+  !wifiUpdater.includes("heartbeat?.stop()") ||
+  !wifiUpdater.includes("before.recoveryMode === true") ||
   !webDeployer.includes('FLEXFOX_WEB_UPLOAD_TIMEOUT_MS ?? "120000"') ||
   !webDeployer.includes('FLEXFOX_WEB_VERIFY_TIMEOUT_MS ?? "60000"') ||
   !webDeployer.includes("verificationTimeoutMs > 110000") ||

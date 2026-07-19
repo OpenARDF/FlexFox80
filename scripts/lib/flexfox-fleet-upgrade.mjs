@@ -45,6 +45,8 @@ export function wifiStatusMatchesSsid(output, expectedSsid) {
 export function espStatusMatchesArtifact(status, artifact) {
   return status?.version === artifact.version &&
     status?.filesystemProtected === true &&
+    status?.filesystemMounted === true &&
+    status?.recoveryMode === false &&
     status?.currentSketchBytes === artifact.bytes &&
     artifact.installedMd5Values.has(String(status?.currentSketchMd5 ?? "").toLowerCase());
 }

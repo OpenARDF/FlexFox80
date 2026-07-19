@@ -18,8 +18,9 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const sketchRoot = join(repoRoot, "Software", "Huzzah", "ARDF_Transmitter");
 const sharedAvrInclude = join(repoRoot, "Software", "AVR128DA48", "FlexFox80", "include");
 const tempRoot = join(repoRoot, "Software", "Huzzah", "tmp");
+const recoveryQualification = process.env.FLEXFOX_ESP_FILESYSTEM_RECOVERY_QUALIFICATION === "1";
 const arduinoRoot = resolve(process.env.ESP_ARDUINO_DATA_ROOT || join(tempRoot, "arduino"));
-const outputRoot = join(tempRoot, "esp-build");
+const outputRoot = join(tempRoot, recoveryQualification ? "esp-build-filesystem-recovery" : "esp-build");
 const configPath = join(arduinoRoot, "arduino-cli.yaml");
 const coreVersion = "2.7.4";
 const webSocketsVersion = "2.3.6";
@@ -119,7 +120,8 @@ const compileOutput = cli([
   "--build-path",
   join(outputRoot, "work"),
   "--build-property",
-  `compiler.cpp.extra_flags=-I${sharedAvrInclude}`,
+  `compiler.cpp.extra_flags=-I${sharedAvrInclude} ` +
+    `-DFLEXFOX_FILESYSTEM_RECOVERY_QUALIFICATION=${recoveryQualification ? 1 : 0}`,
   "--output-dir",
   outputRoot,
   sketchRoot,
@@ -177,7 +179,8 @@ const artifacts = artifactNames.map((file) => {
 });
 const cliVersion = run(arduinoCli, ["version"], { quiet: true }).stdout.trim();
 const evidence = {
-  status: "hardware-compatible-development-build",
+  status: recoveryQualification ? "filesystem-recovery-qualification-build" : "hardware-compatible-development-build",
+  recoveryQualification,
   cliVersion,
   core: `esp8266:esp8266@${coreVersion}`,
   library: `WebSockets@${webSocketsVersion}`,

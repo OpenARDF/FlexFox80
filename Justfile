@@ -22,6 +22,7 @@ policy-check:
 # Build and run dependency-light host characterization tests.
 test:
     ./scripts/run-host-tests.sh
+    node --check ./scripts/qualify-flexfox-esp-filesystem-recovery.mjs
     node --check ./scripts/qualify-flexfox-avr-bootloader.mjs
     node --check ./scripts/update-flexfox-avr-over-wifi.mjs
     node ./Tests/Host/eeprom_enum_layout_migration_test.mjs
@@ -51,6 +52,14 @@ secrets:
 # Build the AVR Release firmware with the pinned compiler/device pack.
 avr-build:
     node ./scripts/build-avr-release.mjs
+
+# Build a non-destructive ESP image that deliberately serves only filesystem recovery routes.
+esp-filesystem-recovery-build:
+    FLEXFOX_ESP_FILESYSTEM_RECOVERY_QUALIFICATION=1 node ./scripts/build-esp8266.mjs
+
+# Install the recovery-only ESP image on an authorized pilot, then restore the normal image through it.
+esp-filesystem-recovery-qualify:
+    node ./scripts/qualify-flexfox-esp-filesystem-recovery.mjs
 
 # Build the bootloader-capable application at the permanent 0x4000 app address.
 avr-relocated-build:

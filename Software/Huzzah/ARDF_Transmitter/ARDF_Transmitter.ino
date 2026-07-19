@@ -67,6 +67,7 @@
 #include "clone_keepalive_schedule.h"
 #include "fleet_soak.h"
 #include "firmware_update_integrity.h"
+#include "filesystem_startup_policy.h"
 #include "linkbus_command_transaction.h"
 /* #include <Wire.h> */
 #include "Helpers.h"
@@ -147,6 +148,19 @@ uint32_t g_fsUploadExpectedCrc32 = 0;
 uint32_t g_fsUploadRunningCrc32 = 0xffffffffUL;
 bool g_fsUploadIntegrityRequired = false;
 bool g_fsUploadSucceeded = false;
+bool g_littleFsMounted = false;
+bool g_littleFsRecoveryMode = false;
+const char *g_littleFsRecoveryReason = "none";
+
+static const char FILESYSTEM_RECOVERY_PAGE_HTML[] PROGMEM =
+  "<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'>"
+  "<title>FlexFox filesystem recovery</title></head><body>"
+  "<h1>Filesystem recovery mode</h1>"
+  "<p>LittleFS was not mounted. No filesystem was formatted or modified.</p>"
+  "<p>Configuration, event, and AVR-update operations are disabled, but the ESP sketch updater remains available.</p>"
+  "<p><a href='/firmware'>Open ESP firmware updater</a></p>"
+  "<p><a href='/firmware/status'>View recovery status</a></p>"
+  "</body></html>";
 
 String g_softAP_IP_addr;
 
@@ -270,6 +284,9 @@ void showSettings(void);
 void handleFileUpload(void);
 void handleFileUploadResult(void);
 void recoverInterruptedFileUploads(void);
+bool startLittleFS(void);
+bool filesystemStartupMayProceed(void);
+void filesystemStartupComplete(void);
 void handleFirmwareUpdatePage(void);
 void handleFirmwareUpdateStatus(void);
 void handleFirmwareUpdateResult(void);
@@ -316,12 +333,35 @@ void setup()
 
   lights = new Blinkies();
 
-  startLittleFS();                  /* Start the LittleFS and list all contents */
-  avrUpdateResumeIfRequired();      /* Resume autonomously if AVR reset removed ESP power mid-update. */
-  recoverInterruptedFileUploads(); /* Restore a live file if power failed during a staged replacement. */
-  if (!readDefaultsFile())        /* Read default settings from file system */
+#define LB_OUTPUT_BUFF_SIZE 25
+  g_LBOutputBuff = new CircularStringBuff(LB_OUTPUT_BUFF_SIZE);
+
+  if (filesystemStartupMayProceed())
   {
-    saveDefaultsFile();
+    g_littleFsMounted = startLittleFS();
+    if (!g_littleFsMounted)
+    {
+      g_littleFsRecoveryReason = "mount-failed";
+    }
+    if (g_littleFsMounted)
+    {
+      avrUpdateResumeIfRequired();      /* Resume autonomously if AVR reset removed ESP power mid-update. */
+      recoverInterruptedFileUploads(); /* Restore a live file if power failed during a staged replacement. */
+      if (!readDefaultsFile())          /* Read default settings from file system */
+      {
+        saveDefaultsFile();
+      }
+    }
+    filesystemStartupComplete();
+  }
+
+  if (!g_littleFsMounted)
+  {
+    /* Never clone, schedule, or write defaults against an unavailable
+     * filesystem. Force the immutable MAC-derived SSID so the recovery target
+     * remains unambiguous even if the saved master setting cannot be read. */
+    g_littleFsRecoveryMode = true;
+    g_IamMaster = false;
   }
 
 #if WIFI_DEBUG_PRINTS_ENABLED
@@ -334,8 +374,6 @@ void setup()
   g_xmtr = new Transmitter(false);
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
-#define LB_OUTPUT_BUFF_SIZE 25
-  g_LBOutputBuff = new CircularStringBuff(LB_OUTPUT_BUFF_SIZE);
 }
 
 /*******************************************************
@@ -469,6 +507,12 @@ String connectionStatus( int which )
   =============================================================== */
 void handleRoot()
 {
+  if (g_littleFsRecoveryMode)
+  {
+    g_http_server.sendHeader("Cache-Control", "no-store");
+    g_http_server.send_P(200, PSTR("text/html; charset=utf-8"), FILESYSTEM_RECOVERY_PAGE_HTML);
+    return;
+  }
   g_http_server.send_P(200, PSTR("text/html; charset=utf-8"), ROOT_PAGE_HTML);
 }
 
@@ -543,6 +587,15 @@ void firmwareUpdateAbort(const String& reason)
   g_firmwareUpdateError = reason;
 }
 
+bool avrSoftwareVersionAtLeast(unsigned int requiredMajor, unsigned int requiredMinor)
+{
+  unsigned int major = 0;
+  unsigned int minor = 0;
+  char trailing = '\0';
+  return sscanf(g_atmega_sw_version.c_str(), "%u.%u%c", &major, &minor, &trailing) == 2 &&
+         (major > requiredMajor || (major == requiredMajor && minor >= requiredMinor));
+}
+
 void firmwareUpdateKeepAvrAwake()
 {
   /* This mature keep-alive path is also reused by ordinary LittleFS uploads.
@@ -554,10 +607,25 @@ void firmwareUpdateKeepAvrAwake()
   {
     if (g_LBOutputBuff && !g_LBOutputBuff->full())
     {
-      g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
+      g_LBOutputBuff->put(
+        avrSoftwareVersionAtLeast(0, 209) ?
+          LB_MESSAGE_ESP_UPDATE_LEASE :
+          LB_MESSAGE_ESP_KEEPALIVE);
       g_firmwareUpdateLastKeepAliveMillis = now;
     }
   }
+}
+
+void firmwareUpdateReleaseAvrLease()
+{
+  /* A maintenance failure must not leave the longer lease active. Restoring
+   * the mature ordinary keep-alive immediately returns the AVR to its normal
+   * two-minute, activity-renewed shutdown contract. */
+  if (g_LBOutputBuff && !g_LBOutputBuff->full())
+  {
+    g_LBOutputBuff->put(LB_MESSAGE_ESP_KEEPALIVE);
+  }
+  g_firmwareUpdateLastKeepAliveMillis = 0;
 }
 
 void beginSlaveCloneKeepAlive()
@@ -596,7 +664,16 @@ void handleFirmwareUpdateStatus()
 {
   String response = "{\"version\":\"";
   response += WIFI_SW_VERSION;
-  response += "\",\"filesystemProtected\":true,\"updateActive\":";
+  response += "\",\"deviceSsid\":\"";
+  response += g_uniqueAPNameString;
+  response += "\",\"filesystemProtected\":true,\"filesystemMounted\":";
+  response += g_littleFsMounted ? "true" : "false";
+  response += ",\"recoveryMode\":";
+  response += g_littleFsRecoveryMode ? "true" : "false";
+  response += ",\"filesystemRecoveryReason\":\"";
+  response += g_littleFsRecoveryReason;
+  response += "\"";
+  response += ",\"updateActive\":";
   response += g_firmwareUpdateActive ? "true" : "false";
   response += ",\"restartPending\":";
   response += g_firmwareRestartPending ? "true" : "false";
@@ -636,6 +713,7 @@ void handleFirmwareUpdateResult()
     return;
   }
 
+  firmwareUpdateReleaseAvrLease();
   String response = "Firmware update rejected. The running firmware and LittleFS were not changed.";
   if (g_firmwareUpdateError.length())
   {
@@ -855,6 +933,7 @@ bool serviceAvrUpdateQualificationPause(uint16_t pageIndex, uint32_t address)
 
 void handleAvrUpdateResult()
 {
+  firmwareUpdateReleaseAvrLease();
   g_http_server.sendHeader("Cache-Control", "no-store");
   if(g_avrUpdateUploadSucceeded)
   {
@@ -1266,6 +1345,13 @@ void fileDeleteWithMessage(String msg)
 
 void handleNotFound()
 {
+  if (g_littleFsRecoveryMode)
+  {
+    g_http_server.sendHeader("Cache-Control", "no-store");
+    g_http_server.send_P(503, PSTR("text/html; charset=utf-8"), FILESYSTEM_RECOVERY_PAGE_HTML);
+    return;
+  }
+
   /* if the requested file or page doesn't exist, return a 404 not found error */
   if (!handleFileRead(g_http_server.uri()))
   { /* check if the file exists in the flash memory (LittleFS), if so, send it */
@@ -1355,21 +1441,8 @@ bool setupHTTP_AP()
     /* Start TCP listener on port TCP_PORT */
     g_http_server.on("/", HTTP_GET, handleRoot);                        /* Call the 'handleRoot' function when a client requests URI "/" */
 
-    g_http_server.on("/download", HTTP_GET, handleFS);                        /* Provide utility to help manage the file system */
-    g_http_server.on("/download.html", HTTP_GET, handleFS);                   /* Provide utility to help manage the file system */
-
-    g_http_server.on("/download", HTTP_POST, handleFileDownload);             /* go to 'handleFileDownload' */
-    g_http_server.on("/download.html", HTTP_POST, handleFileDownload);        /* go to 'handleFileDownload' */
-
-    g_http_server.on("/delete", HTTP_GET, fileDelete);              /* Provide utility to help manage the file system */
-    g_http_server.on("/delete.html", HTTP_GET, fileDelete);         /* Provide utility to help manage the file system */
-
-    g_http_server.on("/delete", HTTP_POST, handleFileDelete);       /* go to 'handleFileDelete' */
-    g_http_server.on("/delete.html", HTTP_POST, handleFileDelete);  /* go to 'handleFileDelete' */
-
-    g_http_server.on("/upload", HTTP_GET, handleUpload);
-    g_http_server.on("/upload.html", HTTP_GET, handleUpload);
-
+    /* These handlers are compiled into the sketch and deliberately remain
+     * available when LittleFS cannot be mounted. */
     g_http_server.on("/firmware", HTTP_GET, handleFirmwareUpdatePage);
     g_http_server.on("/firmware/status", HTTP_GET, handleFirmwareUpdateStatus);
     g_http_server.on(
@@ -1378,33 +1451,51 @@ bool setupHTTP_AP()
       handleFirmwareUpdateResult,
       handleFirmwareUpdateUpload);
 
-    g_http_server.on("/avr-update", HTTP_GET, handleAvrUpdatePage);
-    g_http_server.on("/avr-update/status", HTTP_GET, handleAvrUpdateStatus);
-    g_http_server.on("/avr-update/log", HTTP_GET, handleAvrUpdateJournal);
-    g_http_server.on("/avr-update/qualification/status", HTTP_GET, handleAvrQualificationStatus);
-    g_http_server.on("/avr-update/qualification/continue", HTTP_POST, handleAvrQualificationContinue);
-    g_http_server.on(
-      "/avr-update",
-      HTTP_POST,
-      handleAvrUpdateResult,
-      handleAvrUpdateUpload);
-    g_http_server.on("/avr-update/start", HTTP_POST, handleAvrUpdateStart);
+    if (g_littleFsMounted)
+    {
+      g_http_server.on("/download", HTTP_GET, handleFS);                        /* Provide utility to help manage the file system */
+      g_http_server.on("/download.html", HTTP_GET, handleFS);                   /* Provide utility to help manage the file system */
 
-    g_http_server.on("/fleet-soak/status", HTTP_GET, handleFleetSoakStatus);
-    g_http_server.on("/fleet-soak/activate", HTTP_POST, handleFleetSoakActivate);
-    g_http_server.on("/fleet-soak/cleanup", HTTP_POST, handleFleetSoakCleanup);
+      g_http_server.on("/download", HTTP_POST, handleFileDownload);             /* go to 'handleFileDownload' */
+      g_http_server.on("/download.html", HTTP_POST, handleFileDownload);        /* go to 'handleFileDownload' */
 
-    g_http_server.on(
-      "/upload.html",
-      HTTP_POST,
-      handleFileUploadResult,
-      handleFileUpload);
+      g_http_server.on("/delete", HTTP_GET, fileDelete);              /* Provide utility to help manage the file system */
+      g_http_server.on("/delete.html", HTTP_GET, fileDelete);         /* Provide utility to help manage the file system */
 
-    g_http_server.on(
-      "/upload",
-      HTTP_POST,
-      handleFileUploadResult,
-      handleFileUpload);
+      g_http_server.on("/delete", HTTP_POST, handleFileDelete);       /* go to 'handleFileDelete' */
+      g_http_server.on("/delete.html", HTTP_POST, handleFileDelete);  /* go to 'handleFileDelete' */
+
+      g_http_server.on("/upload", HTTP_GET, handleUpload);
+      g_http_server.on("/upload.html", HTTP_GET, handleUpload);
+
+      g_http_server.on("/avr-update", HTTP_GET, handleAvrUpdatePage);
+      g_http_server.on("/avr-update/status", HTTP_GET, handleAvrUpdateStatus);
+      g_http_server.on("/avr-update/log", HTTP_GET, handleAvrUpdateJournal);
+      g_http_server.on("/avr-update/qualification/status", HTTP_GET, handleAvrQualificationStatus);
+      g_http_server.on("/avr-update/qualification/continue", HTTP_POST, handleAvrQualificationContinue);
+      g_http_server.on(
+        "/avr-update",
+        HTTP_POST,
+        handleAvrUpdateResult,
+        handleAvrUpdateUpload);
+      g_http_server.on("/avr-update/start", HTTP_POST, handleAvrUpdateStart);
+
+      g_http_server.on("/fleet-soak/status", HTTP_GET, handleFleetSoakStatus);
+      g_http_server.on("/fleet-soak/activate", HTTP_POST, handleFleetSoakActivate);
+      g_http_server.on("/fleet-soak/cleanup", HTTP_POST, handleFleetSoakCleanup);
+
+      g_http_server.on(
+        "/upload.html",
+        HTTP_POST,
+        handleFileUploadResult,
+        handleFileUpload);
+
+      g_http_server.on(
+        "/upload",
+        HTTP_POST,
+        handleFileUploadResult,
+        handleFileUpload);
+    }
 
     g_http_server.onNotFound(handleNotFound);   /* When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound" */
     g_http_server.begin();
@@ -1481,7 +1572,10 @@ void onNewStation(WiFiEventSoftAPModeStationConnected sta_info)
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
   g_noActivityTimeoutSeconds = NO_ACTIVITY_TIMEOUT;
-  startWebSocketServer(); /* Start a WebSocket server */
+  if (g_littleFsMounted)
+  {
+    startWebSocketServer(); /* Start WebSocket commands only when configuration state is available. */
+  }
 }
 
 void onStationDisconnect(WiFiEventSoftAPModeStationDisconnected sta_info)
@@ -1723,6 +1817,22 @@ void loop()
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
 
   lights->setLEDs(LEDS_ON, g_LEDs_enabled);
+
+  if (g_littleFsRecoveryMode)
+  {
+    /* Do not attempt cloning, event selection, or defaults access. The ordinary
+     * HTTP loop continues Linkbus service and retains the AVR's absolute WiFi
+     * shutdown authority while exposing only sketch-resident recovery routes. */
+    g_LBOutputBuff->put(LB_MESSAGE_ESP_WAKEUP);
+    g_LBOutputBuff->put(LB_MESSAGE_VER_REQUEST);
+    linkbusLoop();
+    if (setupHTTP_AP())
+    {
+      httpWebServerLoop(100);
+    }
+    lights->setLEDs(LEDS_OFF, g_LEDs_enabled);
+    return;
+  }
 
   waitForTimeLoop(); /* Wait for baud calibration and time update from ATMEGA */
 
@@ -3315,6 +3425,13 @@ void httpWebServerLoop(int blinkRate)
     serviceFirmwareUpdateRestart();
     g_webSocketServer.loop();
 
+    const bool maintenanceUploadActive =
+      g_firmwareUpdateActive || g_avrUpdateUploadActive || (bool)fsUploadFile;
+    if (maintenanceUploadActive)
+    {
+      firmwareUpdateKeepAvrAwake();
+    }
+
     g_numberOfWebClients = WiFi.softAPgetStationNum();
     g_numberOfSocketClients = g_webSocketServer.connectedClients(false);
 
@@ -3359,7 +3476,7 @@ void httpWebServerLoop(int blinkRate)
     {
       holdSeconds = relativeTimeSeconds;
 
-      if (g_numberOfWebClients)
+      if (g_numberOfWebClients && !maintenanceUploadActive)
       {
         if (!(holdSeconds % 25))   /* Ask ATMEGA to wait longer before shutting down WiFi */
         {
@@ -4493,9 +4610,61 @@ bool linkbusLoop()
   return (timeout == 0);
 }
 
-void startLittleFS()
-{ /* Start the LittleFS and list all contents */
-  LittleFS.begin(); /* Start the SPI Flash File System (LittleFS) */
+bool filesystemStartupMayProceed()
+{
+#if FLEXFOX_FILESYSTEM_RECOVERY_QUALIFICATION
+  /* A dedicated, non-production build uses this path to prove the recovery
+   * HTTP service and sketch-update escape route without damaging LittleFS. */
+  g_littleFsRecoveryReason = "qualification";
+  filesystemStartupComplete();
+  return false;
+#endif
+
+  FilesystemStartupMarker marker = filesystemStartupMarkerClear();
+  const bool priorMarkerRead = ESP.rtcUserMemoryRead(
+    FILESYSTEM_STARTUP_RTC_OFFSET_WORDS,
+    reinterpret_cast<uint32_t *>(&marker),
+    sizeof(marker));
+
+  if (priorMarkerRead && filesystemStartupMarkerWasInterrupted(&marker))
+  {
+    /* The hardware watchdog resets a genuinely stuck synchronous LittleFS
+     * operation. On that next boot, skip every filesystem call and expose the
+     * sketch-resident recovery service instead of repeating a boot loop. */
+    g_littleFsRecoveryReason = "startup-watchdog";
+    filesystemStartupComplete();
+    return false;
+  }
+
+  marker = filesystemStartupMarkerInProgress();
+  if (!ESP.rtcUserMemoryWrite(
+        FILESYSTEM_STARTUP_RTC_OFFSET_WORDS,
+        reinterpret_cast<uint32_t *>(&marker),
+        sizeof(marker)))
+  {
+    g_littleFsRecoveryReason = "startup-marker-unavailable";
+    return false;
+  }
+  return true;
+}
+
+void filesystemStartupComplete()
+{
+  FilesystemStartupMarker marker = filesystemStartupMarkerClear();
+  ESP.rtcUserMemoryWrite(
+    FILESYSTEM_STARTUP_RTC_OFFSET_WORDS,
+    reinterpret_cast<uint32_t *>(&marker),
+    sizeof(marker));
+}
+
+bool startLittleFS()
+{ /* Mount LittleFS without ever formatting unit-specific data implicitly. */
+  LittleFSConfig config;
+  config.setAutoFormat(false);
+  if (!LittleFS.setConfig(config) || !LittleFS.begin())
+  {
+    return false;
+  }
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
   if (g_debug_prints_enabled)
@@ -4514,6 +4683,7 @@ void startLittleFS()
     }
   }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+  return true;
 }
 
 void recoverInterruptedFileUploads()
@@ -6681,6 +6851,7 @@ void handleFileUpload()
 
 void handleFileUploadResult()
 {
+  firmwareUpdateReleaseAvrLease();
   if (g_fsUploadSucceeded)
   {
     handleSuccess();

@@ -56,6 +56,7 @@
 #include "event_time_state.h"
 #include "rtc_sync_guard.h"
 #include "avr_update_contract.h"
+#include "wifi_power_lease.h"
 #include "rstctrl.h"
 
 #include <cpuint.h>
@@ -124,7 +125,8 @@ static volatile int32_t g_on_the_air = 0;
 static volatile int g_sendID_seconds_countdown = 0;
 static volatile uint16_t g_code_throttle = 50;
 static volatile uint16_t g_enunciation_code_throttle = 50;
-static volatile uint8_t g_WiFi_shutdown_seconds = 120;
+static volatile uint8_t g_WiFi_shutdown_seconds = WIFI_NORMAL_SHUTDOWN_SECONDS;
+static volatile uint16_t g_wifi_update_lease_seconds = 0;
 static volatile bool g_report_seconds = false;
 static volatile bool g_wifi_active = true;
 static volatile bool g_clone_quiet = false;
@@ -140,6 +142,29 @@ static uint8_t g_bootloader_protocol = 0;
 static uint8_t g_bootloader_version_major = 0;
 static uint8_t g_bootloader_version_minor = 0;
 static volatile uint16_t g_hardware_error = (uint16_t)HARDWARE_OK;
+
+static void renewWifiUpdateLease(void)
+{
+	ENTER_CRITICAL(wifi_update_lease_renew);
+	g_wifi_update_lease_seconds = wifiUpdateLeaseRenew();
+	EXIT_CRITICAL(wifi_update_lease_renew);
+}
+
+static void releaseWifiUpdateLease(void)
+{
+	ENTER_CRITICAL(wifi_update_lease_release);
+	wifiUpdateLeaseRelease(&g_wifi_update_lease_seconds);
+	EXIT_CRITICAL(wifi_update_lease_release);
+}
+
+static bool wifiUpdateLeaseActive(void)
+{
+	uint16_t seconds;
+	ENTER_CRITICAL(wifi_update_lease_read);
+	seconds = g_wifi_update_lease_seconds;
+	EXIT_CRITICAL(wifi_update_lease_read);
+	return seconds != 0;
+}
 
 extern Frequency_Hz g_tx_frequency;
 char g_messages_text[STATION_ID+1][MAX_PATTERN_TEXT_LENGTH + 1];
@@ -500,30 +525,40 @@ void handle_1sec_tasks(void)
 		{
 			wifi_power(ON);     /* power on WiFi */
 			wifi_reset(OFF);    /* bring WiFi out of reset */
-			g_WiFi_shutdown_seconds = 120;
+			g_wifi_update_lease_seconds = 0;
+			g_WiFi_shutdown_seconds = WIFI_NORMAL_SHUTDOWN_SECONDS;
 		}
 	}
 	else
 	{
-		if(g_shutting_down_wifi || (!g_check_for_next_event && !g_waiting_for_next_event))
+		bool wifi_shutdown_due = false;
+		if(g_wifi_update_lease_seconds)
+		{
+			/* The maintenance lease is independent of event/sleep scheduling.
+			 * Even if those state flags become stale, a stopped updater cannot
+			 * leave the battery-powered WiFi regulator enabled indefinitely. */
+			wifi_shutdown_due = wifiUpdateLeaseTick(&g_wifi_update_lease_seconds);
+		}
+		else if(g_shutting_down_wifi || (!g_check_for_next_event && !g_waiting_for_next_event))
 		{
 			if(g_WiFi_shutdown_seconds)
 			{
 				g_WiFi_shutdown_seconds--;
+				wifi_shutdown_due = !g_WiFi_shutdown_seconds && !g_enable_manual_transmissions;
+			}
+		}
 
-				if(!g_WiFi_shutdown_seconds && !g_enable_manual_transmissions)
-				{
-					g_wifi_ready = false;
-					wifi_reset(ON);     /* put WiFi into reset */
-					wifi_power(OFF);    /* power off WiFi */
-					g_shutting_down_wifi = false;
-					g_wifi_active = false;
-							
-					if(g_sleepType != DO_NOT_SLEEP)
-					{
-						g_go_to_sleep_now = true;								
-					}
-				}
+		if(wifi_shutdown_due)
+		{
+			g_wifi_ready = false;
+			wifi_reset(ON);     /* put WiFi into reset */
+			wifi_power(OFF);    /* power off WiFi */
+			g_shutting_down_wifi = false;
+			g_wifi_active = false;
+
+			if(g_sleepType != DO_NOT_SLEEP)
+			{
+				g_go_to_sleep_now = true;
 			}
 		}
 
@@ -1183,7 +1218,7 @@ int main(void)
 						{
 							char str[50];
 					
-							g_WiFi_shutdown_seconds = MAX(60, g_WiFi_shutdown_seconds);
+							g_WiFi_shutdown_seconds = MAX(60U, g_WiFi_shutdown_seconds);
 
 							// TEMPSTR_SIZE must be > 44 to hold start time and battery voltage string
 							sprintf(g_tempStr, "Start %sZ = %sV = ", convertEpochToTimeString(g_event_start_epoch, str, 50), externBatString(true));
@@ -1300,7 +1335,7 @@ int main(void)
 						
 			if(g_WiFi_shutdown_seconds)
 			{
-				g_WiFi_shutdown_seconds = MAX(g_WiFi_shutdown_seconds, 10);
+				g_WiFi_shutdown_seconds = MAX(g_WiFi_shutdown_seconds, 10U);
 			}
 		}
 		
@@ -1385,7 +1420,10 @@ int main(void)
 		/********************************
 		 * Handle sleep
 		 ******************************/
-		if(g_go_to_sleep_now)
+		/* A scheduler sleep request cannot cut short an active maintenance
+		 * transfer. The independent ISR countdown still expires absolutely and
+		 * reasserts this request after at most five minutes without renewal. */
+		if(g_go_to_sleep_now && !wifiUpdateLeaseActive())
 		{
 			LEDS.deactivate();
  			linkbus_disable();	
@@ -1466,6 +1504,19 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 		{
 			case LB_MESSAGE_UPDATE:
 			{
+				if(lb_buff->type == LINKBUS_MSG_COMMAND &&
+				   strcmp(lb_buff->fields[LB_MSG_FIELD1], "LEASE") == 0 &&
+				   !lb_buff->fields[LB_MSG_FIELD2][0])
+				{
+					/* PASS forwarding rejects every $UPD command, so only the
+					 * sketch's internal maintenance path can request this lease.
+					 * It remains an absolute countdown: if the ESP stalls or stops
+					 * renewing it, AVR power removal occurs within five minutes. */
+					g_wifi_active = true;
+					renewWifiUpdateLease();
+					break;
+				}
+
 				if(lb_buff->type == LINKBUS_MSG_QUERY)
 				{
 					if(g_bootloader_protocol)
@@ -1637,7 +1688,8 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 				if(f1 == 'Z')                                                       /* WiFi connected to browser - keep alive */
 				{
 					/* shut down WiFi after 2 minutes of inactivity */
-					g_WiFi_shutdown_seconds = 120;                                  /* wait 2 more minutes before shutting down WiFi */
+					releaseWifiUpdateLease();
+					g_WiFi_shutdown_seconds = WIFI_NORMAL_SHUTDOWN_SECONDS;          /* return to the ordinary 2-minute lease */
 				}
 				else if(f1 == 'C')                                                  /* ESP is beginning a clone session */
 				{
@@ -1675,6 +1727,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					}
 					else if(f1 == '3')                      /* ESP is ready for power off" */
 					{			
+						releaseWifiUpdateLease();
 						g_wifi_enable_delay = 0;
 						g_WiFi_shutdown_seconds = 1;        /* Shut down WiFi in 1 seconds */
 						g_waiting_for_next_event = false;   /* Prevents resetting shutdown settings */

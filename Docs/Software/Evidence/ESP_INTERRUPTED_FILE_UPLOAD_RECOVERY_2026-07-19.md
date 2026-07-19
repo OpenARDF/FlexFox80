@@ -1,6 +1,6 @@
 # ESP Interrupted File-Upload Recovery — 2026-07-19
 
-**Status:** ESP 2.23 source/build/contract gates pass; the recovered fleet unit passes exact flash, filesystem, standalone HTTP, reinstall, and combined ESP/AVR telemetry verification
+**Status:** ESP 2.23 recovered-hardware gates pass; ESP 2.24 generalized recovery and AVR 0.209 bounded maintenance-lease source/build gates pass, with hardware qualification pending
 
 ## Failure and retained evidence
 
@@ -60,4 +60,21 @@ The ignored workflow evidence directories are timestamped `2026-07-19T14-53-55.9
 
 ## Disposition
 
-The failure was in the ordinary LittleFS file-upload/recovery path, not in either bootloader. ESP 2.23 closes the reproduced boot loop while preserving unit data and reusing the already-qualified keep-alive mechanism. The recovered unit passes the exact installed-artifact and live hardware gates, so ESP 2.23 supersedes ESP 2.22 for the remaining fleet rollout and should be installed wirelessly on units already provisioned with 2.22.
+The failure was in the ordinary LittleFS file-upload/recovery path, not in either bootloader. ESP 2.23 closes the reproduced boot loop while preserving unit data and reusing the already-qualified keep-alive mechanism. The recovered unit passes the exact installed-artifact and live hardware gates.
+
+## ESP 2.24 generalized recovery candidate
+
+Review after the 2.23 recovery found a broader availability and data-retention gap: the pinned ESP8266 core defaults LittleFS auto-formatting on, the sketch ignored the mount result, and filesystem-dependent startup continued even when a mount could not be trusted. ESP 2.24 therefore:
+
+- explicitly disables LittleFS auto-formatting and checks both configuration and mount results;
+- skips AVR-update resume, interrupted-file recovery, defaults, cloning, events, WebSockets, and all filesystem routes when LittleFS is unavailable;
+- advertises the unique MAC-derived SSID and serves only sketch-resident `/`, `/firmware`, and `/firmware/status` recovery routes;
+- reports `filesystemMounted`, `recoveryMode`, and `filesystemRecoveryReason` instead of asserting protection without mount evidence;
+- places a startup-in-progress marker in RTC user memory outside eboot's reserved command area, so a watchdog-reset synchronous filesystem stall enters recovery rather than repeating forever;
+- requires the host updater and fleet wrapper to see the expected sketch plus a mounted, non-recovery filesystem before declaring an installation complete.
+
+AVR 0.209 complements this by retaining the normal two-minute WiFi timeout while accepting an ESP-internal, fixed five-minute maintenance lease during firmware or file uploads. The maintenance counter is separate from the normal `uint8_t` timeout and decrements independently of event/sleep state, so stale scheduler flags cannot make it indefinite. Upload success or failure sends the mature ordinary keep-alive command to release the longer lease; a stalled ESP simply stops renewing and AVR removes power when the five-minute lease expires. Raw browser `PASS` continues to reject every `$UPD` command.
+
+The complete host suite passes, including exact 300-second expiry, renewal/release, startup-marker and RTC-placement tests, version/status/route contracts, and existing bootloader/update recovery tests. The pinned builds complete with zero AVR warnings. ESP 2.24 is 564,516 sketch bytes with 30,692 bytes dynamic-memory headroom and unchanged 27,676-byte IRAM use; its source `.bin` SHA-256 is `e82809bb7ab509fd283600b5cae8381b3d28de992ca94c89abe46a4579f5c0ae`. AVR 0.209 remains an 85-page, 43,520-byte wireless image with CRC32 `0x9bb9de58` and SHA-256 `4013608e352b713fb020c411c829565f30f487c107d7e392687179168f12205e`; BL0.3 is unchanged at 5,112 bytes.
+
+Before replacing 2.23 as the remaining-fleet candidate, accessible hardware must prove normal mounted startup, sketch-resident recovery installation, a maintenance operation surviving the old two-minute boundary, automatic five-minute expiry without renewal, immediate return to the ordinary two-minute policy after completion, and normal wake/power-down/event behavior. Already installed ESP 2.22 units can remain as side-by-side controls during this qualification.

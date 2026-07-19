@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -29,6 +29,8 @@ const firmwarePath = resolve(
 );
 const baseUrl = normalizeFlexFoxUrl(process.env.FLEXFOX_URL);
 const expectedVersion = process.env.FLEXFOX_EXPECTED_ESP_VERSION ?? sourceVersion;
+const expectedDeviceSsid = process.env.FLEXFOX_EXPECTED_DEVICE_SSID;
+const expectFilesystemRecovery = process.env.FLEXFOX_EXPECTED_FILESYSTEM_RECOVERY === "1";
 const confirmation = process.env.FLEXFOX_UPDATE_CONFIRM;
 const uploadTimeoutMs = Number.parseInt(
   process.env.FLEXFOX_UPDATE_UPLOAD_TIMEOUT_MS ?? "120000",
@@ -54,6 +56,16 @@ if (
 }
 if (!statSync(firmwarePath).isFile()) {
   throw new Error(`firmware image is not a file: ${firmwarePath}`);
+}
+if (expectedDeviceSsid && !/^Tx_[0-9A-F]{8}$/.test(expectedDeviceSsid)) {
+  throw new Error("FLEXFOX_EXPECTED_DEVICE_SSID must be the exact MAC-derived Tx_ plus eight uppercase hex digits");
+}
+if (expectFilesystemRecovery) {
+  const evidencePath = join(dirname(firmwarePath), "build-evidence.json");
+  if (!existsSync(evidencePath) ||
+      JSON.parse(readFileSync(evidencePath, "utf8")).recoveryQualification !== true) {
+    throw new Error("filesystem recovery may be expected only for the dedicated qualification build artifact");
+  }
 }
 
 const firmware = readFileSync(firmwarePath);
@@ -82,6 +94,9 @@ if (before.uptimeMillis < 10000) {
 if (before.filesystemProtected !== true) {
   throw new Error("device did not confirm that its firmware endpoint protects LittleFS");
 }
+if (expectedDeviceSsid && before.deviceSsid !== expectedDeviceSsid) {
+  throw new Error(`connected device is ${before.deviceSsid}; expected ${expectedDeviceSsid}`);
+}
 if (before.cloneActive || before.updateActive || before.restartPending) {
   throw new Error(`device is busy: ${JSON.stringify(before)}`);
 }
@@ -94,10 +109,15 @@ console.log(`Before: ESP ${before.version}, sketch ${before.currentSketchBytes} 
 console.log(`Upload: ${basename(firmwarePath)}, ${firmware.length} bytes, CRC32 ${firmwareCrc32}`);
 console.log(`SHA-256: ${firmwareSha256}`);
 
-const heartbeat = createBoundedFlexFoxHeartbeat(baseUrl, "firmware update verification");
-process.once("exit", () => heartbeat.stop());
-await heartbeat.start();
-console.log("PASS bounded AVR update heartbeat established");
+let heartbeat;
+if (before.recoveryMode === true) {
+  console.log("PASS recovery-mode updater uses the ESP-internal bounded AVR maintenance lease");
+} else {
+  heartbeat = createBoundedFlexFoxHeartbeat(baseUrl, "firmware update verification");
+  process.once("exit", () => heartbeat?.stop());
+  await heartbeat.start();
+  console.log("PASS bounded AVR update heartbeat established");
+}
 
 const updateUrl = new URL("firmware", baseUrl);
 updateUrl.searchParams.set("confirm", "UPDATE");
@@ -117,7 +137,7 @@ try {
   if (!uploadResponse.ok) {
     throw new Error(`update rejected with HTTP ${uploadResponse.status}: ${responseText.trim()}`);
   }
-  heartbeat.poke();
+  heartbeat?.poke();
   console.log(`PASS upload accepted with HTTP ${uploadResponse.status}`);
 } catch (error) {
   console.warn(`Upload response was interrupted or ambiguous: ${error.message}`);
@@ -145,14 +165,14 @@ while (Date.now() < deadline) {
 }
 
 if (wrongImageAfterReboot) {
-  heartbeat.stop();
+  heartbeat?.stop();
   throw new Error(
     `device rebooted but reports ESP ${wrongImageAfterReboot.version}, sketch MD5 ` +
       `${wrongImageAfterReboot.currentSketchMd5}; the staged update was not installed`,
   );
 }
 if (!after) {
-  heartbeat.stop();
+  heartbeat?.stop();
   throw new Error(
     `device did not return within ${verificationTimeoutMs / 1000} seconds with an installed ` +
       `sketch MD5 derived from ${firmwareMd5}`,
@@ -164,7 +184,18 @@ if (after.version !== expectedVersion) {
 if (after.filesystemProtected !== true) {
   throw new Error("rebooted device no longer reports sketch-only update protection");
 }
-heartbeat.stop();
+if (expectedDeviceSsid && after.deviceSsid !== expectedDeviceSsid) {
+  throw new Error(`rebooted device is ${after.deviceSsid}; expected ${expectedDeviceSsid}`);
+}
+if (expectFilesystemRecovery) {
+  if (after.filesystemMounted !== false || after.recoveryMode !== true ||
+      after.filesystemRecoveryReason !== "qualification") {
+    throw new Error("qualification image did not enter the expected filesystem recovery mode");
+  }
+} else if (after.filesystemMounted !== true || after.recoveryMode !== false) {
+  throw new Error("ESP sketch installed, but LittleFS did not mount; the device remains in filesystem recovery mode");
+}
+heartbeat?.stop();
 
 const installedCandidate = installedMd5Candidates.find(
   ({ md5 }) => md5 === after.currentSketchMd5.toLowerCase(),
@@ -175,3 +206,6 @@ console.log(
 );
 console.log(`PASS uptime reset from ${before.uptimeMillis} ms to ${after.uptimeMillis} ms`);
 console.log("PASS update endpoint still reports LittleFS protection");
+console.log(expectFilesystemRecovery ?
+  "PASS dedicated image entered filesystem recovery without mounting LittleFS" :
+  "PASS LittleFS mounted without entering recovery mode");

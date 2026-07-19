@@ -55,33 +55,37 @@ assert.equal(
 pass("WiFi association requires the exact requested SSID");
 
 const artifact = {
-  version: "2.23",
+  version: "2.24",
   bytes: 563888,
   installedMd5Values: new Set(["ce7ed4ed788edb346e05f8e87b36047e"]),
 };
 const matchingStatus = {
-  version: "2.23",
+  version: "2.24",
   filesystemProtected: true,
+  filesystemMounted: true,
+  recoveryMode: false,
   currentSketchBytes: 563888,
   currentSketchMd5: "CE7ED4ED788EDB346E05F8E87B36047E",
 };
 assert.equal(espStatusMatchesArtifact(matchingStatus, artifact), true);
 assert.equal(espStatusMatchesArtifact({ ...matchingStatus, version: "2.21" }, artifact), false);
 assert.equal(espStatusMatchesArtifact({ ...matchingStatus, filesystemProtected: false }, artifact), false);
+assert.equal(espStatusMatchesArtifact({ ...matchingStatus, filesystemMounted: false }, artifact), false);
+assert.equal(espStatusMatchesArtifact({ ...matchingStatus, recoveryMode: true }, artifact), false);
 assert.equal(espStatusMatchesArtifact({ ...matchingStatus, currentSketchBytes: 1 }, artifact), false);
 assert.equal(espStatusMatchesArtifact({ ...matchingStatus, currentSketchMd5: "wrong" }, artifact), false);
-pass("ESP skip requires version, exact installed MD5, size, and LittleFS protection");
+pass("ESP skip requires exact firmware plus a mounted, non-recovery LittleFS");
 
 const replies = parseProbeReplies(`PASS HTTP 200
 RECV TEMP,29.0C
 RECV SSID,Tx_Master
 RECV MAC,90:B9:F9:C5:BB:22
-RECV SW_VERSIONS,2.23,0.208
+RECV SW_VERSIONS,2.24,0.209
 RECV MASTER,1
 `);
 assert.equal(replies.SSID, "Tx_Master");
 assert.equal(replies.MAC, "90:B9:F9:C5:BB:22");
-assert.equal(replies.SW_VERSIONS, "2.23,0.208");
+assert.equal(replies.SW_VERSIONS, "2.24,0.209");
 assert.equal(replies.MASTER, "1");
 assert.equal(expectedMasterValue("Tx_Master"), "1");
 assert.equal(expectedMasterValue("Tx_7C2D6FD3"), "0");
