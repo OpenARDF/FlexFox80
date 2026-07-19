@@ -36,14 +36,14 @@ extern Blinkies *lights;
 extern bool serviceAvrUpdateQualificationPause(uint16_t pageIndex, uint32_t address);
 
 static const uint32_t AVR_UPDATE_STATE_MAGIC = 0x31565541UL; /* AUV1 */
-static const uint16_t AVR_UPDATE_STATE_SCHEMA = 1U;
+static const uint16_t AVR_UPDATE_STATE_SCHEMA = 2U;
 static const uint8_t AVR_UPDATE_RECOVERY_ATTEMPTS = 3U;
 static const uint16_t AVR_UPDATE_PROBE_CAPTURE_BYTES = 96U;
 static const uint32_t AVR_UPDATE_JOURNAL_MAX_BYTES = 32768UL;
+static const uint8_t AVR_UPDATE_JOURNAL_PAGE_INTERVAL = 8U;
 static String g_avrUpdateProbeHex;
 static uint32_t g_avrUpdateProbeBytes;
 static uint32_t g_avrUpdateBootloaderBaud = AVR_UPDATE_BAUD;
-static int16_t g_qualificationEspRestartPage = -1;
 
 static void appendJournal(const String& event, uint32_t address = UINT32_MAX)
 {
@@ -112,7 +112,12 @@ static bool stateIsValid(const AvrUpdateState& state)
          state.stateCrc32 == stateCrc(state) &&
          state.imageBytes > 0 && state.imageBytes <= AVR_UPDATE_MAX_IMAGE_BYTES &&
          (state.imageBytes % AVR_UPDATE_PAGE_SIZE) == 0 &&
-         state.pageCount == state.imageBytes / AVR_UPDATE_PAGE_SIZE;
+         state.pageCount == state.imageBytes / AVR_UPDATE_PAGE_SIZE &&
+         (state.qualificationEspRestartPage == 0U ||
+          state.qualificationEspRestartPage < state.pageCount) &&
+         (state.qualificationAvrResetPage == 0U ||
+          state.qualificationAvrResetPage < state.pageCount) &&
+         !(state.qualificationEspRestartPage && state.qualificationAvrResetPage);
 }
 
 static uint16_t readU16Le(const uint8_t *bytes)
@@ -245,7 +250,6 @@ bool avrUpdateLoadState(AvrUpdateState *state)
 
 bool avrUpdateCommitStagedImage(uint32_t imageBytes, uint32_t imageCrc32, const String& targetVersion, String *error)
 {
-  g_qualificationEspRestartPage = -1;
   if(!imageBytes || imageBytes > AVR_UPDATE_MAX_IMAGE_BYTES || (imageBytes % AVR_UPDATE_PAGE_SIZE) != 0)
   {
     if(error) *error = "AVR image must contain complete 512-byte pages";
@@ -327,7 +331,6 @@ bool avrUpdateMarkEnteringBootloader(String *error)
 
 bool avrUpdateRestoreStaged(String *error)
 {
-  g_qualificationEspRestartPage = -1;
   AvrUpdateState state;
   if(!avrUpdateLoadState(&state))
   {
@@ -336,6 +339,8 @@ bool avrUpdateRestoreStaged(String *error)
   }
   state.phase = AVR_UPDATE_STAGED;
   state.nextPage = 1;
+  state.qualificationEspRestartPage = 0U;
+  state.qualificationAvrResetPage = 0U;
   if(!saveState(&state))
   {
     if(error) *error = "Unable to restore staged state";
@@ -355,8 +360,33 @@ bool avrUpdateArmQualificationEspRestart(uint16_t pageIndex, String *error)
     if(error) *error = "Qualification restart page is outside the staged non-reset image";
     return false;
   }
-  g_qualificationEspRestartPage = (int16_t)pageIndex;
+  state.qualificationEspRestartPage = pageIndex;
+  if(!saveState(&state))
+  {
+    if(error) *error = "Unable to persist qualification ESP restart page";
+    return false;
+  }
   appendJournal(String("qualification-restart-armed page=") + String(pageIndex));
+  return true;
+}
+
+bool avrUpdateArmQualificationAvrReset(uint16_t pageIndex, String *error)
+{
+  AvrUpdateState state;
+  if(!avrUpdateLoadState(&state) ||
+     (state.phase != AVR_UPDATE_STAGED && state.phase != AVR_UPDATE_ENTERING_BOOTLOADER) ||
+     pageIndex < 1U || pageIndex >= state.pageCount)
+  {
+    if(error) *error = "Qualification AVR reset page is outside the staged non-reset image";
+    return false;
+  }
+  state.qualificationAvrResetPage = pageIndex;
+  if(!saveState(&state))
+  {
+    if(error) *error = "Unable to persist qualification AVR reset page";
+    return false;
+  }
+  appendJournal(String("qualification-avr-reset-armed page=") + String(pageIndex));
   return true;
 }
 
@@ -454,7 +484,8 @@ String avrUpdateStatusJson(const String& deviceSsid)
   String response = String("{\"phase\":\"") + phaseName(state.phase) + "\",\"staged\":" +
                     (LittleFS.exists(AVR_UPDATE_IMAGE_PATH) ? "true" : "false") +
                     ",\"targetVersion\":\"" + state.targetVersion + "\",\"imageBytes\":" +
-                    String(state.imageBytes) + ",\"nextPage\":" + String(state.nextPage) +
+                    String(state.imageBytes) + ",\"imageCrc32\":" + String(state.imageCrc32) +
+                    ",\"nextPage\":" + String(state.nextPage) +
                     ",\"pageCount\":" + String(state.pageCount) + identity;
   return response;
 }
@@ -863,13 +894,30 @@ void avrUpdateResumeIfRequired(bool bootloaderAlreadyReady)
     if(!writePage(address, page)) restartAfterOperationFailure(&image, "write", address);
     if(!verifyPage(address, page)) restartAfterOperationFailure(&image, "verify", address);
     state.nextPage = pageIndex + 1;
-    while(!saveState(&state)) { delay(250); yield(); }
-    appendJournal(String("page-verified index=") + String(pageIndex), address);
-    if(!serviceAvrUpdateQualificationPause(pageIndex, address))
-      restartAfterOperationFailure(&image, "qualification-reset-timeout", address);
-    if(g_qualificationEspRestartPage == (int16_t)pageIndex)
+    /* Protocol 2 deliberately restarts at page 1 after any interruption, so
+     * nextPage is useful for live progress only and must not rewrite LittleFS
+     * after every flash page.  Phase-boundary state remains atomic, while
+     * periodic journal checkpoints retain enough evidence to localize a stall. */
+    if((state.nextPage % AVR_UPDATE_JOURNAL_PAGE_INTERVAL) == 0U ||
+       state.nextPage == state.pageCount)
+      appendJournal(String("page-verified index=") + String(pageIndex), address);
+    if(state.qualificationAvrResetPage == pageIndex)
     {
-      g_qualificationEspRestartPage = -1;
+      /* Consume the one-shot before exposing the pause to the host. An injected
+       * AVR reset may also remove ESP power, so cold replay must not pause at
+       * the same page forever. */
+      state.qualificationAvrResetPage = 0U;
+      while(!saveState(&state)) { delay(250); yield(); }
+      appendJournal(String("qualification-avr-reset-ready page=") + String(pageIndex), address);
+      if(!serviceAvrUpdateQualificationPause(pageIndex, address))
+        restartAfterOperationFailure(&image, "qualification-reset-timeout", address);
+    }
+    if(state.qualificationEspRestartPage == pageIndex)
+    {
+      /* Clear the one-shot before restarting. Recovery replays from page 1, so
+       * persisting this boundary prevents an ESP restart loop after page 8. */
+      state.qualificationEspRestartPage = 0U;
+      while(!saveState(&state)) { delay(250); yield(); }
       appendJournal(String("qualification-esp-restart page=") + String(pageIndex), address);
       delay(100);
       ESP.restart();
@@ -907,6 +955,8 @@ bool avrUpdateObserveApplicationVersion(const String& version)
    * persistence then needs a retry, the verified application can report again. */
   if(LittleFS.exists(AVR_UPDATE_IMAGE_PATH) && !LittleFS.remove(AVR_UPDATE_IMAGE_PATH)) return false;
   state.phase = AVR_UPDATE_COMPLETE;
+  state.qualificationEspRestartPage = 0U;
+  state.qualificationAvrResetPage = 0U;
   if(!saveState(&state)) return false;
   appendJournal(String("complete version=") + version);
   return true;

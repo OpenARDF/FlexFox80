@@ -274,7 +274,7 @@ const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8"
 const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
 const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.208";
-const expectedEspVersion = "2.18";
+const expectedEspVersion = "2.22";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -429,6 +429,7 @@ if (
   !avrFirmwareUpdate.includes("state.nextPage = 1") ||
   !avrFirmwareUpdate.includes("AVR_UPDATE_RECOVERY_REQUIRED") ||
   !avrFirmwareUpdate.includes("AVR_UPDATE_JOURNAL_PATH") ||
+  !avrFirmwareUpdate.includes('\\"imageCrc32\\":') ||
   !avrFirmwareUpdate.includes("LittleFS rename atomically replaces") ||
   /LittleFS\.remove\(AVR_UPDATE_IMAGE_PATH\);\s*if\(!LittleFS\.rename\(AVR_UPDATE_STAGING_PATH/.test(avrFirmwareUpdate) ||
   !espMain.includes('g_http_server.on("/avr-update/log"') ||
@@ -436,6 +437,16 @@ if (
   !wifiAvrUpdater.includes("FLEXFOX_AVR_QUALIFICATION_ESP_RESTART_PAGE") ||
   !wifiAvrUpdater.includes("FLEXFOX_AVR_QUALIFICATION_AVR_RESET_PAGE") ||
   !wifiAvrUpdater.includes("FLEXFOX_AVR_QUALIFICATION_FINAL_READBACK") ||
+  !wifiAvrUpdater.includes("FLEXFOX_AVR_STAGE_TIMEOUT_MS") ||
+  !wifiAvrUpdater.includes("stageRequestWasAmbiguous") ||
+  !wifiAvrUpdater.includes("status.imageCrc32 === expectedImageCrc32") ||
+  !wifiAvrUpdater.includes("statusMatchesStagedCandidate(preflight)") ||
+  !wifiAvrUpdater.includes('versionAtLeast(device.version, "2.20")') ||
+  !wifiAvrUpdater.includes('versionAtLeast(device.version, "2.22")') ||
+  !wifiAvrUpdater.includes("FLEXFOX_AVR_QUALIFICATION_ADB_SERIAL") ||
+  !wifiAvrUpdater.includes("FLEXFOX_AVR_QUALIFICATION_EXTERNAL_POWER_LOSS") ||
+  !wifiAvrUpdater.includes("verified-page external power-loss boundary") ||
+  !wifiAvrUpdater.includes("qualificationAdbRequest") ||
   !wifiAvrUpdater.includes('"atmelice_updi"')
 ) {
   process.stderr.write(
@@ -445,6 +456,42 @@ if (
 }
 
 process.stdout.write("PASS protocol-2 bootloader owns commit safety and autonomous qualification evidence\n");
+
+if (
+  !avrFirmwareUpdateHeader.includes("uint16_t qualificationEspRestartPage;") ||
+  !/state\.qualificationEspRestartPage = pageIndex;[\s\S]*?saveState\(&state\)[\s\S]*?qualification-restart-armed/.test(
+    avrFirmwareUpdate,
+  ) ||
+  !/if\(state\.qualificationEspRestartPage == pageIndex\)[\s\S]*?qualificationEspRestartPage = 0U;[\s\S]*?saveState\(&state\)[\s\S]*?qualification-esp-restart[\s\S]*?ESP\.restart\(\)/.test(
+    avrFirmwareUpdate,
+  )
+) {
+  process.stderr.write(
+    "Firmware contract check failed: the one-shot ESP restart qualification hook must survive AVR handoff power loss and clear before restarting\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS qualification ESP restart hook is persistent and one-shot\n");
+
+if (
+  !avrFirmwareUpdateHeader.includes("uint16_t qualificationAvrResetPage;") ||
+  !avrFirmwareUpdateHeader.includes("avrUpdateArmQualificationAvrReset") ||
+  !/state\.qualificationAvrResetPage = pageIndex;[\s\S]*?saveState\(&state\)[\s\S]*?qualification-avr-reset-armed/.test(
+    avrFirmwareUpdate,
+  ) ||
+  !/if\(state\.qualificationAvrResetPage == pageIndex\)[\s\S]*?qualificationAvrResetPage = 0U;[\s\S]*?saveState\(&state\)[\s\S]*?qualification-avr-reset-ready[\s\S]*?serviceAvrUpdateQualificationPause/.test(
+    avrFirmwareUpdate,
+  ) ||
+  !espMain.includes("avrUpdateArmQualificationAvrReset((uint16_t)resetPage, &error)")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: the one-shot AVR reset qualification hook must survive handoff power loss and clear before host injection\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS qualification AVR reset hook is persistent and one-shot\n");
 
 const avrUpdateStartHandler = espMain.match(
   /void handleAvrUpdateStart\(\)\s*\{([\s\S]*?)\n\}\n\nvoid handleSuccess/,

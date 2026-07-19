@@ -830,7 +830,7 @@ void handleAvrQualificationContinue()
 bool serviceAvrUpdateQualificationPause(uint16_t pageIndex, uint32_t address)
 {
   (void)address;
-  if(g_avrQualificationResetPage != (int16_t)pageIndex) return true;
+  g_avrQualificationResetPage = (int16_t)pageIndex;
   g_avrQualificationResetReady = true;
   g_avrQualificationResetContinue = false;
   g_http_server.begin();
@@ -1175,15 +1175,13 @@ void handleAvrUpdateStart()
   else if(g_http_server.arg("qualificationConfirm") == "ARM-AVR-RESET")
   {
     const long resetPage = g_http_server.arg("qualificationResetPage").toInt();
-    AvrUpdateState qualificationState;
-    if(resetPage < 1 || resetPage > 65535L || !avrUpdateLoadState(&qualificationState) ||
-       resetPage >= qualificationState.pageCount)
+    if(resetPage < 1 || resetPage > 65535L ||
+       !avrUpdateArmQualificationAvrReset((uint16_t)resetPage, &error))
     {
       avrUpdateRestoreStaged(NULL);
-      g_http_server.send(400, "text/plain; charset=utf-8", "Qualification AVR reset page is outside the staged non-reset image");
+      g_http_server.send(400, "text/plain; charset=utf-8", error);
       return;
     }
-    g_avrQualificationResetPage = (int16_t)resetPage;
   }
   else if(g_http_server.arg("qualificationConfirm").length())
   {

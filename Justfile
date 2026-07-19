@@ -26,6 +26,7 @@ test:
     node --check ./scripts/update-flexfox-avr-over-wifi.mjs
     node ./Tests/Host/eeprom_enum_layout_migration_test.mjs
     node ./Tests/Host/avr_update_image_format_test.mjs
+    node ./Tests/Host/avr_readback_normalization_test.mjs
     node ./Tests/Host/esp_root_page_test.mjs
     node ./Tests/Host/esp_firmware_update_page_test.mjs
     node ./Tests/Host/wifi_avr_update_identity_test.mjs

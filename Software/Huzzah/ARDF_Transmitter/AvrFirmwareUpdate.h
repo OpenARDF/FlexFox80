@@ -62,7 +62,10 @@ struct AvrUpdateState
   uint32_t magic;
   uint16_t schema;
   uint8_t phase;
-  uint8_t reserved;
+  /* Zero in production. Qualification persists one-shot interruption pages
+   * because the normal AVR update handoff can remove ESP power before page 1. */
+  uint16_t qualificationEspRestartPage;
+  uint16_t qualificationAvrResetPage;
   uint32_t imageBytes;
   uint32_t imageCrc32;
   uint32_t generation;
@@ -84,5 +87,6 @@ String avrUpdateStatusJson(const String& deviceSsid);
 void avrUpdateResumeIfRequired(bool bootloaderAlreadyReady = false);
 bool avrUpdateObserveApplicationVersion(const String& version);
 bool avrUpdateArmQualificationEspRestart(uint16_t pageIndex, String *error);
+bool avrUpdateArmQualificationAvrReset(uint16_t pageIndex, String *error);
 
 #endif

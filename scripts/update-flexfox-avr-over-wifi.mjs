@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createInterface } from "node:readline/promises";
+import { setTimeout as sleep } from "node:timers/promises";
 import {
   crc32,
   digest,
@@ -19,6 +20,7 @@ import {
   FLEXFOX_AVR_IMAGE_FORMAT,
   inspectFlexFoxAvrUpdateImage,
 } from "./lib/flexfox-avr-update-image.mjs";
+import { normalizeAvrdudeFlashReadback } from "./lib/flexfox-avr-readback.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const host = process.env.FLEXFOX_HOST || "73.73.73.73";
@@ -34,7 +36,11 @@ const expectedDeviceSsid = normalizeMacDerivedDeviceSsid(suppliedExpectedDeviceS
 const qualificationEspRestartPage = Number(process.env.FLEXFOX_AVR_QUALIFICATION_ESP_RESTART_PAGE || 0);
 const qualificationAvrResetPage = Number(process.env.FLEXFOX_AVR_QUALIFICATION_AVR_RESET_PAGE || 0);
 const qualificationFinalReadback = process.env.FLEXFOX_AVR_QUALIFICATION_FINAL_READBACK === "1";
+const qualificationExternalPowerLoss = process.env.FLEXFOX_AVR_QUALIFICATION_EXTERNAL_POWER_LOSS === "1";
+const qualificationAdbSerial = (process.env.FLEXFOX_AVR_QUALIFICATION_ADB_SERIAL || "").trim();
+const qualificationAdbPath = process.env.FLEXFOX_ADB || "adb";
 const defaultVerifyTimeoutMs = 30 * 60 * 1000;
+const stageTimeoutMs = Number(process.env.FLEXFOX_AVR_STAGE_TIMEOUT_MS || 5 * 60 * 1000);
 const supportedBootloaderBauds = new Set([9600, 19200, 38400, 57600, 115200]);
 
 function fail(message) {
@@ -47,6 +53,9 @@ const verifyTimeoutMs = Number(
 );
 if(!Number.isInteger(verifyTimeoutMs) || verifyTimeoutMs < 60000 || verifyTimeoutMs > 3600000) {
   fail("FLEXFOX_AVR_VERIFY_TIMEOUT_MS must be an integer from 60000 through 3600000");
+}
+if(!Number.isInteger(stageTimeoutMs) || stageTimeoutMs < 120000 || stageTimeoutMs > 600000) {
+  fail("FLEXFOX_AVR_STAGE_TIMEOUT_MS must be an integer from 120000 through 600000");
 }
 
 function versionAtLeast(actual, required) {
@@ -95,10 +104,22 @@ if(qualificationAvrResetPage &&
 if(qualificationEspRestartPage && qualificationAvrResetPage) {
   fail("select only one qualification interruption per update run");
 }
+if(qualificationExternalPowerLoss && !qualificationAvrResetPage) {
+  fail("external power-loss qualification requires FLEXFOX_AVR_QUALIFICATION_AVR_RESET_PAGE");
+}
 if(qualificationAvrResetPage || qualificationFinalReadback) {
   const avrdudeProbe = spawnSync("avrdude", ["-?"], { encoding: "utf8" });
   if(avrdudeProbe.error?.code === "ENOENT") {
     fail("qualification AVR reset requires avrdude on PATH");
+  }
+}
+if(qualificationAdbSerial) {
+  const adbProbe = spawnSync(qualificationAdbPath, ["-s", qualificationAdbSerial, "get-state"], {
+    encoding: "utf8",
+    timeout: 10000,
+  });
+  if(adbProbe.error || adbProbe.status !== 0 || adbProbe.stdout.trim() !== "device") {
+    fail(`qualification ADB device ${qualificationAdbSerial} is unavailable`);
   }
 }
 if(!dryRun && process.env.FLEXFOX_AVR_UPDATE_CONFIRM !== `UPDATE-AVR-${manifest.applicationVersion}`) {
@@ -119,6 +140,12 @@ const device = await deviceResponse.json();
 if(!versionAtLeast(device.version, manifest.minimumEspVersion)) {
   fail(`ESP ${device.version} cannot perform AVR updates; install ESP ${manifest.minimumEspVersion} or later first`);
 }
+if(qualificationEspRestartPage && !versionAtLeast(device.version, "2.20")) {
+  fail(`ESP ${device.version} cannot persist the qualification ESP restart hook; install ESP 2.20 or later first`);
+}
+if(qualificationAvrResetPage && !versionAtLeast(device.version, "2.22")) {
+  fail(`ESP ${device.version} cannot persist the qualification AVR reset hook; install ESP 2.22 or later first`);
+}
 if(device.cloneActive || device.updateActive || device.restartPending || device.linkbusEventTransactionActive) {
   fail("device is busy with another firmware, clone, or Linkbus transaction");
 }
@@ -138,20 +165,57 @@ if(dryRun) {
   process.exit(0);
 }
 
-const multipart = multipartFileBody("firmware", basename(imagePath), image);
-const stageUrl = `${baseUrl}/avr-update?confirm=STAGE&size=${image.length}&crc32=${actualCrc32.slice(2)}&version=${encodeURIComponent(manifest.applicationVersion)}`;
-process.stdout.write("Staging and validating the complete image in ESP flash...\n");
-const stageResponse = await fetchWithTimeout(stageUrl, {
-  method: "POST",
-  headers: multipart.headers,
-  body: multipart.body,
-}, 120000);
-const stageText = await stageResponse.text();
-if(!stageResponse.ok) fail(`staging failed with HTTP ${stageResponse.status}: ${stageText}`);
-const stagedResponse = await fetchWithTimeout(`${baseUrl}/avr-update/status`, { cache: "no-store" });
-const staged = await stagedResponse.json();
-if(staged.phase !== "staged" || staged.targetVersion !== manifest.applicationVersion || staged.imageBytes !== image.length) {
-  fail(`device did not retain the expected staged state: ${JSON.stringify(staged)}`);
+const expectedImageCrc32 = Number.parseInt(manifest.imageCrc32.slice(2), 16);
+function statusMatchesStagedCandidate(status) {
+  return status?.phase === "staged" && status.staged === true &&
+    status.targetVersion === manifest.applicationVersion &&
+    status.imageBytes === image.length &&
+    status.imageCrc32 === expectedImageCrc32 &&
+    normalizeMacDerivedDeviceSsid(status.deviceSsid) === preflightDeviceSsid;
+}
+
+let staged = statusMatchesStagedCandidate(preflight) ? preflight : undefined;
+if(staged) {
+  process.stdout.write("Reusing the exact validated image already staged on this device.\n");
+} else {
+  const multipart = multipartFileBody("firmware", basename(imagePath), image);
+  const stageUrl = `${baseUrl}/avr-update?confirm=STAGE&size=${image.length}&crc32=${actualCrc32.slice(2)}&version=${encodeURIComponent(manifest.applicationVersion)}`;
+  process.stdout.write("Staging and validating the complete image in ESP flash...\n");
+  let stageRequestWasAmbiguous = false;
+  try {
+    const stageResponse = await fetchWithTimeout(stageUrl, {
+      method: "POST",
+      headers: multipart.headers,
+      body: multipart.body,
+    }, stageTimeoutMs);
+    const stageText = await stageResponse.text();
+    if(!stageResponse.ok) fail(`staging failed with HTTP ${stageResponse.status}: ${stageText}`);
+  } catch(error) {
+    stageRequestWasAmbiguous = true;
+    process.stdout.write(`Staging response was interrupted or ambiguous: ${error.message}\n`);
+    process.stdout.write("Polling persistent state; only an exact SSID/version/size/CRC match will continue.\n");
+  }
+
+  const stageDeadline = Date.now() + (stageRequestWasAmbiguous ? 180000 : 30000);
+  let lastStageStatus;
+  while(Date.now() < stageDeadline) {
+    try {
+      const response = await fetchWithTimeout(`${baseUrl}/avr-update/status`, { cache: "no-store" }, 5000);
+      if(response.ok) {
+        lastStageStatus = await response.json();
+        if(statusMatchesStagedCandidate(lastStageStatus)) {
+          staged = lastStageStatus;
+          break;
+        }
+      }
+    } catch {
+      // LittleFS may still be completing the atomic replacement.
+    }
+    await sleep(1500);
+  }
+  if(!staged) {
+    fail(`device did not retain the exact staged image: ${JSON.stringify(lastStageStatus)}`);
+  }
 }
 if(Number.isFinite(staged.filesystemFreeBytes)) {
   process.stdout.write(`LittleFS free after staging: ${Math.floor(staged.filesystemFreeBytes / 1024)} KiB\n`);
@@ -193,7 +257,7 @@ function runFinalAtmelIceReadback() {
   if(readback.error || readback.status !== 0) {
     fail(`final Atmel-ICE readback failed; evidence retained at ${evidenceRoot}`);
   }
-  const flash = readFileSync(flashPath);
+  const rawFlash = readFileSync(flashPath);
   const eeprom = readFileSync(eepromPath);
   const fuses = readFileSync(fusesPath);
   const bootloaderPath = resolve(dirname(manifestPath), "..", "bootloader-release", "FlexFox80Bootloader.bin");
@@ -201,8 +265,13 @@ function runFinalAtmelIceReadback() {
   const bootloader = readFileSync(bootloaderPath);
   const expectedBootSection = Buffer.alloc(0x4000, 0xff);
   bootloader.copy(expectedBootSection);
-  if(flash.length !== 128 * 1024 ||
-     !flash.subarray(0, expectedBootSection.length).equals(expectedBootSection)) {
+  let flash;
+  try {
+    flash = normalizeAvrdudeFlashReadback(rawFlash, manifest.flashSize);
+  } catch(error) {
+    fail(`final flash readback was invalid: ${error.message}; evidence retained at ${evidenceRoot}`);
+  }
+  if(!flash.subarray(0, expectedBootSection.length).equals(expectedBootSection)) {
     fail(`final readback did not match the exact expected resident bootloader; evidence retained at ${evidenceRoot}`);
   }
   if(!flash.subarray(manifest.applicationStart, manifest.applicationStart + image.length).equals(image)) {
@@ -215,6 +284,8 @@ function runFinalAtmelIceReadback() {
     fail(`final readback found incorrect CODESIZE/BOOTSIZE fuses; evidence retained at ${evidenceRoot}`);
   }
   writeFileSync(join(evidenceRoot, "readback-verification.json"), `${JSON.stringify({
+    rawFlashBytes: rawFlash.length,
+    rawFlashSha256: digest("sha256", rawFlash),
     flashSha256: digest("sha256", flash),
     eepromSha256: digest("sha256", eeprom),
     fusesSha256: digest("sha256", fuses),
@@ -239,6 +310,31 @@ async function captureEvidence(status) {
   } catch(error) {
     /* A missing route is expected while the ESP or access point is restarting. */
   }
+}
+
+function qualificationAdbRequest(path, method = "GET", formBody = "") {
+  if(!qualificationAdbSerial) return null;
+  const argumentsList = [
+    /* Qualification only: the Moto remains reachable over RNDIS/ADB while its
+     * WiFi route and the Mac's DroidTether route reform after ESP power loss. */
+    "-s", qualificationAdbSerial, "shell", "curl", "--silent", "--show-error", "--fail-with-body",
+    "--connect-timeout", "2", "--max-time", "4",
+  ];
+  if(method === "POST") {
+    argumentsList.push(
+      "--request", "POST",
+      "--header", "Content-Type: application/x-www-form-urlencoded",
+      "--data", formBody,
+    );
+  }
+  argumentsList.push(`${baseUrl}${path}`);
+  const request = spawnSync(qualificationAdbPath, argumentsList, {
+    encoding: "utf8",
+    timeout: 8000,
+    maxBuffer: 1024 * 1024,
+  });
+  if(request.error || request.status !== 0) return null;
+  return request.stdout.trim();
 }
 let suppliedSsidSuffix;
 if(process.stdin.isTTY) {
@@ -280,6 +376,7 @@ process.stdout.write(`Waiting up to ${Math.ceil(verifyTimeoutMs / 60000)} minute
 const deadline = Date.now() + verifyTimeoutMs;
 let avrResetInjected = false;
 let avrResetDroppedEspPower = false;
+let externalPowerLossReady = false;
 while(Date.now() < deadline) {
   await new Promise((resolvePromise) => setTimeout(
     resolvePromise,
@@ -287,13 +384,18 @@ while(Date.now() < deadline) {
   ));
   try {
     if(qualificationAvrResetPage && !avrResetInjected) {
-      const qualificationResponse = await fetchWithTimeout(
-        `${baseUrl}/avr-update/qualification/status`,
-        { cache: "no-store" },
-        2000,
-      );
-      if(qualificationResponse.ok) {
-        const qualification = await qualificationResponse.json();
+      const adbQualification = qualificationAdbRequest("/avr-update/qualification/status");
+      const qualificationResponse = adbQualification === null
+        ? await fetchWithTimeout(
+          `${baseUrl}/avr-update/qualification/status`,
+          { cache: "no-store" },
+          2000,
+        )
+        : null;
+      if(adbQualification !== null || qualificationResponse.ok) {
+        const qualification = adbQualification !== null
+          ? JSON.parse(adbQualification)
+          : await qualificationResponse.json();
         if(qualification.resetReady) {
           writeFileSync(
             join(evidenceRoot, "avr-reset-qualification-ready.json"),
@@ -301,6 +403,15 @@ while(Date.now() < deadline) {
           );
           if(qualification.armedPage !== qualificationAvrResetPage) {
             fail(`device paused at qualification page ${qualification.armedPage}, expected ${qualificationAvrResetPage}`);
+          }
+          if(qualificationExternalPowerLoss) {
+            if(!externalPowerLossReady) {
+              externalPowerLossReady = true;
+              process.stdout.write(
+                `ACTION REQUIRED: ESP red/blue is alternating after verified page ${qualificationAvrResetPage}; remove whole-unit power now.\n`,
+              );
+            }
+            continue;
           }
           process.stdout.write(`Injecting an Atmel-ICE reset after verified page ${qualificationAvrResetPage}...\n`);
           const reset = spawnSync(
@@ -320,17 +431,23 @@ while(Date.now() < deadline) {
           }
           avrResetInjected = true;
           try {
-            const continueResponse = await fetchWithTimeout(
-              `${baseUrl}/avr-update/qualification/continue`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({ confirm: "CONTINUE-AFTER-AVR-RESET" }),
-              },
-              5000,
+            const continueForm = "confirm=CONTINUE-AFTER-AVR-RESET";
+            const adbContinue = qualificationAdbRequest(
+              "/avr-update/qualification/continue", "POST", continueForm,
             );
-            if(!continueResponse.ok) {
-              fail(`device rejected continuation after the injected AVR reset: HTTP ${continueResponse.status}`);
+            if(adbContinue === null) {
+              const continueResponse = await fetchWithTimeout(
+                `${baseUrl}/avr-update/qualification/continue`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                  body: new URLSearchParams({ confirm: "CONTINUE-AFTER-AVR-RESET" }),
+                },
+                5000,
+              );
+              if(!continueResponse.ok) {
+                fail(`device rejected continuation after the injected AVR reset: HTTP ${continueResponse.status}`);
+              }
             }
             process.stdout.write("AVR reset completed without dropping ESP power; qualification pause released.\n");
           } catch(error) {
@@ -352,8 +469,12 @@ while(Date.now() < deadline) {
     await captureEvidence(status);
     process.stdout.write(`Recovery state: ${status.phase}${status.pageCount ? ` (${status.nextPage}/${status.pageCount})` : ""}\n`);
     if(status.phase === "complete" && status.targetVersion === manifest.applicationVersion) {
-      if(qualificationAvrResetPage && !avrResetInjected) {
+      if(qualificationAvrResetPage && !qualificationExternalPowerLoss && !avrResetInjected) {
         fail("AVR update completed without reaching the armed Atmel-ICE reset hook");
+      }
+      if(qualificationExternalPowerLoss &&
+         !latestJournal.includes(`qualification-avr-reset-ready page=${qualificationAvrResetPage}`)) {
+        fail("AVR update completed without journal evidence of the verified-page external power-loss boundary");
       }
       if(qualificationEspRestartPage &&
          !latestJournal.includes(`qualification-esp-restart page=${qualificationEspRestartPage}`)) {
@@ -363,7 +484,7 @@ while(Date.now() < deadline) {
          (latestJournal.match(/bootloader-session-begun/g)?.length ?? 0) < 2) {
         fail("AVR update completed without journal evidence of a full post-interruption session replay");
       }
-      if(qualificationAvrResetPage && !avrResetDroppedEspPower &&
+      if(qualificationAvrResetPage && !qualificationExternalPowerLoss && !avrResetDroppedEspPower &&
          !latestJournal.includes("failure operation=")) {
         fail("AVR update completed without recording the expected interrupted AVR transaction");
       }
