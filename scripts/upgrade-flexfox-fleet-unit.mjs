@@ -30,6 +30,7 @@ import {
   normalizeFlexFoxSsid,
   parseAdbDevices,
   parseProbeReplies,
+  probeTemperatureIsPlausible,
   selectAdbDevice,
   wifiStatusMatchesSsid,
 } from "./lib/flexfox-fleet-upgrade.mjs";
@@ -416,12 +417,32 @@ function verifyIdentity(replies, artifacts, requireCurrentVersions) {
   if (replies.MASTER !== expectedMaster) {
     fail(`connected unit reports MASTER,${replies.MASTER}; expected ${expectedMaster} for ${ssid}`);
   }
+  if (!probeTemperatureIsPlausible(replies.TEMP)) {
+    fail(`probe temperature ${replies.TEMP} is malformed or outside the AVR sanity range`);
+  }
   if (requireCurrentVersions) {
     const expectedVersions = `${artifacts.esp.version},${artifacts.avr.version}`;
     if (replies.SW_VERSIONS !== expectedVersions) {
       fail(`combined version is ${replies.SW_VERSIONS}; expected ${expectedVersions}`);
     }
   }
+}
+
+async function runVerifiedProbe(artifacts, requireCurrentVersions, timeoutMs = 12000) {
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const replies = await runProbe(timeoutMs);
+    try {
+      verifyIdentity(replies, artifacts, requireCurrentVersions);
+      return { replies, attempts: attempt };
+    } catch (error) {
+      lastError = error;
+      const detail = error instanceof Error ? error.message : String(error);
+      if (!detail.includes("probe temperature") || attempt === 3) throw error;
+      log(`WARN: ${detail}; retrying live telemetry (${attempt}/3).`);
+    }
+  }
+  throw lastError;
 }
 
 async function remoteFileMatches(file) {
@@ -484,13 +505,14 @@ async function main() {
     fail("device is busy with a clone, update, restart, or event transaction");
   }
   log("Running read-only identity and telemetry probe...");
-  const initialReplies = await runProbe(12000);
-  verifyIdentity(initialReplies, artifacts, false);
+  const initialProbe = await runVerifiedProbe(artifacts, false);
+  const initialReplies = initialProbe.replies;
   summary.identity = {
     ssid: initialReplies.SSID,
     mac: initialReplies.MAC,
     master: initialReplies.MASTER,
     versionsBefore: initialReplies.SW_VERSIONS,
+    preflightTelemetryAttempts: initialProbe.attempts,
   };
   summary.phases.preflight = { result: "pass" };
   recordSummary();
@@ -573,8 +595,8 @@ async function main() {
   }
 
   log("Running final combined firmware and telemetry verification...");
-  const finalReplies = await runProbe(12000);
-  verifyIdentity(finalReplies, artifacts, true);
+  const finalProbe = await runVerifiedProbe(artifacts, true);
+  const finalReplies = finalProbe.replies;
   const finalStatus = await readFirmwareStatus();
   if (!espStatusMatchesArtifact(finalStatus, artifacts.esp)) {
     fail("final firmware status does not match the exact ESP release image");
@@ -588,6 +610,7 @@ async function main() {
     fail("final firmware status reports an active transaction");
   }
   summary.identity.versionsAfter = finalReplies.SW_VERSIONS;
+  summary.identity.finalTelemetryAttempts = finalProbe.attempts;
   summary.phases.finalVerification = { result: "pass" };
   summary.result = "pass";
   summary.completedAt = new Date().toISOString();

@@ -12,6 +12,7 @@ import {
   normalizeFlexFoxSsid,
   parseAdbDevices,
   parseProbeReplies,
+  probeTemperatureIsPlausible,
   selectAdbDevice,
   wifiStatusMatchesSsid,
 } from "../../scripts/lib/flexfox-fleet-upgrade.mjs";
@@ -85,6 +86,13 @@ assert.equal(replies.MASTER, "1");
 assert.equal(expectedMasterValue("Tx_Master"), "1");
 assert.equal(expectedMasterValue("Tx_7C2D6FD3"), "0");
 pass("probe replies retain exact identity, versions, and role");
+
+assert.equal(probeTemperatureIsPlausible("25.0C"), true);
+assert.equal(probeTemperatureIsPlausible("-40.5C"), true);
+assert.equal(probeTemperatureIsPlausible("230.0C"), false);
+assert.equal(probeTemperatureIsPlausible("-273.0C"), false);
+assert.equal(probeTemperatureIsPlausible("25.0"), false);
+pass("fleet telemetry rejects impossible or malformed AVR temperatures");
 
 assert.deepEqual(fleetWebFiles, ["events.html", "radio.html", "test.html"]);
 assert.equal(fleetWebFiles.every((name) => /^[A-Za-z0-9._-]+$/.test(name)), true);
