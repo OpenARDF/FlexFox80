@@ -18,17 +18,32 @@ assert.match(source, /id="scheduleStart" type="datetime-local"/);
 assert.match(source, /Prepare master and arm fox provisioning/);
 assert.match(source, /id="nextAssignment" class="instruction"/);
 assert.match(source, /id="provisionConfirmation" class="confirmation muted"/);
+assert.match(source, /id="removeSelf" class="danger" disabled/);
+assert.match(source, /id="abortRun" class="danger" disabled/);
 assert.match(source, /TURN ON NOW: \$\{plan\.label\.toUpperCase\(\)\}/);
 assert.match(source, /\$\{entry\.label\.toUpperCase\(\)\} COMPLETE/);
 assert.match(source, /The page will not advance to the next role/);
+assert.match(source, /entry\.cleanupStatus === "ok"/);
+assert.match(source, /all required foxes and the master are clean/);
+assert.match(source, /ABORT_RESERVED_SUITE/);
+assert.match(source, /FLEET_SOAK_ABORT,\$\{entry\.ssid\}/);
+assert.match(source, /TURN ON FOR ABORT/);
+assert.match(source, /Not in abort roster; no stop or deletion command sent/);
+assert.match(source, /Re-arm target abort/);
+assert.match(source, /armCleanup"\)\.disabled = provisioningState\.abortStarted/);
+assert.match(source, /new URLSearchParams\(\{name: "\/fleet-soak\.html"\}\)/);
+assert.match(source, /result\.includes\("File deleted successfully!"\)/);
 assert.match(source, /FLEET_SOAK_MODE,\$\{mode\}/);
 assert.match(source, /FLEET_SOAK_ASSIGN,\$\{entry\.ssid\},\$\{entry\.assignment\}/);
 assert.match(source, /\{label: "Slow 1", assignment: "0:0", frequency: "3\.520 MHz"\}/);
 assert.match(source, /\{label: "Fast 5", assignment: "1:4", frequency: "3\.560 MHz"\}/);
 assert.match(source, /\/fleet-soak\/activate/);
 assert.match(source, /\/fleet-soak\/cleanup/);
+assert.match(source, /\/fleet-soak\/abort/);
 assert.doesNotMatch(source, /CLONE_PRUNE_EVENTS/);
-assert.doesNotMatch(source, /\/delete(?:\.html)?/);
+assert.equal((source.match(/fetch\("\/delete"/g) || []).length, 1,
+  "Fleet Soak page may invoke the existing delete handler only once with its fixed self path");
+assert.doesNotMatch(source, /\/delete\.html/);
 
 const script = source.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script, "Fleet Soak page must contain an inline script");
@@ -52,6 +67,30 @@ assert.deepEqual(
     ["Fast 5", "1:4", "3.560 MHz"],
   ],
 );
+
+const cleanupProgressSource = script.match(
+  /function cleanupProgress\(state, normalTargetCount\) \{[\s\S]*?\n\}(?=\nfunction currentCleanupProgress)/,
+)?.[0];
+assert.ok(cleanupProgressSource, "Fleet Soak page must expose its pure cleanup completion policy");
+const cleanupProgress = new Function(`${cleanupProgressSource}\nreturn cleanupProgress;`)();
+const normalEntries = provisioningPlan.map((plan, index) => ({...plan, ssid: `Tx_${index}`, status: "ok", cleanupStatus: "ok"}));
+assert.equal(cleanupProgress({entries: normalEntries}, 10).complete, true);
+assert.equal(cleanupProgress({entries: normalEntries.slice(0, 9)}, 10).requirementKnown, false);
+const abortEntries = normalEntries.slice(0, 2).map(entry => ({...entry, status: "pending"}));
+const partialAbort = cleanupProgress({
+  abortStarted: true,
+  abortExpectedSsids: abortEntries.map(entry => entry.ssid),
+  entries: [{...abortEntries[0], cleanupStatus: "ok"}, {...abortEntries[1], cleanupStatus: "pending"}, normalEntries[2]],
+}, 10);
+assert.equal(partialAbort.requiredCount, 2);
+assert.equal(partialAbort.completedCount, 1);
+assert.equal(partialAbort.complete, false);
+assert.equal(cleanupProgress({
+  abortStarted: true,
+  abortExpectedSsids: abortEntries.map(entry => entry.ssid),
+  entries: abortEntries.map(entry => ({...entry, cleanupStatus: "ok"})),
+}, 10).complete, true);
+assert.equal(cleanupProgress({abortStarted: true, abortExpectedSsids: [], entries: []}, 10).complete, true);
 
 const generatorBlock = script.match(
   /\/\/ BEGIN FLEET_SOAK_GENERATOR([\s\S]*?)\/\/ END FLEET_SOAK_GENERATOR/,

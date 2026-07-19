@@ -64,7 +64,7 @@ The source templates also retain their normal power settings: Sprint roles are 3
 
 ## Optional Fleet Soak page
 
-The feature is deliberately absent from the normal LittleFS image. Install [`Software/Huzzah/optional/fleet-soak.html`](../../Software/Huzzah/optional/fleet-soak.html) on the master as `/fleet-soak.html` to enable its HTTP and WebSocket controls. Do not install the page on targets; target firmware already contains the narrowly scoped receiver support.
+The feature is deliberately absent from the normal LittleFS image. Install [`Software/Huzzah/optional/fleet-soak.html`](../../Software/Huzzah/optional/fleet-soak.html) on the master as `/fleet-soak.html` to enable its HTTP and WebSocket controls. Do not install the page on targets; ESP 2.26 target firmware contains the narrowly scoped protocol-2 receiver and abort support.
 
 The page:
 
@@ -73,7 +73,9 @@ The page:
 - identifies each attached target by its MAC-derived unique `Tx_` SSID;
 - assigns newly attached foxes strictly by connection order: Slow 1 through Slow 5, then Fast 1 through Fast 5;
 - transfers only the twelve reserved events and creates matching `.me` files on each target; and
-- removes only the twelve reserved `.event` files during cleanup while retaining all `.me` files.
+- removes only the twelve reserved `.event` files during cleanup while retaining all `.me` files;
+- aborts the master through an acknowledged AVR suspension before removing its reserved files; and
+- authorizes abort targets by their exact rostered `Tx_` SSID, requiring each target to acknowledge AVR suspension before its reserved files are removed.
 
 The target commits all twelve assignment `.me` files before promoting any staged `.event` file into the active reserved namespace. A failed or interrupted transfer therefore cannot activate a partially assigned suite.
 
@@ -89,7 +91,11 @@ Deleting `/fleet-soak.html` disarms Fleet Soak controls and deactivates the rese
 6. Connect appropriate antennas or dummy loads and perform the normal RF safety and authorization checks.
 7. During the soak, record each unit's event transitions, expected transmission slots, unexpected resets, Wi-Fi availability, clock drift, and final idle state.
 
-After the soak, use **Remove reserved events from master**, arm target cleanup, and reconnect each tested unit. Target cleanup removes exactly the reserved twelve `.event` names and retains their `.me` files for a future soak. Deleting `/fleet-soak.html` from the master then removes the optional control surface.
+After the soak, use **Remove reserved events from master**, arm target cleanup, and reconnect each tested unit. Target cleanup removes exactly the reserved twelve `.event` names and retains their `.me` files for a future soak. The page records each successful cleanup against the ten-fox provisioning roster. After all ten foxes report successful cleanup and the master has no reserved events, the page arms **Delete Fleet Soak page from master**. That button uses the existing file manager with the fixed `/fleet-soak.html` path, confirms deletion, and returns to the master home page; it cannot select any other file.
+
+To stop early, use **Abort Fleet Soak**. This one button first requires the master AVR to acknowledge the established operator-stop command, then removes only the master's reserved soak events and arms target abort mode. Follow the page's **TURN ON FOR ABORT** instruction for every fox recorded in the run roster. An exact-SSID browser authorization is required before a target receives the abort session. Each target enters clone quiet, refuses abort if an ordinary event is known to be active, requires the AVR to acknowledge suspension, and only then removes its twelve reserved `.event` files. A failure retains that fox in the abort roster for retry. When the master and every required target have confirmed completion, the page-removal button is armed exactly as it is after normal cleanup.
+
+If network control is unavailable, removing power remains the immediate RF stop. The software abort is complete only when the page confirms the master and every required target; do not infer completion from silence alone.
 
 Do not start the fleet soak solely from the page's schedule summary or an optional host manifest. The master event sheet and every target's per-event assignment are the final on-device checks.
 
@@ -97,7 +103,7 @@ Do not start the fleet soak solely from the page's schedule summary or an option
 
 The host regression test reconstructs a fixed-date bundle and verifies all twelve files, UTC timing, role layouts, frequencies, cycle timing, file framing, filesystem limits, hashes, and clone checksums. It also verifies that the generator rejects an accidental overwrite and a start with insufficient setup time.
 
-The ESP event registry and clone manifest are both bounded at 25 files. `events.html` reports an explicit error if more than 25 `.event` files are present rather than silently presenting a complete-looking list. The qualified ESP 2.15 build uses 53% of sketch flash and 60% of global RAM, leaving 32,544 bytes for stack and heap. The self-contained optional page is 25,501 bytes and a generated twelve-event suite is about 23.7 KB raw; allowing one 8 KiB LittleFS block per file still adds less than 140 KiB to the master.
+The ESP event registry and clone manifest are both bounded at 25 files. `events.html` reports an explicit error if more than 25 `.event` files are present rather than silently presenting a complete-looking list. The ESP 2.26 build uses 566,256 sketch bytes and 51,664 bytes of global RAM, leaving 30,256 bytes for stack and heap; IRAM remains unchanged at 27,676 of 32,768 bytes. The self-contained optional page is 38,832 bytes and a generated twelve-event suite is about 23.7 KB raw; allowing one 8 KiB LittleFS block per file still adds less than 140 KiB to the master.
 
 Run it as part of the normal repository checks:
 
@@ -107,7 +113,7 @@ just test
 
 ## Hardware qualification before fleet use
 
-The host checks and firmware build do not make this fleet-ready by themselves. Use dummy loads for the first pilot and require these results before installing ESP 2.15 broadly:
+The host checks and firmware build do not make this fleet-ready by themselves. Use dummy loads for the first pilot and require these results before installing ESP 2.26 broadly:
 
 1. With `/fleet-soak.html` absent and then present but disarmed, perform an ordinary `events.html` clone and verify byte-for-byte ordinary `.event`/`.me` behavior.
 2. Attempt provisioning while the pilot target is running an ordinary event and verify that the target reports the active event and refuses both provisioning and cleanup.
@@ -115,4 +121,7 @@ The host checks and firmware build do not make this fleet-ready by themselves. U
 4. Verify the target receives the assignment shown for its unique `Tx_` SSID, its first future event is programmed into the AVR, and its frequency/slot matches the page.
 5. Place unrelated ordinary events and `.me` files on the target, run Fleet Soak cleanup, and prove their hashes are unchanged while only the twelve reserved `.event` files disappear.
 6. Reboot master and target in disarmed, provisioned, and cleaned states; verify normal event scheduling and the retained soak assignment evidence.
-7. Only after those pilot checks, run the planned multi-unit RF soak and record every target result shown by the page.
+7. Abort while a reserved event is active and verify RF stops before the reserved files disappear. Repeat with an ordinary event active and verify abort is refused and the ordinary event resumes after clone quiet.
+8. Attach an unrostered target during abort and verify that the page sends no stop or deletion authorization. Interrupt one rostered abort and verify that it remains incomplete and retryable.
+9. Complete abort for the master and every rostered target, verify the page-removal button becomes enabled, and prove that it removes only `/fleet-soak.html` while retaining `.me` files.
+10. Only after those pilot checks, run the planned multi-unit RF soak and record every target result shown by the page.

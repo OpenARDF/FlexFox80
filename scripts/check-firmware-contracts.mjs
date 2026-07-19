@@ -317,7 +317,7 @@ const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8"
 const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
 const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.210";
-const expectedEspVersion = "2.25";
+const expectedEspVersion = "2.26";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 

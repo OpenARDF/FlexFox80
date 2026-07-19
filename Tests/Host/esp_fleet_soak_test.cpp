@@ -44,6 +44,14 @@ int main()
 	       "backup_file_is_not_deletable_event");
 	expect(!fleetSoakIsReservedEventPath("Ordinary.event"),
 	       "ordinary_event_is_outside_cleanup_scope");
+	expect(fleetSoakAbortMaySuspend(false, "Ordinary.event"),
+	       "idle_target_may_enter_explicit_abort");
+	expect(fleetSoakAbortMaySuspend(true, "FS01-Sprint.event"),
+	       "active_reserved_event_may_be_suspended");
+	expect(!fleetSoakAbortMaySuspend(true, "Ordinary.event"),
+	       "active_ordinary_event_cannot_be_suspended");
+	expect(!fleetSoakAbortMaySuspend(true, nullptr),
+	       "unidentified_active_event_cannot_be_suspended");
 
 	for (int role = 0; role <= 3; role++)
 	{

@@ -303,6 +303,7 @@ void handleAvrUpdateUpload(void);
 void handleFleetSoakStatus(void);
 void handleFleetSoakActivate(void);
 void handleFleetSoakCleanup(void);
+void handleFleetSoakAbort(void);
 void handleAvrUpdateStart(void);
 void handleFileDownload(void);
 void fileDelete(void);
@@ -327,6 +328,8 @@ void endMasterCloneSession(void);
 bool reconcileCloneEventFiles(const CloneEventManifest *manifest);
 static bool drainLinkbusBeforeEvent(String *errorTxt);
 static bool sendLinkbusTransactionCommand(const String& message, const char *phase, String *errorTxt);
+static bool suspendEventForFleetSoakAbort(String *errorTxt);
+static void clearFleetSoakCandidate(void);
 
 void setup()
 {
@@ -1052,7 +1055,7 @@ void handleAvrUpdateUpload()
   delay(0);
 }
 
-static bool currentEventFileIsActive(String *eventName)
+static bool currentEventFileIsActive(String *eventName, String *eventPath = NULL)
 {
   populateEventFileList();
   const unsigned long currentEpoch = g_timeOfDayFromTx;
@@ -1062,6 +1065,7 @@ static bool currentEventFileIsActive(String *eventName)
     if(event.startDateTimeEpoch <= currentEpoch && currentEpoch < event.finishDateTimeEpoch)
     {
       if(eventName) *eventName = event.ename;
+      if(eventPath) *eventPath = event.path;
       return true;
     }
   }
@@ -1167,6 +1171,52 @@ void handleFleetSoakCleanup(void)
   g_ESP_Comm_State = TX_READ_ALL_EVENTS_FILES;
   g_http_server.send(200, "text/plain; charset=utf-8",
                      String("Fleet Soak cleanup complete; removed ") + removedCount + " reserved event files");
+}
+
+void handleFleetSoakAbort(void)
+{
+  if (!fleetSoakHttpIsAvailable())
+  {
+    return;
+  }
+  if (g_http_server.arg("confirm") != "ABORT_RESERVED_SUITE" ||
+      fleetSoakOperationIsBusy())
+  {
+    g_http_server.send(409, "text/plain; charset=utf-8", "Fleet Soak abort is not currently permitted");
+    return;
+  }
+
+  String activeEventName;
+  String activeEventPath;
+  const bool eventIsActive = currentEventFileIsActive(&activeEventName, &activeEventPath);
+  if (!fleetSoakAbortMaySuspend(eventIsActive, activeEventPath.c_str()))
+  {
+    g_http_server.send(409, "text/plain; charset=utf-8",
+                       String("Refusing to abort ordinary active event: ") + activeEventName);
+    return;
+  }
+
+  String error;
+  if (!suspendEventForFleetSoakAbort(&error))
+  {
+    g_http_server.send(409, "text/plain; charset=utf-8", String("AVR suspension failed: ") + error);
+    return;
+  }
+
+  int removedCount = 0;
+  if (!fleetSoakCleanupReservedEvents(&removedCount, &error))
+  {
+    g_masterFleetSoakMode = FLEET_SOAK_MODE_OFF;
+    g_http_server.send(409, "text/plain; charset=utf-8", error);
+    return;
+  }
+
+  clearFleetSoakCandidate();
+  g_masterFleetSoakMode = FLEET_SOAK_MODE_ABORT;
+  g_ESP_Comm_State = TX_READ_ALL_EVENTS_FILES;
+  g_http_server.send(200, "text/plain; charset=utf-8",
+                     String("Fleet Soak master abort complete; AVR suspended and removed ") +
+                       removedCount + " reserved event files");
 }
 
 static bool avrBootloaderIdentityIsCompatible(const String& identity)
@@ -1484,6 +1534,7 @@ bool setupHTTP_AP()
       g_http_server.on("/fleet-soak/status", HTTP_GET, handleFleetSoakStatus);
       g_http_server.on("/fleet-soak/activate", HTTP_POST, handleFleetSoakActivate);
       g_http_server.on("/fleet-soak/cleanup", HTTP_POST, handleFleetSoakCleanup);
+      g_http_server.on("/fleet-soak/abort", HTTP_POST, handleFleetSoakAbort);
 
       g_http_server.on(
         "/upload.html",
@@ -2129,6 +2180,10 @@ static const char *fleetSoakModeText(FleetSoakMode mode)
   {
     return FLEET_SOAK_MODE_TEXT_CLEANUP;
   }
+  if (mode == FLEET_SOAK_MODE_ABORT)
+  {
+    return FLEET_SOAK_MODE_TEXT_ABORT;
+  }
   return FLEET_SOAK_MODE_TEXT_OFF;
 }
 
@@ -2140,7 +2195,8 @@ static int masterCloneFileCount(void)
   {
     return fleetSoakSuiteIsReady() ? FLEET_SOAK_EVENT_COUNT : 0;
   }
-  if (g_masterFleetSoakMode == FLEET_SOAK_MODE_CLEANUP &&
+  if ((g_masterFleetSoakMode == FLEET_SOAK_MODE_CLEANUP ||
+       g_masterFleetSoakMode == FLEET_SOAK_MODE_ABORT) &&
       g_slave_socket_number == g_fleetSoakCandidateSocket)
   {
     return 0;
@@ -3220,6 +3276,16 @@ bool clientUpdateEventFilesLoop()
           {
             int removedCount = 0;
             if (!fleetSoakCleanupReservedEvents(&removedCount, &errorMessage))
+            {
+              filesComplete = false;
+            }
+          }
+          else if (g_slaveFleetSoakMode == FLEET_SOAK_MODE_ABORT)
+          {
+            int removedCount = 0;
+            filesComplete = suspendEventForFleetSoakAbort(&errorMessage);
+            if (filesComplete &&
+                !fleetSoakCleanupReservedEvents(&removedCount, &errorMessage))
             {
               filesComplete = false;
             }
@@ -4889,8 +4955,13 @@ void webSocketClientEvent(WStype_t type, uint8_t * payload, size_t length)
             assignment.trim();
 
             String activeEventName;
+            String activeEventPath;
+            const bool abortRequested = mode.equals(FLEET_SOAK_MODE_TEXT_ABORT);
             /* Refuse before staging or cleanup so a running field event cannot be disturbed. */
-            if (g_slaveFleetSoakCapabilitySeen && currentEventFileIsActive(&activeEventName))
+            const bool eventIsActive = currentEventFileIsActive(&activeEventName, &activeEventPath);
+            if (g_slaveFleetSoakCapabilitySeen && eventIsActive &&
+                (!abortRequested ||
+                 !fleetSoakAbortMaySuspend(eventIsActive, activeEventPath.c_str())))
             {
               String result = String(SOCK_COMMAND_FLEET_SOAK_RESULT) + "," + g_uniqueAPNameString + "," +
                               mode + ",ERROR,Event is active: " + activeEventName;
@@ -4900,6 +4971,12 @@ void webSocketClientEvent(WStype_t type, uint8_t * payload, size_t length)
             else if (g_slaveFleetSoakCapabilitySeen && mode.equals(FLEET_SOAK_MODE_TEXT_CLEANUP))
             {
               g_slaveFleetSoakMode = FLEET_SOAK_MODE_CLEANUP;
+              g_slaveFleetSoakAssignment = "";
+              g_slaveFleetSoakSessionReady = true;
+            }
+            else if (g_slaveFleetSoakCapabilitySeen && abortRequested)
+            {
+              g_slaveFleetSoakMode = FLEET_SOAK_MODE_ABORT;
               g_slaveFleetSoakAssignment = "";
               g_slaveFleetSoakSessionReady = true;
             }
@@ -5203,6 +5280,13 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
               clearFleetSoakCandidate();
               result = String(SOCK_COMMAND_FLEET_SOAK_RESULT) + ",MASTER,MODE,OK,CLEANUP";
             }
+            else if (requested.equals(FLEET_SOAK_MODE_TEXT_ABORT) &&
+                     fleetSoakReservedEventCount() == 0)
+            {
+              g_masterFleetSoakMode = FLEET_SOAK_MODE_ABORT;
+              clearFleetSoakCandidate();
+              result = String(SOCK_COMMAND_FLEET_SOAK_RESULT) + ",MASTER,MODE,OK,ABORT";
+            }
             else if (requested.equals(FLEET_SOAK_MODE_TEXT_PROVISION))
             {
               result += "The complete reserved suite is not active";
@@ -5210,6 +5294,10 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
             else if (requested.equals(FLEET_SOAK_MODE_TEXT_CLEANUP))
             {
               result += "Clean the master before cleaning targets";
+            }
+            else if (requested.equals(FLEET_SOAK_MODE_TEXT_ABORT))
+            {
+              result += "Abort the master before aborting targets";
             }
             else
             {
@@ -5283,6 +5371,24 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
             {
               String result = String(SOCK_COMMAND_FLEET_SOAK_RESULT) + "," + ssid +
                               ",ASSIGN,ERROR,Assignment rejected";
+              g_webSocketServer.broadcastTXT(stringObjToConstCharString(&result), result.length());
+            }
+          }
+          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_FLEET_SOAK_ABORT))
+          {
+            String ssid = commaIndex >= 0 ? p.substring(commaIndex + 1) : String("");
+            ssid.trim();
+            if (g_masterFleetSoakMode == FLEET_SOAK_MODE_ABORT &&
+                g_fleetSoakCandidateSocket >= 0 && ssid.equals(g_fleetSoakCandidateSsid))
+            {
+              String session = String(SOCK_COMMAND_FLEET_SOAK_SESSION) + "," + FLEET_SOAK_MODE_TEXT_ABORT;
+              g_webSocketServer.sendTXT((uint8_t)g_fleetSoakCandidateSocket,
+                                        stringObjToConstCharString(&session), session.length());
+            }
+            else
+            {
+              String result = String(SOCK_COMMAND_FLEET_SOAK_RESULT) + "," + ssid +
+                              ",ABORT,ERROR,Abort authorization rejected";
               g_webSocketServer.broadcastTXT(stringObjToConstCharString(&result), result.length());
             }
           }
@@ -5360,6 +5466,7 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
                                                (num == g_fleetSoakCandidateSocket &&
                                                 num == g_slave_socket_number &&
                                                 (g_masterFleetSoakMode == FLEET_SOAK_MODE_CLEANUP ||
+                                                 g_masterFleetSoakMode == FLEET_SOAK_MODE_ABORT ||
                                                  fleetSoakAssignmentIsValid(g_fleetSoakCandidateAssignment.c_str())));
               if (!fleetSessionAllowed)
               {
@@ -7309,6 +7416,36 @@ static bool sendLinkbusTransactionCommand(
   g_linkBusCurrentAttemptCount = 0;
   g_LBOutputBuff->put(message);
   return waitForLinkbusTransactionOutcome(phase, errorTxt);
+}
+
+static bool suspendEventForFleetSoakAbort(String *errorTxt)
+{
+  if (g_linkBusEventTransactionActive)
+  {
+    recordLinkbusCommandFailure("Fleet Soak abort", String("Linkbus transaction is already active"), errorTxt);
+    return false;
+  }
+
+  /* CLEAR historically queued this same AVR operator-stop command. Abort uses
+   * the exclusive transaction wrapper so reserved files are removed only
+   * after the AVR has acknowledged that RF and future starts are suspended. */
+  g_linkBusEventTransactionActive = true;
+  bool success = drainLinkbusBeforeEvent(errorTxt) &&
+                 sendLinkbusTransactionCommand(
+                   String(LB_MESSAGE_SUSPEND_EVENT), "Fleet Soak AVR suspension", errorTxt);
+  g_linkBusEventTransactionActive = false;
+
+  if (success)
+  {
+    if (g_activeEvent)
+    {
+      delete g_activeEvent;
+      g_activeEvent = NULL;
+    }
+    g_linkBusLastPhase = "Fleet Soak abort complete";
+    g_linkBusLastFailure = "";
+  }
+  return success;
 }
 
 bool sendEventToATMEGA(String *errorTxt)
