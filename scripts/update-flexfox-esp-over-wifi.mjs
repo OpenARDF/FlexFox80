@@ -86,6 +86,34 @@ async function readStatus(timeoutMs = 5000) {
   return response.json();
 }
 
+async function readLegacyDeviceSsid(timeoutMs = 5000) {
+  const websocketUrl = new URL(baseUrl);
+  websocketUrl.protocol = "ws:";
+  websocketUrl.port = "81";
+  return new Promise((resolvePromise, rejectPromise) => {
+    const socket = new WebSocket(websocketUrl);
+    const timer = setTimeout(() => {
+      socket.close();
+      rejectPromise(new Error("legacy device SSID query timed out"));
+    }, timeoutMs);
+    const finish = (error, ssid) => {
+      clearTimeout(timer);
+      if (socket.readyState < WebSocket.CLOSING) socket.close(1000, "identity verified");
+      if (error) rejectPromise(error);
+      else resolvePromise(ssid);
+    };
+    socket.addEventListener("open", () => {
+      socket.send("!&");
+      socket.send("SSID");
+    });
+    socket.addEventListener("message", (event) => {
+      const message = String(event.data);
+      if (message.startsWith("SSID,")) finish(undefined, message.slice(5));
+    });
+    socket.addEventListener("error", () => finish(new Error("legacy device SSID query failed")));
+  });
+}
+
 let before = await readStatus();
 if (before.uptimeMillis < 10000) {
   await sleep(10000 - before.uptimeMillis);
@@ -94,8 +122,10 @@ if (before.uptimeMillis < 10000) {
 if (before.filesystemProtected !== true) {
   throw new Error("device did not confirm that its firmware endpoint protects LittleFS");
 }
-if (expectedDeviceSsid && before.deviceSsid !== expectedDeviceSsid) {
-  throw new Error(`connected device is ${before.deviceSsid}; expected ${expectedDeviceSsid}`);
+const beforeDeviceSsid = before.deviceSsid ||
+  (expectedDeviceSsid ? await readLegacyDeviceSsid() : undefined);
+if (expectedDeviceSsid && beforeDeviceSsid !== expectedDeviceSsid) {
+  throw new Error(`connected device is ${beforeDeviceSsid}; expected ${expectedDeviceSsid}`);
 }
 if (before.cloneActive || before.updateActive || before.restartPending) {
   throw new Error(`device is busy: ${JSON.stringify(before)}`);

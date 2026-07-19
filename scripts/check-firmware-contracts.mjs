@@ -370,7 +370,9 @@ if (
   !wifiUpdater.includes("FLEXFOX_EXPECTED_FILESYSTEM_RECOVERY") ||
   !wifiUpdater.includes("recoveryQualification !== true") ||
   !wifiUpdater.includes("before.recoveryMode === true") ||
-  !wifiUpdater.includes("before.deviceSsid !== expectedDeviceSsid") ||
+  !wifiUpdater.includes("await readLegacyDeviceSsid()") ||
+  !wifiUpdater.includes('socket.send("SSID")') ||
+  !wifiUpdater.includes("beforeDeviceSsid !== expectedDeviceSsid") ||
   !espFilesystemRecoveryQualifier.includes("QUALIFY ESP FILESYSTEM RECOVERY") ||
   !espFilesystemRecoveryQualifier.includes("install(recoveryImage, true)") ||
   !espFilesystemRecoveryQualifier.includes("install(normalImage, false)")
