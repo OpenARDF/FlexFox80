@@ -274,7 +274,7 @@ const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8"
 const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
 const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.208";
-const expectedEspVersion = "2.22";
+const expectedEspVersion = "2.23";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -652,11 +652,16 @@ process.stdout.write("PASS ESP UART writes keep dynamic text out of printf forma
 
 if (
   !espMain.includes("recoverInterruptedFileUploads();") ||
+  !espMain.includes("Startup recovery must never make the web service unavailable") ||
+  !espMain.includes("Perform no more filesystem mutations during startup") ||
   !espMain.includes('g_fsUploadTargetPath + ".__uploading"') ||
   !espMain.includes('g_fsUploadTargetPath + ".__bak"') ||
   !espMain.includes('g_fsUploadTargetPath.length() + sizeof(".__uploading") - 1U > 31U') ||
   !espMain.includes("g_fsUploadReceivedSize != g_fsUploadExpectedSize") ||
   !espMain.includes("g_fsUploadExpectedCrc32") ||
+  !espMain.includes('g_fsUploadError = "Could not recover an interrupted live file"') ||
+  !espMain.includes('g_fsUploadError = "Could not reclaim an interrupted upload file"') ||
+  espMain.split("firmwareUpdateKeepAvrAwake();").length - 1 < 8 ||
   !espMain.includes("LittleFS.rename(g_fsUploadStagingPath, g_fsUploadTargetPath)") ||
   !espMain.includes("LittleFS.rename(g_fsUploadBackupPath, g_fsUploadTargetPath)")
 ) {

@@ -545,6 +545,9 @@ void firmwareUpdateAbort(const String& reason)
 
 void firmwareUpdateKeepAvrAwake()
 {
+  /* This mature keep-alive path is also reused by ordinary LittleFS uploads.
+   * A long, single HTTP request can prevent the browser WebSocket heartbeat
+   * from being serviced before the AVR's two-minute ESP timeout expires. */
   const unsigned long now = millis();
   if (!g_firmwareUpdateLastKeepAliveMillis ||
       (unsigned long)(now - g_firmwareUpdateLastKeepAliveMillis) >= 20000UL)
@@ -4515,50 +4518,28 @@ void startLittleFS()
 
 void recoverInterruptedFileUploads()
 {
-  static const String stagingSuffix = ".__uploading";
   static const String backupSuffix = ".__bak";
 
-  while (true)
+  /* Startup recovery must never make the web service unavailable while trying
+   * to reclaim an interrupted staging file. Restore the prior live file with
+   * one metadata rename when necessary, then leave stale-file reclamation to a
+   * later, explicitly kept-awake upload transaction. */
+  Dir dir = LittleFS.openDir("/");
+  while (dir.next())
   {
-    String recoveryPath;
-    bool isBackup = false;
-    Dir dir = LittleFS.openDir("/");
-    while (dir.next())
+    const String recoveryPath = dir.fileName();
+    if (!recoveryPath.endsWith(backupSuffix))
     {
-      const String fileName = dir.fileName();
-      if (fileName.endsWith(backupSuffix))
-      {
-        recoveryPath = fileName;
-        isBackup = true;
-        break;
-      }
-      if (fileName.endsWith(stagingSuffix))
-      {
-        recoveryPath = fileName;
-        break;
-      }
-    }
-
-    if (!recoveryPath.length())
-    {
-      return;
-    }
-    if (!isBackup)
-    {
-      LittleFS.remove(recoveryPath); /* An incomplete staged upload is never live. */
       continue;
     }
 
     const String targetPath = recoveryPath.substring(
       0,
       recoveryPath.length() - backupSuffix.length());
-    if (LittleFS.exists(targetPath))
+    if (!LittleFS.exists(targetPath))
     {
-      LittleFS.remove(recoveryPath);
-    }
-    else if (!LittleFS.rename(recoveryPath, targetPath))
-    {
-      return; /* Preserve the only complete copy for the next boot/recovery attempt. */
+      LittleFS.rename(recoveryPath, targetPath); /* Best effort; preserve backup on failure. */
+      return; /* Perform no more filesystem mutations during startup. */
     }
   }
 }
@@ -6530,6 +6511,10 @@ void handleFileUpload()
     g_fsUploadSucceeded = false;
     g_fsUploadIntegrityRequired =
       g_http_server.hasArg("size") || g_http_server.hasArg("crc32");
+    g_firmwareUpdateLastKeepAliveMillis = 0;
+    firmwareUpdateKeepAvrAwake();
+    linkbusLoop();
+    yield();
 
     if (!g_fsUploadTargetPath.length() ||
         g_fsUploadTargetPath.length() > 64 ||
@@ -6563,7 +6548,23 @@ void handleFileUpload()
 
     g_fsUploadStagingPath = g_fsUploadTargetPath + ".__uploading";
     g_fsUploadBackupPath = g_fsUploadTargetPath + ".__bak";
-    LittleFS.remove(g_fsUploadStagingPath);
+    if (LittleFS.exists(g_fsUploadBackupPath))
+    {
+      const bool recovered = LittleFS.exists(g_fsUploadTargetPath) ?
+        LittleFS.remove(g_fsUploadBackupPath) :
+        LittleFS.rename(g_fsUploadBackupPath, g_fsUploadTargetPath);
+      if (!recovered)
+      {
+        g_fsUploadError = "Could not recover an interrupted live file";
+        return;
+      }
+    }
+    if (LittleFS.exists(g_fsUploadStagingPath) &&
+        !LittleFS.remove(g_fsUploadStagingPath))
+    {
+      g_fsUploadError = "Could not reclaim an interrupted upload file";
+      return;
+    }
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
     if (g_debug_prints_enabled)
     {
@@ -6578,6 +6579,9 @@ void handleFileUpload()
   }
   else if (upload.status == UPLOAD_FILE_WRITE)
   {
+    firmwareUpdateKeepAvrAwake();
+    linkbusLoop();
+    yield();
     if (fsUploadFile && !g_fsUploadError.length())
     {
       if (g_fsUploadIntegrityRequired &&
@@ -6600,6 +6604,9 @@ void handleFileUpload()
   }
   else if (upload.status == UPLOAD_FILE_END)
   {
+    firmwareUpdateKeepAvrAwake();
+    linkbusLoop();
+    yield();
     if (fsUploadFile)
     {
       fsUploadFile.close();
@@ -6660,6 +6667,9 @@ void handleFileUpload()
   }
   else if (upload.status == UPLOAD_FILE_ABORTED)
   {
+    firmwareUpdateKeepAvrAwake();
+    linkbusLoop();
+    yield();
     if (fsUploadFile)
     {
       fsUploadFile.close();

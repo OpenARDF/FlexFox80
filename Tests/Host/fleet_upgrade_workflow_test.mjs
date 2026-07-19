@@ -55,12 +55,12 @@ assert.equal(
 pass("WiFi association requires the exact requested SSID");
 
 const artifact = {
-  version: "2.22",
+  version: "2.23",
   bytes: 563888,
   installedMd5Values: new Set(["ce7ed4ed788edb346e05f8e87b36047e"]),
 };
 const matchingStatus = {
-  version: "2.22",
+  version: "2.23",
   filesystemProtected: true,
   currentSketchBytes: 563888,
   currentSketchMd5: "CE7ED4ED788EDB346E05F8E87B36047E",
@@ -76,12 +76,12 @@ const replies = parseProbeReplies(`PASS HTTP 200
 RECV TEMP,29.0C
 RECV SSID,Tx_Master
 RECV MAC,90:B9:F9:C5:BB:22
-RECV SW_VERSIONS,2.22,0.208
+RECV SW_VERSIONS,2.23,0.208
 RECV MASTER,1
 `);
 assert.equal(replies.SSID, "Tx_Master");
 assert.equal(replies.MAC, "90:B9:F9:C5:BB:22");
-assert.equal(replies.SW_VERSIONS, "2.22,0.208");
+assert.equal(replies.SW_VERSIONS, "2.23,0.208");
 assert.equal(replies.MASTER, "1");
 assert.equal(expectedMasterValue("Tx_Master"), "1");
 assert.equal(expectedMasterValue("Tx_7C2D6FD3"), "0");

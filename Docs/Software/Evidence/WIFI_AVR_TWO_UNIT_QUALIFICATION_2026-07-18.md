@@ -1,6 +1,6 @@
 # WiFi AVR Two-Unit Qualification — 2026-07-18
 
-**Status:** Unit A passes ESP 2.22 / BL0.3 uninterrupted, ESP-restart, AVR-reset, whole-unit power-loss, and exact-readback gates; equal-time Apply, file preservation, normal RF/event behavior, Unit B, and fleet-soak gates remain
+**Status:** Unit A passes ESP 2.22 / BL0.3 interruption and exact-readback gates; ESP 2.23 supersedes 2.22 after a separately recovered ordinary-file-upload interruption; remaining normal-operation, second-unit, and soak gates are unchanged
 
 ## Objective
 
@@ -27,7 +27,9 @@ Retained future start and finish epochs are not enough to justify slow red after
 | ESP resources | 53% sketch flash; 62% global RAM; 30,944 bytes dynamic-memory headroom; 5,092 bytes IRAM headroom; zero warnings |
 | AVR resources | 41,894 text + 1,150 data bytes; 1,576 BSS bytes; zero warnings |
 
-The original ESP 2.18 / BL0.3 / AVR 0.208 candidate passed the source/build gates but failed its first protocol-2 hardware run at the final commit boundary. ESP 2.19 removed the redundant per-page LittleFS recovery-state rewrite exposed by that run and retained periodic journal checkpoints plus atomic phase-boundary state. ESP 2.22 persists both one-shot qualification hooks across the normal ESP power loss, makes ambiguous staging responses identity/size/CRC-verifiable, and supports Moto-side qualification synchronization. It has passed `just check`, a zero-warning ESP build, protected installation, and all Unit A boot-chain recovery gates; it remains blocked from fleet rollout by the remaining two-unit and normal-operation gates.
+The original ESP 2.18 / BL0.3 / AVR 0.208 candidate passed the source/build gates but failed its first protocol-2 hardware run at the final commit boundary. ESP 2.19 removed the redundant per-page LittleFS recovery-state rewrite exposed by that run and retained periodic journal checkpoints plus atomic phase-boundary state. ESP 2.22 persists both one-shot qualification hooks across the normal ESP power loss, makes ambiguous staging responses identity/size/CRC-verifiable, and supports Moto-side qualification synchronization. It passed `just check`, a zero-warning ESP build, protected installation, and all Unit A boot-chain recovery gates.
+
+ESP 2.23 now supersedes that sketch for deployment. A fleet unit lost power between the ordinary `/test.html` backup and promotion renames; exact flash extraction proved that all unit data and both complete transaction copies survived, but synchronous startup cleanup prevented HTTP from becoming available before the AVR removed ESP power. ESP 2.23 reuses the qualified keep-alive path during ordinary uploads and limits startup recovery to one metadata rename. The repaired unit passed standalone exact-file verification and the combined ESP 2.23 / BL0.3 / AVR 0.208 fleet gate after reinstall. See [ESP interrupted file-upload recovery](ESP_INTERRUPTED_FILE_UPLOAD_RECOVERY_2026-07-19.md).
 
 BL0.2 is retained only as historical evidence and must not be installed on additional units. Review found four fleet-significant gaps: reset-last was not enforced by the resident bootloader, a persistent POR/BOR recovery request could preserve the wrong ESP power state, a corrupt staged image after erase could suppress the recovery web service, and a single serial `U` could enter the startup boot path. BL0.3 enforces an ordered image-bound session, product trailer, payload/full-image CRC, bootloader-owned reset-page commit, normal cold ESP power sequencing, recoverable invalid-image service, and a CRC-framed `UBL2!` serial entry.
 
@@ -134,7 +136,7 @@ The host staging workflow uses the same fixed-length, ESP8266-compatible multipa
 
 ### ESP sketch
 
-Install ESP 2.22 first. The protected updater must replace only the sketch and preserve LittleFS:
+Install ESP 2.23 first. The protected updater must replace only the sketch and preserve LittleFS:
 
 ```text
 FLEXFOX_UPDATE_CONFIRM='UPDATE FLEXFOX ESP' just wifi-esp-update
@@ -143,7 +145,7 @@ FLEXFOX_UPDATE_CONFIRM='UPDATE FLEXFOX ESP' just wifi-esp-update
 Pass criteria:
 
 - the updater reports the exact installed sketch MD5 derived from the frozen image;
-- uptime restarts and `/firmware/status` reports ESP 2.22;
+- uptime restarts and `/firmware/status` reports ESP 2.23;
 - `filesystemProtected` remains true;
 - all pre-test `.event` and `.me` hashes remain unchanged;
 - `just wifi-probe` still receives live AVR temperature and battery data.

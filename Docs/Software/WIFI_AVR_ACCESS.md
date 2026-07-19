@@ -53,20 +53,20 @@ The ESP translates AVR replies back to WebSocket messages including `TEMP`, `BAT
 
 ## Wireless AVR bootloading
 
-### Implementation status — ESP 2.22 / AVR 0.208 / bootloader BL0.3 candidate
+### Implementation status — ESP 2.23 / AVR 0.208 / bootloader BL0.3 candidate
 
-The earlier BL0.1 transport and AVR 0.208 application installation have real pilot evidence. BL0.2 is superseded and must not be provisioned to the fleet: review found that reset-vector-last behavior was controlled only by the ESP, cold recovery could skip the normal ESP rail/reset sequence, an invalid staged image after programming began could leave the web recovery service unavailable, and startup accepted an unsafe single-byte serial entry request. BL0.3 protocol 2 moves the commit decision into the resident bootloader and closes those recovery gaps. The first ESP 2.18 / BL0.3 hardware run reached the reset-page commit boundary but timed out there; ESP 2.19 removed the redundant per-page LittleFS state rewrites exposed by that run. ESP 2.22 additionally persists both qualification interruption hooks across the normal ESP power loss, verifies ambiguous staging responses against SSID/version/size/CRC, and allows an optional Moto-side ADB path to synchronize the Atmel-ICE reset test while the Mac route reforms.
+The earlier BL0.1 transport and AVR 0.208 application installation have real pilot evidence. BL0.2 is superseded and must not be provisioned to the fleet: review found that reset-vector-last behavior was controlled only by the ESP, cold recovery could skip the normal ESP rail/reset sequence, an invalid staged image after programming began could leave the web recovery service unavailable, and startup accepted an unsafe single-byte serial entry request. BL0.3 protocol 2 moves the commit decision into the resident bootloader and closes those recovery gaps. The first ESP 2.18 / BL0.3 hardware run reached the reset-page commit boundary but timed out there; ESP 2.19 removed the redundant per-page LittleFS state rewrites exposed by that run. ESP 2.22 additionally persists both qualification interruption hooks across the normal ESP power loss, verifies ambiguous staging responses against SSID/version/size/CRC, and allows an optional Moto-side ADB path to synchronize the Atmel-ICE reset test while the Mac route reforms. ESP 2.23 reuses that mature keep-alive path during ordinary LittleFS uploads and bounds interrupted-upload startup recovery to one metadata rename, preventing a large stale-file deletion from withholding HTTP until the AVR removes ESP power.
 
-AVR 0.208 retains the scheduled-start sleep correction, relocated bootloader handoff, equal-time persistent disable, and LED re-arm after Apply. ESP 2.22 retains the browser `CLEAR`, event-picker, status, and Sync corrections while adding the protocol-2 updater, persistent diagnostics, controlled fault-injection hooks, and phase-boundary-only recovery-state persistence. The guarded `$UPD,START,SSID;` handoff independently suspends RF, stores and verifies a completed finish epoch, marks recovery in EEPROM, and only then software-resets into the resident bootloader.
+AVR 0.208 retains the scheduled-start sleep correction, relocated bootloader handoff, equal-time persistent disable, and LED re-arm after Apply. ESP 2.23 retains the browser `CLEAR`, event-picker, status, and Sync corrections, the protocol-2 updater, persistent diagnostics, controlled fault-injection hooks, and phase-boundary-only recovery-state persistence. The guarded `$UPD,START,SSID;` handoff independently suspends RF, stores and verifies a completed finish epoch, marks recovery in EEPROM, and only then software-resets into the resident bootloader.
 
 - a 16 KiB resident Boot section occupies `0x0000–0x3FFF` (`BOOTSIZE=0x20`);
 - the FlexFox application is linked at `0x4000` (`CODESIZE=0x00`);
 - the bootloader reasserts AVR PA5 (`WIFI_ENABLE`) and releases PA6 (`WIFI_RESET`) immediately after reset;
-- ESP 2.22 stages a page-aligned FlexFox product image and dual-slot recovery state in LittleFS before requesting bootloader entry;
+- ESP 2.23 stages a page-aligned FlexFox product image and dual-slot recovery state in LittleFS before requesting bootloader entry;
 - the ESP accepts update start only after the operator enters the final four characters of the unit's MAC-derived `Tx_...` device SSID;
 - the AVR application accepts the internal `$UPD,START,SSID;` handoff only while the event, manual transmission, and RF output are idle;
 - raw WebSocket `PASS` forwarding cannot send `$UPD` frames and bypass the dedicated update route;
-- bootloader traffic uses USART1 PC0/PC1; the candidate default is 38,400 baud, and ESP 2.22 can discover 9,600, 19,200, 38,400, 57,600, or 115,200 baud for qualification and recovery;
+- bootloader traffic uses USART1 PC0/PC1; the candidate default is 38,400 baud, and ESP 2.23 can discover 9,600, 19,200, 38,400, 57,600, or 115,200 baud for qualification and recovery;
 - every protocol frame has CRC-16, every written page is immediately read back by the bootloader, and a protocol-2 begin frame binds the session to the complete image length and CRC-32;
 - the resident bootloader itself requires the reset-vector page to be erased first, observes every non-reset page in order, validates a FlexFox-specific product trailer and both payload/full-image CRC-32 values, and permits the reset-vector page only as the final commit;
 - EEPROM byte 511 is reserved as a pre-erase update marker, closing the power-loss window before the reset-vector page has been invalidated;
@@ -117,6 +117,12 @@ just wifi-avr-bootloader-qualification
 The harness cannot remove all unit power itself. Unit A passed a separately coordinated off/on cycle at the exact verified page-42 pause; Unit B must repeat the required recovery gates before fleet qualification.
 
 Do not provision the fleet merely because both firmware builds pass. Keep the pilot chassis accessible until boot, ordinary RF/event behavior, WiFi power-down/wake, a complete wireless update, and repeated physical power interruption during erase/write/final handoff have all passed.
+
+### Current fleet upload-recovery result — 2026-07-19
+
+During `Tx_C22DD117` provisioning, power was interrupted after `/test.html` had been staged and the prior live file renamed to its backup. The complete 4 MiB flash verified exactly, LittleFS unpacked without corruption, and all unit-specific `.event` and `.me` files remained intact. The old startup path then reproduced an availability failure by trying to reclaim large stale transaction files before starting HTTP, allowing the AVR's ESP-power timeout to recur on every boot.
+
+ESP 2.23 services the existing firmware-update keep-alive path during ordinary uploads and limits startup recovery to restoring one missing live file by metadata rename. Stale-file deletion moves to the next explicitly kept-awake upload transaction. After FTDI installation with the repaired unit-specific filesystem, the standalone ESP reported 2.23 and exact `/test.html`, `/events.html`, and `/radio.html` hashes. Reinstalled in the FlexFox, the unit passed the read-only preflight and full idempotent workflow at ESP 2.23 / BL0.3 / AVR 0.208 with live telemetry. See [ESP interrupted file-upload recovery](Evidence/ESP_INTERRUPTED_FILE_UPLOAD_RECOVERY_2026-07-19.md).
 
 ### Current pilot qualification result — 2026-07-19
 
@@ -177,9 +183,9 @@ Every existing unit would consequently need one physical UPDI provisioning opera
 4. the expected interrupt-vector selection and boot/application handoff behavior;
 5. unchanged or deliberately migrated EEPROM and other unit-specific state.
 
-The selected layout reserves 32 512-byte pages (16 KiB), places the application at `0x4000`, and leaves 112 KiB for application code. Exact sizes and section boundaries are checked by the build/package scripts rather than copied from this note. The pinned ESP 2.22 build uses 559,728 sketch bytes and leaves 30,944 bytes of dynamic-memory headroom. IRAM uses 27,676 of 32,768 bytes, leaving 5,092 bytes, and remains the tighter executable margin to check on every release build.
+The selected layout reserves 32 512-byte pages (16 KiB), places the application at `0x4000`, and leaves 112 KiB for application code. Exact sizes and section boundaries are checked by the build/package scripts rather than copied from this note. The pinned ESP 2.23 build uses 563,952 sketch bytes and leaves 30,888 bytes of dynamic-memory headroom. IRAM uses 27,676 of 32,768 bytes, leaving 5,092 bytes, and remains the tighter executable margin to check on every release build.
 
-The qualified ESP profile provides a 1,024,000-byte LittleFS partition with 8 KiB allocation blocks. Unit A measured 536 KiB free with the complete 43,520-byte protocol-2 image staged; the persistent journal is capped at 32,768 bytes. Before opening the staging file, ESP 2.22 reads `LittleFS.info()`, rounds the declared image size to whole filesystem blocks, and requires four additional free blocks (32 KiB on this profile) for metadata and recovery-state changes. The status endpoint and update page report measured total, used, and free bytes; the same preflight remains mandatory on every unit.
+The qualified ESP profile provides a 1,024,000-byte LittleFS partition with 8 KiB allocation blocks. Unit A measured 536 KiB free with the complete 43,520-byte protocol-2 image staged; the persistent journal is capped at 32,768 bytes. Before opening the staging file, ESP 2.23 reads `LittleFS.info()`, rounds the declared image size to whole filesystem blocks, and requires four additional free blocks (32 KiB on this profile) for metadata and recovery-state changes. The status endpoint and update page report measured total, used, and free bytes; the same preflight remains mandatory on every unit.
 
 ### AVR reset cuts power to the ESP
 
