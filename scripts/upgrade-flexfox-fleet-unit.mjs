@@ -37,6 +37,7 @@ import {
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const dryRun = process.env.FLEXFOX_FLEET_UPGRADE_DRY_RUN === "1";
+const wirelessOnly = process.env.FLEXFOX_FLEET_WIRELESS_ONLY === "1";
 const unitId = normalizeFleetUnitId(process.env.FLEXFOX_UNIT_ID);
 const ssid = normalizeFlexFoxSsid(process.env.FLEXFOX_SSID);
 const flexFoxHost = "73.73.73.73";
@@ -54,6 +55,9 @@ const stamp = startedAt.toISOString().replaceAll(":", "-");
 
 if (!unitId) fail("set FLEXFOX_UNIT_ID to a safe unit label such as fox-01 or beacon");
 if (!ssid) fail("set FLEXFOX_SSID to Tx_Master or the complete MAC-derived Tx_XXXXXXXX SSID");
+if (wirelessOnly && ssid === "Tx_Master") {
+  fail("wireless-only AVR updates require the unique MAC-derived Tx_XXXXXXXX SSID");
+}
 if (!dryRun && process.env.FLEXFOX_FLEET_UPGRADE_CONFIRM !== "UPGRADE FLEXFOX UNIT") {
   fail("set FLEXFOX_FLEET_UPGRADE_CONFIRM='UPGRADE FLEXFOX UNIT' after identifying the unit");
 }
@@ -74,6 +78,7 @@ const summary = {
   unitId,
   expectedSsid: ssid,
   dryRun,
+  wirelessOnly,
   startedAt: startedAt.toISOString(),
   completedAt: null,
   result: "running",
@@ -475,7 +480,10 @@ async function deployWebFile(file) {
 async function main() {
   writeFileSync(logPath, "");
   recordSummary();
-  log(`FlexFox fleet ${dryRun ? "preflight" : "upgrade"}: ${unitId} (${ssid})`);
+  log(
+    `FlexFox fleet ${dryRun ? "preflight" : wirelessOnly ? "wireless upgrade" : "upgrade"}: ` +
+      `${unitId} (${ssid})`,
+  );
   log(`Evidence: ${evidenceDir}`);
 
   const artifacts = loadArtifacts();
@@ -521,7 +529,11 @@ async function main() {
     summary.phases.esp = {
       result: espStatusMatchesArtifact(initialStatus, artifacts.esp) ? "would-skip" : "would-update",
     };
-    summary.phases.avr = { result: "would-verify-or-provision-with-atmel-ice" };
+    summary.phases.avr = {
+      result: wirelessOnly
+        ? "would-update-through-resident-bootloader"
+        : "would-verify-or-provision-with-atmel-ice",
+    };
     summary.phases.web = {};
     for (const file of artifacts.webFiles) {
       summary.phases.web[file.name] = {
@@ -557,28 +569,48 @@ async function main() {
   }
   recordSummary();
 
-  log(`Verifying or provisioning ${artifacts.avr.bootloaderVersion} + AVR ${artifacts.avr.version} with Atmel-ICE...`);
-  const avrResult = await runProcess("just", ["avr-provision-boot-chain"], {
-    env: {
-      ...process.env,
-      FLEXFOX_UNIT_ID: unitId,
-      FLEXFOX_PROVISION_CONFIRM: "PROVISION-BOOTLOADER",
-      FLEXFOX_FUSE_CONFIRM: "WRITE-BOOTSIZE-0x20",
-      FLEXFOX_PROVISION_SKIP_IF_CURRENT: "1",
-    },
-    timeoutMs: 240000,
-  });
-  summary.phases.avr = {
-    result: avrResult.stdout.includes("already matches the exact boot-chain image")
-      ? "skipped-already-current"
-      : "provisioned-and-verified",
-  };
+  if (wirelessOnly) {
+    log(
+      `Updating AVR wirelessly through the resident ${artifacts.avr.bootloaderVersion} ` +
+        `to ${artifacts.avr.version}...`,
+    );
+    await runWithWifiRecovery("just", ["wifi-avr-update"], {
+      env: {
+        ...process.env,
+        FLEXFOX_HOST: `127.0.0.1:${localHttpPort}`,
+        FLEXFOX_EXPECTED_DEVICE_SSID: ssid,
+        FLEXFOX_AVR_SSID_SUFFIX: ssid.slice(-4),
+        FLEXFOX_AVR_UPDATE_CONFIRM: `UPDATE-AVR-${artifacts.avr.version}`,
+        FLEXFOX_ADB_SERIAL: adbSerial,
+        FLEXFOX_ADB: adbPath,
+      },
+      timeoutMs: 35 * 60 * 1000,
+    });
+    summary.phases.avr = { result: "updated-wirelessly-and-verified" };
+  } else {
+    log(`Verifying or provisioning ${artifacts.avr.bootloaderVersion} + AVR ${artifacts.avr.version} with Atmel-ICE...`);
+    const avrResult = await runProcess("just", ["avr-provision-boot-chain"], {
+      env: {
+        ...process.env,
+        FLEXFOX_UNIT_ID: unitId,
+        FLEXFOX_PROVISION_CONFIRM: "PROVISION-BOOTLOADER",
+        FLEXFOX_FUSE_CONFIRM: "WRITE-BOOTSIZE-0x20",
+        FLEXFOX_PROVISION_SKIP_IF_CURRENT: "1",
+      },
+      timeoutMs: 240000,
+    });
+    summary.phases.avr = {
+      result: avrResult.stdout.includes("already matches the exact boot-chain image")
+        ? "skipped-already-current"
+        : "provisioned-and-verified",
+    };
+  }
   recordSummary();
 
-  log(`Waiting for ${ssid} after the Atmel-ICE reset...`);
+  log(`Waiting for ${ssid} after the AVR restart...`);
   const afterAvrStatus = await waitForFirmwareStatus();
   if (!espStatusMatchesArtifact(afterAvrStatus, artifacts.esp)) {
-    fail("ESP release image did not return after AVR provisioning");
+    fail("ESP release image did not return after the AVR restart");
   }
 
   summary.phases.web = {};

@@ -151,6 +151,14 @@ fleet-upgrade-preflight unit ssid:
 fleet-upgrade-unit unit ssid:
     FLEXFOX_UNIT_ID="{{unit}}" FLEXFOX_SSID="{{ssid}}" node ./scripts/upgrade-flexfox-fleet-unit.mjs
 
+# Read-only preflight for a unit that already has the qualified resident bootloader.
+fleet-wireless-upgrade-preflight unit ssid:
+    FLEXFOX_UNIT_ID="{{unit}}" FLEXFOX_SSID="{{ssid}}" FLEXFOX_FLEET_UPGRADE_DRY_RUN=1 FLEXFOX_FLEET_WIRELESS_ONLY=1 node ./scripts/upgrade-flexfox-fleet-unit.mjs
+
+# Upgrade an already-provisioned unit entirely over WiFi; requires the top-level confirmation variable.
+fleet-wireless-upgrade-unit unit ssid:
+    FLEXFOX_UNIT_ID="{{unit}}" FLEXFOX_SSID="{{ssid}}" FLEXFOX_FLEET_WIRELESS_ONLY=1 node ./scripts/upgrade-flexfox-fleet-unit.mjs
+
 # Generate the alternating 12-event, ten-unit fleet soak bundle for an explicit UTC start.
 fleet-soak-events start:
     node ./scripts/generate-flexfox-fleet-soak-events.mjs --start "{{start}}"

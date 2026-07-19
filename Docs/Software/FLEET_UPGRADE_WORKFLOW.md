@@ -15,6 +15,8 @@ The guarded sequence is:
 
 The workflow never writes a complete LittleFS image. It does not delete or replace `.event`, `.me`, settings, or other unit-specific files.
 
+For a closed unit that already has the qualified resident bootloader, use the wireless-only recipes. They retain the same identity, ESP, web-file, and final telemetry gates, but replace the Atmel-ICE phase with the protected `wifi-avr-update` workflow. `Tx_Master` is intentionally rejected by this mode because its non-unique name cannot supply the MAC-derived SSID authorization required for wireless AVR bootloading.
+
 ## Prerequisites
 
 - Build and qualify the release artifacts before starting the fleet loop.
@@ -50,6 +52,19 @@ FLEXFOX_FLEET_UPGRADE_CONFIRM='UPGRADE FLEXFOX UNIT' \
 ```
 
 The command discovers a single connected ADB device automatically. Set `FLEXFOX_ADB_SERIAL` when more than one device is present. Set `FLEXFOX_ADB` only when `adb` is outside `PATH`, `ANDROID_HOME`, and the normal macOS Android SDK location.
+
+## Wireless-only catch-up
+
+For a unit whose BL0.3 bootloader was already independently provisioned and verified:
+
+```sh
+just fleet-wireless-upgrade-preflight fox-01 Tx_7C2D6FD3
+
+FLEXFOX_FLEET_UPGRADE_CONFIRM='UPGRADE FLEXFOX UNIT' \
+  just fleet-wireless-upgrade-unit fox-01 Tx_7C2D6FD3
+```
+
+The guarded order is ESP sketch, AVR application through BL0.3, the three approved web files, and final combined identity/version/telemetry verification. The Moto is repeatedly associated with the exact SSID while either processor restarts. No Atmel-ICE connection is used or required.
 
 ## Interruption and retry behavior
 

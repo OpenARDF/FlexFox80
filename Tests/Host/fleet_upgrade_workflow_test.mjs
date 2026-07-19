@@ -114,6 +114,7 @@ const workflowSource = readFileSync(
 );
 for (const recipe of [
   "wifi-esp-update",
+  "wifi-avr-update",
   "avr-provision-boot-chain",
   "wifi-web-deploy",
   "wifi-probe",
@@ -121,13 +122,16 @@ for (const recipe of [
   assert.equal(workflowSource.includes(recipe), true, `missing reused recipe ${recipe}`);
 }
 assert.equal(workflowSource.includes("FLEXFOX_FLEET_UPGRADE_CONFIRM"), true);
+assert.equal(workflowSource.includes("FLEXFOX_FLEET_WIRELESS_ONLY"), true);
 assert.equal(workflowSource.includes("FLEXFOX_PROVISION_SKIP_IF_CURRENT"), true);
 assert.equal(workflowSource.includes("runWithWifiRecovery"), true);
 assert.equal(workflowSource.includes("remoteFileMatches"), true);
 assert.equal(workflowSource.includes("ARDF_Transmitter.littlefs.bin"), false);
 const espPhase = workflowSource.indexOf("Updating ESP wirelessly");
+const wirelessAvrPhase = workflowSource.indexOf("Updating AVR wirelessly");
 const avrPhase = workflowSource.indexOf("Verifying or provisioning");
 const webPhase = workflowSource.indexOf("summary.phases.web = {}", avrPhase);
 const finalPhase = workflowSource.indexOf("Running final combined firmware");
+assert.equal(espPhase < wirelessAvrPhase && wirelessAvrPhase < webPhase, true);
 assert.equal(espPhase < avrPhase && avrPhase < webPhase && webPhase < finalPhase, true);
-pass("fleet wrapper reuses guarded recipes in ESP, AVR, web, and final-probe order");
+pass("fleet wrapper reuses guarded wired or wireless AVR recipes in the same phase order");
