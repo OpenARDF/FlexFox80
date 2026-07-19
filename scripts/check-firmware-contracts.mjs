@@ -31,6 +31,7 @@ const driverInitHeaderPath = join(
 );
 const wifiProbePath = join(repoRoot, "scripts", "probe-flexfox-wifi.mjs");
 const wifiUpdaterPath = join(repoRoot, "scripts", "update-flexfox-esp-over-wifi.mjs");
+const wifiMaintenanceLeaseTestPath = join(repoRoot, "scripts", "test-flexfox-wifi-maintenance-lease.mjs");
 const espFilesystemRecoveryQualifierPath = join(
   repoRoot,
   "scripts",
@@ -257,6 +258,7 @@ const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
 const wifiProbe = readFileSync(wifiProbePath, "utf8");
 const wifiUpdater = readFileSync(wifiUpdaterPath, "utf8");
+const wifiMaintenanceLeaseTest = readFileSync(wifiMaintenanceLeaseTestPath, "utf8");
 const espFilesystemRecoveryQualifier = readFileSync(espFilesystemRecoveryQualifierPath, "utf8");
 const wifiAvrUpdater = readFileSync(wifiAvrUpdaterPath, "utf8");
 const webDeployer = readFileSync(webDeployerPath, "utf8");
@@ -412,6 +414,21 @@ if (
 }
 
 process.stdout.write("PASS AVR WiFi maintenance lease is internal, bounded, and returns to two minutes\n");
+
+if (
+  !wifiMaintenanceLeaseTest.includes("TEST UPDATE WIFI LEASE") ||
+  !wifiMaintenanceLeaseTest.includes("durationMs < 125000") ||
+  !wifiMaintenanceLeaseTest.includes('identity.get("SW_VERSIONS")') ||
+  !wifiMaintenanceLeaseTest.includes('scratchName = "lease.chk"') ||
+  !wifiMaintenanceLeaseTest.includes("missing.status !== 404")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: live maintenance-lease test must be exact-target, longer than two minutes, and self-cleaning\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS live maintenance-lease test is exact-target, longer than two minutes, and self-cleaning\n");
 
 if (
   !espMain.includes("avrUpdateResumeIfRequired();") ||

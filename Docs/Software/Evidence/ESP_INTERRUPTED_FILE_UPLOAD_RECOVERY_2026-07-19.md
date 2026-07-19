@@ -1,6 +1,6 @@
 # ESP Interrupted File-Upload Recovery — 2026-07-19
 
-**Status:** ESP 2.23 recovered-hardware gates pass; ESP 2.24 generalized recovery and AVR 0.209 bounded maintenance-lease source/build gates pass, with hardware qualification pending
+**Status:** ESP 2.23 recovered-hardware gates pass; ESP 2.24 generalized recovery and AVR 0.209 bounded maintenance-lease source/build and pilot-hardware gates pass
 
 ## Failure and retained evidence
 
@@ -77,4 +77,8 @@ AVR 0.209 complements this by retaining the normal two-minute WiFi timeout while
 
 The complete host suite passes, including exact 300-second expiry, renewal/release, startup-marker and RTC-placement tests, version/status/route contracts, and existing bootloader/update recovery tests. The pinned builds complete with zero AVR warnings. ESP 2.24 is 564,516 sketch bytes with 30,692 bytes dynamic-memory headroom and unchanged 27,676-byte IRAM use; its source `.bin` SHA-256 is `e82809bb7ab509fd283600b5cae8381b3d28de992ca94c89abe46a4579f5c0ae`. AVR 0.209 remains an 85-page, 43,520-byte wireless image with CRC32 `0x9bb9de58` and SHA-256 `4013608e352b713fb020c411c829565f30f487c107d7e392687179168f12205e`; BL0.3 is unchanged at 5,112 bytes.
 
-Before replacing 2.23 as the remaining-fleet candidate, accessible hardware must prove normal mounted startup, sketch-resident recovery installation, a maintenance operation surviving the old two-minute boundary, automatic five-minute expiry without renewal, immediate return to the ordinary two-minute policy after completion, and normal wake/power-down/event behavior. Already installed ESP 2.22 units can remain as side-by-side controls during this qualification.
+Pilot `Tx_C22DD117` then passed the guarded two-image recovery test. The normal ESP 2.24 image reported the exact installed sketch, `filesystemMounted=true`, and `recoveryMode=false`. The non-destructive qualification image rebooted with its distinct exact MD5, `filesystemMounted=false`, `recoveryMode=true`, and reason `qualification`; it never mounted or modified LittleFS. Its sketch-resident updater successfully restored the normal image, which again reported mounted, non-recovery state and the exact expected MD5.
+
+The same pilot then completed the 85-page BL0.3 wireless update from AVR 0.208 to AVR 0.209 and reported `SW_VERSIONS,2.24,0.209` with live temperature, battery, SSID, MAC, clock, and master-state replies. A deliberately throttled transactional `lease.chk` upload ran for 135,817 ms without a WebSocket heartbeat, crossing the former 120-second cutoff. Exact download comparison passed and the scratch file was deleted. After the Moto network entry was forgotten, settled scans received no new advertisement and the last-seen age advanced past 143 seconds, proving maintenance completion returned to ordinary WiFi shutdown behavior. The production policy's dependency-free host test independently proves that a stopped updater's unrenewed maintenance lease expires exactly once at 300 one-second ticks.
+
+ESP 2.24 / AVR 0.209 can therefore proceed to the remaining opened units while installed ESP 2.22 units remain side-by-side controls. Fleet rollout still retains ordinary event/RF, wake/power-down, and soak observation; do not reinterpret this focused recovery/lease gate as the complete release qualification.

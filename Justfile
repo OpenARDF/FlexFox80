@@ -23,6 +23,7 @@ policy-check:
 test:
     ./scripts/run-host-tests.sh
     node --check ./scripts/qualify-flexfox-esp-filesystem-recovery.mjs
+    node --check ./scripts/test-flexfox-wifi-maintenance-lease.mjs
     node --check ./scripts/qualify-flexfox-avr-bootloader.mjs
     node --check ./scripts/update-flexfox-avr-over-wifi.mjs
     node ./Tests/Host/eeprom_enum_layout_migration_test.mjs
@@ -93,6 +94,10 @@ wifi-probe:
 # Keep the FlexFox WiFi module active with the read-only WebSocket heartbeat.
 wifi-monitor:
     FLEXFOX_PROBE_MONITOR=1 node ./scripts/probe-flexfox-wifi.mjs
+
+# Prove an ESP-managed upload survives beyond the former two-minute AVR cutoff.
+wifi-maintenance-lease-test:
+    node ./scripts/test-flexfox-wifi-maintenance-lease.mjs
 
 # Observe reported clock phase without setting time or changing configuration.
 wifi-clock-observe:
