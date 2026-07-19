@@ -1,0 +1,615 @@
+#!/usr/bin/env node
+
+/*
+ * Fleet coordinator only: destructive work remains in the qualified ESP, AVR,
+ * and web deployment scripts. This wrapper owns target identity, Moto relays,
+ * phase order, live-state skip decisions, reassociation, and audit evidence.
+ */
+
+import { spawn } from "node:child_process";
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { setTimeout as sleep } from "node:timers/promises";
+import {
+  digest,
+  esp8266SketchMd5Candidates,
+  fetchWithTimeout,
+} from "./lib/flexfox-http.mjs";
+import {
+  espStatusMatchesArtifact,
+  expectedMasterValue,
+  fleetWebFiles,
+  normalizeFleetUnitId,
+  normalizeFlexFoxSsid,
+  parseAdbDevices,
+  parseProbeReplies,
+  selectAdbDevice,
+  wifiStatusMatchesSsid,
+} from "./lib/flexfox-fleet-upgrade.mjs";
+
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const dryRun = process.env.FLEXFOX_FLEET_UPGRADE_DRY_RUN === "1";
+const unitId = normalizeFleetUnitId(process.env.FLEXFOX_UNIT_ID);
+const ssid = normalizeFlexFoxSsid(process.env.FLEXFOX_SSID);
+const flexFoxHost = "73.73.73.73";
+const localHttpPort = parsePort(process.env.FLEXFOX_RELAY_HTTP_PORT ?? "18080", "HTTP relay");
+const localWebSocketPort = parsePort(
+  process.env.FLEXFOX_RELAY_WEBSOCKET_PORT ?? "18081",
+  "WebSocket relay",
+);
+const deviceHttpRelayPort = localHttpPort;
+const deviceWebSocketRelayPort = localWebSocketPort;
+const httpUrl = `http://127.0.0.1:${localHttpPort}/`;
+const webSocketUrl = `ws://127.0.0.1:${localWebSocketPort}/`;
+const startedAt = new Date();
+const stamp = startedAt.toISOString().replaceAll(":", "-");
+
+if (!unitId) fail("set FLEXFOX_UNIT_ID to a safe unit label such as fox-01 or beacon");
+if (!ssid) fail("set FLEXFOX_SSID to Tx_Master or the complete MAC-derived Tx_XXXXXXXX SSID");
+if (!dryRun && process.env.FLEXFOX_FLEET_UPGRADE_CONFIRM !== "UPGRADE FLEXFOX UNIT") {
+  fail("set FLEXFOX_FLEET_UPGRADE_CONFIRM='UPGRADE FLEXFOX UNIT' after identifying the unit");
+}
+
+const evidenceDir = join(
+  repoRoot,
+  "Software",
+  "AVR128DA48",
+  "tmp",
+  "fleet-upgrade",
+  `${stamp}-${unitId}`,
+);
+mkdirSync(evidenceDir, { recursive: true });
+const logPath = join(evidenceDir, "upgrade.log");
+const summaryPath = join(evidenceDir, "summary.json");
+const summary = {
+  format: "flexfox-fleet-upgrade-v1",
+  unitId,
+  expectedSsid: ssid,
+  dryRun,
+  startedAt: startedAt.toISOString(),
+  completedAt: null,
+  result: "running",
+  artifacts: {},
+  identity: {},
+  phases: {},
+};
+
+function fail(message) {
+  throw new Error(`FlexFox fleet upgrade: ${message}`);
+}
+
+function parsePort(value, label) {
+  const port = Number.parseInt(value, 10);
+  if (!Number.isInteger(port) || port < 1024 || port > 65535) {
+    fail(`${label} port must be an integer from 1024 through 65535`);
+  }
+  return port;
+}
+
+function recordSummary() {
+  writeFileSync(summaryPath, `${JSON.stringify(summary, null, 2)}\n`);
+}
+
+function log(message = "") {
+  const line = `${message}\n`;
+  process.stdout.write(line);
+  appendFileSync(logPath, line);
+}
+
+function logError(message = "") {
+  const line = `${message}\n`;
+  process.stderr.write(line);
+  appendFileSync(logPath, line);
+}
+
+async function runProcess(command, args, options = {}) {
+  const {
+    allowFailure = false,
+    echo = true,
+    env = process.env,
+    timeoutMs = 120000,
+  } = options;
+  return new Promise((resolvePromise, rejectPromise) => {
+    const child = spawn(command, args, {
+      cwd: repoRoot,
+      env,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    let timedOut = false;
+    let forceKillTimer;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill("SIGTERM");
+      forceKillTimer = setTimeout(() => child.kill("SIGKILL"), 3000);
+    }, timeoutMs);
+
+    child.stdout.on("data", (chunk) => {
+      const text = chunk.toString();
+      stdout += text;
+      appendFileSync(logPath, text);
+      if (echo) process.stdout.write(text);
+    });
+    child.stderr.on("data", (chunk) => {
+      const text = chunk.toString();
+      stderr += text;
+      appendFileSync(logPath, text);
+      if (echo) process.stderr.write(text);
+    });
+    child.once("error", (error) => {
+      clearTimeout(timer);
+      clearTimeout(forceKillTimer);
+      rejectPromise(error);
+    });
+    child.once("close", (code, signal) => {
+      clearTimeout(timer);
+      clearTimeout(forceKillTimer);
+      const result = { code, signal, stdout, stderr };
+      if (timedOut) {
+        rejectPromise(new Error(`${command} timed out after ${timeoutMs} ms`));
+      } else if (code !== 0 && !allowFailure) {
+        const detail = stderr.trim().split(/\r?\n/).slice(-1)[0] || `exit ${code}`;
+        rejectPromise(new Error(`${command} failed: ${detail}`));
+      } else {
+        resolvePromise(result);
+      }
+    });
+  });
+}
+
+function resolveAdbPath() {
+  const explicit = String(process.env.FLEXFOX_ADB ?? "").trim();
+  if (explicit) return explicit;
+  const androidHome = String(process.env.ANDROID_HOME ?? "").trim();
+  if (androidHome) {
+    const candidate = join(androidHome, "platform-tools", "adb");
+    if (existsSync(candidate)) return candidate;
+  }
+  const userHome = String(process.env.HOME ?? "").trim();
+  if (userHome) {
+    const candidate = join(userHome, "Library", "Android", "sdk", "platform-tools", "adb");
+    if (existsSync(candidate)) return candidate;
+  }
+  return "adb";
+}
+
+const adbPath = resolveAdbPath();
+let adbSerial;
+
+async function adb(args, options = {}) {
+  const serialArgs = adbSerial ? ["-s", adbSerial] : [];
+  return runProcess(adbPath, [...serialArgs, ...args], {
+    echo: false,
+    timeoutMs: 15000,
+    ...options,
+  });
+}
+
+async function selectMoto() {
+  const devicesResult = await runProcess(adbPath, ["devices", "-l"], {
+    echo: false,
+    timeoutMs: 15000,
+  });
+  const devices = parseAdbDevices(devicesResult.stdout);
+  adbSerial = selectAdbDevice(devices, process.env.FLEXFOX_ADB_SERIAL);
+  log(`Moto ADB device: ${adbSerial}`);
+}
+
+async function readWifiStatus() {
+  const result = await adb(["shell", "cmd", "wifi", "status"], { allowFailure: true });
+  return result.stdout;
+}
+
+async function requestWifiAssociation() {
+  await adb(
+    ["shell", "cmd", "wifi", "connect-network", ssid, "open", "-r", "none"],
+    { allowFailure: true },
+  );
+}
+
+async function waitForWifiAssociation(timeoutMs = 90000) {
+  const deadline = Date.now() + timeoutMs;
+  let joinRequestedAt = 0;
+  while (Date.now() < deadline) {
+    const status = await readWifiStatus();
+    if (wifiStatusMatchesSsid(status, ssid)) return;
+    if (Date.now() - joinRequestedAt >= 3000) {
+      await requestWifiAssociation();
+      joinRequestedAt = Date.now();
+    }
+    await sleep(1000);
+  }
+  fail(`Moto did not associate with ${ssid} within ${Math.ceil(timeoutMs / 1000)} seconds`);
+}
+
+async function devicePortIsListening(port) {
+  const result = await adb(
+    ["shell", "toybox", "nc", "-z", "-w", "1", "127.0.0.1", String(port)],
+    { allowFailure: true, timeoutMs: 5000 },
+  );
+  return result.code === 0;
+}
+
+async function ensureDeviceRelay(devicePort, targetPort) {
+  if (await devicePortIsListening(devicePort)) return;
+  const relayCommand =
+    `toybox nc -s 127.0.0.1 -p ${devicePort} -L ` +
+    `toybox nc -w 8 ${flexFoxHost} ${targetPort} >/dev/null 2>&1 &`;
+  await adb(["shell", relayCommand], { timeoutMs: 5000 });
+  await sleep(250);
+  if (!(await devicePortIsListening(devicePort))) {
+    fail(`Moto relay did not start on device port ${devicePort}`);
+  }
+}
+
+async function prepareRelays() {
+  await ensureDeviceRelay(deviceHttpRelayPort, 80);
+  await ensureDeviceRelay(deviceWebSocketRelayPort, 81);
+  await adb(["forward", `tcp:${localHttpPort}`, `tcp:${deviceHttpRelayPort}`]);
+  await adb(["forward", `tcp:${localWebSocketPort}`, `tcp:${deviceWebSocketRelayPort}`]);
+}
+
+async function readFirmwareStatus(timeoutMs = 5000) {
+  const url = new URL("firmware/status", httpUrl);
+  url.searchParams.set("cache", String(Date.now()));
+  const response = await fetchWithTimeout(url, { cache: "no-store" }, timeoutMs);
+  if (!response.ok) fail(`firmware status returned HTTP ${response.status}`);
+  return response.json();
+}
+
+async function waitForFirmwareStatus(timeoutMs = 240000) {
+  const deadline = Date.now() + timeoutMs;
+  let lastError;
+  while (Date.now() < deadline) {
+    try {
+      await waitForWifiAssociation(10000);
+      await prepareRelays();
+      return await readFirmwareStatus(5000);
+    } catch (error) {
+      lastError = error;
+      await sleep(1500);
+    }
+  }
+  fail(`firmware status did not return: ${lastError?.message ?? "timeout"}`);
+}
+
+async function runWithWifiRecovery(command, args, options) {
+  let finished = false;
+  let associationWasLost = false;
+  const monitor = (async () => {
+    while (!finished) {
+      await sleep(1500);
+      if (finished) break;
+      try {
+        const status = await readWifiStatus();
+        if (!wifiStatusMatchesSsid(status, ssid)) {
+          if (!associationWasLost) {
+            associationWasLost = true;
+            log(`Moto association with ${ssid} was lost; automatic reconnect active.`);
+          }
+          await requestWifiAssociation();
+        } else if (associationWasLost) {
+          associationWasLost = false;
+          log(`Moto rejoined ${ssid}.`);
+        }
+      } catch {
+        // The child command owns the operation result; this loop only assists reassociation.
+      }
+    }
+  })();
+  try {
+    return await runProcess(command, args, options);
+  } finally {
+    finished = true;
+    await monitor;
+  }
+}
+
+function loadArtifacts() {
+  const espBuildDir = join(repoRoot, "Software", "Huzzah", "tmp", "esp-build");
+  const espPath = join(espBuildDir, "ARDF_Transmitter.ino.bin");
+  const espEvidencePath = join(espBuildDir, "build-evidence.json");
+  const espVersionHeaderPath = join(
+    repoRoot,
+    "Software",
+    "Huzzah",
+    "ARDF_Transmitter",
+    "esp8266.h",
+  );
+  const avrManifestPath = join(
+    repoRoot,
+    "Software",
+    "AVR128DA48",
+    "tmp",
+    "avr-boot-chain",
+    "FlexFox80-AVR-Release-Info.json",
+  );
+  for (const requiredPath of [espPath, espEvidencePath, espVersionHeaderPath, avrManifestPath]) {
+    if (!existsSync(requiredPath)) fail(`required release artifact is missing: ${requiredPath}`);
+  }
+
+  const espBytes = readFileSync(espPath);
+  const espEvidence = JSON.parse(readFileSync(espEvidencePath, "utf8"));
+  const espEvidenceEntry = espEvidence.artifacts?.find(
+    (entry) => entry.file === basename(espPath),
+  );
+  const espSha256 = digest("sha256", espBytes);
+  if (
+    !espEvidenceEntry ||
+    espEvidenceEntry.bytes !== espBytes.length ||
+    espEvidenceEntry.sha256 !== espSha256
+  ) {
+    fail("ESP sketch does not match build-evidence.json");
+  }
+  const versionHeader = readFileSync(espVersionHeaderPath, "utf8");
+  const espVersion = versionHeader.match(/#define\s+WIFI_SW_VERSION\s+\(\"([^\"]+)\"\)/)?.[1];
+  if (!espVersion) fail("could not read the ESP source version");
+  const installedMd5Values = new Set(
+    esp8266SketchMd5Candidates(espBytes).map(({ md5 }) => md5),
+  );
+
+  const avrManifest = JSON.parse(readFileSync(avrManifestPath, "utf8"));
+  if (
+    avrManifest.format !== "flexfox-avr-update-v2" ||
+    avrManifest.protocolVersion !== 2 ||
+    !avrManifest.applicationVersion ||
+    !avrManifest.bootloaderVersion
+  ) {
+    fail("AVR release manifest does not describe the permanent boot chain");
+  }
+  const initialInstallPath = resolve(dirname(avrManifestPath), avrManifest.initialInstallFile);
+  if (!existsSync(initialInstallPath)) fail(`AVR first-install image is missing: ${initialInstallPath}`);
+
+  const webRoot = join(repoRoot, "Software", "Huzzah", "ARDF_Transmitter", "data");
+  const webFiles = fleetWebFiles.map((name) => {
+    const path = join(webRoot, name);
+    if (!existsSync(path)) fail(`fleet web file is missing: ${path}`);
+    const content = readFileSync(path);
+    return { name, path, content, bytes: content.length, sha256: digest("sha256", content) };
+  });
+
+  return {
+    esp: {
+      path: espPath,
+      version: espVersion,
+      bytes: espBytes.length,
+      sha256: espSha256,
+      installedMd5Values,
+    },
+    avr: {
+      version: avrManifest.applicationVersion,
+      bootloaderVersion: avrManifest.bootloaderVersion,
+      manifestPath: avrManifestPath,
+      initialInstallPath,
+    },
+    webFiles,
+  };
+}
+
+async function runProbe(timeoutMs = 4000) {
+  const result = await runProcess("just", ["wifi-probe"], {
+    env: {
+      ...process.env,
+      FLEXFOX_URL: httpUrl,
+      FLEXFOX_WEBSOCKET_URL: webSocketUrl,
+      FLEXFOX_PROBE_TIMEOUT_MS: String(timeoutMs),
+    },
+    timeoutMs: timeoutMs + 15000,
+  });
+  return parseProbeReplies(result.stdout);
+}
+
+function verifyIdentity(replies, artifacts, requireCurrentVersions) {
+  for (const name of ["SSID", "MAC", "SW_VERSIONS", "MASTER", "TEMP", "BAT"]) {
+    if (!replies[name]) fail(`probe did not return ${name}`);
+  }
+  if (replies.SSID !== ssid) fail(`connected unit reports ${replies.SSID}, expected ${ssid}`);
+  const expectedMaster = expectedMasterValue(ssid);
+  if (replies.MASTER !== expectedMaster) {
+    fail(`connected unit reports MASTER,${replies.MASTER}; expected ${expectedMaster} for ${ssid}`);
+  }
+  if (requireCurrentVersions) {
+    const expectedVersions = `${artifacts.esp.version},${artifacts.avr.version}`;
+    if (replies.SW_VERSIONS !== expectedVersions) {
+      fail(`combined version is ${replies.SW_VERSIONS}; expected ${expectedVersions}`);
+    }
+  }
+}
+
+async function remoteFileMatches(file) {
+  try {
+    const url = new URL(encodeURIComponent(file.name), httpUrl);
+    url.searchParams.set("cache", String(Date.now()));
+    const response = await fetchWithTimeout(url, { cache: "no-store" }, 10000);
+    if (!response.ok) return false;
+    const stored = Buffer.from(await response.arrayBuffer());
+    return stored.length === file.bytes && digest("sha256", stored) === file.sha256;
+  } catch {
+    return false;
+  }
+}
+
+async function deployWebFile(file) {
+  await runProcess("just", ["wifi-web-deploy"], {
+    env: {
+      ...process.env,
+      FLEXFOX_URL: httpUrl,
+      FLEXFOX_WEBSOCKET_URL: webSocketUrl,
+      FLEXFOX_WEB_FILE: file.path,
+      FLEXFOX_WEB_CONFIRM: "UPDATE FLEXFOX WEB FILE",
+    },
+    timeoutMs: 180000,
+  });
+  if (!(await remoteFileMatches(file))) fail(`/${file.name} failed final readback verification`);
+}
+
+async function main() {
+  writeFileSync(logPath, "");
+  recordSummary();
+  log(`FlexFox fleet ${dryRun ? "preflight" : "upgrade"}: ${unitId} (${ssid})`);
+  log(`Evidence: ${evidenceDir}`);
+
+  const artifacts = loadArtifacts();
+  summary.artifacts = {
+    espVersion: artifacts.esp.version,
+    espBytes: artifacts.esp.bytes,
+    espSha256: artifacts.esp.sha256,
+    avrVersion: artifacts.avr.version,
+    bootloaderVersion: artifacts.avr.bootloaderVersion,
+    avrManifest: artifacts.avr.manifestPath,
+    webFiles: artifacts.webFiles.map(({ name, bytes, sha256 }) => ({ name, bytes, sha256 })),
+  };
+  recordSummary();
+
+  await selectMoto();
+  log(`Joining ${ssid} and preparing scoped ADB relays...`);
+  await waitForWifiAssociation();
+  await prepareRelays();
+  const initialStatus = await waitForFirmwareStatus();
+  if (initialStatus.filesystemProtected !== true) fail("ESP does not report LittleFS protection");
+  if (
+    initialStatus.cloneActive ||
+    initialStatus.updateActive ||
+    initialStatus.restartPending ||
+    initialStatus.linkbusEventTransactionActive
+  ) {
+    fail("device is busy with a clone, update, restart, or event transaction");
+  }
+  log("Running read-only identity and telemetry probe...");
+  const initialReplies = await runProbe(12000);
+  verifyIdentity(initialReplies, artifacts, false);
+  summary.identity = {
+    ssid: initialReplies.SSID,
+    mac: initialReplies.MAC,
+    master: initialReplies.MASTER,
+    versionsBefore: initialReplies.SW_VERSIONS,
+  };
+  summary.phases.preflight = { result: "pass" };
+  recordSummary();
+
+  if (dryRun) {
+    summary.phases.esp = {
+      result: espStatusMatchesArtifact(initialStatus, artifacts.esp) ? "would-skip" : "would-update",
+    };
+    summary.phases.avr = { result: "would-verify-or-provision-with-atmel-ice" };
+    summary.phases.web = {};
+    for (const file of artifacts.webFiles) {
+      summary.phases.web[file.name] = {
+        result: (await remoteFileMatches(file)) ? "would-skip" : "would-update",
+      };
+    }
+    summary.result = "preflight-pass";
+    summary.completedAt = new Date().toISOString();
+    recordSummary();
+    log("PASS: read-only fleet upgrade preflight completed; no firmware or files were written.");
+    return;
+  }
+
+  if (espStatusMatchesArtifact(initialStatus, artifacts.esp)) {
+    summary.phases.esp = { result: "skipped-already-current" };
+    log(`PASS: ESP ${artifacts.esp.version} exact image is already installed; skipping write.`);
+  } else {
+    log(`Updating ESP wirelessly to ${artifacts.esp.version}...`);
+    await runWithWifiRecovery("just", ["wifi-esp-update"], {
+      env: {
+        ...process.env,
+        FLEXFOX_URL: httpUrl,
+        FLEXFOX_WEBSOCKET_URL: webSocketUrl,
+        FLEXFOX_UPDATE_CONFIRM: "UPDATE FLEXFOX ESP",
+      },
+      timeoutMs: 420000,
+    });
+    const afterEsp = await waitForFirmwareStatus();
+    if (!espStatusMatchesArtifact(afterEsp, artifacts.esp)) {
+      fail("ESP updater returned without the exact release image installed");
+    }
+    summary.phases.esp = { result: "updated-and-verified" };
+  }
+  recordSummary();
+
+  log(`Verifying or provisioning ${artifacts.avr.bootloaderVersion} + AVR ${artifacts.avr.version} with Atmel-ICE...`);
+  const avrResult = await runProcess("just", ["avr-provision-boot-chain"], {
+    env: {
+      ...process.env,
+      FLEXFOX_UNIT_ID: unitId,
+      FLEXFOX_PROVISION_CONFIRM: "PROVISION-BOOTLOADER",
+      FLEXFOX_FUSE_CONFIRM: "WRITE-BOOTSIZE-0x20",
+      FLEXFOX_PROVISION_SKIP_IF_CURRENT: "1",
+    },
+    timeoutMs: 240000,
+  });
+  summary.phases.avr = {
+    result: avrResult.stdout.includes("already matches the exact boot-chain image")
+      ? "skipped-already-current"
+      : "provisioned-and-verified",
+  };
+  recordSummary();
+
+  log(`Waiting for ${ssid} after the Atmel-ICE reset...`);
+  const afterAvrStatus = await waitForFirmwareStatus();
+  if (!espStatusMatchesArtifact(afterAvrStatus, artifacts.esp)) {
+    fail("ESP release image did not return after AVR provisioning");
+  }
+
+  summary.phases.web = {};
+  for (const file of artifacts.webFiles) {
+    if (await remoteFileMatches(file)) {
+      summary.phases.web[file.name] = { result: "skipped-already-current" };
+      log(`PASS: /${file.name} already matches; skipping write.`);
+    } else {
+      log(`Deploying /${file.name}...`);
+      await deployWebFile(file);
+      summary.phases.web[file.name] = { result: "updated-and-verified" };
+    }
+    recordSummary();
+  }
+
+  log("Running final combined firmware and telemetry verification...");
+  const finalReplies = await runProbe(12000);
+  verifyIdentity(finalReplies, artifacts, true);
+  const finalStatus = await readFirmwareStatus();
+  if (!espStatusMatchesArtifact(finalStatus, artifacts.esp)) {
+    fail("final firmware status does not match the exact ESP release image");
+  }
+  if (
+    finalStatus.cloneActive ||
+    finalStatus.updateActive ||
+    finalStatus.restartPending ||
+    finalStatus.linkbusEventTransactionActive
+  ) {
+    fail("final firmware status reports an active transaction");
+  }
+  summary.identity.versionsAfter = finalReplies.SW_VERSIONS;
+  summary.phases.finalVerification = { result: "pass" };
+  summary.result = "pass";
+  summary.completedAt = new Date().toISOString();
+  recordSummary();
+  log(
+    `PASS: ${unitId} is complete at ESP ${artifacts.esp.version}, ` +
+      `${artifacts.avr.bootloaderVersion}, AVR ${artifacts.avr.version}.`,
+  );
+}
+
+try {
+  await main();
+} catch (error) {
+  summary.result = "failed";
+  summary.completedAt = new Date().toISOString();
+  summary.error = error instanceof Error ? error.message : String(error);
+  try {
+    recordSummary();
+    logError(summary.error);
+    logError(`Evidence retained at ${evidenceDir}`);
+  } catch {
+    process.stderr.write(`${summary.error}\n`);
+  }
+  process.exitCode = 2;
+}

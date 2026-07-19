@@ -11,9 +11,10 @@ if (!Number.isInteger(timeoutMs) || timeoutMs < 3000 || timeoutMs > 60000) {
   throw new Error("FLEXFOX_PROBE_TIMEOUT_MS must be an integer from 3000 through 60000");
 }
 
-const websocketUrl = new URL(baseUrl);
+const websocketUrlOverride = process.env.FLEXFOX_WEBSOCKET_URL;
+const websocketUrl = new URL(websocketUrlOverride ?? baseUrl);
 websocketUrl.protocol = "ws:";
-websocketUrl.port = "81";
+if (!websocketUrlOverride) websocketUrl.port = "81";
 websocketUrl.pathname = "/";
 websocketUrl.search = "";
 websocketUrl.hash = "";
@@ -33,6 +34,7 @@ const messages = [];
 let socket;
 let heartbeat;
 let finishTimer;
+let finishProbe;
 let livePathReported = false;
 
 function messageType(message) {
@@ -53,6 +55,7 @@ function reportLivePathIfComplete() {
     livePathReported = true;
     console.log("PASS WiFi-to-AVR read-only path returned temperature and battery data");
     if (monitorMode) console.log("MONITOR Sending !& every 5 seconds; stop with Ctrl-C");
+    else finishProbe?.();
   }
 }
 
@@ -69,6 +72,7 @@ try {
   console.log(`PASS HTTP ${response.status} ${baseUrl.href}`);
 
   await new Promise((resolve, reject) => {
+    finishProbe = resolve;
     socket = new WebSocket(websocketUrl);
 
     const failTimer = setTimeout(() => reject(new Error("WebSocket connection timed out")), 4000);

@@ -76,6 +76,24 @@ if [ "$(wc -c <"$fuses_before" | tr -d ' ')" != "16" ]; then
 fi
 
 shasum -a 256 "$artifact" "$eeprom_before" "$fuses_before"
+
+if [ "${FLEXFOX_PROVISION_SKIP_IF_CURRENT:-}" = "1" ]; then
+	printf '%s\n' "Checking whether the exact boot-chain image is already installed..."
+	flash_is_current=false
+	# A failed verify means this unit still needs provisioning; it is not a script failure.
+	# shellcheck disable=SC2086
+	if avrdude $programmer_args -U "flash:v:$artifact:i"; then
+		flash_is_current=true
+	fi
+	fuse7_before=$(od -An -tx1 -j 7 -N 1 "$fuses_before" | tr -d ' \n')
+	fuse8_before=$(od -An -tx1 -j 8 -N 1 "$fuses_before" | tr -d ' \n')
+	marker_before=$(od -An -tx1 -j 511 -N 1 "$eeprom_before" | tr -d ' \n')
+	if $flash_is_current && [ "$fuse7_before" = "00" ] && [ "$fuse8_before" = "20" ] && [ "$marker_before" = "ff" ]; then
+		printf '%s\n' "PASS: target already matches the exact boot-chain image, boot fuses, and cleared recovery marker; skipping write."
+		exit 0
+	fi
+fi
+
 cp "$eeprom_before" "$eeprom_restore"
 printf '\377' | dd of="$eeprom_restore" bs=1 seek=511 conv=notrunc 2>/dev/null
 printf '%s\n' "Erasing and programming the combined bootloader plus relocated AVR $application_version image..."

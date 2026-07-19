@@ -35,7 +35,9 @@ test:
     node ./Tests/Host/fleet_soak_event_generator_test.mjs
     node ./Tests/Host/fleet_soak_page_test.mjs
     node ./Tests/Host/fleet_soak_protocol_test.mjs
+    node ./Tests/Host/fleet_upgrade_workflow_test.mjs
     node ./Tests/Host/release_checklist_validator_test.mjs
+    node --check ./scripts/upgrade-flexfox-fleet-unit.mjs
     node ./scripts/check-firmware-contracts.mjs
     node ./scripts/check-eeprom-layout.mjs
 
@@ -126,6 +128,14 @@ wifi-avr-bootloader-qualification:
 # Install and hash-verify events.html or another named LittleFS web file (explicit confirmation required).
 wifi-web-deploy:
     node ./scripts/deploy-flexfox-web-file.mjs
+
+# Read-only identity, artifact, relay, and per-file upgrade preflight for one fleet unit.
+fleet-upgrade-preflight unit ssid:
+    FLEXFOX_UNIT_ID="{{unit}}" FLEXFOX_SSID="{{ssid}}" FLEXFOX_FLEET_UPGRADE_DRY_RUN=1 node ./scripts/upgrade-flexfox-fleet-unit.mjs
+
+# Upgrade and independently verify one opened fleet unit; requires the top-level confirmation variable.
+fleet-upgrade-unit unit ssid:
+    FLEXFOX_UNIT_ID="{{unit}}" FLEXFOX_SSID="{{ssid}}" node ./scripts/upgrade-flexfox-fleet-unit.mjs
 
 # Generate the alternating 12-event, ten-unit fleet soak bundle for an explicit UTC start.
 fleet-soak-events start:

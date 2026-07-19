@@ -159,6 +159,8 @@ Do not force a layout conversion when the plausibility gate rejects the raw EEPR
 
 For a routine ESP sketch update, write and verify only the release sketch at `0x0`; do not erase or replace LittleFS. A full 4 MiB ESP backup is optional and is made only when specifically requested or separately justified. A LittleFS replacement is a distinct recovery/factory operation and requires explicit authorization.
 
+For the guarded one-unit-at-a-time ESP, Atmel-ICE boot-chain, and web-overlay sequence, use the [fleet upgrade workflow](FLEET_UPGRADE_WORKFLOW.md). Its rerun decisions come from fresh device evidence rather than a local completion flag.
+
 ## Completed transition to main
 
 On 2026-07-14, the owner approved the one-time replacement-tree merge that established the qualified AVR128DA48 product line on `main`:

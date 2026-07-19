@@ -1,7 +1,8 @@
 export function createBoundedFlexFoxHeartbeat(baseUrl, purpose = "device operation") {
-  const websocketUrl = new URL(baseUrl);
+  const websocketUrlOverride = process.env.FLEXFOX_WEBSOCKET_URL;
+  const websocketUrl = new URL(websocketUrlOverride ?? baseUrl);
   websocketUrl.protocol = "ws:";
-  websocketUrl.port = "81";
+  if (!websocketUrlOverride) websocketUrl.port = "81";
   websocketUrl.pathname = "/";
   websocketUrl.search = "";
   websocketUrl.hash = "";
