@@ -11,10 +11,11 @@ There is no approved earlier public firmware release to which a v2.0.0 unit shou
 The public recovery set is:
 
 - `FlexFox80-AVR-0.210.hex` for AVR application flash;
+- `FlexFox80-AVR-First-Install-0.210.hex` for programmer-based installation of BL0.3 and the matching relocated AVR 0.210 application on a new unit;
 - `FlexFox80-ESP-2.27.bin` for ESP sketch flash at `0x000000`; and
 - `FlexFox80-LittleFS-2.27.bin` only when filesystem factory/recovery replacement is explicitly intended.
 
-BL0.3 is not a routine release asset. A healthy resident BL0.3 can reinstall the AVR application wirelessly. Initial bootloader installation or recovery from a damaged bootloader requires the qualified Atmel-ICE/UPDI provisioning workflow.
+The first-install HEX is not a wireless-update file and does not embed fuse writes. It requires the qualified Atmel-ICE/UPDI provisioning workflow, `CODESIZE=0x00`, `BOOTSIZE=0x20`, EEPROM/fuse preservation, and exact readback verification. A healthy resident BL0.3 can reinstall the AVR application wirelessly without using the first-install image.
 
 ## Recovery rules
 

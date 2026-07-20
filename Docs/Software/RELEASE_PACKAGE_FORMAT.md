@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines the maintenance-release package contract adapted from SignalSlinger's manifest, checksum, validation, and plain-language packaging practices. FlexFox differs because it is a mature legacy product maintained for an established user base, and because one release contains independently versioned AVR128DA48 and ESP8266 firmware plus an ESP LittleFS image that is not safe to treat as an ordinary firmware update.
+This document defines the maintenance-release package contract adapted from SignalSlinger's separate normal-update and first-install artifacts, manifest, checksum, validation, and plain-language packaging practices. FlexFox differs because it is a mature legacy product maintained for an established user base, and because one release contains independently versioned AVR128DA48 and ESP8266 firmware plus an ESP LittleFS image that is not safe to treat as an ordinary firmware update.
 
 FlexFox releases support exactly one hardware target: **Ver 2.1 (Mar 2022)**. Do not generate parallel board variants or imply compatibility with prototypes, earlier PCB revisions, or later unqualified hardware.
 
@@ -29,14 +29,15 @@ FlexFox80-<release>-AVR-<avr-version>-ESP-<esp-version>-Release-Files.zip
 
 The validated ZIP contains exactly:
 
-- `FlexFox80-AVR-<avr-version>.hex` — AVR program flash for Atmel-ICE/UPDI installation;
+- `FlexFox80-AVR-<avr-version>.hex` — application-only legacy-address AVR image for deliberately bootloader-free maintainer recovery; it does not contain the resident bootloader and is not the normal choice for a new unit;
+- `FlexFox80-AVR-First-Install-<avr-version>.hex` — preferred Atmel-ICE/UPDI image for a new unit, containing the qualified resident bootloader plus the matching relocated release application;
 - `FlexFox80-ESP-<esp-version>.bin` — ESP sketch image written at address `0x00000000`;
 - `FlexFox80-LittleFS-<esp-version>.bin` — exact release filesystem baseline, clearly marked as recovery/factory material rather than a routine update;
 - `FlexFox80-Release-Info-<release>.json` — machine-readable release manifest;
 - `FlexFox80-Checksums-<release>.txt` — SHA-256 checksum list for every packaged file other than the checksum file itself;
 - `README-FlexFox80-<release>.txt` — plain-language installation, preservation, compatibility, and rollback warnings.
 
-For the normal GitHub release, upload the AVR HEX, ESP sketch BIN, and LittleFS BIN individually as well as inside the complete ZIP. Label the LittleFS asset as recovery/factory content because installing it replaces stored web assets, events, and settings; its availability as a release asset does not make it part of a routine firmware update.
+For the normal GitHub release, upload both AVR HEX files, the ESP sketch BIN, and the LittleFS BIN individually as well as inside the complete ZIP. The first-install name must remain unambiguous because it is a programmer image, not a wireless update. Label the LittleFS asset as recovery/factory content because installing it replaces stored web assets, events, and settings; its availability as a release asset does not make it part of a routine firmware update.
 
 ## Files deliberately excluded
 
@@ -66,7 +67,20 @@ The manifest format identifier is `flexfox80-release-info-v1`. A conforming mani
     "processor": "AVR128DA48",
     "toolchain": "AVR-GCC 7.3.0",
     "devicePack": "AVR-Dx_DFP 1.9.103",
-    "eepromSchemaBytes": 274
+    "eepromSchemaBytes": 274,
+    "firstInstall": {
+      "fileName": "FlexFox80-AVR-First-Install-0.210.hex",
+      "bootloaderVersion": "BL0.3",
+      "protocolVersion": 2,
+      "bootloaderBaud": 38400,
+      "bootloaderBytes": 5112,
+      "applicationStart": 16384,
+      "applicationVersion": "0.210",
+      "requiredFuses": {
+        "codesize": "0x00",
+        "bootsize": "0x20"
+      }
+    }
   },
   "esp": {
     "version": "2.1",
@@ -102,10 +116,11 @@ The package validator must fail unless all of the following hold:
 3. The manifest pins the qualified build profiles and the AVR EEPROM schema is exactly 274 bytes (`0x112`).
 4. Every manifest and checksum entry names exactly one existing regular file, with matching byte size and SHA-256.
 5. The ZIP contains every required file and no unlisted installation image.
-6. The AVR HEX parses as valid Intel HEX and contains program flash only; it must not silently include EEPROM, fuses, signatures, or lock bytes.
-7. The ESP sketch and LittleFS images match the selected build outputs and expected flash layout.
-8. The package README warns that routine AVR installation preserves unit EEPROM and routine ESP installation does not overwrite LittleFS.
-9. The manifest commit equals the annotated tag target and is an ancestor of the intended release branch.
+6. Both AVR files parse as valid Intel HEX and contain program flash only; neither may silently include EEPROM, fuses, signatures, or lock bytes.
+7. The first-install HEX contains the exact qualified bootloader at address zero and the exact matching relocated application at the manifest application start, without overlap. Its manifest records bootloader version, protocol, baud, size, and required `CODESIZE` and `BOOTSIZE` fuse fields.
+8. The ESP sketch and LittleFS images match the selected build outputs and expected flash layout.
+9. The package README distinguishes the application-only and first-install AVR files, requires the qualified programmer/provisioning flow for first installation, warns that AVR EEPROM/fuses must be preserved and verified, and warns that routine ESP installation does not overwrite LittleFS.
+10. The manifest commit equals the annotated tag target and is an ancestor of the intended release branch.
 
 After archiving, copy the archived assets into a clean temporary directory and repeat the same checks. A successful copy or upload command is not archive proof.
 
@@ -114,7 +129,8 @@ After archiving, copy the archived assets into a clean temporary directory and r
 Retain in the designated durable release archive:
 
 - the complete validated release ZIP;
-- the AVR HEX for qualified UPDI installation;
+- the combined AVR first-install HEX for qualified UPDI installation of the bootloader and matching relocated application;
+- the application-only AVR HEX retained for deliberately bootloader-free maintainer recovery;
 - the ESP sketch BIN for qualified FTDI installation;
 - the ESP LittleFS BIN, clearly labeled as recovery/factory content;
 - the manifest and checksum list as standalone verification assets.

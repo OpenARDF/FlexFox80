@@ -4,7 +4,7 @@
 
 **Firmware:** ESP `2.27`, AVR `0.210` (`SW_VERSIONS,2.27,0.210`)
 
-**Bootloader:** AVR BL0.3 is already resident on the provisioned fleet; it is not included as a routine release asset.
+**Bootloader:** AVR BL0.3 is already resident on the provisioned fleet. `FlexFox80-AVR-First-Install-0.210.hex` contains BL0.3 plus the matching relocated AVR 0.210 application for programmer-based setup of a new unit.
 
 ## Highlights
 
@@ -27,7 +27,9 @@
 ## Installation cautions
 
 - Preserve and verify each unit's EEPROM and fuses when using Atmel-ICE. Do not copy EEPROM between units.
-- The AVR HEX is application firmware. BL0.3 initial installation or recovery remains a programmer operation.
+- For a new unit, use `FlexFox80-AVR-First-Install-0.210.hex` with Atmel-ICE/UPDI. It is the combined BL0.3 plus relocated AVR 0.210 programmer image, not a wireless-update file.
+- BL0.3 setup requires `CODESIZE=0x00` and `BOOTSIZE=0x20`. Fuse values are not embedded in the HEX; use the qualified provisioning flow and preserve/verify EEPROM and fuses.
+- `FlexFox80-AVR-0.210.hex` is application-only and uses the legacy address-zero layout. It does not contain BL0.3 and is not the normal choice for a new or BL0.3-equipped unit.
 - Write the ESP sketch BIN at `0x000000`. Do not erase the whole flash during a routine update.
 - The LittleFS BIN is recovery/factory content for `0x300000` under the qualified 4M1M layout. It replaces stored settings, event files, and web files.
 - Cryptographic firmware signatures are intentionally not part of this release. Wireless AVR access uses the target's MAC-derived SSID suffix as the operator unlock and is limited by the AVR-controlled maintenance window.
