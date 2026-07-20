@@ -29,20 +29,17 @@
   <section>
     <h2>1. Prepare this master</h2>
     <p id="masterStatus">Reading master status…</p>
-    <p>
-      <label>First event start <input id="scheduleStart" type="datetime-local" step="60" required></label>
-      <button id="prepareRun" class="primary">Prepare master and arm fox provisioning</button>
-    </p>
-    <p id="scheduleStatus" class="muted">Choose a start at least 30 minutes in the future.</p>
+    <input id="eventFiles" type="file" accept=".event" multiple>
+    <button id="installSuite" class="primary">Install and activate selected suite</button>
     <button id="cleanMaster" class="danger">Remove reserved events from master</button>
-    <p class="muted">The master generates and validates the twelve reserved events from this single start time. The full sequence lasts 4 hours 41 minutes.</p>
+    <p class="muted">Select the twelve <code>FS01-Sprint.event</code> through <code>FS12-Classic.event</code> files produced by the Fleet Soak generator.</p>
   </section>
 
   <section>
     <h2>2. Prepare or clean targets</h2>
-    <p id="nextAssignment">Provisioning order has not started.</p>
+    <label><input id="automaticAssignment" type="checkbox" checked> Automatically use the recommended unused assignment</label>
     <p>
-      <button id="armProvision" class="primary">Re-arm target provisioning</button>
+      <button id="armProvision" class="primary">Arm target provisioning</button>
       <button id="armCleanup" class="danger">Arm target cleanup</button>
       <button id="disarm">Disarm</button>
     </p>
@@ -60,243 +57,15 @@
 
 <script>
 "use strict";
-// BEGIN FLEET_SOAK_GENERATOR
-// Keep this browser generator byte-for-byte aligned with the checked-in host generator.
-// The host regression executes this block and compares every generated event.
+// Mirror the firmware allowlist so this optional page cannot select arbitrary event names.
 const reservedNames = Array.from({length: 12}, (_, index) =>
   `FS${String(index + 1).padStart(2, "0")}-${index % 2 ? "Classic" : "Sprint"}.event`);
-const durationsMinutes = [10, 12, 15];
-const gapsMinutes = [10, 12, 15];
-const sprintTemplate = `EVENT_START
-EVENT_NAME, "Sprint 80m"
-EVENT_VERSION, "1.1"
-EVENT_BAND, 80
-EVENT_CALLSIGN, "DE FOX"
-EVENT_SPEED_CALLSIGN, 20
-EVENT_START_DATE_TIME, 2018-03-23T18:00:00Z
-EVENT_FINISH_DATE_TIME, 2018-03-23T20:00:00Z
-EVENT_MODULATION, CW
-EVENT_NUMBER_OF_TX_TYPES, 4
-TYPE1_TX_COUNT, 5
-TYPE1_ROLE_NAME, "Fast"
-TYPE1_FREQ, 3570000
-TYPE1_POWER_LEVEL, 300
-TYPE1_ID_INTERVAL, 600
-TYPE1_CODE_SPEED, 12
-TYPE1_TX1_PATTERN, "MOE "
-TYPE1_TX1_ON_TIME, 12
-TYPE1_TX1_OFF_TIME, 48
-TYPE1_TX1_DELAY_TIME, 0
-TYPE1_TX2_PATTERN, "MOI "
-TYPE1_TX2_ON_TIME, 12
-TYPE1_TX2_OFF_TIME, 48
-TYPE1_TX2_DELAY_TIME, 12
-TYPE1_TX3_PATTERN, "MOS "
-TYPE1_TX3_ON_TIME, 12
-TYPE1_TX3_OFF_TIME, 48
-TYPE1_TX3_DELAY_TIME, 24
-TYPE1_TX4_PATTERN, "MOH "
-TYPE1_TX4_ON_TIME, 12
-TYPE1_TX4_OFF_TIME, 48
-TYPE1_TX4_DELAY_TIME, 36
-TYPE1_TX5_PATTERN, "MO5 "
-TYPE1_TX5_ON_TIME, 12
-TYPE1_TX5_OFF_TIME, 48
-TYPE1_TX5_DELAY_TIME, 48
-TYPE2_TX_COUNT, 5
-TYPE2_ROLE_NAME, "Slow"
-TYPE2_FREQ, 3530000
-TYPE2_POWER_LEVEL, 300
-TYPE2_ID_INTERVAL, 600
-TYPE2_CODE_SPEED, 8
-TYPE2_TX1_PATTERN, "MOE "
-TYPE2_TX1_ON_TIME, 12
-TYPE2_TX1_OFF_TIME, 48
-TYPE2_TX1_DELAY_TIME, 0
-TYPE2_TX2_PATTERN, "MOI "
-TYPE2_TX2_ON_TIME, 12
-TYPE2_TX2_OFF_TIME, 48
-TYPE2_TX2_DELAY_TIME, 12
-TYPE2_TX3_PATTERN, "MOS "
-TYPE2_TX3_ON_TIME, 12
-TYPE2_TX3_OFF_TIME, 48
-TYPE2_TX3_DELAY_TIME, 24
-TYPE2_TX4_PATTERN, "MOH "
-TYPE2_TX4_ON_TIME, 12
-TYPE2_TX4_OFF_TIME, 48
-TYPE2_TX4_DELAY_TIME, 36
-TYPE2_TX5_PATTERN, "MO5 "
-TYPE2_TX5_ON_TIME, 12
-TYPE2_TX5_OFF_TIME, 48
-TYPE2_TX5_DELAY_TIME, 48
-TYPE3_TX_COUNT, 1
-TYPE3_ROLE_NAME, "Spectator"
-TYPE3_FREQ, 3550000
-TYPE3_POWER_LEVEL, 300
-TYPE3_ID_INTERVAL, 600
-TYPE3_CODE_SPEED, 8
-TYPE3_TX1_PATTERN, "S "
-TYPE3_TX1_ON_TIME, 60
-TYPE3_TX1_OFF_TIME, 0
-TYPE3_TX1_DELAY_TIME, 0
-TYPE4_TX_COUNT, 1
-TYPE4_ROLE_NAME, "Finish"
-TYPE4_FREQ, 3600000
-TYPE4_POWER_LEVEL, 300
-TYPE4_ID_INTERVAL, 600
-TYPE4_CODE_SPEED, 8
-TYPE4_TX1_PATTERN, "MO "
-TYPE4_TX1_ON_TIME, 60
-TYPE4_TX1_OFF_TIME, 0
-TYPE4_TX1_DELAY_TIME, 0
-EVENT_END`.split("\n");
-const classicTemplate = `EVENT_START
-EVENT_NAME, "Classic 80m"
-EVENT_VERSION, "1.1"
-EVENT_BAND, 80
-EVENT_CALLSIGN, ""
-EVENT_SPEED_CALLSIGN, 20
-EVENT_START_DATE_TIME, 2018-03-23T18:00:00Z
-EVENT_FINISH_DATE_TIME, 2018-03-23T20:00:00Z
-EVENT_MODULATION, CW
-EVENT_NUMBER_OF_TX_TYPES, 2
-TYPE1_TX_COUNT, 5
-TYPE1_ROLE_NAME, "Fox"
-TYPE1_FREQ, 3580000
-TYPE1_POWER_LEVEL, 5000
-TYPE1_ID_INTERVAL, 60
-TYPE1_CODE_SPEED, 8
-TYPE1_TX1_PATTERN, "MOE "
-TYPE1_TX1_ON_TIME, 60
-TYPE1_TX1_OFF_TIME, 240
-TYPE1_TX1_DELAY_TIME, 0
-TYPE1_TX2_PATTERN, "MOI "
-TYPE1_TX2_ON_TIME, 60
-TYPE1_TX2_OFF_TIME, 240
-TYPE1_TX2_DELAY_TIME, 60
-TYPE1_TX3_PATTERN, "MOS "
-TYPE1_TX3_ON_TIME, 60
-TYPE1_TX3_OFF_TIME, 240
-TYPE1_TX3_DELAY_TIME, 120
-TYPE1_TX4_PATTERN, "MOH "
-TYPE1_TX4_ON_TIME, 60
-TYPE1_TX4_OFF_TIME, 240
-TYPE1_TX4_DELAY_TIME, 180
-TYPE1_TX5_PATTERN, "MO5 "
-TYPE1_TX5_ON_TIME, 60
-TYPE1_TX5_OFF_TIME, 240
-TYPE1_TX5_DELAY_TIME, 240
-TYPE2_TX_COUNT, 1
-TYPE2_ROLE_NAME, "Finish"
-TYPE2_FREQ, 3600000
-TYPE2_POWER_LEVEL, 5000
-TYPE2_ID_INTERVAL, 300
-TYPE2_CODE_SPEED, 8
-TYPE2_TX1_PATTERN, "MO "
-TYPE2_TX1_ON_TIME, 60
-TYPE2_TX1_OFF_TIME, 0
-TYPE2_TX1_DELAY_TIME, 0
-EVENT_END`.split("\n");
-
-function replaceExactlyOne(lines, prefix, replacement) {
-  const indexes = lines.map((line, index) => line.startsWith(prefix) ? index : -1).filter(index => index >= 0);
-  if (indexes.length !== 1) throw new Error(`Expected one ${prefix} line; found ${indexes.length}.`);
-  lines[indexes[0]] = replacement;
-}
-function scheduledHeader(lines, name, startUtc, finishUtc) {
-  const result = [...lines];
-  replaceExactlyOne(result, "EVENT_NAME,", `EVENT_NAME, "${name}"`);
-  replaceExactlyOne(result, "EVENT_VERSION,", 'EVENT_VERSION, "fleet-soak-v1"');
-  replaceExactlyOne(result, "EVENT_START_DATE_TIME,", `EVENT_START_DATE_TIME, ${startUtc}`);
-  replaceExactlyOne(result, "EVENT_FINISH_DATE_TIME,", `EVENT_FINISH_DATE_TIME, ${finishUtc}`);
-  return result;
-}
-function renamedType(lines, fromType, toType, roleName, frequency) {
-  const result = lines.map(line => line.replace(new RegExp(`^TYPE${fromType}_`), `TYPE${toType}_`));
-  replaceExactlyOne(result, `TYPE${toType}_ROLE_NAME,`, `TYPE${toType}_ROLE_NAME, "${roleName}"`);
-  replaceExactlyOne(result, `TYPE${toType}_FREQ,`, `TYPE${toType}_FREQ, ${frequency}`);
-  return result;
-}
-function roleBlocks(lines, expectedRoleCount) {
-  const endIndex = lines.indexOf("EVENT_END");
-  const starts = [];
-  for (let role = 1; role <= expectedRoleCount; role += 1) {
-    starts.push(lines.findIndex(line => line.startsWith(`TYPE${role}_TX_COUNT,`)));
-  }
-  if (endIndex < 0 || starts.some(index => index < 0) ||
-      starts.some((index, position) => position > 0 && index <= starts[position - 1])) {
-    throw new Error("Event template role blocks are not in the expected order.");
-  }
-  return starts.map((start, index) => lines.slice(start, starts[index + 1] ?? endIndex));
-}
-function sprintEvent(template, name, startUtc, finishUtc) {
-  const scheduled = scheduledHeader(template, name, startUtc, finishUtc);
-  const blocks = roleBlocks(scheduled, 4);
-  const header = scheduled.slice(0, scheduled.findIndex(line => line.startsWith("TYPE1_TX_COUNT,")));
-  return [...header,
-    ...renamedType(blocks[1], 2, 1, "Slow", 3520000),
-    ...renamedType(blocks[0], 1, 2, "Fast", 3560000),
-    ...renamedType(blocks[2], 3, 3, "Spectator", 3540000),
-    ...renamedType(blocks[3], 4, 4, "Beacon", 3600000), "EVENT_END"];
-}
-function classicEvent(template, name, startUtc, finishUtc) {
-  const scheduled = scheduledHeader(template, name, startUtc, finishUtc);
-  const eventTypeCountIndex = scheduled.findIndex(line => line.startsWith("EVENT_NUMBER_OF_TX_TYPES,"));
-  const blocks = roleBlocks(scheduled, 2);
-  const type1Index = scheduled.findIndex(line => line.startsWith("TYPE1_TX_COUNT,"));
-  if (!(eventTypeCountIndex >= 0 && type1Index > eventTypeCountIndex)) throw new Error("Classic template header is invalid.");
-  const header = scheduled.slice(0, type1Index);
-  replaceExactlyOne(header, "EVENT_NUMBER_OF_TX_TYPES,", "EVENT_NUMBER_OF_TX_TYPES, 4");
-  const spectatorRole = renamedType(blocks[1], 2, 3, "Spectator", 3540000);
-  replaceExactlyOne(spectatorRole, "TYPE3_TX1_PATTERN,", 'TYPE3_TX1_PATTERN, "S "');
-  return [...header,
-    ...renamedType(blocks[0], 1, 1, "Classic Fox", 3520000),
-    ...renamedType(blocks[0], 1, 2, "Alternate Classic Fox", 3560000),
-    ...spectatorRole,
-    ...renamedType(blocks[1], 2, 4, "Beacon", 3600000), "EVENT_END"];
-}
-function formatUtc(epochMillis) { return new Date(epochMillis).toISOString().replace(".000Z", "Z"); }
-function buildFleetSoakEvents(startEpoch) {
-  if (!Number.isFinite(startEpoch)) throw new Error("The Fleet Soak start time is invalid.");
-  const events = [];
-  let cursor = startEpoch;
-  for (let index = 0; index < reservedNames.length; index += 1) {
-    const sequence = index + 1;
-    const kind = index % 2 === 0 ? "Sprint" : "Classic";
-    const durationMinutes = durationsMinutes[index % durationsMinutes.length];
-    const startUtc = formatUtc(cursor);
-    const finishEpoch = cursor + durationMinutes * 60000;
-    const finishUtc = formatUtc(finishEpoch);
-    const name = `Fleet Soak ${String(sequence).padStart(2, "0")} ${kind} ${durationMinutes}m`;
-    const lines = kind === "Sprint"
-      ? sprintEvent(sprintTemplate, name, startUtc, finishUtc)
-      : classicEvent(classicTemplate, name, startUtc, finishUtc);
-    events.push({filename: reservedNames[index], contents: `${lines.join("\n")}\n`, startUtc, finishUtc});
-    cursor = finishEpoch + (index + 1 < reservedNames.length ? gapsMinutes[index % gapsMinutes.length] * 60000 : 0);
-  }
-  return events;
-}
-// END FLEET_SOAK_GENERATOR
-
-const provisioningPlan = [
-  {label: "Slow 1", assignment: "0:0", frequency: "3.520 MHz"},
-  {label: "Slow 2", assignment: "0:1", frequency: "3.520 MHz"},
-  {label: "Slow 3", assignment: "0:2", frequency: "3.520 MHz"},
-  {label: "Slow 4", assignment: "0:3", frequency: "3.520 MHz"},
-  {label: "Slow 5", assignment: "0:4", frequency: "3.520 MHz"},
-  {label: "Fast 1", assignment: "1:0", frequency: "3.560 MHz"},
-  {label: "Fast 2", assignment: "1:1", frequency: "3.560 MHz"},
-  {label: "Fast 3", assignment: "1:2", frequency: "3.560 MHz"},
-  {label: "Fast 4", assignment: "1:3", frequency: "3.560 MHz"},
-  {label: "Fast 5", assignment: "1:4", frequency: "3.560 MHz"},
-];
-const provisioningStateKey = "flexfoxFleetSoakProvisioningV2";
-let provisioningState = loadProvisioningState();
-const assignmentsSent = new Set();
-let activeProvisionSsid = provisioningState.entries.find(entry => entry.status !== "ok")?.ssid || "";
+const assignments = ["0:0", "0:1", "0:2", "0:3", "0:4", "1:0", "1:1", "1:2", "1:3", "1:4", "2:0", "3:0"];
+const rosterKey = "flexfoxFleetSoakRosterV1";
+// The roster is operator-side memory only; every target still reports its device evidence.
+const roster = JSON.parse(localStorage.getItem(rosterKey) || "{}");
 let mode = "OFF";
 let socket;
-let masterClockSync;
 
 const byId = id => document.getElementById(id);
 function note(message, className = "") {
@@ -305,44 +74,7 @@ function note(message, className = "") {
   line.className = className;
   byId("log").prepend(line);
 }
-function loadProvisioningState() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(provisioningStateKey) || "null");
-    if (parsed && typeof parsed.runStartUtc === "string" && Array.isArray(parsed.entries)) return parsed;
-  } catch (error) {
-    console.warn("Unable to restore Fleet Soak provisioning order:", error);
-  }
-  return {runStartUtc: "", entries: []};
-}
-function saveProvisioningState() {
-  try { localStorage.setItem(provisioningStateKey, JSON.stringify(provisioningState)); }
-  catch (error) { console.warn("Unable to retain Fleet Soak provisioning order:", error); }
-}
-function resetProvisioningState(runStartUtc) {
-  provisioningState = {runStartUtc, entries: []};
-  activeProvisionSsid = "";
-  assignmentsSent.clear();
-  saveProvisioningState();
-  byId("targets").replaceChildren();
-  updateNextAssignment();
-}
-function completedProvisionCount() {
-  return provisioningState.entries.filter(entry => entry.status === "ok").length;
-}
-function updateNextAssignment() {
-  const completed = completedProvisionCount();
-  const plan = provisioningPlan[completed];
-  if (!plan) {
-    byId("nextAssignment").textContent = "All ten foxes are provisioned; target provisioning is disarmed.";
-    byId("nextAssignment").className = "ok";
-    return;
-  }
-  const active = provisioningState.entries.find(entry => entry.status !== "ok");
-  byId("nextAssignment").textContent = active
-    ? `Waiting for ${active.ssid} to finish as ${active.label} (${active.assignment}, ${active.frequency}).`
-    : `Next powered fox: ${plan.label} (${plan.assignment}, ${plan.frequency}).`;
-  byId("nextAssignment").className = active?.status === "error" ? "error" : "";
-}
+function saveRoster() { localStorage.setItem(rosterKey, JSON.stringify(roster)); }
 function setModeText(text, className = "") {
   byId("modeStatus").textContent = text;
   byId("modeStatus").className = className;
@@ -377,128 +109,67 @@ function crc32(bytes) {
   }
   return (crc ^ 0xffffffff) >>> 0;
 }
-async function uploadFile(artifact) {
+async function uploadFile(file) {
   // Reuse the normal transactional event upload endpoint, including its size and CRC checks.
-  const content = new TextEncoder().encode(artifact.contents);
+  const content = new Uint8Array(await file.arrayBuffer());
   const form = new FormData();
-  form.append("name", new Blob([content], {type: "text/plain"}), artifact.filename);
+  form.append("name", file, file.name);
   const crc = crc32(content).toString(16).padStart(8, "0");
   return responseText(await fetch(`/upload?size=${content.length}&crc32=${crc}`, {method: "POST", body: form}));
 }
-
-function localDateTimeValue(epochMillis) {
-  const value = new Date(epochMillis);
-  const local = new Date(epochMillis - value.getTimezoneOffset() * 60000);
-  return local.toISOString().slice(0, 16);
-}
-function suggestedStartEpoch() {
-  const fifteenMinutes = 15 * 60000;
-  return Math.ceil((Date.now() + 75 * 60000) / fifteenMinutes) * fifteenMinutes;
-}
-function selectedStartEpoch() {
-  const epoch = new Date(byId("scheduleStart").value).getTime();
-  if (!Number.isFinite(epoch)) throw new Error("Choose the first event start date and time.");
-  if (epoch < Date.now() + 30 * 60000) throw new Error("The first event must start at least 30 minutes from now.");
-  return epoch;
-}
-async function waitForOpenSocket(timeoutMs = 10000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    if (socket?.readyState === WebSocket.OPEN) return;
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-  throw new Error("The Fleet Soak control connection did not open.");
-}
-async function synchronizeMasterClock() {
-  await waitForOpenSocket();
-  await new Promise((resolve, reject) => {
-    const delay = 1000 - (Date.now() % 1000);
-    setTimeout(() => {
-      const expectedEpoch = Math.floor(Date.now() / 1000);
-      const timer = setTimeout(() => {
-        masterClockSync = null;
-        reject(new Error("The master did not confirm its synchronized clock."));
-      }, 10000);
-      masterClockSync = {expectedEpoch, resolve: () => { clearTimeout(timer); masterClockSync = null; resolve(); }};
-      socket.send(`SYNC,${new Date().toISOString()}`);
-      note("Synchronizing the master clock to this device…");
-    }, delay);
-  });
-}
-async function prepareRun() {
-  let events;
-  let startEpoch;
-  try {
-    startEpoch = selectedStartEpoch();
-    events = buildFleetSoakEvents(startEpoch);
-  } catch (error) {
-    byId("scheduleStatus").textContent = error.message;
-    byId("scheduleStatus").className = "error";
+async function installSuite() {
+  const files = [...byId("eventFiles").files];
+  const names = files.map(file => file.name).sort();
+  if (names.length !== reservedNames.length || names.some((name, index) => name !== [...reservedNames].sort()[index])) {
+    note("Select exactly the twelve reserved Fleet Soak event files.", "error");
     return;
   }
-  byId("prepareRun").disabled = true;
+  byId("installSuite").disabled = true;
   try {
     await setMode("OFF");
-    await synchronizeMasterClock();
-    note("Master clock synchronization confirmed.", "ok");
-    for (const event of events) {
-      note(`Generating and uploading ${event.filename}…`);
-      await uploadFile(event);
+    for (const name of reservedNames) {
+      note(`Uploading ${name}…`);
+      await uploadFile(files.find(file => file.name === name));
     }
     const body = new URLSearchParams({confirm: "ACTIVATE_RESERVED_SUITE"});
     note(await responseText(await fetch("/fleet-soak/activate", {method: "POST", body})), "ok");
-    resetProvisioningState(events[0].startUtc);
-    const finish = new Date(events.at(-1).finishUtc);
-    byId("scheduleStatus").textContent =
-      `Ready: ${new Date(startEpoch).toLocaleString()} through ${finish.toLocaleString()}. Power the foxes in the displayed order.`;
-    byId("scheduleStatus").className = "ok";
-    await setMode("PROVISION");
   } catch (error) {
-    byId("scheduleStatus").textContent = `Preparation stopped safely: ${error.message}`;
-    byId("scheduleStatus").className = "error";
-    note(`Suite preparation stopped safely: ${error.message}`, "error");
+    note(`Suite installation stopped: ${error.message}`, "error");
   } finally {
-    byId("prepareRun").disabled = false;
+    byId("installSuite").disabled = false;
     await refreshStatus();
   }
 }
 
-function sendAssignment(entry) {
-  if (!socket || socket.readyState !== WebSocket.OPEN ||
-      !provisioningPlan.some(plan => plan.assignment === entry.assignment) || assignmentsSent.has(entry.ssid)) return;
-  assignmentsSent.add(entry.ssid);
-  entry.status = "pending";
-  activeProvisionSsid = entry.ssid;
-  saveProvisioningState();
-  updateNextAssignment();
-  socket.send(`FLEET_SOAK_ASSIGN,${entry.ssid},${entry.assignment}`);
-  note(`${entry.ssid} is ${entry.label} (${entry.assignment}, ${entry.frequency}); provisioning started.`);
+function inferredAssignment(sprint, classic) {
+  // Preserve familiar slots while spreading Sprint units across its slow and fast roles.
+  if (/^0:[0-4]$/.test(sprint)) return `1:${sprint[2]}`;
+  if (/^1:[0-4]$/.test(sprint)) return `0:${sprint[2]}`;
+  if (sprint === "2:0") return "2:0";
+  if (sprint === "3:0") return "3:0";
+  if (/^0:[0-4]$/.test(classic)) return classic;
+  if (classic === "1:0") return "3:0";
+  return "";
 }
-function provisioningEntryForTarget(ssid, sprint, classic, storedFleet) {
-  let entry = provisioningState.entries.find(candidate => candidate.ssid === ssid);
-  if (entry) {
-    entry.sprint = sprint;
-    entry.classic = classic;
-    entry.storedFleet = storedFleet;
-    saveProvisioningState();
-    return entry;
-  }
-  if (mode !== "PROVISION") return null;
-  const unfinished = provisioningState.entries.find(candidate => candidate.status !== "ok");
-  if (unfinished) return null;
-  const plan = provisioningPlan[provisioningState.entries.length];
-  if (!plan) return null;
-  entry = {ssid, ...plan, sprint, classic, storedFleet, status: "pending"};
-  provisioningState.entries.push(entry);
-  activeProvisionSsid = ssid;
-  saveProvisioningState();
-  updateNextAssignment();
-  return entry;
+function availableAssignment(preferred, ssid) {
+  const used = new Set(Object.entries(roster).filter(([key]) => key !== ssid).map(([, value]) => value.assignment));
+  if (preferred && !used.has(preferred)) return preferred;
+  return assignments.find(value => !used.has(value)) || "";
+}
+function sendAssignment(ssid, assignment) {
+  if (!socket || socket.readyState !== WebSocket.OPEN || !assignments.includes(assignment)) return;
+  roster[ssid] = {...(roster[ssid] || {}), assignment};
+  saveRoster();
+  socket.send(`FLEET_SOAK_ASSIGN,${ssid},${assignment}`);
+  note(`Assigned ${ssid} to ${assignment}; provisioning started.`);
 }
 function showTarget(fields) {
   const [, ssid, protocol, total, reserved, ready, sprint = "", classic = "", storedFleet = ""] = fields;
   if (protocol !== "1") return;
-  const entry = provisioningEntryForTarget(ssid, sprint, classic, storedFleet);
+  const preferred = roster[ssid]?.assignment || (assignments.includes(storedFleet) ? storedFleet : "") || inferredAssignment(sprint, classic);
+  const assignment = availableAssignment(preferred, ssid);
+  roster[ssid] = {assignment, sprint, classic, storedFleet};
+  saveRoster();
 
   let row = document.querySelector(`tr[data-ssid="${CSS.escape(ssid)}"]`);
   if (!row) {
@@ -509,15 +180,15 @@ function showTarget(fields) {
   }
   row.cells[0].textContent = `${ssid} (${total} events; ${reserved} reserved${ready === "1" ? "; ready" : ""})`;
   row.cells[1].textContent = `Stored soak ${storedFleet || "—"}; Sprint ${sprint || "—"}; Classic ${classic || "—"}`;
-  row.cells[2].textContent = entry ? `${entry.label}: ${entry.assignment} at ${entry.frequency}` : "Waiting for prior fox";
-  row.cells[3].textContent = entry?.status === "ok" ? "Provision: OK" : "Connected";
+  const select = document.createElement("select");
+  for (const value of assignments) select.add(new Option(value, value, false, value === assignment));
+  const button = document.createElement("button");
+  button.textContent = "Assign and provision";
+  button.onclick = () => sendAssignment(ssid, select.value);
+  row.cells[2].replaceChildren(select, button);
+  row.cells[3].textContent = "Connected";
   note(`Target connected: ${ssid}.`);
-  if (mode === "PROVISION" && entry?.status !== "ok") sendAssignment(entry);
-  else if (mode === "PROVISION" && !entry && activeProvisionSsid && activeProvisionSsid !== ssid) {
-    row.cells[3].textContent = `Power off this fox; ${activeProvisionSsid} has not completed.`;
-    row.cells[3].className = "error";
-    note(`${ssid} was not assigned because ${activeProvisionSsid} has not completed.`, "error");
-  }
+  if (mode === "PROVISION" && byId("automaticAssignment").checked && assignment) sendAssignment(ssid, assignment);
 }
 function showResult(fields) {
   const [, ssid, operation, outcome, ...details] = fields;
@@ -536,20 +207,6 @@ function showResult(fields) {
     row.cells[3].textContent = `${operation}: ${outcome}${details.length ? ` — ${details.join(", ")}` : ""}`;
     row.cells[3].className = outcome === "OK" ? "ok" : "error";
   }
-  if (operation === "PROVISION") {
-    const entry = provisioningState.entries.find(candidate => candidate.ssid === ssid);
-    if (entry) {
-      assignmentsSent.delete(ssid);
-      entry.status = outcome === "OK" ? "ok" : "error";
-      activeProvisionSsid = outcome === "OK" ? "" : ssid;
-      saveProvisioningState();
-      updateNextAssignment();
-      if (outcome === "OK" && completedProvisionCount() === provisioningPlan.length) {
-        note("All ten foxes are provisioned. Target provisioning is now disarmed.", "ok");
-        setMode("OFF");
-      }
-    }
-  }
   note(`${ssid}: ${operation} ${outcome}${details.length ? ` — ${details.join(", ")}` : ""}`, outcome === "OK" ? "ok" : "error");
 }
 function connectSocket() {
@@ -557,12 +214,6 @@ function connectSocket() {
   socket.onopen = () => { note("Fleet Soak control connection opened.", "ok"); if (mode !== "OFF") socket.send(`FLEET_SOAK_MODE,${mode}`); };
   socket.onmessage = event => {
     const fields = String(event.data).split(",");
-    if (fields[0] === "SYNC" && masterClockSync) {
-      const reportedEpoch = Number(fields[1]);
-      if (Number.isFinite(reportedEpoch) && Math.abs(reportedEpoch - masterClockSync.expectedEpoch) <= 2) {
-        masterClockSync.resolve();
-      }
-    }
     if (fields[0] === "FLEET_SOAK_INFO") showTarget(fields);
     if (fields[0] === "FLEET_SOAK_RESULT") showResult(fields);
   };
@@ -583,18 +234,7 @@ async function cleanMaster() {
   } catch (error) { note(`Master cleanup failed: ${error.message}`, "error"); }
 }
 
-function updateSchedulePreview() {
-  const epoch = new Date(byId("scheduleStart").value).getTime();
-  if (!Number.isFinite(epoch)) return;
-  const finish = new Date(epoch + 281 * 60000);
-  byId("scheduleStatus").textContent =
-    `Planned run: ${new Date(epoch).toLocaleString()} through ${finish.toLocaleString()}.`;
-  byId("scheduleStatus").className = epoch < Date.now() + 30 * 60000 ? "error" : "muted";
-}
-
-byId("scheduleStart").value = localDateTimeValue(suggestedStartEpoch());
-byId("scheduleStart").onchange = updateSchedulePreview;
-byId("prepareRun").onclick = prepareRun;
+byId("installSuite").onclick = installSuite;
 byId("cleanMaster").onclick = cleanMaster;
 byId("armProvision").onclick = () => setMode("PROVISION");
 byId("armCleanup").onclick = async () => {
@@ -602,8 +242,6 @@ byId("armCleanup").onclick = async () => {
   await setMode("CLEANUP");
 };
 byId("disarm").onclick = () => setMode("OFF");
-updateSchedulePreview();
-updateNextAssignment();
 connectSocket();
 refreshStatus();
 setInterval(() => { if (socket?.readyState === WebSocket.OPEN) socket.send("ALIVE"); }, 5000);
