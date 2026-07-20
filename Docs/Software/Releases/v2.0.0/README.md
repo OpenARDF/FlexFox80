@@ -1,12 +1,16 @@
 # FlexFox80 v2.0.0 Release Record
 
-**Status:** Release preparation approved; final archive verification pending
+**Status:** Released and independently verified
 
 **Hardware:** FlexFox Ver 2.1 (Mar 2022) only
 
 **Embedded versions:** AVR `0.210`, ESP `2.27`, resident AVR bootloader `BL0.3`
 
 **Candidate source commit:** `6976f80e908526ccbbec44a19e897f72d82ac887`
+
+**Tagged release commit:** `b3a05fee2dcf47d2ec6b99e92b4b0d5fc36d5556`
+
+**GitHub release:** <https://github.com/OpenARDF/FlexFox80/releases/tag/v2.0.0>
 
 ## Release basis
 

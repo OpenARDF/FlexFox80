@@ -118,26 +118,26 @@
     {
       "id": "annotated-tag",
       "description": "Create and push an annotated release tag pointing to the verified release commit.",
-      "status": "pending",
-      "evidence": ""
+      "status": "done",
+      "evidence": "Annotated tag v2.0.0 was created and pushed on 2026-07-20. Tag object 9d2117c2db893ff2a7170f39c11b4f5c47065e77 peels to verified main commit b3a05fee2dcf47d2ec6b99e92b4b0d5fc36d5556, exactly matching the package manifest."
     },
     {
       "id": "release-record-created",
       "description": "Create a durable maintainer release record with the approved notes and verification summary.",
-      "status": "pending",
-      "evidence": ""
+      "status": "done",
+      "evidence": "The stable, non-draft, non-prerelease GitHub release FlexFox80 v2.0.0 was published at https://github.com/OpenARDF/FlexFox80/releases/tag/v2.0.0 on 2026-07-20 with the approved maintainer notes."
     },
     {
       "id": "release-assets-archived",
       "description": "Store the validated release ZIP and individually required firmware assets in the designated durable archive.",
-      "status": "pending",
-      "evidence": ""
+      "status": "done",
+      "evidence": "GitHub contains the validated ZIP, AVR 0.210 HEX, ESP 2.27 sketch BIN, factory/recovery LittleFS BIN, release manifest, and checksum list. GitHub-reported sizes and SHA-256 digests match the local validated set."
     },
     {
       "id": "archived-release-verified",
       "description": "Copy and independently verify the archived assets, hashes, release record, and tag target.",
-      "status": "pending",
-      "evidence": ""
+      "status": "done",
+      "evidence": "Docs/Software/Evidence/V2_0_0_GITHUB_RELEASE_VERIFICATION_2026-07-20.md records a fresh GitHub download, byte-for-byte asset comparisons, ZIP/integrity/hash/manifest checks, AVR parsing, ESP checksum validation, exact LittleFS inventory, and equality of manifest and peeled annotated-tag commits."
     }
   ]
 }
