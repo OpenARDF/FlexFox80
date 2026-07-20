@@ -833,7 +833,8 @@ if (
   !espMain.includes('g_fsUploadError = "Could not reclaim an interrupted upload file"') ||
   espMain.split("firmwareUpdateKeepAvrAwake();").length - 1 < 8 ||
   !espMain.includes("LittleFS.rename(g_fsUploadStagingPath, g_fsUploadTargetPath)") ||
-  !espMain.includes("LittleFS.rename(g_fsUploadBackupPath, g_fsUploadTargetPath)")
+  !espMain.includes("LittleFS.rename(g_fsUploadBackupPath, g_fsUploadTargetPath)") ||
+  !espMain.includes('g_http_server.sendHeader("Connection", "close");\n  if (g_fsUploadSucceeded)')
 ) {
   process.stderr.write(
     "Firmware contract check failed: LittleFS uploads must stage, validate, activate, and recover the prior live file\n",
