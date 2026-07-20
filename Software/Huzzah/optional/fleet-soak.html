@@ -37,8 +37,6 @@
     </p>
     <p id="scheduleStatus" class="muted">Choose a start at least 30 minutes in the future.</p>
     <button id="cleanMaster" class="danger">Remove reserved events from master</button>
-    <button id="abortRun" class="danger" disabled>Abort Fleet Soak</button>
-    <p id="abortStatus" class="muted">Abort is available after a soak run has been prepared.</p>
     <p class="muted">The master generates and validates the twelve reserved events from this single start time. The full sequence lasts 4 hours 41 minutes.</p>
   </section>
 
@@ -56,13 +54,6 @@
       <thead><tr><th>Target</th><th>Existing assignment evidence</th><th>Soak assignment</th><th>Result</th></tr></thead>
       <tbody id="targets"></tbody>
     </table>
-  </section>
-
-  <section>
-    <h2>3. Remove this optional page</h2>
-    <p id="selfRemovalStatus" class="muted">Self-removal is locked until master and target cleanup are complete.</p>
-    <button id="removeSelf" class="danger" disabled>Delete Fleet Soak page from master</button>
-    <p class="muted">This removes only <code>/fleet-soak.html</code>. Retained assignment <code>.me</code> files are not removed.</p>
   </section>
 
   <section>
@@ -305,13 +296,10 @@ const provisioningPlan = [
 const provisioningStateKey = "flexfoxFleetSoakProvisioningV2";
 let provisioningState = loadProvisioningState();
 const assignmentsSent = new Set();
-const abortCommandsSent = new Set();
 let activeProvisionSsid = provisioningState.entries.find(entry => entry.status !== "ok")?.ssid || "";
-let mode = provisioningState.abortStarted ? "ABORT" : "OFF";
+let mode = "OFF";
 let socket;
 let masterClockSync;
-let masterReservedEventCount = null;
-let masterOperationActive = true;
 
 const byId = id => document.getElementById(id);
 function note(message, className = "") {
@@ -327,98 +315,24 @@ function loadProvisioningState() {
   } catch (error) {
     console.warn("Unable to restore Fleet Soak provisioning order:", error);
   }
-  return {runStartUtc: "", entries: [], abortStarted: false, abortExpectedSsids: []};
+  return {runStartUtc: "", entries: []};
 }
 function saveProvisioningState() {
   try { localStorage.setItem(provisioningStateKey, JSON.stringify(provisioningState)); }
   catch (error) { console.warn("Unable to retain Fleet Soak provisioning order:", error); }
 }
 function resetProvisioningState(runStartUtc) {
-  provisioningState = {runStartUtc, entries: [], abortStarted: false, abortExpectedSsids: []};
+  provisioningState = {runStartUtc, entries: []};
   activeProvisionSsid = "";
   assignmentsSent.clear();
-  abortCommandsSent.clear();
   saveProvisioningState();
   byId("targets").replaceChildren();
   byId("provisionConfirmation").textContent = "No fox has completed provisioning yet.";
   byId("provisionConfirmation").className = "confirmation muted";
-  byId("abortStatus").textContent = "Abort is available after a soak run has been prepared.";
-  byId("abortStatus").className = "muted";
   updateNextAssignment();
-  updateSelfRemovalControl();
 }
 function completedProvisionCount() {
   return provisioningState.entries.filter(entry => entry.status === "ok").length;
-}
-function cleanupProgress(state, normalTargetCount) {
-  const entries = Array.isArray(state.entries) ? state.entries : [];
-  if (state.abortStarted) {
-    const expectedSsids = Array.isArray(state.abortExpectedSsids) ? state.abortExpectedSsids : null;
-    const expected = new Set(expectedSsids || []);
-    const requiredEntries = expectedSsids ? entries.filter(entry => expected.has(entry.ssid)) : [];
-    const requirementKnown = Boolean(expectedSsids) && expected.size === expectedSsids.length &&
-      requiredEntries.length === expectedSsids.length;
-    return {
-      requiredEntries,
-      requiredCount: expectedSsids?.length ?? 0,
-      requirementKnown,
-      completedCount: requiredEntries.filter(entry => entry.cleanupStatus === "ok").length,
-      complete: requirementKnown && requiredEntries.every(entry => entry.cleanupStatus === "ok"),
-    };
-  }
-  const requirementKnown = entries.length === normalTargetCount &&
-    entries.every(entry => entry.status === "ok");
-  return {
-    requiredEntries: entries,
-    requiredCount: normalTargetCount,
-    requirementKnown,
-    completedCount: entries.filter(entry => entry.cleanupStatus === "ok").length,
-    complete: requirementKnown && entries.every(entry => entry.cleanupStatus === "ok"),
-  };
-}
-function currentCleanupProgress() {
-  return cleanupProgress(provisioningState, provisioningPlan.length);
-}
-function allTargetCleanupIsConfirmed() {
-  return currentCleanupProgress().complete;
-}
-function updateSelfRemovalControl() {
-  const progress = currentCleanupProgress();
-  const cleanupCount = progress.completedCount;
-  const requiredEntries = progress.requiredEntries;
-  const requiredCount = progress.requiredCount;
-  const rosterIsComplete = progress.requirementKnown;
-  const masterIsClean = masterReservedEventCount === 0;
-  const armed = rosterIsComplete && allTargetCleanupIsConfirmed() && masterIsClean && !masterOperationActive;
-  const button = byId("removeSelf");
-  button.disabled = !armed;
-  if (provisioningState.abortStarted) {
-    const nextAbort = requiredEntries.find(entry => entry.cleanupStatus !== "ok");
-    byId("abortStatus").textContent = nextAbort
-      ? `TURN ON FOR ABORT: ${nextAbort.label.toUpperCase()} — ${nextAbort.ssid}. Keep it on until abort is confirmed.`
-      : "ABORT COMPLETE — every required target has confirmed AVR suspension and reserved-file removal.";
-    byId("abortStatus").className = nextAbort ? "error" : "ok";
-  }
-  if (!rosterIsComplete) {
-    byId("selfRemovalStatus").textContent =
-      "Self-removal is locked: the target cleanup roster is incomplete.";
-    byId("selfRemovalStatus").className = "muted";
-  } else if (cleanupCount < requiredCount) {
-    byId("selfRemovalStatus").textContent =
-      `${provisioningState.abortStarted ? "Target abort" : "Target cleanup"}: ${cleanupCount} of ${requiredCount} foxes confirmed. Complete every target before removing this page.`;
-    byId("selfRemovalStatus").className = "muted";
-  } else if (!masterIsClean) {
-    byId("selfRemovalStatus").textContent =
-      "All required target cleanups are confirmed. Remove the reserved events from the master to arm self-removal.";
-    byId("selfRemovalStatus").className = "muted";
-  } else if (masterOperationActive) {
-    byId("selfRemovalStatus").textContent = "Cleanup is complete; waiting for the current master operation to finish.";
-    byId("selfRemovalStatus").className = "muted";
-  } else {
-    byId("selfRemovalStatus").textContent =
-      `${provisioningState.abortStarted ? "ABORT" : "CLEANUP"} COMPLETE — all required foxes and the master are clean. Page self-removal is armed.`;
-    byId("selfRemovalStatus").className = "ok";
-  }
 }
 function updateNextAssignment() {
   if (!provisioningState.runStartUtc) {
@@ -468,31 +382,8 @@ async function refreshStatus() {
       ? `Ready: ${status.reservedEventCount} reserved and ${status.ordinaryEventCount} ordinary events; ${status.filesystemFreeBytes ?? "unknown"} bytes free.`
       : `Not active: ${status.reservedEventCount} of 12 reserved events are installed; ${status.ordinaryEventCount} ordinary events; capacity ${status.eventCapacity}.`;
     byId("masterStatus").className = status.suiteReady ? "ok" : "";
-    masterReservedEventCount = status.reservedEventCount;
-    masterOperationActive = status.operationActive;
-    const reportedModes = ["OFF", "PROVISION", "CLEANUP", "ABORT"];
-    if (reportedModes[status.mode]) mode = reportedModes[status.mode];
-    byId("prepareRun").disabled = provisioningState.abortStarted || status.operationActive;
-    byId("cleanMaster").disabled = provisioningState.abortStarted || status.operationActive;
-    byId("armProvision").disabled = provisioningState.abortStarted || !status.suiteReady || status.operationActive;
-    byId("armCleanup").disabled = provisioningState.abortStarted || status.operationActive;
-    if (provisioningState.abortStarted) {
-      const abortComplete = allTargetCleanupIsConfirmed();
-      byId("abortRun").textContent = abortComplete ? "Abort complete" :
-        (mode === "ABORT" ? "Target abort armed" : "Re-arm target abort");
-      byId("abortRun").disabled = abortComplete || mode === "ABORT" || status.operationActive;
-    } else {
-      byId("abortRun").textContent = "Abort Fleet Soak";
-      byId("abortRun").disabled = status.operationActive || !provisioningState.runStartUtc;
-    }
-    updateSelfRemovalControl();
+    byId("armProvision").disabled = !status.suiteReady || status.operationActive;
   } catch (error) {
-    masterReservedEventCount = null;
-    masterOperationActive = true;
-    for (const id of ["prepareRun", "cleanMaster", "abortRun", "armProvision", "armCleanup"]) {
-      byId(id).disabled = true;
-    }
-    updateSelfRemovalControl();
     byId("masterStatus").textContent = `Could not read master status: ${error.message}`;
     byId("masterStatus").className = "error";
   }
@@ -603,13 +494,6 @@ function sendAssignment(entry) {
   socket.send(`FLEET_SOAK_ASSIGN,${entry.ssid},${entry.assignment}`);
   note(`${entry.ssid} is ${entry.label} (${entry.assignment}, ${entry.frequency}); provisioning started.`);
 }
-function sendAbort(entry) {
-  if (!socket || socket.readyState !== WebSocket.OPEN || mode !== "ABORT" ||
-      entry.cleanupStatus === "ok" || abortCommandsSent.has(entry.ssid)) return;
-  abortCommandsSent.add(entry.ssid);
-  socket.send(`FLEET_SOAK_ABORT,${entry.ssid}`);
-  note(`${entry.ssid} is authorized for bounded AVR suspension and reserved-file removal.`);
-}
 function provisioningEntryForTarget(ssid, sprint, classic, storedFleet) {
   let entry = provisioningState.entries.find(candidate => candidate.ssid === ssid);
   if (entry) {
@@ -636,7 +520,7 @@ function provisioningEntryForTarget(ssid, sprint, classic, storedFleet) {
 }
 function showTarget(fields) {
   const [, ssid, protocol, total, reserved, ready, sprint = "", classic = "", storedFleet = ""] = fields;
-  if (protocol !== "2") return;
+  if (protocol !== "1") return;
   const entry = provisioningEntryForTarget(ssid, sprint, classic, storedFleet);
 
   let row = document.querySelector(`tr[data-ssid="${CSS.escape(ssid)}"]`);
@@ -656,15 +540,6 @@ function showTarget(fields) {
     row.cells[3].textContent = `Power off this fox; ${activeProvisionSsid} has not completed.`;
     row.cells[3].className = "error";
     note(`${ssid} was not assigned because ${activeProvisionSsid} has not completed.`, "error");
-  } else if (mode === "ABORT") {
-    const expected = new Set(provisioningState.abortExpectedSsids || []);
-    if (entry && expected.has(ssid)) {
-      sendAbort(entry);
-    } else {
-      row.cells[3].textContent = "Not in abort roster; no stop or deletion command sent.";
-      row.cells[3].className = "error";
-      note(`${ssid} was not touched because it is not in this run's abort roster.`, "error");
-    }
   }
 }
 function showResult(fields) {
@@ -707,24 +582,6 @@ function showResult(fields) {
       }
     }
   }
-  if (operation === "CLEANUP" || operation === "ABORT") {
-    const entry = provisioningState.entries.find(candidate => candidate.ssid === ssid);
-    const expected = !provisioningState.abortStarted ||
-      (provisioningState.abortExpectedSsids || []).includes(ssid);
-    if (entry && expected) {
-      abortCommandsSent.delete(ssid);
-      entry.cleanupStatus = outcome === "OK" ? "ok" : "error";
-      saveProvisioningState();
-      updateSelfRemovalControl();
-      note(outcome === "OK"
-        ? `${entry.label} ${operation.toLowerCase()} confirmed; this fox can be turned off.`
-        : `${entry.label} ${operation.toLowerCase()} failed; keep this fox on and retry.`, outcome === "OK" ? "ok" : "error");
-      if (operation === "ABORT" && outcome === "OK" && allTargetCleanupIsConfirmed()) {
-        note("Fleet Soak abort is complete on every required target.", "ok");
-        setMode("OFF");
-      }
-    }
-  }
   note(`${ssid}: ${operation} ${outcome}${details.length ? ` — ${details.join(", ")}` : ""}`, outcome === "OK" ? "ok" : "error");
 }
 function connectSocket() {
@@ -741,23 +598,14 @@ function connectSocket() {
     if (fields[0] === "FLEET_SOAK_INFO") showTarget(fields);
     if (fields[0] === "FLEET_SOAK_RESULT") showResult(fields);
   };
-  socket.onclose = () => {
-    abortCommandsSent.clear();
-    setModeText("Control connection lost; reconnecting…", "error");
-    setTimeout(connectSocket, 1500);
-  };
+  socket.onclose = () => { setModeText("Control connection lost; reconnecting…", "error"); setTimeout(connectSocket, 1500); };
 }
 async function setMode(nextMode) {
   mode = nextMode;
   if (socket?.readyState === WebSocket.OPEN) socket.send(`FLEET_SOAK_MODE,${mode}`);
   setModeText(mode === "OFF" ? "Fleet Soak target operation is disarmed." : `Fleet Soak ${mode.toLowerCase()} mode is armed. Connect one target at a time.`, mode === "OFF" ? "" : "ok");
-  if (provisioningState.abortStarted && !allTargetCleanupIsConfirmed()) {
-    byId("abortRun").textContent = mode === "ABORT" ? "Target abort armed" : "Re-arm target abort";
-    byId("abortRun").disabled = mode === "ABORT";
-  }
 }
 async function cleanMaster() {
-  if (provisioningState.abortStarted) return;
   if (!confirm("Remove only the twelve reserved Fleet Soak event files from this master? Assignment .me files will be retained.")) return;
   try {
     await setMode("OFF");
@@ -765,71 +613,6 @@ async function cleanMaster() {
     note(await responseText(await fetch("/fleet-soak/cleanup", {method: "POST", body})), "ok");
     await refreshStatus();
   } catch (error) { note(`Master cleanup failed: ${error.message}`, "error"); }
-}
-
-async function abortFleetSoak() {
-  if (provisioningState.abortStarted) {
-    if (!allTargetCleanupIsConfirmed()) await setMode("ABORT");
-    return;
-  }
-  if (!provisioningState.runStartUtc) return;
-  if (!confirm("ABORT FLEET SOAK? This immediately suspends the master AVR, removes only reserved soak events, and then requires each listed fox to be powered for confirmed abort cleanup.")) return;
-  const button = byId("abortRun");
-  button.disabled = true;
-  try {
-    await setMode("OFF");
-    const body = new URLSearchParams({confirm: "ABORT_RESERVED_SUITE"});
-    const result = await responseText(await fetch("/fleet-soak/abort", {method: "POST", body}));
-    provisioningState.abortStarted = true;
-    provisioningState.abortExpectedSsids = provisioningState.entries.map(entry => entry.ssid);
-    for (const entry of provisioningState.entries) entry.cleanupStatus = "pending";
-    abortCommandsSent.clear();
-    saveProvisioningState();
-    mode = "ABORT";
-    byId("abortStatus").textContent =
-      `MASTER ABORTED — ${provisioningState.abortExpectedSsids.length} target foxes remain. Power each displayed roster fox one at a time.`;
-    byId("abortStatus").className = "ok";
-    setModeText("Fleet Soak abort mode is armed. Connect one rostered target at a time.", "ok");
-    note(result, "ok");
-    await refreshStatus();
-    if (allTargetCleanupIsConfirmed()) {
-      await setMode("OFF");
-      updateSelfRemovalControl();
-    }
-  } catch (error) {
-    byId("abortStatus").textContent = `Fleet Soak was not aborted: ${error.message}`;
-    byId("abortStatus").className = "error";
-    button.disabled = false;
-    note(`Fleet Soak abort failed safely: ${error.message}`, "error");
-  }
-}
-
-async function removeFleetSoakPage() {
-  if (!allTargetCleanupIsConfirmed() || masterReservedEventCount !== 0 || masterOperationActive) return;
-  if (!confirm("Delete only /fleet-soak.html from this master? Fleet Soak controls will disappear, while assignment .me files remain.")) return;
-  const button = byId("removeSelf");
-  button.disabled = true;
-  try {
-    const statusResponse = await fetch(`/fleet-soak/status?cache=${Date.now()}`, {cache: "no-store"});
-    const status = await statusResponse.json();
-    if (!statusResponse.ok || status.reservedEventCount !== 0 || status.operationActive) {
-      throw new Error("Master cleanup is no longer complete");
-    }
-    await setMode("OFF");
-    // Reuse the existing file manager, but expose no user-selectable deletion path here.
-    const body = new URLSearchParams({name: "/fleet-soak.html"});
-    const result = await responseText(await fetch("/delete", {method: "POST", body}));
-    if (!result.includes("File deleted successfully!")) throw new Error("The master did not confirm page deletion");
-    byId("selfRemovalStatus").textContent = "Fleet Soak page deleted successfully. Returning to the master home page…";
-    byId("selfRemovalStatus").className = "ok";
-    note("Removed only /fleet-soak.html from the master.", "ok");
-    setTimeout(() => location.replace("/"), 1500);
-  } catch (error) {
-    byId("selfRemovalStatus").textContent = `Fleet Soak page was not removed: ${error.message}`;
-    byId("selfRemovalStatus").className = "error";
-    updateSelfRemovalControl();
-    note(`Page self-removal failed safely: ${error.message}`, "error");
-  }
 }
 
 function updateSchedulePreview() {
@@ -845,8 +628,6 @@ byId("scheduleStart").value = localDateTimeValue(suggestedStartEpoch());
 byId("scheduleStart").onchange = updateSchedulePreview;
 byId("prepareRun").onclick = prepareRun;
 byId("cleanMaster").onclick = cleanMaster;
-byId("abortRun").onclick = abortFleetSoak;
-byId("removeSelf").onclick = removeFleetSoakPage;
 byId("armProvision").onclick = () => setMode("PROVISION");
 byId("armCleanup").onclick = async () => {
   await refreshStatus();
@@ -855,7 +636,6 @@ byId("armCleanup").onclick = async () => {
 byId("disarm").onclick = () => setMode("OFF");
 updateSchedulePreview();
 updateNextAssignment();
-updateSelfRemovalControl();
 connectSocket();
 refreshStatus();
 setInterval(() => { if (socket?.readyState === WebSocket.OPEN) socket.send("ALIVE"); }, 5000);

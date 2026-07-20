@@ -33,7 +33,7 @@
 
 #include <stddef.h>
 
-#define FLEET_SOAK_PROTOCOL_VERSION 2
+#define FLEET_SOAK_PROTOCOL_VERSION 1
 #define FLEET_SOAK_EVENT_COUNT 12
 #define FLEET_SOAK_PAGE_PATH "/fleet-soak.html"
 #define FLEET_SOAK_READY_PATH "/fleet-soak.ready"
@@ -44,8 +44,7 @@ enum FleetSoakMode
 {
   FLEET_SOAK_MODE_OFF = 0,
   FLEET_SOAK_MODE_PROVISION,
-  FLEET_SOAK_MODE_CLEANUP,
-  FLEET_SOAK_MODE_ABORT
+  FLEET_SOAK_MODE_CLEANUP
 };
 
 static const char *const FLEET_SOAK_EVENT_PATHS[FLEET_SOAK_EVENT_COUNT] = {
@@ -141,13 +140,6 @@ static inline int fleetSoakEventIndex(const char *path)
 static inline bool fleetSoakIsReservedEventPath(const char *path)
 {
   return fleetSoakEventIndex(path) >= 0;
-}
-
-static inline bool fleetSoakAbortMaySuspend(bool eventIsActive, const char *activeEventPath)
-{
-  /* An explicit abort may stop an idle target or an active reserved soak event,
-   * but must never suspend an ordinary event known to be active. */
-  return !eventIsActive || fleetSoakIsReservedEventPath(activeEventPath);
 }
 
 static inline bool fleetSoakAssignmentIsValid(const char *assignment)

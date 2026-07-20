@@ -19,8 +19,6 @@ assert.match(main, /fleetSoakStageReceivedEvent\(updatedFileName, path, &errorMe
 assert.match(main, /fleetSoakFinalizeStagedSuite\(g_slaveFleetSoakAssignment, &errorMessage\)/);
 assert.match(main, /fleetSoakCleanupReservedEvents\(&removedCount, &errorMessage\)/);
 assert.match(main, /targetOrdinaryEventCount \+ FLEET_SOAK_EVENT_COUNT <= MAXIMUM_NUMBER_OF_EVENTS/);
-assert.match(names, /#define FLEET_SOAK_PROTOCOL_VERSION 2/);
-assert.match(names, /FLEET_SOAK_MODE_ABORT/);
 
 const ownershipValidator = fleet.match(
   /bool eventHasOwnedLayout\([\s\S]*?(?=\nString readStoredAssignment)/,
@@ -39,35 +37,8 @@ const sessionHandler = main.match(
 )?.[1];
 assert.ok(sessionHandler, "target Fleet Soak session handler must remain present");
 assert.doesNotMatch(sessionHandler, /SLAVE_WAITING_FOR_FILES/, "assignment must not start transfer before clock sync finishes");
-assert.match(sessionHandler, /currentEventFileIsActive\(&activeEventName, &activeEventPath\)/,
-  "a target must identify an active event before accepting an abort");
-assert.match(sessionHandler, /!abortRequested \|\|[\s\S]*!fleetSoakAbortMaySuspend\(eventIsActive, activeEventPath\.c_str\(\)\)/,
-  "abort must refuse an active ordinary event");
-assert.match(sessionHandler, /g_slaveFleetSoakMode = FLEET_SOAK_MODE_ABORT/);
-
-const abortHandler = main.match(
-  /void handleFleetSoakAbort\(void\)([\s\S]*?)(?=\nstatic bool avrBootloaderIdentityIsCompatible)/,
-)?.[1];
-assert.ok(abortHandler, "master Fleet Soak abort handler must remain present");
-assert.match(abortHandler, /ABORT_RESERVED_SUITE/);
-assert.match(abortHandler, /!fleetSoakAbortMaySuspend\(eventIsActive, activeEventPath\.c_str\(\)\)/);
-assert.ok(
-  abortHandler.indexOf("suspendEventForFleetSoakAbort") < abortHandler.indexOf("fleetSoakCleanupReservedEvents"),
-  "master abort must confirm AVR suspension before removing reserved events",
-);
-
-const abortFinalizer = main.match(
-  /else if \(g_slaveFleetSoakMode == FLEET_SOAK_MODE_ABORT\)([\s\S]*?)(?=\n          else if)/,
-)?.[1];
-assert.ok(abortFinalizer, "target Fleet Soak abort finalizer must remain present");
-assert.ok(
-  abortFinalizer.indexOf("suspendEventForFleetSoakAbort") < abortFinalizer.indexOf("fleetSoakCleanupReservedEvents"),
-  "target abort must confirm AVR suspension before removing reserved events",
-);
-assert.match(main, /SOCK_COMMAND_FLEET_SOAK_ABORT/,
-  "the browser must explicitly authorize the exact target SSID before abort");
-assert.match(main, /String\(LB_MESSAGE_SUSPEND_EVENT\), "Fleet Soak AVR suspension"/,
-  "abort must reuse the acknowledged AVR operator-stop command");
+assert.match(sessionHandler, /currentEventFileIsActive\(&activeEventName\)/,
+  "a target with an active event must reject Fleet Soak provisioning and cleanup");
 
 const cleanup = fleet.match(
   /bool fleetSoakCleanupReservedEvents\([\s\S]*?\n\}/,
