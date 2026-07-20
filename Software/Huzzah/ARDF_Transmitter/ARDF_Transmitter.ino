@@ -6854,9 +6854,9 @@ void handleFileUpload()
 void handleFileUploadResult()
 {
   firmwareUpdateReleaseAvrLease();
-  /* Browsers otherwise retain each successful multipart connection. A batch
-   * such as the twelve-file Fleet Soak suite can exhaust this small server's
-   * client slots even though every individual file committed successfully. */
+  /* Browsers otherwise retain each successful multipart connection. A
+   * multi-file batch can exhaust this small server's client slots even though
+   * every individual file committed successfully. */
   g_http_server.sendHeader("Connection", "close");
   if (g_fsUploadSucceeded)
   {
