@@ -106,8 +106,8 @@
     {
       "id": "release-branch-verified",
       "description": "Verify the clean integrated main commit and reproduce the selected release artifacts from it.",
-      "status": "pending",
-      "evidence": "Clean-main reproduction follows integration."
+      "status": "done",
+      "evidence": "Docs/Software/Evidence/V2_0_0_MAIN_RELEASE_REPRODUCTION_2026-07-20.md records clean fast-forward integration into main at 558c841, a passing full repository check, and two warning-free byte-identical AVR and ESP/LittleFS builds matching the qualified candidate hashes."
     },
     {
       "id": "release-approved",
