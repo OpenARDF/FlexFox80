@@ -66,6 +66,8 @@ const rosterKey = "flexfoxFleetSoakRosterV1";
 const roster = JSON.parse(localStorage.getItem(rosterKey) || "{}");
 let mode = "OFF";
 let socket;
+let socketHeartbeatTimer;
+let socketReconnectTimer;
 
 const byId = id => document.getElementById(id);
 function note(message, className = "") {
@@ -210,14 +212,37 @@ function showResult(fields) {
   note(`${ssid}: ${operation} ${outcome}${details.length ? ` — ${details.join(", ")}` : ""}`, outcome === "OK" ? "ok" : "error");
 }
 function connectSocket() {
-  socket = new WebSocket(`ws://${location.hostname}:81/`);
-  socket.onopen = () => { note("Fleet Soak control connection opened.", "ok"); if (mode !== "OFF") socket.send(`FLEET_SOAK_MODE,${mode}`); };
-  socket.onmessage = event => {
+  /* Normal device access uses ports 80/81. The established host-side Moto
+   * relay uses 18080/18081 so hardware qualification can drive this exact page. */
+  const websocketPort = location.hostname === "127.0.0.1" && location.port === "18080"
+    ? "18081" : "81";
+  const candidate = new WebSocket(`ws://${location.hostname}:${websocketPort}/`);
+  socket = candidate;
+  candidate.onopen = () => {
+    if (socket !== candidate) return candidate.close();
+    note("Fleet Soak control connection opened.", "ok");
+    if (mode !== "OFF") candidate.send(`FLEET_SOAK_MODE,${mode}`);
+    candidate.send("!&");
+    if (socketHeartbeatTimer) clearInterval(socketHeartbeatTimer);
+    socketHeartbeatTimer = setInterval(() => {
+      if (socket === candidate && candidate.readyState === WebSocket.OPEN) candidate.send("!&");
+    }, 2000);
+  };
+  candidate.onmessage = event => {
+    if (socket !== candidate) return;
     const fields = String(event.data).split(",");
     if (fields[0] === "FLEET_SOAK_INFO") showTarget(fields);
     if (fields[0] === "FLEET_SOAK_RESULT") showResult(fields);
   };
-  socket.onclose = () => { setModeText("Control connection lost; reconnecting…", "error"); setTimeout(connectSocket, 1500); };
+  candidate.onclose = () => {
+    if (socket !== candidate) return;
+    socket = undefined;
+    if (socketHeartbeatTimer) clearInterval(socketHeartbeatTimer);
+    socketHeartbeatTimer = undefined;
+    setModeText("Control connection lost; reconnecting…", "error");
+    if (socketReconnectTimer) clearTimeout(socketReconnectTimer);
+    socketReconnectTimer = setTimeout(() => { socketReconnectTimer = undefined; connectSocket(); }, 1500);
+  };
 }
 async function setMode(nextMode) {
   mode = nextMode;

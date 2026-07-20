@@ -14,6 +14,11 @@ assert.equal(existsSync(baselinePagePath), false, "Fleet Soak must remain absent
 assert.match(source, /const reservedNames = Array\.from\(\{length: 12\}/);
 assert.match(source, /FLEET_SOAK_MODE,\$\{mode\}/);
 assert.match(source, /FLEET_SOAK_ASSIGN,\$\{ssid\},\$\{assignment\}/);
+assert.match(source, /location\.hostname === "127\.0\.0\.1" && location\.port === "18080"/);
+assert.match(source, /\? "18081" : "81"/);
+assert.match(source, /candidate\.send\("!&"\)/);
+assert.match(source, /}, 2000\);/);
+assert.match(source, /if \(socket !== candidate\) return/);
 assert.match(source, /\/fleet-soak\/activate/);
 assert.match(source, /\/fleet-soak\/cleanup/);
 assert.doesNotMatch(source, /CLONE_PRUNE_EVENTS/);
