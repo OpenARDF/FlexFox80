@@ -33,6 +33,7 @@ test:
     node ./Tests/Host/esp_firmware_update_page_test.mjs
     node ./Tests/Host/wifi_avr_update_identity_test.mjs
     node ./Tests/Host/flexfox_http_test.mjs
+    node ./Tests/Host/flexfox_adb_relay_test.mjs
     node ./Tests/Host/events_html_test.mjs
     node ./Tests/Host/fleet_soak_event_generator_test.mjs
     node ./Tests/Host/fleet_soak_page_test.mjs
@@ -90,6 +91,20 @@ avr-probe:
 # Probe the running FlexFox through its read-only WiFi/WebSocket path.
 wifi-probe:
     node ./scripts/probe-flexfox-wifi.mjs
+
+# Connect a USB-debuggable Android device to one exact FlexFox and expose localhost-only HTTP/WebSocket relays.
+wifi-adb-relay ssid:
+    FLEXFOX_SSID="{{ssid}}" node ./scripts/prepare-flexfox-adb-relay.mjs
+
+# Prepare the preferred Android ADB relay and run the read-only identity/telemetry probe through it.
+wifi-adb-probe ssid:
+    FLEXFOX_SSID="{{ssid}}" node ./scripts/prepare-flexfox-adb-relay.mjs
+    FLEXFOX_URL=http://127.0.0.1:18080/ FLEXFOX_WEBSOCKET_URL=ws://127.0.0.1:18081/ just wifi-probe
+
+# Prepare the preferred Android ADB relay and hold the read-only WebSocket heartbeat through it.
+wifi-adb-monitor ssid:
+    FLEXFOX_SSID="{{ssid}}" node ./scripts/prepare-flexfox-adb-relay.mjs
+    FLEXFOX_URL=http://127.0.0.1:18080/ FLEXFOX_WEBSOCKET_URL=ws://127.0.0.1:18081/ just wifi-monitor
 
 # Keep the FlexFox WiFi module active with the read-only WebSocket heartbeat.
 wifi-monitor:

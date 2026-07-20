@@ -23,6 +23,12 @@ import {
   fetchWithTimeout,
 } from "./lib/flexfox-http.mjs";
 import {
+  createFlexFoxAdbRelay,
+  defaultFlexFoxRelayHttpPort,
+  defaultFlexFoxRelayWebSocketPort,
+  parseFlexFoxRelayPort,
+} from "./lib/flexfox-adb-relay.mjs";
+import {
   espStatusMatchesArtifact,
   expectedMasterValue,
   fleetWebFiles,
@@ -40,16 +46,14 @@ const dryRun = process.env.FLEXFOX_FLEET_UPGRADE_DRY_RUN === "1";
 const wirelessOnly = process.env.FLEXFOX_FLEET_WIRELESS_ONLY === "1";
 const unitId = normalizeFleetUnitId(process.env.FLEXFOX_UNIT_ID);
 const ssid = normalizeFlexFoxSsid(process.env.FLEXFOX_SSID);
-const flexFoxHost = "73.73.73.73";
-const localHttpPort = parsePort(process.env.FLEXFOX_RELAY_HTTP_PORT ?? "18080", "HTTP relay");
-const localWebSocketPort = parsePort(
-  process.env.FLEXFOX_RELAY_WEBSOCKET_PORT ?? "18081",
+const localHttpPort = parseFlexFoxRelayPort(
+  process.env.FLEXFOX_RELAY_HTTP_PORT ?? defaultFlexFoxRelayHttpPort,
+  "HTTP relay",
+);
+const localWebSocketPort = parseFlexFoxRelayPort(
+  process.env.FLEXFOX_RELAY_WEBSOCKET_PORT ?? defaultFlexFoxRelayWebSocketPort,
   "WebSocket relay",
 );
-const deviceHttpRelayPort = localHttpPort;
-const deviceWebSocketRelayPort = localWebSocketPort;
-const httpUrl = `http://127.0.0.1:${localHttpPort}/`;
-const webSocketUrl = `ws://127.0.0.1:${localWebSocketPort}/`;
 const startedAt = new Date();
 const stamp = startedAt.toISOString().replaceAll(":", "-");
 
@@ -89,14 +93,6 @@ const summary = {
 
 function fail(message) {
   throw new Error(`FlexFox fleet upgrade: ${message}`);
-}
-
-function parsePort(value, label) {
-  const port = Number.parseInt(value, 10);
-  if (!Number.isInteger(port) || port < 1024 || port > 65535) {
-    fail(`${label} port must be an integer from 1024 through 65535`);
-  }
-  return port;
 }
 
 function recordSummary() {
@@ -199,6 +195,20 @@ async function adb(args, options = {}) {
   });
 }
 
+const {
+  httpUrl,
+  webSocketUrl,
+  readWifiStatus,
+  requestWifiAssociation,
+  waitForWifiAssociation,
+  prepareRelays,
+} = createFlexFoxAdbRelay({
+  adb,
+  expectedSsid: ssid,
+  httpPort: localHttpPort,
+  webSocketPort: localWebSocketPort,
+});
+
 async function selectMoto() {
   const devicesResult = await runProcess(adbPath, ["devices", "-l"], {
     echo: false,
@@ -207,60 +217,6 @@ async function selectMoto() {
   const devices = parseAdbDevices(devicesResult.stdout);
   adbSerial = selectAdbDevice(devices, process.env.FLEXFOX_ADB_SERIAL);
   log(`Moto ADB device: ${adbSerial}`);
-}
-
-async function readWifiStatus() {
-  const result = await adb(["shell", "cmd", "wifi", "status"], { allowFailure: true });
-  return result.stdout;
-}
-
-async function requestWifiAssociation() {
-  await adb(
-    ["shell", "cmd", "wifi", "connect-network", ssid, "open", "-r", "none"],
-    { allowFailure: true },
-  );
-}
-
-async function waitForWifiAssociation(timeoutMs = 90000) {
-  const deadline = Date.now() + timeoutMs;
-  let joinRequestedAt = 0;
-  while (Date.now() < deadline) {
-    const status = await readWifiStatus();
-    if (wifiStatusMatchesSsid(status, ssid)) return;
-    if (Date.now() - joinRequestedAt >= 3000) {
-      await requestWifiAssociation();
-      joinRequestedAt = Date.now();
-    }
-    await sleep(1000);
-  }
-  fail(`Moto did not associate with ${ssid} within ${Math.ceil(timeoutMs / 1000)} seconds`);
-}
-
-async function devicePortIsListening(port) {
-  const result = await adb(
-    ["shell", "toybox", "nc", "-z", "-w", "1", "127.0.0.1", String(port)],
-    { allowFailure: true, timeoutMs: 5000 },
-  );
-  return result.code === 0;
-}
-
-async function ensureDeviceRelay(devicePort, targetPort) {
-  if (await devicePortIsListening(devicePort)) return;
-  const relayCommand =
-    `toybox nc -s 127.0.0.1 -p ${devicePort} -L ` +
-    `toybox nc -w 8 ${flexFoxHost} ${targetPort} >/dev/null 2>&1 &`;
-  await adb(["shell", relayCommand], { timeoutMs: 5000 });
-  await sleep(250);
-  if (!(await devicePortIsListening(devicePort))) {
-    fail(`Moto relay did not start on device port ${devicePort}`);
-  }
-}
-
-async function prepareRelays() {
-  await ensureDeviceRelay(deviceHttpRelayPort, 80);
-  await ensureDeviceRelay(deviceWebSocketRelayPort, 81);
-  await adb(["forward", `tcp:${localHttpPort}`, `tcp:${deviceHttpRelayPort}`]);
-  await adb(["forward", `tcp:${localWebSocketPort}`, `tcp:${deviceWebSocketRelayPort}`]);
 }
 
 async function readFirmwareStatus(timeoutMs = 5000) {

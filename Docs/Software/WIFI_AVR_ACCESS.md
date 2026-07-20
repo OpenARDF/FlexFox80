@@ -298,10 +298,10 @@ The probe uses Node's built-in HTTP and WebSocket clients. It:
 
 It does not synchronize the clock, change settings, load or execute an event, key the transmitter, save EEPROM, shut off WiFi, or use raw pass-through.
 
-For an extended hardware session, keep DroidTether running and hold the safe WebSocket open:
+For an extended Android-assisted hardware session, prepare the preferred ADB relay and hold the safe WebSocket open:
 
 ```text
-just wifi-monitor
+just wifi-adb-monitor Tx_<unit-specific-eight-hex-characters>
 ```
 
 Monitor mode performs the same initial proof, then sends only `!&` every five seconds until interrupted with Ctrl-C. The ESP disconnects a WebSocket after approximately ten seconds without text traffic, so a 30-second heartbeat cannot preserve one continuous socket. Five seconds leaves margin for scheduling delay while reducing the built-in pages' two-second heartbeat rate. This resets the ESP WebSocket activity timer and allows the ESP/AVR keep-alive behavior to remain active while the Moto stays associated with the FlexFox AP.
@@ -390,9 +390,34 @@ The current bench unit is connected to a dummy load, but RF-active commands stil
 
 ## Mac networking
 
-The proven simultaneous-connectivity arrangement is:
+### Preferred Android ADB relay
 
-1. keep the Mac WiFi interface associated with ScharStar 2 so its normal default route and internet access remain unchanged;
+The default Android-assisted debugging path is the repository-owned ADB relay:
+
+```text
+just wifi-adb-probe Tx_<unit-specific-eight-hex-characters>
+just wifi-adb-monitor Tx_<unit-specific-eight-hex-characters>
+```
+
+Use `Tx_Master` when the target is intentionally advertising the master alias. The recipes require one authorized USB-debuggable Android device, command the Moto to join the complete expected SSID, and fail closed if the ADB device or SSID is ambiguous. USB tethering is not required.
+
+The shared relay helper starts two loopback-only `toybox nc -L` listeners on the Moto. Each accepted connection reaches only `73.73.73.73:80` or `73.73.73.73:81`; `adb forward` exposes those listeners to the Mac as `127.0.0.1:18080` and `127.0.0.1:18081`. The Mac keeps its existing WiFi, default route, DNS, and internet access. No RNDIS interface, `utun`, administrator prompt, or macOS route change is involved. The guarded fleet-upgrade workflow uses this same helper and automatically reassociates the exact target after an ESP restart.
+
+After `just wifi-adb-relay <ssid>`, other host tools can use:
+
+```text
+FLEXFOX_URL=http://127.0.0.1:18080/ \
+FLEXFOX_WEBSOCKET_URL=ws://127.0.0.1:18081/ \
+just wifi-probe
+```
+
+Rerun the relay recipe after an ADB-server restart, USB reconnection, phone reboot, or target change. Always require the subsequent probe to return the complete expected `SSID`, `MAC`, `SW_VERSIONS`, `MASTER`, temperature, and battery data before any state-changing operation.
+
+### DroidTether fallback
+
+DroidTether is retained only for an environment where ADB forwarding or Android `toybox nc -L` is unavailable. Its proven simultaneous-connectivity arrangement is:
+
+1. keep the Mac WiFi interface on its normal network so its default route and internet access remain unchanged;
 2. associate the Moto with the FlexFox `Tx_...` access point;
 3. connect the Moto to the Mac by USB and enable Moto USB tethering;
 4. start DroidTether with default routing disabled;
