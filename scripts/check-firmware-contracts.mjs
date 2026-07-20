@@ -542,6 +542,7 @@ if (
   !wifiAvrUpdater.includes("expectedSsidSuffix") ||
   !wifiAvrUpdater.includes("FLEXFOX_AVR_UPDATE_DRY_RUN") ||
   !wifiAvrUpdater.includes("FLEXFOX_EXPECTED_DEVICE_SSID") ||
+  !wifiAvrUpdater.includes("FLEXFOX_RECONNECT_SSID") ||
   !wifiAvrUpdater.includes("preflightDeviceSsid") ||
   !wifiAvrUpdater.includes("stagedDeviceSsid !== preflightDeviceSsid") ||
   !wifiAvrUpdater.includes("no image was staged") ||

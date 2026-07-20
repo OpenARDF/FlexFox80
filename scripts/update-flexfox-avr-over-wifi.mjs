@@ -40,6 +40,7 @@ const qualificationExternalPowerLoss = process.env.FLEXFOX_AVR_QUALIFICATION_EXT
 const qualificationAdbSerial = (process.env.FLEXFOX_AVR_QUALIFICATION_ADB_SERIAL || "").trim();
 const adbSerial = (process.env.FLEXFOX_ADB_SERIAL || qualificationAdbSerial).trim();
 const adbPath = process.env.FLEXFOX_ADB || "adb";
+const suppliedReconnectSsid = (process.env.FLEXFOX_RECONNECT_SSID || "").trim();
 const defaultVerifyTimeoutMs = 30 * 60 * 1000;
 const stageTimeoutMs = Number(process.env.FLEXFOX_AVR_STAGE_TIMEOUT_MS || 5 * 60 * 1000);
 const supportedBootloaderBauds = new Set([9600, 19200, 38400, 57600, 115200]);
@@ -123,6 +124,14 @@ if(adbSerial) {
     fail(`ADB device ${adbSerial} is unavailable`);
   }
 }
+if(suppliedReconnectSsid &&
+   suppliedReconnectSsid !== "Tx_Master" &&
+   !/^Tx_[0-9A-F]{8}$/.test(suppliedReconnectSsid)) {
+  fail("FLEXFOX_RECONNECT_SSID must be Tx_Master or an exact canonical device SSID");
+}
+if(suppliedReconnectSsid && !adbSerial) {
+  fail("FLEXFOX_RECONNECT_SSID requires FLEXFOX_ADB_SERIAL");
+}
 if(!dryRun && process.env.FLEXFOX_AVR_UPDATE_CONFIRM !== `UPDATE-AVR-${manifest.applicationVersion}`) {
   fail(`set FLEXFOX_AVR_UPDATE_CONFIRM=UPDATE-AVR-${manifest.applicationVersion} to authorize staging this exact image`);
 }
@@ -160,6 +169,10 @@ if(!preflightDeviceSsid) {
 if(expectedDeviceSsid && preflightDeviceSsid !== expectedDeviceSsid) {
   fail(`connected unit is ${preflight.deviceSsid}, not expected ${suppliedExpectedDeviceSsid}`);
 }
+/* A master advertises Tx_Master while retaining a MAC-derived update identity.
+ * Keep authorization bound to that unique identity, but allow recovery polling
+ * to rejoin the AP name that is actually visible to Android. */
+const reconnectSsid = suppliedReconnectSsid || preflight.deviceSsid;
 process.stdout.write(`Device: ${preflight.deviceSsid}, ESP ${device.version}, AVR update state ${preflight.phase}\n`);
 if(dryRun) {
   process.stdout.write("PASS: read-only AVR update preflight completed; no image was staged.\n");
@@ -347,7 +360,7 @@ function requestMotoReassociation() {
     [
       "-s", adbSerial,
       "shell", "cmd", "wifi", "connect-network",
-      preflight.deviceSsid, "open", "-r", "none",
+      reconnectSsid, "open", "-r", "none",
     ],
     { encoding: "utf8", timeout: 15000 },
   );

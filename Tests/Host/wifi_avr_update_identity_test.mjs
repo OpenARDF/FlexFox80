@@ -24,7 +24,10 @@ assert.equal(unattendedUpdateNeedsExpectedSsid(true, false, ""), false);
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const updater = readFileSync(join(repoRoot, "scripts", "update-flexfox-avr-over-wifi.mjs"), "utf8");
 assert.match(updater, /process\.env\.FLEXFOX_ADB_SERIAL \|\| qualificationAdbSerial/);
+assert.match(updater, /process\.env\.FLEXFOX_RECONNECT_SSID/);
+assert.match(updater, /const reconnectSsid = suppliedReconnectSsid \|\| preflight\.deviceSsid/);
 assert.match(updater, /"cmd", "wifi", "connect-network"/);
+assert.match(updater, /reconnectSsid, "open", "-r", "none"/);
 assert.match(updater, /Date\.now\(\) - lastReassociationMillis >= 3000/);
 
 console.log("PASS AVR WiFi updater identity guards and Moto reassociation are unattended-safe");
