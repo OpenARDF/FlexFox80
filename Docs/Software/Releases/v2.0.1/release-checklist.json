@@ -1,0 +1,144 @@
+{
+  "release": "v2.0.1",
+  "repository": "OpenARDF/FlexFox80",
+  "channel": "stable",
+  "sourceCommit": "8a23b565821bbd27dca414b8b93809bd9ccc044c",
+  "hardwareRevision": "Ver 2.1 (Mar 2022)",
+  "avrVersion": "0.210",
+  "espVersion": "2.27",
+  "items": [
+    {
+      "id": "branch-announced",
+      "description": "Confirm the current branch and announce it before release work begins.",
+      "status": "done",
+      "evidence": "Development_AVR128DA48 was announced and confirmed at exact requested commit 8a23b56 on 2026-07-24."
+    },
+    {
+      "id": "working-tree-reviewed",
+      "description": "Confirm the working tree is clean or that unrelated changes are intentionally excluded.",
+      "status": "done",
+      "evidence": "The worktree was clean and exactly aligned with origin/Development_AVR128DA48 before release work."
+    },
+    {
+      "id": "release-channel",
+      "description": "Record whether this is a stable release or an explicitly approved prerelease.",
+      "status": "done",
+      "evidence": "The owner requested the normal GitHub release workflow; v2.0.1 is stable, non-draft, and non-prerelease."
+    },
+    {
+      "id": "release-label-and-firmware-pair",
+      "description": "Approve the product release label and exact AVR and ESP embedded version pair.",
+      "status": "done",
+      "evidence": "The next product patch label is v2.0.1; exact source 8a23b56 reports ESP 2.27 and AVR 0.210, with BL0.3."
+    },
+    {
+      "id": "hardware-revision",
+      "description": "Confirm the release supports only FlexFox Ver 2.1 (Mar 2022).",
+      "status": "done",
+      "evidence": "The manifest, package README, and release notes state FlexFox Ver 2.1 (Mar 2022) only."
+    },
+    {
+      "id": "source-commit-frozen",
+      "description": "Freeze and record the exact clean source commit used for both release builds.",
+      "status": "done",
+      "evidence": "Both release build passes, manifest, main, and annotated tag use 8a23b565821bbd27dca414b8b93809bd9ccc044c."
+    },
+    {
+      "id": "full-repository-check",
+      "description": "Run the full repository check at the frozen source commit.",
+      "status": "done",
+      "evidence": "just check passed at 8a23b56 on 2026-07-24, including the focused radio page regression and 274-byte EEPROM contract."
+    },
+    {
+      "id": "deterministic-avr-build",
+      "description": "Build AVR Release firmware twice with pinned tools and record matching hashes, warnings, resources, and EEPROM ABI.",
+      "status": "done",
+      "evidence": "Two AVR-GCC 7.3.0 / AVR-Dx_DFP 1.9.103 legacy, relocated, and BL0.3 builds were warning-free and byte-identical. Application HEX SHA-256 ae482773e00cfd87039586b3e1890e595e9e501b9179ecb4df1ac698655f3092; text 42806, data 1156, BSS 1585; EEPROM 274 bytes."
+    },
+    {
+      "id": "deterministic-esp-build",
+      "description": "Build the ESP sketch twice with the qualified profile and record matching sketch hashes, warnings, and resources.",
+      "status": "done",
+      "evidence": "Two ESP8266 core 2.7.4 / WebSockets 2.3.6 HUZZAH 80 MHz 4M1M builds were warning-free and byte-identical. Sketch SHA-256 abb161062fc3a8f04c436bc851fddc8c0fa84f69f1c32248e5d0073912466148."
+    },
+    {
+      "id": "artifact-manifest",
+      "description": "Generate the release manifest, checksums, package README, and exact AVR, ESP, and LittleFS artifact set.",
+      "status": "done",
+      "evidence": "The exact seven-file ZIP contains both AVR HEX paths, ESP sketch, recovery LittleFS, flexfox80-release-info-v1 manifest, checksum list, and operator README."
+    },
+    {
+      "id": "package-validation",
+      "description": "Independently validate manifest fields, package contents, file sizes, and SHA-256 hashes.",
+      "status": "done",
+      "evidence": "A clean extraction passed ZIP integrity, exact inventory, all internal SHA-256 checks, manifest checks, exact BL0.3/relocated-app/trailer extraction, ESP checksum validation, and LittleFS inventory. ZIP SHA-256 4e83e79c8fa7e8ea0f37cd2f61f06cce81697439fe45588c59a1c55668e60342."
+    },
+    {
+      "id": "hardware-checklist",
+      "description": "Complete the versioned FlexFox hardware checklist, recording every approved skip explicitly.",
+      "status": "done",
+      "evidence": "hardware-disposition.md records the v2.0.0 fleet baseline, the focused manual-radio regression, and the exact v2.0.1 live-install boundary."
+    },
+    {
+      "id": "live-version-report",
+      "description": "Install the selected pair on a representative unit and capture the expected combined AVR and ESP version report.",
+      "status": "skipped",
+      "skipReason": "The owner requested direct GitHub publication from exact pushed commit 8a23b56 without a new device-install step; the embedded pair remains SW_VERSIONS,2.27,0.210 and the limitation is recorded in hardware-disposition.md.",
+      "skipRequestedBy": "Charles Scharlau"
+    },
+    {
+      "id": "rollback-package",
+      "description": "Select and verify the release rollback package and recovery instructions.",
+      "status": "done",
+      "evidence": "rollback.md selects independently verified v2.0.0 as the rollback point and records v2.0.1 preservation, image, offset, and verification boundaries."
+    },
+    {
+      "id": "release-notes",
+      "description": "Approve concise maintainer notes that separate changes, verification, compatibility, and deferrals.",
+      "status": "done",
+      "evidence": "The owner requested release; release-notes.md records the manual-radio fix, exact source, verification, unchanged embedded strings, and installation cautions."
+    },
+    {
+      "id": "integration-approved",
+      "description": "Obtain explicit approval to integrate the candidate into main.",
+      "status": "done",
+      "evidence": "The owner's request to release exact pushed commit 8a23b56 through the established workflow authorized its fast-forward integration to main."
+    },
+    {
+      "id": "release-branch-verified",
+      "description": "Verify the clean integrated main commit and reproduce the selected release artifacts from it.",
+      "status": "done",
+      "evidence": "main was fast-forwarded without a merge commit to exact source 8a23b56. The clean tree and both local build passes used that exact commit; main and both development refs matched before tagging."
+    },
+    {
+      "id": "release-approved",
+      "description": "Obtain explicit approval for the maintenance release, tag, and designated durable archive.",
+      "status": "done",
+      "evidence": "The owner's 2026-07-24 request explicitly authorized a GitHub release from commit 8a23b56."
+    },
+    {
+      "id": "annotated-tag",
+      "description": "Create and push an annotated release tag pointing to the verified release commit.",
+      "status": "done",
+      "evidence": "Annotated tag object aec57b6511cf689a67d4409918fd49a32dc8c15c was pushed and peels to 8a23b565821bbd27dca414b8b93809bd9ccc044c."
+    },
+    {
+      "id": "release-record-created",
+      "description": "Create a durable maintainer release record with the approved notes and verification summary.",
+      "status": "done",
+      "evidence": "The stable GitHub release was published at https://github.com/OpenARDF/FlexFox80/releases/tag/v2.0.1 on 2026-07-24."
+    },
+    {
+      "id": "release-assets-archived",
+      "description": "Store the validated release ZIP and individually required firmware assets in the designated durable archive.",
+      "status": "done",
+      "evidence": "GitHub contains the validated ZIP, both AVR HEX files, ESP sketch, recovery LittleFS, manifest, and checksum list; all reported sizes and SHA-256 digests match."
+    },
+    {
+      "id": "archived-release-verified",
+      "description": "Copy and independently verify the archived assets, hashes, release record, and tag target.",
+      "status": "done",
+      "evidence": "Docs/Software/Evidence/V2_0_1_GITHUB_RELEASE_VERIFICATION_2026-07-24.md records fresh download and independent archive verification."
+    }
+  ]
+}

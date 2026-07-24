@@ -13,6 +13,7 @@ This directory documents the current AVR128DA48-based software architecture on t
 - [Release package format](RELEASE_PACKAGE_FORMAT.md) defines the two-processor manifest, checksums, package contents, validation rules, and durable maintenance archive adapted from SignalSlinger.
 - [Release checklist template](release-checklist-template.json) provides evidence-bearing `candidate`, `release`, and `final` gates with explicit owner-attributed skips.
 - [Withdrawn FlexFox80 v1.0.0 record](Releases/v1.0.0/README.md) preserves the first tagged maintenance baseline, its critical AVR `0.201` safety advisory, and the verified GitHub release withdrawal.
+- [FlexFox80 v2.0.1 release record](Releases/v2.0.1/README.md) records the manual-radio maintenance release, exact source commit, published assets, verification, and installation boundary.
 - [July 2026 release-readiness plan](RELEASE_READINESS_PLAN_2026-07-14.md) records the decision to complete R4, freeze firmware scope, qualify an official release candidate, and defer the remaining review items with a precise resume point.
 - [July 2026 release-candidate snapshot](RELEASE_CANDIDATE_SNAPSHOT_2026-07-14.md) records the frozen firmware source, exact artifact hashes, completed verification, branch alignment, rollback position, and still-open official-release gates.
 - [July 2026 release hardware checklist](RELEASE_HARDWARE_CHECKLIST_2026-07-14.md) maps the A8 matrix to passed, partial, pending, and proposed-defer evidence and isolates the remaining owner decisions.
