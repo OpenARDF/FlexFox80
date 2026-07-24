@@ -17,6 +17,13 @@
             cursor: pointer;
         }
 
+        .keybutton {
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
         .incbutton {
             background-color: blue;
             border: none;
@@ -210,7 +217,9 @@
         var g_timesync_rcvd = 0;
         var g_webSocketAliveTimer = 0;
 
-        var g_radio_initialized = false;
+        var g_powerReady = false;
+        var g_pendingPowerLevel = null;
+        var g_keyIsDown = false;
 
         ///////////////////////////////
         // Settings
@@ -431,7 +440,32 @@
             txt.value = g_userText5;
         }
 
+        function setManualTransmitControlsEnabled(enabled) {
+            g_powerReady = Boolean(enabled);
+
+            var keyButton = document.getElementById("keyButton");
+            if (keyButton != null) {
+                keyButton.disabled = !g_powerReady;
+                keyButton.value = g_powerReady ? "Key" : "Power...";
+
+                if (!g_powerReady) {
+                    g_keyIsDown = false;
+                    keyButton.setAttribute("style", "background-color: #40A1FF;");
+                }
+            }
+
+            for (var i = 1; i <= 5; i++) {
+                var sendButton = document.getElementById("sendUserText" + i);
+                if (sendButton != null) {
+                    sendButton.disabled = !g_powerReady;
+                }
+            }
+        }
+
         function keyDownAction() {
+            if (!g_powerReady || g_keyIsDown) return;
+            g_keyIsDown = true;
+
             var btn = document.getElementById("keyButton");
 
             var x = document.getElementById("errorreport");
@@ -445,6 +479,9 @@
         }
 
         function keyUpAction() {
+            if (!g_keyIsDown) return;
+            g_keyIsDown = false;
+
             var btn = document.getElementById("keyButton");
 
             var x = document.getElementById("errorreport");
@@ -456,6 +493,25 @@
             btn.setAttribute("style", "background-color: #40A1FF;");
             btn.value = "Key"
             sendKeyUp();
+        }
+
+        function keyPointerDownAction(evt) {
+            if (evt && (typeof evt.button == "number") && (evt.button != 0)) return;
+            if (evt && evt.preventDefault) evt.preventDefault();
+            if (evt && evt.currentTarget && evt.currentTarget.setPointerCapture &&
+                (typeof evt.pointerId == "number")) {
+                try {
+                    evt.currentTarget.setPointerCapture(evt.pointerId);
+                } catch (err) {
+                    console.warn("Unable to capture Key pointer:", err);
+                }
+            }
+            keyDownAction();
+        }
+
+        function keyPointerUpAction(evt) {
+            if (evt && evt.preventDefault) evt.preventDefault();
+            keyUpAction();
         }
 
         function eventRow(rowData, isHeader) {
@@ -504,24 +560,19 @@
                 var btn = document.createElement('input');
                 var entry = rowData.name;
                 btn.type = "button";
-                btn.className = "button";
+                btn.className = "button keybutton";
                 btn.id = "keyButton";
                 btn.value = "Key";
-                btn.onmouseup = (function(entry) {
-                    return function() {
-                        keyUpAction();
-                    }
-                })(entry);
-                btn.onmouseout = (function(entry) {
-                    return function() {
-                        keyUpAction();
-                    }
-                })(entry);
-                btn.onmousedown = (function(entry) {
-                    return function() {
-                        keyDownAction();
-                    }
-                })(entry);
+                btn.disabled = !g_powerReady;
+                btn.onpointerdown = keyPointerDownAction;
+                btn.onpointerup = keyPointerUpAction;
+                btn.onpointercancel = keyPointerUpAction;
+                btn.onlostpointercapture = keyPointerUpAction;
+                btn.onmousedown = keyPointerDownAction;
+                btn.onmouseup = keyPointerUpAction;
+                btn.ontouchstart = keyPointerDownAction;
+                btn.ontouchend = keyPointerUpAction;
+                btn.ontouchcancel = keyPointerUpAction;
 
                 cell0 = document.createElement("td");
                 cell0.setAttribute("border", "1px solid black");
@@ -675,6 +726,8 @@
             var host = String(window.location.hostname);
 
             console.log("Host: " + host);
+            g_pendingPowerLevel = null;
+            setManualTransmitControlsEnabled(false);
 
             if (host.length > 0) {
                 if (g_websock != null) // socket already exists
@@ -703,62 +756,68 @@
 
             if (websocketcreated == true) {
                 document.getElementById("xmtrTime").innerHTML = "Connected";
+                var socket = g_websock;
 
-                g_websock.onopen = function(evt) {
+                socket.onopen = function(evt) {
+                    if (g_websock !== socket) return;
+
                     console.log("websock open");
                     websocketcreated = true;
                     g_stillConnected = Math.max(200, g_stillConnected);
                     updateTemperatureDisplay();
+                    g_pendingPowerLevel = null;
+                    setManualTransmitControlsEnabled(false);
 
-                    setTimeout(function() {
+                    scheduleForSocket(socket, 250, function() {
                         sendSocketAlive();
-                    }, 250);
+                    });
 
-                    setTimeout(function() {
+                    scheduleForSocket(socket, 500, function() {
                         sendToSocket("CLEAR");
-                    }, 500);
+                    });
 
-                    setTimeout(function() {
+                    scheduleForSocket(socket, 750, function() {
                         sendToSocket("SSID");
-                    }, 750);
+                    });
 
-                    setTimeout(function() {
+                    scheduleForSocket(socket, 1000, function() {
                         sendToSocket("MAC");
-                    }, 1000);
+                    });
 
-                    setTimeout(function() {
+                    scheduleForSocket(socket, 1250, function() {
                         sendToSocket("SW_VERSIONS");
-                    }, 1250);
+                    });
 
-                    if (!g_radio_initialized) {
-                        g_radio_initialized = true;
-                        setTimeout(function() {
-                            sendCookieValuesToRadio();
-                        }, 1500);
-                    }
+                    sendCookieValuesToRadio(socket);
                 }
 
-                g_websock.onclose = function(evt) {
+                socket.onclose = function(evt) {
                     if (g_numberOfOpenWebSockets) g_numberOfOpenWebSockets--;
 
-                    if (g_numberOfOpenWebSockets == 0) {
-                        console.log("all websocks closed");
-                        if (websocketcreated == true) { // handle test case where server refuses websocket
-                            setOverlay("Disconnected");
-                        }
-                        websocketcreated = false;
-                        g_websock = null;
-                        g_stillConnected = 0;
-                    } else {
+                    if (g_websock !== socket) {
                         console.log("old websock closed");
+                        return;
                     }
+
+                    console.log("current websock closed");
+                    g_pendingPowerLevel = null;
+                    setManualTransmitControlsEnabled(false);
+                    if (websocketcreated == true) { // handle test case where server refuses websocket
+                        setOverlay("Disconnected");
+                    }
+                    websocketcreated = false;
+                    g_websock = null;
+                    g_stillConnected = 0;
                 };
 
-                g_websock.onerror = function(evt) {
+                socket.onerror = function(evt) {
+                    if (g_websock !== socket) return;
                     console.log("Websock error: " + evt);
                 };
 
-                g_websock.onmessage = function(evt) {
+                socket.onmessage = function(evt) {
+                    if (g_websock !== socket) return;
+
                     var str = evt.data;
                     var arr = str.split(",");
 
@@ -1154,10 +1213,16 @@
                                 var mw = arr[1];
 
                                 console.log("tx power: ", arr[1]);
+                                g_powerLevel = mw;
                                 var pe = document.getElementById("pwrSelect");
 
                                 if (pe != null) {
                                     pe.value = arr[1];
+                                }
+
+                                if ((g_pendingPowerLevel != null) && (String(mw) == String(g_pendingPowerLevel))) {
+                                    g_pendingPowerLevel = null;
+                                    setManualTransmitControlsEnabled(true);
                                 }
                             }
                             break;
@@ -1196,8 +1261,21 @@
             var eventLine = {};
             g_eventTableData.push(eventLine);
             displayEvents(true);
+            setManualTransmitControlsEnabled(false);
 
             console.log("At end of start() function!");
+        }
+
+        function socketIsCurrentAndOpen(socket) {
+            return (socket != null) && (socket === g_websock) && (socket.readyState == socket.OPEN);
+        }
+
+        function scheduleForSocket(socket, delayMs, callback) {
+            return setTimeout(function() {
+                if (socketIsCurrentAndOpen(socket)) {
+                    callback();
+                }
+            }, delayMs);
         }
 
         function clamp(min, num, max) {
@@ -1294,7 +1372,9 @@
         }
 
         function sendKeyDown() {
-            var btext = "KEY_DOWN";
+            var p = document.getElementById("pwrSelect");
+            var power = p ? p.value : g_powerLevel;
+            var btext = "KEY_DOWN," + power;
             sendToSocket(btext);
         }
 
@@ -1339,6 +1419,8 @@
             if (p) {
                 var power = p.value;
                 var msgText = "POWER,0," + power;
+                g_pendingPowerLevel = power;
+                setManualTransmitControlsEnabled(false);
                 sendToSocket(msgText);
                 g_powerLevel = power;
                 setCookie(2 * 356, "power", g_powerLevel);
@@ -1710,16 +1792,24 @@
         ////////////////////////////////////////////////////////////
 
         window.addEventListener("mouseup", function() {
+            keyUpAction();
             if (document.getElementById("freq1").value != 0) {
                 resetFreq1Slider();
             }
         });
 
         window.addEventListener("touchend", function() {
+            keyUpAction();
             if (document.getElementById("freq1").value != 0) {
                 resetFreq1Slider();
             }
         });
+
+        window.addEventListener("touchcancel", keyUpAction);
+        window.addEventListener("pointerup", keyUpAction);
+        window.addEventListener("pointercancel", keyUpAction);
+        window.addEventListener("blur", keyUpAction);
+        window.addEventListener("pagehide", keyUpAction);
 
         window.addEventListener("click", function() {
             if (document.getElementById("freq1").value != 0) {
@@ -1744,50 +1834,49 @@
             return newString;
         }
 
-        function sendCookieValuesToRadio() {
-            setTimeout(function() {
-                let msgText = "PASS,$KEY,^;";
-                sendToSocket(msgText);
-            }, 6000);
+        function sendCookieValuesToRadio(socket) {
+            scheduleForSocket(socket, 1500, sendPower);
 
-            setTimeout(sendPower, 4000);
+            scheduleForSocket(socket, 1750, sendCodeSpeed);
 
-            setTimeout(sendCodeSpeed, 4250);
-
-            setTimeout(function() {
+            scheduleForSocket(socket, 2000, function() {
                 let msgText = "FREQ,0," + String(g_freq1FrequencyHz);
                 sendToSocket(msgText);
-            }, 4500);
+            });
+
+            scheduleForSocket(socket, 2250, function() {
+                let msgText = "PASS,$KEY,^;";
+                sendToSocket(msgText);
+            });
+        }
+
+        function sendString(text) {
+            if (!g_powerReady) return;
+
+            var p = document.getElementById("pwrSelect");
+            var power = p ? p.value : g_powerLevel;
+            var btext = "PASS,$POW,M," + power + ";$KEY," + escapeString(text) + ";";
+            sendToSocket(btext);
         }
 
         function sendString1Click() {
-            var text = document.getElementById("user1Text").value;
-            var btext = "PASS,$KEY," + escapeString(text) + ";";
-            sendToSocket(btext);
+            sendString(document.getElementById("user1Text").value);
         }
 
         function sendString2Click() {
-            var text = document.getElementById("user2Text").value;
-            var btext = "PASS,$KEY," + escapeString(text) + ";";
-            sendToSocket(btext);
+            sendString(document.getElementById("user2Text").value);
         }
 
         function sendString3Click() {
-            var text = document.getElementById("user3Text").value;
-            var btext = "PASS,$KEY," + escapeString(text) + ";";
-            sendToSocket(btext);
+            sendString(document.getElementById("user3Text").value);
         }
 
         function sendString4Click() {
-            var text = document.getElementById("user4Text").value;
-            var btext = "PASS,$KEY," + escapeString(text) + ";";
-            sendToSocket(btext);
+            sendString(document.getElementById("user4Text").value);
         }
 
         function sendString5Click() {
-            var text = document.getElementById("user5Text").value;
-            var btext = "PASS,$KEY," + escapeString(text) + ";";
-            sendToSocket(btext);
+            sendString(document.getElementById("user5Text").value);
         }
 
     </script>
@@ -1802,7 +1891,7 @@
         <h1 id="mainHeading" style="font-family:verdana; font-size:30px; color:Black; text-align:center;">Transmitter Test</h1>
         <p id="wifiVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
         <p id="ATMEGAVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
-        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">radio.html Version: 0.82 - 19 Jul 2026</p>
+        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">radio.html Version: 0.86 - 24 Jul 2026</p>
 
         <div>
             <table>
@@ -1867,7 +1956,7 @@
                         </td>
 
                         <td style="width:14.4px; text-align: left">
-                            <button id="sendUserText1" class="button" onclick="sendString1Click();">SEND</button>
+                            <button id="sendUserText1" class="button" onclick="sendString1Click();" disabled>SEND</button>
                         </td>
 
                     </tr>
@@ -1877,7 +1966,7 @@
                         </td>
 
                         <td style="width:14.4px; text-align: left">
-                            <button id="sendUserText2" class="button" onclick="sendString2Click();">SEND</button>
+                            <button id="sendUserText2" class="button" onclick="sendString2Click();" disabled>SEND</button>
                         </td>
                     </tr>
                     <tr>
@@ -1886,7 +1975,7 @@
                         </td>
 
                         <td style="width:14.4px; text-align: left">
-                            <button id="sendUserText3" class="button" onclick="sendString3Click();">SEND</button>
+                            <button id="sendUserText3" class="button" onclick="sendString3Click();" disabled>SEND</button>
                         </td>
                     </tr>
                     <tr>
@@ -1895,7 +1984,7 @@
                         </td>
 
                         <td style="width:14.4px; text-align: left">
-                            <button id="sendUserText4" class="button" onclick="sendString4Click();">SEND</button>
+                            <button id="sendUserText4" class="button" onclick="sendString4Click();" disabled>SEND</button>
                         </td>
                     </tr>
                     <tr>
@@ -1904,7 +1993,7 @@
                         </td>
 
                         <td style="width:14.4px; text-align: left">
-                            <button id="sendUserText5" class="button" onclick="sendString5Click();">SEND</button>
+                            <button id="sendUserText5" class="button" onclick="sendString5Click();" disabled>SEND</button>
                         </td>
                     </tr>
                 </table>

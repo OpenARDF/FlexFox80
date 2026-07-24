@@ -907,6 +907,10 @@ ISR(TCB0_INT_vect)
 						key = OFF;
 						keyTransmitter(OFF);
 						LEDS.setRed(OFF);
+					}
+
+					if(g_enunciator == LED_AND_RF)
+					{
 						powerToTransmitter(OFF);
 					}
 				
@@ -1639,6 +1643,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					char* str = lb_buff->fields[LB_MSG_FIELD1];
 					int lenstr = strlen(str);
 					bool hold = g_enable_manual_transmissions;
+					bool queuedText = false;
 					
 					if((lenstr == 2) && (str[0] == '\\') && (str[1] == 'B')) /* backspace */
 					{
@@ -1649,6 +1654,18 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 					else if(lenstr > 1)
 					{
 						int i = 0;
+
+						/*
+						 * A web Send command can interrupt automated Morse. Claim the
+						 * generator before filling the manual buffer so the main loop
+						 * does not discard the newly queued text while changing callers.
+						 */
+						if(lastMorseCaller() != CALLER_MANUAL_TRANSMISSIONS)
+						{
+							bool manualRepeat = false;
+							g_text_buff.reset();
+							makeMorse((char*)"\0", &manualRepeat, null, CALLER_MANUAL_TRANSMISSIONS);
+						}
 						
 						g_enable_manual_transmissions = false; /* simple thread collision avoidance */
 						while(!g_text_buff.full() && i<lenstr && i<LINKBUS_MAX_MSG_FIELD_LENGTH)
@@ -1656,6 +1673,7 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 							g_text_buff.put(lb_buff->fields[LB_MSG_FIELD1][i++]);
 						}
 						g_enable_manual_transmissions = hold;
+						queuedText = (i > 0);
 					}
 					else
 					{
@@ -1681,10 +1699,24 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 						}
 						else
 						{
+							if(lastMorseCaller() != CALLER_MANUAL_TRANSMISSIONS)
+							{
+								bool manualRepeat = false;
+								g_text_buff.reset();
+								makeMorse((char*)"\0", &manualRepeat, null, CALLER_MANUAL_TRANSMISSIONS);
+							}
+
 							g_enable_manual_transmissions = false; /* simple thread collision avoidance */
 							g_text_buff.put(c);
 							g_enable_manual_transmissions = hold;
+							queuedText = true;
 						}
+					}
+
+					if(queuedText)
+					{
+						g_enunciator = LED_AND_RF;
+						powerToTransmitter(ON);
 					}
 				}
 			}
@@ -1778,21 +1810,24 @@ void __attribute__((optimize("O0"))) handleLinkBusMsgs()
 						pwr_mW = (uint16_t)atoi(lb_buff->fields[LB_MSG_FIELD1]);
 					}
 					
-					if(pwr_mW != txGetPowerMw())
+					bool powerChanged = (pwr_mW != txGetPowerMw());
+					/*
+					 * Reapply the DAC value even when the requested numeric power
+					 * matches the cached value. Manual radio mode uses this to
+					 * refresh the physical setting immediately before key-down.
+					 */
+					ec = txSetParameters(&pwr_mW, NULL);
+					if(ec)
 					{
-						ec = txSetParameters(&pwr_mW, NULL);
-						if(ec)
-						{
-							g_last_error_code = ec;
-						}
-						else
-						{
-							new_event_parameter_count++;
-						}
-
-						sprintf(g_tempStr, "M,%u", pwr_mW);
-						lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_TX_POWER_LABEL, g_tempStr);
+						g_last_error_code = ec;
 					}
+					else if(powerChanged)
+					{
+						new_event_parameter_count++;
+					}
+
+					sprintf(g_tempStr, "M,%u", pwr_mW);
+					lb_send_msg(LINKBUS_MSG_REPLY, LB_MESSAGE_TX_POWER_LABEL, g_tempStr);
 					
 					g_Event_Configuration_Check |= TX_POWER_RECEIVED_B;
 				}

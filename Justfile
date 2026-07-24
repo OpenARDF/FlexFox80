@@ -35,6 +35,7 @@ test:
     node ./Tests/Host/flexfox_http_test.mjs
     node ./Tests/Host/flexfox_adb_relay_test.mjs
     node ./Tests/Host/events_html_test.mjs
+    node ./Tests/Host/radio_html_test.mjs
     node ./Tests/Host/fleet_soak_event_generator_test.mjs
     node ./Tests/Host/fleet_soak_page_test.mjs
     node ./Tests/Host/fleet_soak_protocol_test.mjs

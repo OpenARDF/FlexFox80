@@ -5946,8 +5946,41 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_KEYDOWN))
           {
-            String msgOut = String(LB_MESSAGE_KEYDOWN);
-            g_LBOutputBuff->put(msgOut);
+            bool validKeyRequest = true;
+            int comma = p.indexOf(',');
+
+            /*
+             * radio.html includes its selected power with every key-down. Queue
+             * the power first so a manual transmission cannot use a stale AVR
+             * setting during page startup. A bare KEY_DOWN remains supported
+             * for older pages and diagnostic clients.
+             */
+            if (comma >= 0)
+            {
+              String pwr = p.substring(comma + 1);
+              pwr.trim();
+              bool numericPower = pwr.length();
+              for (unsigned int i = 0; numericPower && (i < pwr.length()); i++)
+              {
+                numericPower = isDigit(pwr.charAt(i));
+              }
+              long requestedPower = numericPower ? pwr.toInt() : -1;
+              validKeyRequest = numericPower &&
+                                (requestedPower >= 0) &&
+                                (requestedPower <= 5000);
+
+              if (validKeyRequest)
+              {
+                String powerMsg = String(LB_MESSAGE_TX_POWER_SET + String(requestedPower) + ";");
+                g_LBOutputBuff->put(powerMsg);
+              }
+            }
+
+            if (validKeyRequest)
+            {
+              String msgOut = String(LB_MESSAGE_KEYDOWN);
+              g_LBOutputBuff->put(msgOut);
+            }
           }
           else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_KEYUP))
           {
