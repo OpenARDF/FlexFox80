@@ -1221,6 +1221,13 @@ void handleAvrUpdateStart()
     return;
   }
 
+  /*
+   * The resident-bootloader search can take longer than the ordinary two-minute
+   * WiFi shutdown clock when the first handoff is missed. Reacquire the bounded
+   * five-minute maintenance lease before draining the queue so a recoverable
+   * handoff failure returns to HTTP service instead of powering the ESP off.
+   */
+  firmwareUpdateKeepAvrAwake();
   g_avrBootloaderAvailable = false;
   g_avrBootloaderIdentity = "";
   bool residentBootloader = false;
@@ -1236,11 +1243,13 @@ void handleAvrUpdateStart()
   if(!applicationPreflight && !residentBootloader)
   {
     if(!error.length()) error = "The AVR did not prove a protocol-2 BL0.3-or-newer bootloader and 0x4000 application layout";
+    firmwareUpdateReleaseAvrLease();
     g_http_server.send(409, "text/plain; charset=utf-8", error);
     return;
   }
   if(!avrUpdateMarkEnteringBootloader(&error))
   {
+    firmwareUpdateReleaseAvrLease();
     g_http_server.send(500, "text/plain; charset=utf-8", error);
     return;
   }
@@ -1251,6 +1260,7 @@ void handleAvrUpdateStart()
        !avrUpdateArmQualificationEspRestart((uint16_t)restartPage, &error))
     {
       avrUpdateRestoreStaged(NULL);
+      firmwareUpdateReleaseAvrLease();
       g_http_server.send(400, "text/plain; charset=utf-8", error);
       return;
     }
@@ -1262,6 +1272,7 @@ void handleAvrUpdateStart()
        !avrUpdateArmQualificationAvrReset((uint16_t)resetPage, &error))
     {
       avrUpdateRestoreStaged(NULL);
+      firmwareUpdateReleaseAvrLease();
       g_http_server.send(400, "text/plain; charset=utf-8", error);
       return;
     }
@@ -1269,6 +1280,7 @@ void handleAvrUpdateStart()
   else if(g_http_server.arg("qualificationConfirm").length())
   {
     avrUpdateRestoreStaged(NULL);
+    firmwareUpdateReleaseAvrLease();
     g_http_server.send(400, "text/plain; charset=utf-8", "Unknown AVR update qualification request");
     return;
   }
@@ -1283,6 +1295,7 @@ void handleAvrUpdateStart()
   {
     g_avrQualificationResetPage = -1;
     avrUpdateRestoreStaged(NULL);
+    firmwareUpdateReleaseAvrLease();
     g_linkBusLastFailure = error;
     g_http_server.send(409, "text/plain; charset=utf-8", error);
   }
@@ -1302,6 +1315,7 @@ void handleAvrUpdateStart()
      * pre-erase recovery return must restore service so status and retry remain
      * available without requiring a power cycle. */
     g_http_server.begin();
+    firmwareUpdateReleaseAvrLease();
   }
 }
 

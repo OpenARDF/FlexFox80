@@ -317,7 +317,7 @@ const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8"
 const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
 const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.210";
-const expectedEspVersion = "2.27";
+const expectedEspVersion = "2.28";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -667,21 +667,25 @@ const avrUpdateStartHandler = espMain.match(
 if (
   !avrUpdateStartHandler ||
   (avrUpdateStartHandler[1].match(/drainLinkbusBeforeEvent\(&error\)/g)?.length ?? 0) !== 1 ||
+  avrUpdateStartHandler[1].indexOf("firmwareUpdateKeepAvrAwake();") < 0 ||
+  avrUpdateStartHandler[1].indexOf("firmwareUpdateKeepAvrAwake();") >
+    avrUpdateStartHandler[1].indexOf("drainLinkbusBeforeEvent(&error)") ||
+  (avrUpdateStartHandler[1].match(/firmwareUpdateReleaseAvrLease\(\);/g)?.length ?? 0) < 7 ||
   avrUpdateStartHandler[1].indexOf("sendLinkbusTransactionCommand(String(LB_MESSAGE_AVR_UPDATE_START)") >
     avrUpdateStartHandler[1].indexOf('g_http_server.send(202') ||
   !avrUpdateStartHandler[1].includes("avrUpdateResumeIfRequired(residentBootloader);") ||
-  !/avrUpdateResumeIfRequired\(residentBootloader\);[\s\S]*g_http_server\.begin\(\);/.test(
+  !/avrUpdateResumeIfRequired\(residentBootloader\);[\s\S]*g_http_server\.begin\(\);[\s\S]*firmwareUpdateReleaseAvrLease\(\);/.test(
     avrUpdateStartHandler[1],
   ) ||
   !avrFirmwareUpdate.includes("bool bootloaderReady = bootloaderAlreadyReady;")
 ) {
   process.stderr.write(
-    "Firmware contract check failed: AVR START must retain its exclusive queue, resident bootloader session, and bounded HTTP recovery\n",
+    "Firmware contract check failed: AVR START must retain its exclusive queue, bounded maintenance lease, resident bootloader session, and HTTP recovery\n",
   );
   process.exit(1);
 }
 
-process.stdout.write("PASS wireless AVR handoff cannot race a redundant Linkbus queue drain\n");
+process.stdout.write("PASS wireless AVR handoff holds a bounded lease and cannot race a redundant Linkbus queue drain\n");
 
 if (
   !avrFirmwareUpdate.includes("uint32_t remaining = state.imageBytes;") ||
