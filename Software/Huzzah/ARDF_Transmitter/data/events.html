@@ -241,6 +241,9 @@
         var g_transmitterTimeMs = 0;
         var g_transmitterTimeReceivedMs = 0;
         var g_connectedTransmitterSSID = "";
+        var g_connectedTransmitterIdentity = "";
+        var g_eventsResetForCurrentConnection = false;
+        var g_transmitterIdentityCheckPending = false;
         var g_websock = null;
         var g_timesync_rcvd = 0;
         var g_webSocketAliveTimer = 0;
@@ -276,16 +279,20 @@
             role: "Role"
         }]
 
-        var g_eventTableData = [{
-            name: "Event",
-            version: "Ver",
-            start: "Start",
-            finish: "Finish",
-            role: "Fox",
-            callsign: "Call",
-            power: "Power",
-            frequency: "Freq"
-        }]; /* Event data to display in a table header */
+        function newEventTableData() {
+            return [{
+                name: "Event",
+                version: "Ver.",
+                start: "Start Time",
+                finish: "Finish Time",
+                role: "Fox",
+                callsign: "Call",
+                power: "Power",
+                frequency: "Freq"
+            }];
+        }
+
+        var g_eventTableData = newEventTableData(); /* Event data to display in a table header */
 
         var g_powerLevels = ["0", "10", "100", "200", "300", "400", "500", "600", "800", "1000", "1500", "2000", "2500", "3000", "4000", "5000"];
         var g_selectedEvent = "";
@@ -437,6 +444,83 @@
             for (var i = 1; i < eventNum; i++) {
                 eventTable.appendChild(eventRow(g_eventTableData[i], false));
             }
+        }
+
+        function resetEventsForCurrentConnection(reason) {
+            if (g_eventsResetForCurrentConnection) return;
+            g_eventsResetForCurrentConnection = true;
+
+            console.log("Clearing cached events: " + reason);
+            g_eventTableData = newEventTableData();
+            g_selectedEvent = "";
+            g_selectedEventStart = 0;
+            g_selectedEventFinish = 0;
+            g_selectedTxType = "";
+            g_eventNumberOfTxTypes = 0;
+            g_typeTxNames = [];
+            g_typeFrequency = [];
+            g_typePower = [];
+            g_eventSheetLoaded = false;
+            g_eventSheetCacheSupported = false;
+            g_eventSelectionIdentitySupported = false;
+            g_renderedSelectedEvent = "";
+            g_event_changes_saved = true;
+            g_loading_data = true;
+
+            if (document.getElementById("eventTable") != null) {
+                displayEvents();
+            }
+
+            var transmitterTime = document.getElementById("xmtrTime");
+            if (transmitterTime != null) transmitterTime.textContent = "Connected - Loading events...";
+            setOverlay("Connected\nLoading Events...");
+            g_lastPacketTime = 0;
+            g_delayedPackets = 0;
+            sendToSocket("EVENT_NAME,NEW!");
+        }
+
+        function completeTransmitterIdentityCheck(identity) {
+            g_transmitterIdentityCheckPending = false;
+            var detectedIdentity = String(identity || "").trim().toUpperCase();
+            if (!detectedIdentity) {
+                resetEventsForCurrentConnection("device identity was unavailable");
+                return;
+            }
+
+            if (g_connectedTransmitterIdentity &&
+                (detectedIdentity != g_connectedTransmitterIdentity)) {
+                resetEventsForCurrentConnection(
+                    "device changed from " + g_connectedTransmitterIdentity + " to " + detectedIdentity
+                );
+            }
+
+            g_connectedTransmitterIdentity = detectedIdentity;
+            if (!g_eventsResetForCurrentConnection && g_eventSheetLoaded) {
+                var transmitterTime = document.getElementById("xmtrTime");
+                if (transmitterTime != null) transmitterTime.textContent = "Connected - Refreshing events...";
+                setOverlay(null);
+            }
+        }
+
+        function requestTransmitterIdentity(socket) {
+            if (!window || (typeof window.fetch != "function")) return false;
+
+            g_transmitterIdentityCheckPending = true;
+            window.fetch("/firmware/status", {
+                cache: "no-store"
+            }).then(function(response) {
+                if (!response.ok) throw new Error("HTTP " + response.status);
+                return response.json();
+            }).then(function(info) {
+                if (g_websock !== socket) return;
+                completeTransmitterIdentityCheck(info && info.deviceSsid);
+            }).catch(function(err) {
+                if (g_websock !== socket) return;
+                g_transmitterIdentityCheckPending = false;
+                console.warn("Unable to identify connected transmitter:", err);
+                resetEventsForCurrentConnection("device identity check failed");
+            });
+            return true;
         }
 
         function eventSelect(selection) {
@@ -943,10 +1027,16 @@
                     clearWebSocketReconnect();
                     g_lastPacketTime = 0;
                     g_delayedPackets = 0;
-                    g_connectedTransmitterSSID = "";
+                    g_eventsResetForCurrentConnection = false;
+                    g_transmitterIdentityCheckPending = false;
                     g_loading_data = true;
                     updateTemperatureDisplay();
                     showConnectedState();
+                    if (requestTransmitterIdentity(socket)) {
+                        var transmitterTime = document.getElementById("xmtrTime");
+                        if (transmitterTime != null) transmitterTime.textContent = "Connected - Identifying transmitter...";
+                        setOverlay("Connected\nIdentifying Transmitter...");
+                    }
 
                     sendToSocket("EVENT_NAME,NEW!");
                     sendSocketAlive();
@@ -969,6 +1059,7 @@
                 socket.onclose = function(evt) {
                     if (g_websock !== socket) return;
                     console.log("websock closed");
+                    g_transmitterIdentityCheckPending = false;
                     g_websock = null;
                     g_stillConnected = 0;
                     g_loading_data = false;
@@ -1301,16 +1392,7 @@
                                 hideFreqSet1();
                                 updateTextFormatting();
                                 if (!g_eventSheetLoaded) {
-                                    g_eventTableData = [{
-                                        name: "Event",
-                                        version: "Ver.",
-                                        start: "Start Time",
-                                        finish: "Finish Time",
-                                        role: "Fox",
-                                        callsign: "Call",
-                                        power: "Power",
-                                        frequency: "Freq"
-                                    }];
+                                    g_eventTableData = newEventTableData();
                                 }
                             }
                             break;
@@ -1553,7 +1635,14 @@
                             {
                                 if (typeof arr[1] != 'undefined') {
                                     clearConnectionMessages();
-                                    g_connectedTransmitterSSID = String(arr[1]).trim();
+                                    var detectedSSID = String(arr[1]).trim();
+                                    if (g_connectedTransmitterSSID &&
+                                        (detectedSSID != g_connectedTransmitterSSID)) {
+                                        resetEventsForCurrentConnection(
+                                            "SSID changed from " + g_connectedTransmitterSSID + " to " + detectedSSID
+                                        );
+                                    }
+                                    g_connectedTransmitterSSID = detectedSSID;
                                     var t = g_connectedTransmitterSSID + ": Events Settings";
                                     var h = document.getElementById("mainHeading");
                                     if (h != null) h.textContent = t;
@@ -2071,6 +2160,7 @@
                 document.getElementById("overlayText").textContent = msgTxt;
                 document.getElementById("overlay").style.display = "block";
             } else {
+                if (g_transmitterIdentityCheckPending) return;
                 document.getElementById("overlay").style.display = "none";
             }
         }
@@ -2784,7 +2874,7 @@
         <h1 id="mainHeading" style="font-family:verdana; font-size:30px; color:Black; text-align:center;">Transmitter Settings</h1>
         <p id="wifiVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
         <p id="ATMEGAVersion" style="font-family:verdana; font-size:12px; color:Black; text-align:center;"></p>
-        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.6.1 - 19 Jul 2026</p>
+        <p id="version" style="font-family:verdana; font-size:12px; color:Black; text-align:center;">events.html Version: 0.6.2 - 25 Jul 2026</p>
 
         <div>
             <table>

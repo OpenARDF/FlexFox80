@@ -72,7 +72,7 @@ function makeSelect(values, selectedIndex = 0) {
   return select;
 }
 
-function createPage(initialStorage = {}) {
+function createPage(initialStorage = {}, fetchImpl = null) {
   const elements = new Map();
   const listeners = new Map();
   const storage = new Map(Object.entries(initialStorage));
@@ -132,6 +132,7 @@ function createPage(initialStorage = {}) {
       listeners.set(type, registered);
     },
   };
+  if (fetchImpl) window.fetch = fetchImpl;
   const context = vm.createContext({
     Date,
     Math,
@@ -194,7 +195,7 @@ assert.ok(!source.includes("Date.getTime()"), "date fallback must call getTime o
 assert.match(html, /<html lang="en">/);
 assert.match(html, /<meta charset="utf-8">/);
 assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1">/);
-assert.match(html, /events\.html Version: 0\.6\.1 - 19 Jul 2026/);
+assert.match(html, /events\.html Version: 0\.6\.2 - 25 Jul 2026/);
 assert.match(source, /case 0xFA:[\s\S]*?text = "No event will run";/);
 assert.match(html, /onpointerdown="clockSyncPressStart\(event\);"/);
 assert.match(
@@ -265,6 +266,64 @@ console.log("PASS events.html JavaScript and critical HTML syntax parse");
   assert.equal(status.textContent, "");
   assert.equal(status.style.display, "none");
   console.log("PASS a newly detected transmitter clears stale connection messages");
+}
+
+{
+  const identities = ["Tx_11112222", "Tx_33334444"];
+  let identityIndex = 0;
+  let resolveIdentity;
+  const page = createPage({}, () => new Promise((resolvePromise) => {
+    resolveIdentity = () => resolvePromise({
+      ok: true,
+      async json() {
+        return { deviceSsid: identities[identityIndex] };
+      },
+    });
+  }));
+  page.context.g_connectedTransmitterSSID = "Tx_Master";
+  page.context.g_connectedTransmitterIdentity = identities[0].toUpperCase();
+  page.context.g_selectedEvent = "Stale Event";
+  page.context.g_eventSheetLoaded = true;
+  page.context.g_eventTableData = [
+    { name: "Event" },
+    { name: "Stale Event", version: "1.0" },
+  ];
+
+  page.context.webSocketStart();
+  const firstSocket = page.sockets.at(-1);
+  firstSocket.onopen({});
+  firstSocket.onmessage({ data: "TX_ROLE,0:0" });
+  assert.equal(
+    page.elements.get("overlayText").textContent,
+    "Connected\nIdentifying Transmitter...",
+    "event replies must not reveal cached rows before device identity is confirmed",
+  );
+  resolveIdentity();
+  await new Promise((resolvePromise) => setImmediate(resolvePromise));
+  assert.equal(page.context.g_eventTableData.length, 2);
+  assert.equal(page.context.g_selectedEvent, "Stale Event");
+  assert.equal(page.elements.get("overlay").style.display, "none");
+
+  firstSocket.close();
+  lastTimerWithDelay(page.timeouts, 2000).callback();
+  identityIndex = 1;
+  const secondSocket = page.sockets.at(-1);
+  secondSocket.onopen({});
+  resolveIdentity();
+  await new Promise((resolvePromise) => setImmediate(resolvePromise));
+
+  assert.equal(page.context.g_connectedTransmitterSSID, "Tx_Master");
+  assert.equal(page.context.g_connectedTransmitterIdentity, identities[1].toUpperCase());
+  assert.equal(page.context.g_eventTableData.length, 1);
+  assert.equal(page.context.g_selectedEvent, "");
+  assert.equal(page.context.g_eventSheetLoaded, false);
+  assert.equal(
+    secondSocket.sent.filter((message) => message === "EVENT_NAME,NEW!").length,
+    2,
+    "a same-SSID device change must initiate a fresh event transfer after clearing cached rows",
+  );
+  assert.equal(page.elements.get("overlayText").textContent, "Connected\nLoading Events...");
+  console.log("PASS same-SSID transmitter changes clear cached events using immutable device identity");
 }
 
 {
