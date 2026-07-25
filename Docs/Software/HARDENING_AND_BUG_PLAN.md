@@ -640,6 +640,23 @@ The fix should preserve the existing RF, event, sleep, and temperature behavior 
 
 Target qualification must cover repeated long-standby-equivalent entries at varied ADC phases, antenna-removal wake, immediate `events.html` connection, alternating temperature/battery requests, normal WiFi timeout and return to sleep, and a dummy-loaded event/RF smoke test. Confirm separately that the external-voltage telemetry path remains isolated from RF power selection and event transmission decisions.
 
+### Mid-term clone workflow: target status and next-target readiness
+
+Extend `events.html` and the `Tx_Master` clone protocol with a dynamic table of targets observed during the current synchronization run. The master, rather than browser-only inference, should update each target's row as its session proceeds. Each row must identify the target, show its assigned role, and retain the final success or failure message. Intermediate state may be shown when useful, but a successful file transfer must not be presented as complete until event programming and normal clone cleanup have finished.
+
+In addition to the table, `Tx_Master` must explicitly tell the operator when it is ready to synchronize the next target. Readiness must describe actual admission readiness, not merely receipt of the preceding target's `SUS` success message or a change to the success LED pattern. The readiness transition should occur only after the prior target has been released or disconnected, master clone ownership has been cleared, AVR clone-quiet state has been resumed or safely resolved, and a new target can begin without receiving cleanup messages from the prior session. Qualification should include rapid sequential power-up, browser refresh/reconnect, success and failure cleanup, target disappearance during cleanup, and proof that every displayed role and outcome belongs to the correct target.
+
+### Mid-term investigation: multiple nearby or parallel sync targets
+
+Investigate whether `Tx_Master` can reliably handle targets that connect simultaneously or within a short interval. Treat two possible operating models separately:
+
+1. multiple targets may associate and wait while the master admits exactly one synchronization session at a time; and
+2. two or more targets may run genuinely parallel clock, file-transfer, event-programming, and cleanup sessions.
+
+Do not assume that the second model is safe. The current implementation has shared clone ownership, socket, file-count, Linkbus/AVR-quiet, message-broadcast, and transfer state that may couple sessions. First characterize ESP8266 access-point and WebSocket capacity, heap and LittleFS pressure, transfer bandwidth, clock-edge coordination, per-target message routing, timeout behavior, and cleanup isolation. The test matrix should cover staggered and simultaneous starts, success mixed with failure or disconnect, repeated batches, unique roles, event-file integrity, exact RTC readback, and proof that one target cannot consume another target's release, status, file data, role, or outcome.
+
+Prefer reliable queued admission with a clear per-target waiting state if true parallel operation cannot meet the same correctness and recovery gates as the established single-target path. Any parallel design requires per-target session state and directed protocol messages; it must preserve a serialized fallback and pass a representative multi-unit hardware soak before becoming an operator workflow.
+
 ### Deferred boot-chain hardening for a future chassis-open service interval
 
 AVR BL0.3 and the guarded ESP update path are accepted for the current fleet rollout. Do not revise either boot chain during ordinary wireless maintenance. Re-examine the following workstreams if another hardware issue requires reopening the fleet and makes one-time programmer access practical:
