@@ -1,0 +1,143 @@
+{
+  "release": "v2.0.2",
+  "repository": "OpenARDF/FlexFox80",
+  "channel": "stable",
+  "sourceCommit": "1120ee63804bf6b69dcea89c1c17772236081556",
+  "hardwareRevision": "Ver 2.1 (Mar 2022)",
+  "avrVersion": "0.210",
+  "espVersion": "2.28",
+  "items": [
+    {
+      "id": "branch-announced",
+      "description": "Confirm the current branch and announce it before release work begins.",
+      "status": "done",
+      "evidence": "Development_AVR128DA48 was announced, audited, and frozen before its exact v2.0.2 candidate was integrated."
+    },
+    {
+      "id": "working-tree-reviewed",
+      "description": "Confirm the working tree is clean or that unrelated changes are intentionally excluded.",
+      "status": "done",
+      "evidence": "All intended source and roadmap changes were committed. The unrelated live KiCad schematic lock file remained untracked, untouched, and excluded from the release."
+    },
+    {
+      "id": "release-channel",
+      "description": "Record whether this is a stable release or an explicitly approved prerelease.",
+      "status": "done",
+      "evidence": "The owner explicitly requested a full stable v2.0.2 release."
+    },
+    {
+      "id": "release-label-and-firmware-pair",
+      "description": "Approve the product release label and exact AVR and ESP embedded version pair.",
+      "status": "done",
+      "evidence": "The owner approved product release v2.0.2; exact source reports ESP 2.28 and AVR 0.210 with resident bootloader BL0.3."
+    },
+    {
+      "id": "hardware-revision",
+      "description": "Confirm the release supports only FlexFox Ver 2.1 (Mar 2022).",
+      "status": "done",
+      "evidence": "The manifest, package README, and release notes state FlexFox Ver 2.1 (Mar 2022) only."
+    },
+    {
+      "id": "source-commit-frozen",
+      "description": "Freeze and record the exact clean source commit used for both release builds.",
+      "status": "done",
+      "evidence": "Both release build passes and the package manifest use main commit 1120ee63804bf6b69dcea89c1c17772236081556."
+    },
+    {
+      "id": "full-repository-check",
+      "description": "Run the full repository check at the frozen source commit.",
+      "status": "done",
+      "evidence": "just check passed at the v2.0.2 source candidate on 2026-07-25, including radio.html, wireless handoff, firmware-contract, documentation, policy, and 274-byte EEPROM checks."
+    },
+    {
+      "id": "deterministic-avr-build",
+      "description": "Build AVR Release firmware twice with pinned tools and record matching hashes, warnings, resources, and EEPROM ABI.",
+      "status": "done",
+      "evidence": "Two AVR-GCC 7.3.0 / AVR-Dx_DFP 1.9.103 legacy, relocated, and BL0.3 builds were warning-free and byte-identical. Application HEX SHA-256 ae482773e00cfd87039586b3e1890e595e9e501b9179ecb4df1ac698655f3092; text 42806, data 1156, BSS 1585; EEPROM 274 bytes."
+    },
+    {
+      "id": "deterministic-esp-build",
+      "description": "Build the ESP sketch twice with the qualified profile and record matching sketch hashes, warnings, and resources.",
+      "status": "done",
+      "evidence": "Two ESP8266 core 2.7.4 / WebSockets 2.3.6 HUZZAH 80 MHz 4M1M builds were warning-free and byte-identical. Sketch SHA-256 b851c87004302c908783f6746c91de91a82a6a0dadb8f53546de8ea27feef226; sketch 565012 bytes; IRAM 27676 bytes; dynamic-memory headroom 30676 bytes."
+    },
+    {
+      "id": "artifact-manifest",
+      "description": "Generate the release manifest, checksums, package README, and exact AVR, ESP, and LittleFS artifact set.",
+      "status": "done",
+      "evidence": "The exact seven-file v2.0.2 ZIP contains both AVR HEX paths, ESP 2.28 sketch, recovery LittleFS, flexfox80-release-info-v1 manifest, checksum list, and operator README."
+    },
+    {
+      "id": "package-validation",
+      "description": "Independently validate manifest fields, package contents, file sizes, and SHA-256 hashes.",
+      "status": "done",
+      "evidence": "A clean extraction passed ZIP integrity, exact inventory, all internal SHA-256 checks, manifest checks, BL0.3/relocated-app/protocol-trailer extraction, ESP checksum validation, LittleFS inventory, and equality to the frozen build outputs. ZIP SHA-256 ef86a4ef7ae9390f2da236d7d59a310b5b8a800034bfff00351b11380947538f."
+    },
+    {
+      "id": "hardware-checklist",
+      "description": "Complete the versioned FlexFox hardware checklist, recording every approved skip explicitly.",
+      "status": "done",
+      "evidence": "hardware-disposition.md records the exact 17-unit candidate rollout, two separately identified Tx_Master units, successful owner testing, and post-release final-reflash boundary."
+    },
+    {
+      "id": "live-version-report",
+      "description": "Install the selected pair on a representative unit and capture the expected combined AVR and ESP version report.",
+      "status": "done",
+      "evidence": "Live fleet probes during the completed candidate rollout reported SW_VERSIONS,2.28,0.210; the owner confirmed successful testing across the 17-unit fleet."
+    },
+    {
+      "id": "rollback-package",
+      "description": "Select and verify the release rollback package and recovery instructions.",
+      "status": "done",
+      "evidence": "rollback.md selects independently verified v2.0.1 as the rollback point and records wireless, programmer, EEPROM/fuse, LittleFS, offset, and verification boundaries."
+    },
+    {
+      "id": "release-notes",
+      "description": "Approve concise maintainer notes that separate changes, verification, compatibility, and deferrals.",
+      "status": "done",
+      "evidence": "The owner requested the full release; release-notes.md records the ESP 2.28 handoff correction, included radio fixes, verification, final fleet reflash, and deferred voltage freshness work."
+    },
+    {
+      "id": "integration-approved",
+      "description": "Obtain explicit approval to integrate the candidate into main.",
+      "status": "done",
+      "evidence": "The owner's request to merge all changes since v2.0.1 authorized the fast-forward integration into main."
+    },
+    {
+      "id": "release-branch-verified",
+      "description": "Verify the clean integrated main commit and reproduce the selected release artifacts from it.",
+      "status": "done",
+      "evidence": "main was fast-forwarded without a merge commit to exact source 1120ee63804bf6b69dcea89c1c17772236081556 and pushed. Both complete release build passes used that exact source."
+    },
+    {
+      "id": "release-approved",
+      "description": "Obtain explicit approval for the maintenance release, tag, and designated durable archive.",
+      "status": "done",
+      "evidence": "The owner's 2026-07-25 request explicitly authorized the full stable v2.0.2 release and subsequent 17-unit reflash."
+    },
+    {
+      "id": "annotated-tag",
+      "description": "Create and push an annotated release tag pointing to the verified release commit.",
+      "status": "done",
+      "evidence": "Remote annotated tag object 1759a65ba3b59d52b165fbe747788ab8a85e9e43 peels to exact release source 1120ee63804bf6b69dcea89c1c17772236081556."
+    },
+    {
+      "id": "release-record-created",
+      "description": "Create a durable maintainer release record with the approved notes and verification summary.",
+      "status": "done",
+      "evidence": "The stable, non-draft, non-prerelease GitHub release was published at https://github.com/OpenARDF/FlexFox80/releases/tag/v2.0.2 on 2026-07-25."
+    },
+    {
+      "id": "release-assets-archived",
+      "description": "Store the validated release ZIP and individually required firmware assets in the designated durable archive.",
+      "status": "done",
+      "evidence": "GitHub contains the validated ZIP, both AVR HEX files, ESP sketch, recovery LittleFS, manifest, and checksum list; GitHub-reported sizes and SHA-256 digests match the local set."
+    },
+    {
+      "id": "archived-release-verified",
+      "description": "Copy and independently verify the archived assets, hashes, release record, and tag target.",
+      "status": "done",
+      "evidence": "Docs/Software/Evidence/V2_0_2_GITHUB_RELEASE_VERIFICATION_2026-07-25.md records fresh download, byte equality, clean ZIP extraction, independent image checks, and remote tag verification."
+    }
+  ]
+}
