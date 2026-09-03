@@ -6,7 +6,7 @@ repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
 
 required_tools="git rg jq node c++"
-optional_tools="just gitleaks shellcheck shfmt"
+optional_tools="just gitleaks shellcheck shfmt unzip"
 missing=0
 
 printf '%s\n' "Repository: $repo_root"

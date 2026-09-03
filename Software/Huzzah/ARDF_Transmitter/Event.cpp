@@ -318,9 +318,26 @@ bool Event::validEventFile(String path, String* filename)
 
 bool Event::validEventFile(String path, String* filename, bool requireChecksum)
 {
+  return validEventFile(path, filename, requireChecksum, 0, NULL);
+}
+
+bool Event::validEventFile(
+  String path,
+  String* filename,
+  bool requireChecksum,
+  uint32_t maximumDurationMillis,
+  bool* timedOut)
+{
   bool failure = true;
   int linesInFile = 0;
   EventFileIntegrityState integrity = eventFileIntegrityInitialState();
+  const uint32_t startedMillis = millis();
+  bool validationTimedOut = false;
+
+  if (timedOut)
+  {
+    *timedOut = false;
+  }
 
   if (LittleFS.exists(path))
   {
@@ -334,6 +351,12 @@ bool Event::validEventFile(String path, String* filename, bool requireChecksum)
       while (file.available() && (linesInFile < MAXIMUM_NUMBER_OF_EVENT_FILE_LINES))
       {
         yield();
+        if (maximumDurationMillis &&
+            (uint32_t)(millis() - startedMillis) > maximumDurationMillis)
+        {
+          validationTimedOut = true;
+          break;
+        }
         s = file.readStringUntil('\n');
         s.trim();
         if (!s.length())
@@ -357,7 +380,8 @@ bool Event::validEventFile(String path, String* filename, bool requireChecksum)
 
       const bool lineLimitExceeded =
         (linesInFile >= MAXIMUM_NUMBER_OF_EVENT_FILE_LINES) && file.available();
-      failure = lineLimitExceeded || !eventFileIntegrityValid(&integrity, requireChecksum);
+      failure = validationTimedOut || lineLimitExceeded ||
+                !eventFileIntegrityValid(&integrity, requireChecksum);
 
       file.close();   /* Close the file */
     }
@@ -369,6 +393,11 @@ bool Event::validEventFile(String path, String* filename, bool requireChecksum)
   else
   {
     failure = true;
+  }
+
+  if (timedOut)
+  {
+    *timedOut = validationTimedOut;
   }
 
   return (!failure);

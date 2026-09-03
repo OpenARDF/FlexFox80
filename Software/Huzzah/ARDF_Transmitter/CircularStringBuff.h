@@ -28,8 +28,7 @@
 
 class CircularStringBuff {
   public:
-    ~CircularStringBuff() {
-    }
+    ~CircularStringBuff();
 
     CircularStringBuff(size_t);
 

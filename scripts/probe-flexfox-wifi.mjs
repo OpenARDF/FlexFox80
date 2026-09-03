@@ -1,16 +1,29 @@
 #!/usr/bin/env node
 
+import { appendFileSync, mkdirSync } from "node:fs";
+import { join, resolve } from "node:path";
+
+import {
+  cloneMonitorDisconnectIsExpected,
+  cloneMonitorLogFileName,
+  cloneMonitorLogRecord,
+  cloneMonitorMessageShouldBeCaptured,
+} from "./lib/flexfox-clone-monitor-log.mjs";
 import { probeTemperatureIsPlausible } from "./lib/flexfox-fleet-upgrade.mjs";
 
 const baseUrl = new URL(process.env.FLEXFOX_URL ?? "http://73.73.73.73/");
 const timeoutMs = Number.parseInt(process.env.FLEXFOX_PROBE_TIMEOUT_MS ?? "12000", 10);
 const monitorMode = process.env.FLEXFOX_PROBE_MONITOR === "1";
+const captureDirectory = String(process.env.FLEXFOX_PROBE_CAPTURE_DIR ?? "").trim();
 
 if (baseUrl.protocol !== "http:") {
   throw new Error("FLEXFOX_URL must use http:// because the deployed module does not serve TLS");
 }
 if (!Number.isInteger(timeoutMs) || timeoutMs < 3000 || timeoutMs > 60000) {
   throw new Error("FLEXFOX_PROBE_TIMEOUT_MS must be an integer from 3000 through 60000");
+}
+if (captureDirectory && !monitorMode) {
+  throw new Error("FLEXFOX_PROBE_CAPTURE_DIR requires continuous monitor mode");
 }
 
 const websocketUrlOverride = process.env.FLEXFOX_WEBSOCKET_URL;
@@ -22,6 +35,12 @@ websocketUrl.search = "";
 websocketUrl.hash = "";
 
 const safeRequests = ["SSID", "MAC", "SW_VERSIONS", "MASTER"];
+let capturePath = "";
+
+function captureRecord(kind, details = {}) {
+  if (!capturePath) return;
+  appendFileSync(capturePath, `${cloneMonitorLogRecord(kind, details)}\n`, "utf8");
+}
 
 if (process.env.FLEXFOX_PROBE_DRY_RUN === "1") {
   console.log(`HTTP target: ${baseUrl.href}`);
@@ -29,7 +48,19 @@ if (process.env.FLEXFOX_PROBE_DRY_RUN === "1") {
   console.log(`Safe requests: !&, ${safeRequests.join(", ")}`);
   console.log("The WebSocket connection also asks the AVR for temperature and battery state.");
   console.log(`Continuous monitor: ${monitorMode ? "enabled" : "disabled"}`);
+  console.log(`Diagnostic capture: ${captureDirectory || "disabled"}`);
   process.exit(0);
+}
+
+if (captureDirectory) {
+  const resolvedCaptureDirectory = resolve(process.cwd(), captureDirectory);
+  mkdirSync(resolvedCaptureDirectory, { recursive: true });
+  capturePath = join(resolvedCaptureDirectory, cloneMonitorLogFileName());
+  captureRecord("monitor-start", {
+    httpUrl: baseUrl.href,
+    webSocketUrl: websocketUrl.href,
+  });
+  console.log(`CAPTURE Clone diagnostics: ${capturePath}`);
 }
 
 const messages = [];
@@ -72,6 +103,7 @@ function reportLivePathIfComplete() {
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.once(signal, () => {
+    captureRecord("monitor-stop", { signal });
     closeSocket();
     process.exit(0);
   });
@@ -83,10 +115,31 @@ try {
   console.log(`PASS HTTP ${response.status} ${baseUrl.href}`);
 
   await new Promise((resolve, reject) => {
-    finishProbe = resolve;
+    let settled = false;
+    finishProbe = () => {
+      if (settled) return;
+      settled = true;
+      resolve();
+    };
     socket = new WebSocket(websocketUrl);
 
-    const failTimer = setTimeout(() => reject(new Error("WebSocket connection timed out")), 4000);
+    const fail = (reason) => {
+      if (settled) return;
+      settled = true;
+      reject(new Error(reason));
+    };
+    const finishOrFailOnDisconnect = (reason) => {
+      if (settled) return;
+      if (cloneMonitorDisconnectIsExpected(monitorMode, livePathReported)) {
+        captureRecord("monitor-disconnect", { reason });
+        console.log(`MONITOR DISCONNECTED: ${reason}`);
+        finishProbe();
+        return;
+      }
+      fail(reason);
+    };
+
+    const failTimer = setTimeout(() => fail("WebSocket connection timed out"), 4000);
 
     socket.addEventListener("open", () => {
       clearTimeout(failTimer);
@@ -103,19 +156,24 @@ try {
         if (socket.readyState === WebSocket.OPEN) socket.send("!&");
       }, 5000);
 
-      if (!monitorMode) finishTimer = setTimeout(resolve, timeoutMs);
+      if (!monitorMode) finishTimer = setTimeout(finishProbe, timeoutMs);
     });
 
     socket.addEventListener("message", (event) => {
       const message = String(event.data);
       messages.push(message);
       console.log(`RECV ${message}`);
+      if (cloneMonitorMessageShouldBeCaptured(message)) {
+        captureRecord("message", { message });
+      }
       reportLivePathIfComplete();
     });
 
-    socket.addEventListener("error", () => reject(new Error("WebSocket error")));
+    socket.addEventListener("error", () => finishOrFailOnDisconnect("WebSocket error"));
     socket.addEventListener("close", (event) => {
-      if (event.code !== 1000) reject(new Error(`WebSocket closed unexpectedly (${event.code})`));
+      if (event.code !== 1000) {
+        finishOrFailOnDisconnect(`WebSocket closed unexpectedly (${event.code})`);
+      }
     });
   });
 
@@ -137,5 +195,6 @@ try {
 
   reportLivePathIfComplete();
 } finally {
+  captureRecord("monitor-end");
   closeSocket();
 }

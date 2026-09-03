@@ -14,7 +14,9 @@ The runner writes executables only under the ignored `Software/AVR128DA48/tmp/ho
 
 `just test` also runs dependency-free source-contract checks for firmware declarations whose target-compiler interpretation is safety-relevant. These checks supplement compilation; they do not replace it.
 
-The source contracts also require the release-pair definitions and their reporting paths to remain aligned. The current candidate identity is ESP `2.28` plus AVR `0.210`, reported together as `SW_VERSIONS,2.28,0.210`.
+The source contracts also require the firmware-pair definitions and their reporting paths to remain aligned. The normal ESP build is ESP `2.35` plus unchanged AVR `0.210`, reported together as `SW_VERSIONS,2.35,0.210`. It retains the qualified core 2.7.4 and WebSockets 2.3.6 stack while using the promoted LittleFS 2.5.1 engine. The sketch-only qualification artifact remains isolated from the normal sketch-plus-filesystem build.
+
+`just esp-clone-littlefs-diagnostic-characterize` builds the isolated sketch-only ESP 2.35 qualification artifact, then compares LittleFS 2.2 and 2.5.1 replacement-rename flash operations at the FlexFox filesystem geometry. This opt-in characterization depends on the pinned ESP8266 package and checksum-pinned LittleFS source, so it is not part of dependency-light `just test`.
 
 The WiFi power-lease regression proves the ESP-only maintenance lease expires exactly at 300 seconds, can be renewed, returns to zero on ordinary activity, and remains separate from the unchanged 120-second normal timeout. The filesystem startup-policy regression proves only an exact in-progress marker enters recovery and that its RTC storage does not overlap eboot's command area.
 
@@ -95,6 +97,10 @@ The ESP clone keep-alive schedule regression compiles the same bounded schedule 
 - a 20-second cadence that remains due until it can be queued;
 - correct interval arithmetic across `millis()` wraparound; and
 - immediate heartbeat cancellation when clone work ends.
+
+The ESP clone diagnostic-state regression covers phase transitions, file and line counters, cleanup and overflow flags, and frozen elapsed times after a terminal failure or completion. The clone sync-safety regression covers the permitted one-second clock rollover, the master no-progress watchdog (including `millis()` wrap), and integrity and address separation of the retained reset marker.
+
+The production ESP `CircularStringBuff.cpp` is also compiled against a host Arduino `String` shim. Its regression covers FIFO behavior, moved-from slot release, reset release, and destruction under AddressSanitizer so that clone traffic cannot retain every consumed line allocation or leak the backing array. Source contracts additionally require the per-file receive queue to be destroyed before validation and rename, and diagnostic records to reserve one buffer rather than construct a chain of heap-fragmenting temporary strings.
 
 The ESP Linkbus command-transaction regression compiles the same outcome decision used by event programming and covers:
 

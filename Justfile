@@ -22,6 +22,11 @@ policy-check:
 # Build and run dependency-light host characterization tests.
 test:
     ./scripts/run-host-tests.sh
+    node --check ./scripts/build-esp8266.mjs
+    node --check ./scripts/characterize-littlefs-rename.mjs
+    node --check ./scripts/probe-flexfox-wifi.mjs
+    node --check ./scripts/lib/flexfox-clone-monitor-log.mjs
+    node --check ./scripts/update-flexfox-esp-over-wifi.mjs
     node --check ./scripts/qualify-flexfox-esp-filesystem-recovery.mjs
     node --check ./scripts/test-flexfox-wifi-maintenance-lease.mjs
     node --check ./scripts/qualify-flexfox-avr-bootloader.mjs
@@ -34,6 +39,7 @@ test:
     node ./Tests/Host/wifi_avr_update_identity_test.mjs
     node ./Tests/Host/flexfox_http_test.mjs
     node ./Tests/Host/flexfox_adb_relay_test.mjs
+    node ./Tests/Host/clone_monitor_log_test.mjs
     node ./Tests/Host/events_html_test.mjs
     node ./Tests/Host/radio_html_test.mjs
     node ./Tests/Host/fleet_soak_event_generator_test.mjs
@@ -107,6 +113,11 @@ wifi-adb-monitor ssid:
     FLEXFOX_SSID="{{ssid}}" node ./scripts/prepare-flexfox-adb-relay.mjs
     FLEXFOX_URL=http://127.0.0.1:18080/ FLEXFOX_WEBSOCKET_URL=ws://127.0.0.1:18081/ just wifi-monitor
 
+# Monitor one exact FlexFox through ADB and retain diagnostic/control records without event-file data.
+wifi-adb-clone-monitor ssid:
+    FLEXFOX_SSID="{{ssid}}" node ./scripts/prepare-flexfox-adb-relay.mjs
+    FLEXFOX_URL=http://127.0.0.1:18080/ FLEXFOX_WEBSOCKET_URL=ws://127.0.0.1:18081/ FLEXFOX_PROBE_CAPTURE_DIR=Software/Huzzah/tmp/clone-monitor just wifi-monitor
+
 # Keep the FlexFox WiFi module active with the read-only WebSocket heartbeat.
 wifi-monitor:
     FLEXFOX_PROBE_MONITOR=1 node ./scripts/probe-flexfox-wifi.mjs
@@ -179,9 +190,25 @@ fleet-wireless-upgrade-unit unit ssid:
 fleet-soak-events start:
     node ./scripts/generate-flexfox-fleet-soak-events.mjs --start "{{start}}"
 
-# Build the ESP8266 sketch and LittleFS image with the qualified pinned profile.
+# Build the normal ESP 2.35 sketch and LittleFS image with the qualified LittleFS 2.5.1 engine.
 esp-build:
     node ./scripts/build-esp8266.mjs
+
+# Build the sketch-only qualification artifact with LittleFS 2.5.1 on the qualified core 2.7.4 stack.
+esp-clone-littlefs-diagnostic-build:
+    FLEXFOX_ESP_LITTLEFS_2_5_1_DIAGNOSTIC=1 node ./scripts/build-esp8266.mjs
+
+# Compare LittleFS 2.2 and 2.5.1 replacement-rename work at the FlexFox filesystem geometry.
+esp-clone-littlefs-diagnostic-characterize: esp-clone-littlefs-diagnostic-build
+    node ./scripts/characterize-littlefs-rename.mjs
+
+# Install the exact ESP 2.35 sketch-only qualification artifact on one canonical target.
+wifi-esp-clone-littlefs-diagnostic-update ssid:
+    FLEXFOX_FIRMWARE_BIN="Software/Huzzah/tmp/esp-build-littlefs-2.5.1-diagnostic/ARDF_Transmitter.ino.bin" FLEXFOX_EXPECTED_ESP_VERSION="2.35" FLEXFOX_EXPECTED_DEVICE_SSID="{{ssid}}" FLEXFOX_EXPECTED_PREUPDATE_DEVICE_SSID="{{ssid}}" FLEXFOX_RECONNECT_SSID="{{ssid}}" FLEXFOX_REQUIRE_LITTLEFS_2_5_1_DIAGNOSTIC=1 node ./scripts/update-flexfox-esp-over-wifi.mjs
+
+# Install the evidence-bound normal ESP 2.35 sketch while preserving the device filesystem.
+wifi-esp-normal-update device_ssid reconnect_ssid:
+    FLEXFOX_FIRMWARE_BIN="Software/Huzzah/tmp/esp-build/ARDF_Transmitter.ino.bin" FLEXFOX_EXPECTED_ESP_VERSION="2.35" FLEXFOX_EXPECTED_DEVICE_SSID="{{device_ssid}}" FLEXFOX_EXPECTED_PREUPDATE_DEVICE_SSID="{{device_ssid}}" FLEXFOX_RECONNECT_SSID="{{reconnect_ssid}}" FLEXFOX_REQUIRE_NORMAL_ESP_BUILD=1 node ./scripts/update-flexfox-esp-over-wifi.mjs
 
 # Program and independently verify only the ESP sketch region (explicit confirmation required).
 esp-program-sketch:

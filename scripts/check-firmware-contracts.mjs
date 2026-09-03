@@ -30,7 +30,10 @@ const driverInitHeaderPath = join(
   "driver_init.h",
 );
 const wifiProbePath = join(repoRoot, "scripts", "probe-flexfox-wifi.mjs");
+const cloneMonitorLogPath = join(repoRoot, "scripts", "lib", "flexfox-clone-monitor-log.mjs");
 const wifiUpdaterPath = join(repoRoot, "scripts", "update-flexfox-esp-over-wifi.mjs");
+const espBuildPath = join(repoRoot, "scripts", "build-esp8266.mjs");
+const justfilePath = join(repoRoot, "Justfile");
 const wifiMaintenanceLeaseTestPath = join(repoRoot, "scripts", "test-flexfox-wifi-maintenance-lease.mjs");
 const espFilesystemRecoveryQualifierPath = join(
   repoRoot,
@@ -206,6 +209,13 @@ const espEventPath = join(
   "ARDF_Transmitter",
   "Event.cpp",
 );
+const espCircularStringBufferPath = join(
+  repoRoot,
+  "Software",
+  "Huzzah",
+  "ARDF_Transmitter",
+  "CircularStringBuff.cpp",
+);
 const roleAssignmentBoundsPath = join(
   repoRoot,
   "Software",
@@ -273,7 +283,10 @@ const source = readFileSync(eepromManagerPath, "utf8");
 const header = readFileSync(eepromManagerHeaderPath, "utf8");
 const driverInitHeader = readFileSync(driverInitHeaderPath, "utf8");
 const wifiProbe = readFileSync(wifiProbePath, "utf8");
+const cloneMonitorLog = readFileSync(cloneMonitorLogPath, "utf8");
 const wifiUpdater = readFileSync(wifiUpdaterPath, "utf8");
+const espBuild = readFileSync(espBuildPath, "utf8");
+const justfile = readFileSync(justfilePath, "utf8");
 const wifiMaintenanceLeaseTest = readFileSync(wifiMaintenanceLeaseTestPath, "utf8");
 const espFilesystemRecoveryQualifier = readFileSync(espFilesystemRecoveryQualifierPath, "utf8");
 const wifiAvrUpdater = readFileSync(wifiAvrUpdaterPath, "utf8");
@@ -306,6 +319,7 @@ const espHeader = readFileSync(espHeaderPath, "utf8");
 const espDefinitions = readFileSync(espDefinitionsPath, "utf8");
 const filesystemStartupPolicy = readFileSync(filesystemStartupPolicyPath, "utf8");
 const espEvent = readFileSync(espEventPath, "utf8");
+const espCircularStringBuffer = readFileSync(espCircularStringBufferPath, "utf8");
 const roleAssignmentBounds = readFileSync(roleAssignmentBoundsPath, "utf8");
 const eventFileIntegrity = readFileSync(eventFileIntegrityPath, "utf8");
 const cloneEventManifest = readFileSync(cloneEventManifestPath, "utf8");
@@ -317,7 +331,7 @@ const avrFirmwareUpdateHeader = readFileSync(avrFirmwareUpdateHeaderPath, "utf8"
 const avrFirmwareUpdatePage = readFileSync(avrFirmwareUpdatePagePath, "utf8");
 
 const expectedAvrVersion = process.env.FLEXFOX_EXPECTED_AVR_VERSION ?? "0.210";
-const expectedEspVersion = "2.28";
+const expectedEspVersion = process.env.FLEXFOX_EXPECTED_ESP_VERSION ?? "2.35";
 const avrVersion = avrDefinitions.match(/#define\s+SW_REVISION\s+"([^"]+)"/);
 const espVersion = espDefinitions.match(/#define\s+WIFI_SW_VERSION\s+\("([^"]+)"\)/);
 
@@ -717,6 +731,13 @@ if (
   !heartbeatHelper.includes('socket.send("!&")') ||
   !heartbeatHelper.includes("heartbeatTimer = setInterval(poke, 5000)") ||
   !heartbeatHelper.includes("reconnectTimer = setTimeout(connect, 1500)") ||
+  !wifiProbe.includes("FLEXFOX_PROBE_CAPTURE_DIR") ||
+  !wifiProbe.includes("cloneMonitorMessageShouldBeCaptured(message)") ||
+  !cloneMonitorLog.includes('"CDIAG"') ||
+  !cloneMonitorLog.includes('"SUE"') ||
+  !cloneMonitorLog.includes('return `clone-monitor-${date.toISOString()') ||
+  !justfile.includes("wifi-adb-clone-monitor ssid:") ||
+  !justfile.includes("FLEXFOX_PROBE_CAPTURE_DIR=Software/Huzzah/tmp/clone-monitor") ||
   !wifiUpdater.includes('FLEXFOX_UPDATE_VERIFY_TIMEOUT_MS ?? "240000"') ||
   !wifiUpdater.includes("FLEXFOX_EXPECTED_ESP_VERSION ?? sourceVersion") ||
   !wifiUpdater.includes("WIFI_SW_VERSION") ||
@@ -735,12 +756,43 @@ if (
   !webDeployer.includes("heartbeat.stop()")
 ) {
   process.stderr.write(
-    "Firmware contract check failed: host WiFi updates and web deployments must keep the AVR awake only during bounded, reconnecting verification windows\n",
+    "Firmware contract check failed: host WiFi tools must retain filtered clone diagnostics and keep the AVR awake only during bounded, reconnecting verification windows\n",
   );
   process.exit(1);
 }
 
 process.stdout.write("PASS host WiFi updates use a shared bounded reconnecting AVR heartbeat\n");
+
+if (
+  !espBuild.includes('FLEXFOX_ESP_LITTLEFS_2_5_1_DIAGNOSTIC === "1"') ||
+  !espBuild.includes('"esp-build-littlefs-2.5.1-diagnostic"') ||
+  !espBuild.includes('qualifiedVersion !== "00020005"') ||
+  !espBuild.includes('qualifiedDiskVersion !== "00020000"') ||
+  !espBuild.includes('filesystemImageGenerated: !sketchOnlyDiagnostic') ||
+  !espBuild.includes("firmwareVersion,") ||
+  !espBuild.includes('littleFsEngine: "littlefs@2.5.1"') ||
+  !espBuild.includes('"hardware-compatible-normal-build"') ||
+  !espBuild.includes('compiledLittleFsSources.some((file) => !file.startsWith(qualifiedLibraryPrefix))') ||
+  !wifiUpdater.includes('FLEXFOX_REQUIRE_LITTLEFS_2_5_1_DIAGNOSTIC === "1"') ||
+  !wifiUpdater.includes('FLEXFOX_REQUIRE_NORMAL_ESP_BUILD === "1"') ||
+  !wifiUpdater.includes('requiredBuildEvidence.littleFsDiskVersion !== "2.0"') ||
+  !wifiUpdater.includes("requiredBuildEvidence.firmwareVersion !== expectedVersion") ||
+  !wifiUpdater.includes('requiredBuildEvidence.littleFsSourceArchive?.sha256') ||
+  !wifiUpdater.includes('artifact?.bytes !== firmware.length || artifact?.sha256 !== firmwareSha256') ||
+  !justfile.includes("esp-clone-littlefs-diagnostic-build:") ||
+  !justfile.includes("esp-clone-littlefs-diagnostic-characterize:") ||
+  !justfile.includes("wifi-esp-clone-littlefs-diagnostic-update ssid:") ||
+  !justfile.includes("wifi-esp-normal-update device_ssid reconnect_ssid:") ||
+  !justfile.includes('FLEXFOX_EXPECTED_ESP_VERSION="2.35"') ||
+  !justfile.includes("FLEXFOX_REQUIRE_NORMAL_ESP_BUILD=1")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: LittleFS 2.5.1 must be the evidence-bound normal engine while the sketch-only qualification path remains isolated\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS LittleFS 2.5.1 is the evidence-bound normal ESP engine\n");
 
 const slaveMainLoop = espMain.match(
   /else \/\* IamSlave \*\/([\s\S]*?)\n\s*if \(g_onlyUpdateEvent\)/,
@@ -799,8 +851,8 @@ if (
 process.stdout.write("PASS ESP event programming is an exclusive fail-fast Linkbus transaction\n");
 
 if (
-  espMain.match(/delete g_fileDataBuff;/g)?.length !== 3 ||
-  espMain.match(/delete g_fileDataBuff;\s+g_fileDataBuff = NULL;/g)?.length !== 3 ||
+  espMain.match(/delete g_fileDataBuff;/g)?.length !== 5 ||
+  espMain.match(/delete g_fileDataBuff;\s+g_fileDataBuff = NULL;/g)?.length !== 5 ||
   !espMain.includes("size_t j;") ||
   !espMain.includes("Serial.readBytes(buf, min(sizeof(buf) - 1, bytesAvail))") ||
   !espMain.includes("if ((size_t)messageLength >= sizeof(buf) - 1)")
@@ -1725,6 +1777,46 @@ if (
 
 process.stdout.write("PASS ESP clone handshake drains queues and requires matching RTC readback\n");
 
+if (
+  !espCircularStringBuffer.includes("delete[] buf_;") ||
+  !espCircularStringBuffer.includes("buf_[head_] = std::move(item);") ||
+  !espCircularStringBuffer.includes("String val = std::move(buf_[tail_]);")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: ESP clone receive queue retains consumed String allocations or leaks its backing array\n",
+  );
+  process.exit(1);
+}
+
+if (
+  !espMain.includes("cloneClockReadbackAccepted(g_cloneClockExpected, rtcEpoch)") ||
+  !espMain.includes("serviceMasterCloneWatchdog();") ||
+  !espMain.includes("masterCloneProgressTimedOut(") ||
+  !espMain.includes("CLONE_FILE_VALIDATION_TIMEOUT_MILLIS") ||
+  !espMain.includes("message.reserve(384);") ||
+  !espMain.includes("g_cloneDiagnosticMinimumFreeHeap") ||
+  !espMain.includes("cloneDiagnosticTemporaryFileOpened(&g_cloneDiagnostic);") ||
+  !espMain.includes("cloneDiagnosticTemporaryFileCompleted(&g_cloneDiagnostic);") ||
+  !espMain.includes("cleanupIncompleteCloneTempFile(tempFile);") ||
+  !espMain.includes('!LittleFS.exists("/Temp")') ||
+  !espMain.includes("cloneDiagnosticTemporaryFileCleanupAttempted") ||
+  !espMain.includes("cloneDiagnosticTemporaryFileCleanupConfirmed") ||
+  !/temp\.equals\("EOF"\)[\s\S]*?delete g_fileDataBuff;[\s\S]*?WSClientValidateFile/.test(espMain) ||
+  espMain.includes("LittleFS.remove(updatedFileName)") ||
+  !espMain.includes("LittleFS rename replaces an existing file atomically") ||
+  !espMain.includes("fileReady = LittleFS.rename(path, updatedFileName);") ||
+  !espMain.includes("loadCloneResetEvidence();") ||
+  !espMain.includes("if (g_cloneRecoveredResetDetected)") ||
+  !espMain.includes("g_LBOutputBuff->put(LB_MESSAGE_ESP_CLONE_RESUME);")
+) {
+  process.stderr.write(
+    "Firmware contract check failed: ESP clone recovery lacks bounded validation, selective incomplete-Temp cleanup, atomic event replacement, clock tolerance, master progress recovery, or reset resume\n",
+  );
+  process.exit(1);
+}
+
+process.stdout.write("PASS ESP clone recovery bounds memory, clock, validation, progress, and reset handling\n");
+
 const txAssignmentBody = espEvent.match(
   /bool\s+Event::setTxAssignment\s*\(\s*String\s+role_slot\s*\)\s*\{([\s\S]*?)\n\}/,
 );
@@ -1744,16 +1836,15 @@ if (
 
 process.stdout.write("PASS ESP role assignment retains the complete role prefix\n");
 
-const eventFileValidatorBody = espEvent.match(
-  /bool\s+Event::validEventFile\s*\(\s*String\s+path\s*,\s*String\s*\*\s*filename\s*,\s*bool\s+requireChecksum\s*\)\s*\{([\s\S]*?)\n\}/,
-);
 if (
-  !eventFileValidatorBody ||
-  !eventFileValidatorBody[1].includes("eventFileIntegrityInitialState()") ||
-  !eventFileValidatorBody[1].includes("eventFileIntegrityObserveLine") ||
-  !eventFileValidatorBody[1].includes("eventFileIntegrityValid(&integrity, requireChecksum)") ||
+  !espEvent.includes("return validEventFile(path, filename, requireChecksum, 0, NULL);") ||
+  !espEvent.includes("eventFileIntegrityInitialState()") ||
+  !espEvent.includes("eventFileIntegrityObserveLine") ||
+  !espEvent.includes("eventFileIntegrityValid(&integrity, requireChecksum)") ||
+  !espEvent.includes("maximumDurationMillis") ||
+  !espEvent.includes("validationTimedOut = true;") ||
   !espEvent.includes("validEventFile(path, NULL, false)") ||
-  !espMain.includes("Event::validEventFile(path, &updatedFileName, true)") ||
+  !espMain.includes("CLONE_FILE_VALIDATION_TIMEOUT_MILLIS") ||
   !eventFileIntegrity.includes("uint32_t checksum;") ||
   !eventFileIntegrity.includes("received == state->checksum") ||
   !eventFileIntegrity.includes("return !requireChecksum || state->checksumSeen;")

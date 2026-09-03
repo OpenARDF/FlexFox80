@@ -64,7 +64,10 @@
 #include "FleetSoak.h"
 #include "Event.h"
 #include "clone_event_manifest.h"
+#include "clone_diagnostic_state.h"
 #include "clone_keepalive_schedule.h"
+#include "clone_reset_marker.h"
+#include "clone_sync_safety.h"
 #include "fleet_soak.h"
 #include "firmware_update_integrity.h"
 #include "filesystem_startup_policy.h"
@@ -188,6 +191,8 @@ bool g_slaveCloneQuietActive = false;
 bool g_slaveSyncReadySent = false;
 unsigned long g_slaveSyncReadyStartedMillis = 0;
 unsigned long g_cloneClockExpected = 0;
+unsigned long g_cloneClockReadback = 0;
+int32_t g_cloneClockReadbackDelta = 0;
 unsigned long g_cloneClockWaitStartedMillis = 0;
 bool g_cloneClockVerified = false;
 bool g_cloneClockReadbackMismatch = false;
@@ -197,6 +202,24 @@ bool g_masterClonePruneTargetEvents = false;
 bool g_slaveClonePruneTargetEvents = false;
 CloneEventManifest g_cloneEventManifest;
 CloneKeepAliveSchedule g_slaveCloneKeepAliveSchedule = {0, false, false};
+CloneDiagnosticState g_cloneDiagnostic;
+String g_cloneDiagnosticFailure;
+bool g_cloneDiagnosticCanReportToMaster = false;
+uint32_t g_cloneDiagnosticFreeHeap = 0;
+uint32_t g_cloneDiagnosticMinimumFreeHeap = 0;
+uint16_t g_cloneDiagnosticMaxFreeBlock = 0;
+uint8_t g_cloneDiagnosticHeapFragmentation = 0;
+String g_masterLastTargetDiagnostic;
+unsigned long g_masterLastTargetDiagnosticMillis = 0;
+unsigned long g_masterCloneSessionStartedMillis = 0;
+unsigned long g_masterCloneLastProgressMillis = 0;
+uint16_t g_masterCloneRecoveryCount = 0;
+String g_masterCloneLastFailure;
+bool g_cloneRecoveredResetDetected = false;
+CloneDiagnosticPhase g_cloneRecoveredResetPhase = CLONE_DIAG_IDLE;
+uint16_t g_cloneRecoveredResetFileIndex = 0;
+uint16_t g_cloneRecoveredResetFileCount = 0;
+String g_cloneRecoveredResetReason;
 FleetSoakMode g_masterFleetSoakMode = FLEET_SOAK_MODE_OFF;
 FleetSoakMode g_slaveFleetSoakMode = FLEET_SOAK_MODE_OFF;
 String g_slaveFleetSoakAssignment;
@@ -322,7 +345,17 @@ bool setAVRCloneQuietMode(bool quiet);
 void beginSlaveCloneKeepAlive(void);
 void serviceSlaveCloneKeepAlive(void);
 void endSlaveCloneKeepAlive(void);
+void reportCloneDiagnosticPhase(CloneDiagnosticPhase phase);
+void reportCloneDiagnosticFailure(const String& reason);
+void reportCloneDiagnosticComplete(void);
+String cloneDiagnosticFailureText(const String& fallback);
+void captureCloneHeapDiagnostic(void);
+void cleanupIncompleteCloneTempFile(File& tempFile);
+void persistCloneResetMarker(void);
+void loadCloneResetEvidence(void);
+void initializeUniqueAPName(void);
 void serviceMasterCloneHandshake(void);
+void serviceMasterCloneWatchdog(void);
 void endMasterCloneSession(void);
 bool reconcileCloneEventFiles(const CloneEventManifest *manifest);
 static bool drainLinkbusBeforeEvent(String *errorTxt);
@@ -331,6 +364,8 @@ static bool sendLinkbusTransactionCommand(const String& message, const char *pha
 void setup()
 {
   Serial.begin(SERIAL_BAUD_RATE);
+  initializeUniqueAPName();
+  loadCloneResetEvidence();
 
   lights = new Blinkies();
 
@@ -374,6 +409,14 @@ void setup()
 #else
   g_xmtr = new Transmitter(false);
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+
+  if (g_cloneRecoveredResetDetected)
+  {
+    /* A reset during cloning can leave the AVR suppressing the time report that
+     * waitForTimeLoop() requires. Resume it before entering that wait so the
+     * target can boot, expose diagnostics, and retry without a power cycle. */
+    g_LBOutputBuff->put(LB_MESSAGE_ESP_CLONE_RESUME);
+  }
 
 }
 
@@ -655,6 +698,199 @@ void endSlaveCloneKeepAlive()
   cloneKeepAliveEnd(&g_slaveCloneKeepAliveSchedule);
 }
 
+void persistCloneResetMarker()
+{
+  CloneResetMarker marker = g_cloneDiagnostic.active
+                            ? cloneResetMarkerActive(
+                                (uint32_t)g_cloneDiagnostic.phase,
+                                g_cloneDiagnostic.fileIndex,
+                                g_cloneDiagnostic.fileCount)
+                            : cloneResetMarkerClear();
+  ESP.rtcUserMemoryWrite(
+    CLONE_RESET_RTC_OFFSET_WORDS,
+    reinterpret_cast<uint32_t *>(&marker),
+    sizeof(marker));
+}
+
+void loadCloneResetEvidence()
+{
+  CloneResetMarker marker = cloneResetMarkerClear();
+  const bool markerRead = ESP.rtcUserMemoryRead(
+    CLONE_RESET_RTC_OFFSET_WORDS,
+    reinterpret_cast<uint32_t *>(&marker),
+    sizeof(marker));
+
+  if (markerRead && cloneResetMarkerWasInterrupted(&marker) &&
+      marker.phase <= (uint32_t)CLONE_DIAG_FAILED)
+  {
+    g_cloneRecoveredResetDetected = true;
+    g_cloneRecoveredResetPhase = (CloneDiagnosticPhase)marker.phase;
+    g_cloneRecoveredResetFileIndex = (uint16_t)marker.fileIndex;
+    g_cloneRecoveredResetFileCount = (uint16_t)marker.fileCount;
+    g_cloneRecoveredResetReason = ESP.getResetReason();
+  }
+
+  marker = cloneResetMarkerClear();
+  ESP.rtcUserMemoryWrite(
+    CLONE_RESET_RTC_OFFSET_WORDS,
+    reinterpret_cast<uint32_t *>(&marker),
+    sizeof(marker));
+}
+
+static String jsonEscaped(String value)
+{
+  value.replace("\\", "\\\\");
+  value.replace("\"", "\\\"");
+  value.replace("\r", "\\r");
+  value.replace("\n", "\\n");
+  return value;
+}
+
+static String cloneDiagnosticSnapshot()
+{
+  const uint32_t now = millis();
+  String failureReason = g_cloneDiagnosticFailure;
+  failureReason.replace(",", ";");
+  String resetReason = g_cloneRecoveredResetReason;
+  resetReason.replace(",", ";");
+  String message;
+  /* Clone diagnostics run at the lowest-heap point in the workflow. Reserve
+   * once and append in place instead of constructing a long chain of String
+   * temporaries immediately before LittleFS metadata operations. */
+  message.reserve(384);
+  message += SOCK_COMMAND_CLONE_DIAGNOSTIC;
+  message += ',';
+  message += g_uniqueAPNameString;
+  message += ',';
+  message += cloneDiagnosticPhaseText(g_cloneDiagnostic.phase);
+  message += ',';
+  message += cloneDiagnosticPhaseText(g_cloneDiagnostic.failurePhase);
+  message += ',';
+  message += g_cloneDiagnostic.attempt;
+  message += ',';
+  message += g_cloneDiagnostic.fileIndex;
+  message += ',';
+  message += g_cloneDiagnostic.fileCount;
+  message += ',';
+  message += g_cloneDiagnostic.receivedLines;
+  message += ',';
+  message += cloneDiagnosticElapsedMillis(&g_cloneDiagnostic, now);
+  message += ',';
+  message += g_cloneDiagnostic.cleanupConfirmed ? '1' : '0';
+  message += ',';
+  message += g_cloneDiagnostic.receiveBufferOverflow ? '1' : '0';
+  message += ',';
+  message += failureReason;
+  message += ',';
+  message += g_cloneClockExpected;
+  message += ',';
+  message += g_cloneClockReadback;
+  message += ',';
+  message += g_cloneClockReadbackDelta;
+  message += ',';
+  message += cloneDiagnosticPhaseText(g_cloneRecoveredResetPhase);
+  message += ',';
+  message += g_cloneRecoveredResetFileIndex;
+  message += ',';
+  message += g_cloneRecoveredResetFileCount;
+  message += ',';
+  message += resetReason;
+  message += ',';
+  message += g_cloneDiagnosticFreeHeap;
+  message += ',';
+  message += g_cloneDiagnosticMinimumFreeHeap;
+  message += ',';
+  message += g_cloneDiagnosticMaxFreeBlock;
+  message += ',';
+  message += g_cloneDiagnosticHeapFragmentation;
+  message += ',';
+  message += g_cloneDiagnostic.temporaryFileCleanupAttempted ? '1' : '0';
+  message += ',';
+  message += g_cloneDiagnostic.temporaryFileCleanupConfirmed ? '1' : '0';
+  message.replace("\r", " ");
+  message.replace("\n", " ");
+  return message;
+}
+
+void captureCloneHeapDiagnostic()
+{
+  g_cloneDiagnosticFreeHeap = ESP.getFreeHeap();
+  if (!g_cloneDiagnosticMinimumFreeHeap ||
+      g_cloneDiagnosticFreeHeap < g_cloneDiagnosticMinimumFreeHeap)
+  {
+    g_cloneDiagnosticMinimumFreeHeap = g_cloneDiagnosticFreeHeap;
+  }
+  g_cloneDiagnosticMaxFreeBlock = ESP.getMaxFreeBlockSize();
+  g_cloneDiagnosticHeapFragmentation = ESP.getHeapFragmentation();
+}
+
+void cleanupIncompleteCloneTempFile(File& tempFile)
+{
+  if (!cloneDiagnosticShouldRemoveIncompleteTemporaryFile(&g_cloneDiagnostic))
+  {
+    return;
+  }
+
+  if (tempFile)
+  {
+    tempFile.close();
+  }
+  if (LittleFS.exists("/Temp"))
+  {
+    LittleFS.remove("/Temp");
+  }
+  cloneDiagnosticTemporaryFileCleanupFinished(
+    &g_cloneDiagnostic,
+    !LittleFS.exists("/Temp"));
+}
+
+static void emitCloneDiagnosticSnapshot()
+{
+  String message = cloneDiagnosticSnapshot();
+  Serial.println(message);
+  if (g_cloneDiagnosticCanReportToMaster)
+  {
+    g_webSocketLocalClient.sendTXT(stringObjToConstCharString(&message));
+  }
+}
+
+void reportCloneDiagnosticPhase(CloneDiagnosticPhase phase)
+{
+  cloneDiagnosticSetPhase(&g_cloneDiagnostic, phase, millis());
+  captureCloneHeapDiagnostic();
+  persistCloneResetMarker();
+  emitCloneDiagnosticSnapshot();
+}
+
+void reportCloneDiagnosticFailure(const String& reason)
+{
+  if (!g_cloneDiagnosticFailure.length())
+  {
+    g_cloneDiagnosticFailure = reason;
+  }
+  cloneDiagnosticFail(&g_cloneDiagnostic, millis());
+  captureCloneHeapDiagnostic();
+  persistCloneResetMarker();
+  emitCloneDiagnosticSnapshot();
+}
+
+void reportCloneDiagnosticComplete()
+{
+  cloneDiagnosticComplete(&g_cloneDiagnostic, millis());
+  captureCloneHeapDiagnostic();
+  persistCloneResetMarker();
+  emitCloneDiagnosticSnapshot();
+}
+
+String cloneDiagnosticFailureText(const String& fallback)
+{
+  const String reason = g_cloneDiagnosticFailure.length() ? g_cloneDiagnosticFailure : fallback;
+  const CloneDiagnosticPhase phase = g_cloneDiagnostic.phase == CLONE_DIAG_FAILED
+                                     ? g_cloneDiagnostic.failurePhase
+                                     : g_cloneDiagnostic.phase;
+  return String(cloneDiagnosticPhaseText(phase)) + ": " + reason;
+}
+
 void handleFirmwareUpdatePage()
 {
   g_http_server.sendHeader("Cache-Control", "no-store");
@@ -695,9 +931,75 @@ void handleFirmwareUpdateStatus()
   response += ",\"linkbusLastAttempts\":";
   response += String(g_linkBusLastAttempts);
   response += ",\"linkbusLastPhase\":\"";
-  response += g_linkBusLastPhase;
+  response += jsonEscaped(g_linkBusLastPhase);
   response += "\",\"linkbusLastFailure\":\"";
-  response += g_linkBusLastFailure;
+  response += jsonEscaped(g_linkBusLastFailure);
+  response += "\",\"cloneDiagnosticActive\":";
+  response += g_cloneDiagnostic.active ? "true" : "false";
+  response += ",\"cloneDiagnosticPhase\":\"";
+  response += cloneDiagnosticPhaseText(g_cloneDiagnostic.phase);
+  response += "\",\"cloneDiagnosticFailurePhase\":\"";
+  response += cloneDiagnosticPhaseText(g_cloneDiagnostic.failurePhase);
+  response += "\",\"cloneDiagnosticFailure\":\"";
+  response += jsonEscaped(g_cloneDiagnosticFailure);
+  response += "\",\"cloneDiagnosticAttempt\":";
+  response += String(g_cloneDiagnostic.attempt);
+  response += ",\"cloneDiagnosticFileIndex\":";
+  response += String(g_cloneDiagnostic.fileIndex);
+  response += ",\"cloneDiagnosticFileCount\":";
+  response += String(g_cloneDiagnostic.fileCount);
+  response += ",\"cloneDiagnosticReceivedLines\":";
+  response += String(g_cloneDiagnostic.receivedLines);
+  response += ",\"cloneDiagnosticElapsedMillis\":";
+  response += String(cloneDiagnosticElapsedMillis(&g_cloneDiagnostic, millis()));
+  response += ",\"cloneDiagnosticPhaseElapsedMillis\":";
+  response += String(cloneDiagnosticPhaseElapsedMillis(&g_cloneDiagnostic, millis()));
+  response += ",\"cloneDiagnosticCleanupConfirmed\":";
+  response += g_cloneDiagnostic.cleanupConfirmed ? "true" : "false";
+  response += ",\"cloneDiagnosticReceiveBufferOverflow\":";
+  response += g_cloneDiagnostic.receiveBufferOverflow ? "true" : "false";
+  response += ",\"cloneDiagnosticTemporaryFileReceptionActive\":";
+  response += g_cloneDiagnostic.temporaryFileReceptionActive ? "true" : "false";
+  response += ",\"cloneDiagnosticTemporaryFileCleanupAttempted\":";
+  response += g_cloneDiagnostic.temporaryFileCleanupAttempted ? "true" : "false";
+  response += ",\"cloneDiagnosticTemporaryFileCleanupConfirmed\":";
+  response += g_cloneDiagnostic.temporaryFileCleanupConfirmed ? "true" : "false";
+  response += ",\"cloneDiagnosticClockExpected\":";
+  response += String(g_cloneClockExpected);
+  response += ",\"cloneDiagnosticClockReadback\":";
+  response += String(g_cloneClockReadback);
+  response += ",\"cloneDiagnosticClockDeltaSeconds\":";
+  response += String(g_cloneClockReadbackDelta);
+  response += ",\"cloneDiagnosticFreeHeap\":";
+  response += String(g_cloneDiagnosticFreeHeap);
+  response += ",\"cloneDiagnosticMinimumFreeHeap\":";
+  response += String(g_cloneDiagnosticMinimumFreeHeap);
+  response += ",\"cloneDiagnosticMaxFreeBlock\":";
+  response += String(g_cloneDiagnosticMaxFreeBlock);
+  response += ",\"cloneDiagnosticHeapFragmentation\":";
+  response += String(g_cloneDiagnosticHeapFragmentation);
+  response += ",\"cloneRecoveredResetDetected\":";
+  response += g_cloneRecoveredResetDetected ? "true" : "false";
+  response += ",\"cloneRecoveredResetPhase\":\"";
+  response += cloneDiagnosticPhaseText(g_cloneRecoveredResetPhase);
+  response += "\",\"cloneRecoveredResetFileIndex\":";
+  response += String(g_cloneRecoveredResetFileIndex);
+  response += ",\"cloneRecoveredResetFileCount\":";
+  response += String(g_cloneRecoveredResetFileCount);
+  response += ",\"cloneRecoveredResetReason\":\"";
+  response += jsonEscaped(g_cloneRecoveredResetReason);
+  response += "\",\"masterLastTargetDiagnosticMillis\":";
+  response += String(g_masterLastTargetDiagnosticMillis);
+  response += ",\"masterLastTargetDiagnostic\":\"";
+  response += jsonEscaped(g_masterLastTargetDiagnostic);
+  response += "\",\"masterCloneSessionStartedMillis\":";
+  response += String(g_masterCloneSessionStartedMillis);
+  response += ",\"masterCloneLastProgressMillis\":";
+  response += String(g_masterCloneLastProgressMillis);
+  response += ",\"masterCloneRecoveryCount\":";
+  response += String(g_masterCloneRecoveryCount);
+  response += ",\"masterCloneLastFailure\":\"";
+  response += jsonEscaped(g_masterCloneLastFailure);
   response += "\"";
   response += "}";
   g_http_server.sendHeader("Cache-Control", "no-store");
@@ -1397,6 +1699,19 @@ void handleNotFound()
   }
 }
 
+void initializeUniqueAPName()
+{
+  uint8_t mac[WL_MAC_ADDR_LENGTH];
+  WiFi.softAPmacAddress(mac);
+  char macID[9];
+  /* Format bytes, not integers, so every MAC-derived identity has exactly
+   * eight uppercase hex digits even when a byte contains a leading zero. */
+  snprintf(macID, sizeof(macID), "%02X%02X%02X%02X",
+           mac[WL_MAC_ADDR_LENGTH - 4], mac[WL_MAC_ADDR_LENGTH - 3],
+           mac[WL_MAC_ADDR_LENGTH - 2], mac[WL_MAC_ADDR_LENGTH - 1]);
+  g_uniqueAPNameString = String("Tx_") + macID;
+}
+
 
 bool setupHTTP_AP()
 {
@@ -1419,15 +1734,10 @@ bool setupHTTP_AP()
   /*  WiFi.mode(WIFI_AP); */
 
   /* Keep an immutable per-ESP identity even while master mode advertises Tx_Master. */
-  uint8_t mac[WL_MAC_ADDR_LENGTH];
-  WiFi.softAPmacAddress(mac);
-  char macID[9];
-  /* Format bytes, not integers, so every MAC-derived identity has exactly
-   * eight uppercase hex digits even when a byte contains a leading zero. */
-  snprintf(macID, sizeof(macID), "%02X%02X%02X%02X",
-           mac[WL_MAC_ADDR_LENGTH - 4], mac[WL_MAC_ADDR_LENGTH - 3],
-           mac[WL_MAC_ADDR_LENGTH - 2], mac[WL_MAC_ADDR_LENGTH - 1]);
-  g_uniqueAPNameString = String("Tx_") + macID;
+  if (!g_uniqueAPNameString.length())
+  {
+    initializeUniqueAPName();
+  }
   g_AP_NameString = g_IamMaster ? MASTER_SSID : g_uniqueAPNameString;
 
   IPAddress apIP = stringToIP(g_softAP_IP_addr);
@@ -1924,6 +2234,19 @@ void loop()
     if (!g_onlyUpdateEvent)
     {
       beginSlaveCloneKeepAlive();
+      cloneDiagnosticBegin(&g_cloneDiagnostic, millis());
+      g_cloneDiagnosticFailure = "";
+      g_cloneDiagnosticFreeHeap = 0;
+      g_cloneDiagnosticMinimumFreeHeap = 0;
+      g_cloneDiagnosticMaxFreeBlock = 0;
+      g_cloneDiagnosticHeapFragmentation = 0;
+      captureCloneHeapDiagnostic();
+      g_cloneClockExpected = 0;
+      g_cloneClockReadback = 0;
+      g_cloneClockReadbackDelta = 0;
+      g_cloneDiagnosticCanReportToMaster = false;
+      persistCloneResetMarker();
+      emitCloneDiagnosticSnapshot();
     }
 
     if (!g_onlyUpdateEvent && !setupWiFiAPConnection())
@@ -2004,8 +2327,9 @@ void loop()
           }
           else
           {
+            reportCloneDiagnosticFailure("no events are scheduled to run after transfer");
             String msg = String(SOCK_COMMAND_SLAVE_UPDATE_ERROR);
-            msg = msg + ",No events scheduled to run";
+            msg = msg + "," + cloneDiagnosticFailureText("No events scheduled to run");
             g_webSocketLocalClient.sendTXT(stringObjToConstCharString(&msg)); /* Send to Master */
             blinkPeriodMillis = 100;
             shutdownSlave();
@@ -2022,10 +2346,18 @@ void loop()
       else
       {
         blinkPeriodMillis = 100;
+        if (g_cloneDiagnostic.phase != CLONE_DIAG_FAILED)
+        {
+          reportCloneDiagnosticFailure("master handshake or clock synchronization failed");
+        }
       }
     }
     else
     {
+      if (!g_onlyUpdateEvent)
+      {
+        reportCloneDiagnosticFailure("could not associate with master access point");
+      }
       /* Load the next active event */
       populateEventFileList();   /* read files into the event list */
       g_numberOfScheduledEvents = numberOfEventsScheduled(g_timeOfDayFromTx);
@@ -2246,14 +2578,66 @@ void serviceMasterCloneHandshake()
   }
 }
 
+void serviceMasterCloneWatchdog()
+{
+  if (!masterCloneProgressTimedOut(
+        g_master_has_connected_slave,
+        g_masterCloneLastProgressMillis,
+        millis()))
+  {
+    return;
+  }
+
+  const int staleSocket = g_slave_socket_number;
+  g_masterCloneLastFailure = "target made no clone progress for 15 seconds";
+  g_masterCloneRecoveryCount++;
+
+  if (staleSocket >= 0)
+  {
+    String msg = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_FREE;
+    g_webSocketServer.sendTXT(
+      (uint8_t)staleSocket,
+      stringObjToConstCharString(&msg),
+      msg.length());
+  }
+
+  /* Always resume the master's AVR and clear ownership, even when the TCP
+   * library still considers the vanished target socket connected. */
+  endMasterCloneSession();
+  if (staleSocket >= 0)
+  {
+    g_webSocketServer.disconnect((uint8_t)staleSocket);
+  }
+}
+
 void shutdownSlave()
 {
   int times2try = 2;
   bool ready = false;
   unsigned long last = millis();
   int state = 0;
+  const bool priorFailure = g_cloneDiagnostic.phase == CLONE_DIAG_FAILED;
 
-  setAVRCloneQuietMode(false);
+  if (!priorFailure)
+  {
+    reportCloneDiagnosticPhase(CLONE_DIAG_CLEANUP_RESUME);
+  }
+  g_cloneDiagnostic.cleanupConfirmed = setAVRCloneQuietMode(false);
+  if (!g_cloneDiagnostic.cleanupConfirmed)
+  {
+    if (!priorFailure)
+    {
+      reportCloneDiagnosticFailure("AVR resume acknowledgement was not confirmed");
+    }
+    else
+    {
+      emitCloneDiagnosticSnapshot();
+    }
+  }
+  else if (!priorFailure)
+  {
+    reportCloneDiagnosticPhase(CLONE_DIAG_RELEASE);
+  }
 
   while (!ready)
   {
@@ -2311,6 +2695,15 @@ void shutdownSlave()
         }
         break;
     }
+  }
+
+  if (!priorFailure && g_cloneDiagnostic.cleanupConfirmed && g_slave_released)
+  {
+    reportCloneDiagnosticComplete();
+  }
+  else if (!priorFailure && g_cloneDiagnostic.cleanupConfirmed && g_cloneDiagnostic.phase != CLONE_DIAG_FAILED)
+  {
+    reportCloneDiagnosticFailure("master did not confirm target release");
   }
 
   return;
@@ -2414,16 +2807,24 @@ bool clientConnectLoop()
 
   int blinkPeriodMillis = 100;
   String msg;
-  int times2try = 5;
+  /* A rebooted target may need to outlast the master's stale-session watchdog
+   * before its reconnect can be accepted. */
+  int times2try = 10;
   bool syncFailed = true;
   bool busy = true;
   static unsigned long last = 0;
 
+  reportCloneDiagnosticPhase(CLONE_DIAG_AVR_QUIET);
   if (!setAVRCloneQuietMode(true))
   {
+    reportCloneDiagnosticFailure(
+      g_linkBusNacksReceived ? "AVR rejected clone quiet mode" :
+      (g_linkBusAckTimoutOccurred ? "AVR clone quiet acknowledgement timed out" :
+       "AVR clone quiet queue did not drain"));
     setAVRCloneQuietMode(false);
     return true;
   }
+  reportCloneDiagnosticPhase(CLONE_DIAG_MASTER_HANDSHAKE);
 
   while (busy)
   {
@@ -2443,6 +2844,9 @@ bool clientConnectLoop()
             {
               msg = String(SOCK_COMMAND_SLAVE) + "," + SLAVE_CONNECT;
               g_webSocketLocalClient.sendTXT(stringObjToConstCharString(&msg)); /* Connect to Master */
+              g_cloneDiagnostic.attempt++;
+              g_cloneDiagnostic.updatedMillis = millis();
+              emitCloneDiagnosticSnapshot();
               last = millis();
               times2try--;
             }
@@ -2455,6 +2859,7 @@ bool clientConnectLoop()
               g_slaveSyncReadySent = false;
               g_slaveSyncReadyStartedMillis = millis();
               g_webSocketSlaveState = WSClientSyncClock;
+              reportCloneDiagnosticPhase(CLONE_DIAG_CLOCK_READY);
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
               if (g_debug_prints_enabled)
@@ -2465,6 +2870,7 @@ bool clientConnectLoop()
             }
             else
             {
+              errorMessage = "master did not accept target connection";
               g_webSocketSlaveState = WSClientClose;
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -2482,6 +2888,7 @@ bool clientConnectLoop()
         {
           if (g_slave_released)
           {
+            errorMessage = "master released target before clock synchronization";
             g_webSocketSlaveState = WSClientClose;
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -2498,6 +2905,7 @@ bool clientConnectLoop()
             times2try = 5;
             if ((unsigned long)(millis() - g_slaveSyncReadyStartedMillis) > 12000)
             {
+              errorMessage = "master clock synchronization message timed out";
               g_webSocketSlaveState = WSClientClose;
             }
             else if (!g_slaveSyncReadySent)
@@ -2516,6 +2924,7 @@ bool clientConnectLoop()
           if (g_slave_released)
           {
             blinkPeriodMillis = 100;
+            errorMessage = "master released target during clock readback";
             g_webSocketSlaveState = WSClientClose;
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -2535,9 +2944,14 @@ bool clientConnectLoop()
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
             g_webSocketSlaveState = WSClientExitSuccess;
             failure = false;
+            reportCloneDiagnosticPhase(CLONE_DIAG_FILE_WAIT);
           }
           else if (g_cloneClockReadbackMismatch || g_linkBusAckTimoutOccurred || g_linkBusNacksReceived || ((unsigned long)(millis() - g_cloneClockWaitStartedMillis) > 10000))
           {
+            errorMessage = g_cloneClockReadbackMismatch ? "clock readback did not match requested time" :
+                           (g_linkBusNacksReceived ? "AVR rejected synchronized clock" :
+                            (g_linkBusAckTimoutOccurred ? "clock write acknowledgement timed out" :
+                             "clock readback timed out"));
             g_webSocketSlaveState = WSClientClose;
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -2567,6 +2981,12 @@ bool clientConnectLoop()
         {
           if (syncFailed)
           {
+            if (g_cloneDiagnostic.phase != CLONE_DIAG_FAILED)
+            {
+              reportCloneDiagnosticFailure(
+                errorMessage.length() ? errorMessage : String("connection state closed without a reason"));
+            }
+            errorMessage = cloneDiagnosticFailureText(errorMessage);
             msg = String(SOCK_COMMAND_SLAVE_UPDATE_ERROR);
             if (errorMessage.length())
             {
@@ -2633,7 +3053,15 @@ bool clientConnectLoop()
 
   if (failure && g_slaveCloneQuietActive)
   {
-    setAVRCloneQuietMode(false);
+    g_cloneDiagnostic.cleanupConfirmed = setAVRCloneQuietMode(false);
+    if (!g_cloneDiagnostic.cleanupConfirmed && !g_cloneDiagnosticFailure.length())
+    {
+      reportCloneDiagnosticFailure("AVR resume after failed connection was not confirmed");
+    }
+    else
+    {
+      emitCloneDiagnosticSnapshot();
+    }
   }
 
   return (failure);
@@ -2654,6 +3082,11 @@ bool loadActiveEventFile(String updatedFileName)
   bool syncFailed = true;
   bool busy = true;
   unsigned long last = 0;
+
+  if (!g_IamMaster && g_cloneDiagnostic.active)
+  {
+    reportCloneDiagnosticPhase(CLONE_DIAG_EVENT_PROGRAM);
+  }
 
   g_webSocketSlaveState = WSClientLoadEventFile;
 
@@ -2802,6 +3235,15 @@ bool loadActiveEventFile(String updatedFileName)
           {
             if (syncFailed)
             {
+              if (!g_IamMaster && g_cloneDiagnostic.phase != CLONE_DIAG_FAILED)
+              {
+                reportCloneDiagnosticFailure(
+                  errorMessage.length() ? errorMessage : String("event programming state closed without a reason"));
+              }
+              if (!g_IamMaster)
+              {
+                errorMessage = cloneDiagnosticFailureText(errorMessage);
+              }
               msg = String(SOCK_COMMAND_SLAVE_UPDATE_ERROR);
               if (errorMessage.length())
               {
@@ -2928,6 +3370,7 @@ bool clientUpdateEventFilesLoop()
         {
           if (g_slave_released)
           {
+            errorMessage = "master released target while waiting for files";
             g_webSocketSlaveState = WSClientClose;
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -2961,6 +3404,7 @@ bool clientUpdateEventFilesLoop()
             else
             {
               blinkPeriodMillis = 100;
+              errorMessage = "master did not answer file request";
               g_webSocketSlaveState = WSClientClose;
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -2978,6 +3422,7 @@ bool clientUpdateEventFilesLoop()
         {
           if (g_slave_released)
           {
+            errorMessage = "master released target before file transfer started";
             g_webSocketSlaveState = WSClientClose;
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -3003,6 +3448,7 @@ bool clientUpdateEventFilesLoop()
 
               if (tempFile)
               {
+                cloneDiagnosticTemporaryFileOpened(&g_cloneDiagnostic);
                 g_webSocketSlaveState = WSClientReceiveFileData;
                 times2try = 5;
 
@@ -3015,6 +3461,7 @@ bool clientUpdateEventFilesLoop()
               }
               else
               {
+                errorMessage = "could not create temporary event file";
                 g_webSocketSlaveState = WSClientClose;
               }
             }
@@ -3032,6 +3479,7 @@ bool clientUpdateEventFilesLoop()
         {
           if (g_slave_released)
           {
+            errorMessage = "master released target during file transfer";
             g_webSocketSlaveState = WSClientClose;
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -3057,6 +3505,7 @@ bool clientUpdateEventFilesLoop()
                 }
                 else
                 {
+                  errorMessage = "file data timed out";
                   g_webSocketSlaveState = WSClientClose;
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
                   if (g_debug_prints_enabled)
@@ -3079,7 +3528,15 @@ bool clientUpdateEventFilesLoop()
                   }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
                   tempFile.close();
+                  cloneDiagnosticTemporaryFileCompleted(&g_cloneDiagnostic);
+                  /* File reception is complete. Reclaim the 202-String queue
+                   * before validation and rename, where LittleFS needs its
+                   * largest contiguous heap block. The next file allocates a
+                   * fresh queue in WSClientReceiveFileUpdate. */
+                  delete g_fileDataBuff;
+                  g_fileDataBuff = NULL;
                   g_webSocketSlaveState = WSClientValidateFile;
+                  reportCloneDiagnosticPhase(CLONE_DIAG_FILE_VALIDATE);
                 }
                 else if (temp.length() > 0)
                 {
@@ -3109,6 +3566,7 @@ bool clientUpdateEventFilesLoop()
         {
           if (g_slave_released)
           {
+            errorMessage = "master released target during file validation";
             g_webSocketSlaveState = WSClientClose;
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -3121,7 +3579,15 @@ bool clientUpdateEventFilesLoop()
           else
           {
             String path = String("/Temp");
-            if (Event::validEventFile(path, &updatedFileName, true))
+            bool validationTimedOut = false;
+            updatedFileName = "";
+            reportCloneDiagnosticPhase(CLONE_DIAG_FILE_VALIDATE_READ);
+            if (Event::validEventFile(
+                  path,
+                  &updatedFileName,
+                  true,
+                  CLONE_FILE_VALIDATION_TIMEOUT_MILLIS,
+                  &validationTimedOut))
             {
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
               if (g_debug_prints_enabled)
@@ -3144,25 +3610,18 @@ bool clientUpdateEventFilesLoop()
                   bool fileReady = true;
                   if (g_slaveFleetSoakMode == FLEET_SOAK_MODE_PROVISION)
                   {
+                    reportCloneDiagnosticPhase(CLONE_DIAG_FILE_INSTALL_RENAME);
                     fileReady = fleetSoakStageReceivedEvent(updatedFileName, path, &errorMessage);
                   }
                   else
                   {
-                    if (LittleFS.exists(updatedFileName))
-                    {
-#if TRANSMITTER_COMPILE_DEBUG_PRINTS
-                      if (g_debug_prints_enabled)
-                      {
-                        Serial.println("Removing old file");
-                      }
-#endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
-                      fileReady = LittleFS.remove(updatedFileName);
-                    }
-
-                    if (fileReady)
-                    {
-                      fileReady = LittleFS.rename(path, updatedFileName);
-                    }
+                    /* LittleFS rename replaces an existing file atomically in
+                     * one directory commit. Removing the live file first is
+                     * both unnecessary and unsafe: it adds metadata churn and
+                     * leaves no valid file if the following rename stalls or
+                     * power is lost. */
+                    reportCloneDiagnosticPhase(CLONE_DIAG_FILE_INSTALL_RENAME);
+                    fileReady = LittleFS.rename(path, updatedFileName);
                   }
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
@@ -3175,6 +3634,8 @@ bool clientUpdateEventFilesLoop()
                   {
                     g_webSocketSlaveState = WSClientWaitingForFiles;
                     times2try = 5;
+                    g_cloneDiagnostic.fileCount = g_cloneEventManifest.count;
+                    reportCloneDiagnosticPhase(CLONE_DIAG_FILE_WAIT);
                   }
                   else
                   {
@@ -3185,11 +3646,15 @@ bool clientUpdateEventFilesLoop()
               }
               else
               {
+                errorMessage = "validated event file had no destination name";
                 g_webSocketSlaveState = WSClientClose;
               }
             }
             else
             {
+              errorMessage = validationTimedOut
+                             ? "event file validation exceeded five seconds"
+                             : "received event file failed validation";
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
               if (g_debug_prints_enabled)
               {
@@ -3263,6 +3728,17 @@ bool clientUpdateEventFilesLoop()
         {
           if (syncFailed)
           {
+            /* A staging file that is still open never received EOF and cannot
+             * be validated or installed. Remove only that incomplete file.
+             * A complete Temp file is deliberately retained if validation or
+             * replacement fails so post-failure forensics remain possible. */
+            cleanupIncompleteCloneTempFile(tempFile);
+            if (g_cloneDiagnostic.phase != CLONE_DIAG_FAILED)
+            {
+              reportCloneDiagnosticFailure(
+                errorMessage.length() ? errorMessage : String("file transfer state closed without a reason"));
+            }
+            errorMessage = cloneDiagnosticFailureText(errorMessage);
             msg = String(SOCK_COMMAND_SLAVE_UPDATE_ERROR);
             if (errorMessage.length())
             {
@@ -3330,6 +3806,21 @@ bool clientUpdateEventFilesLoop()
         }
         break;
     }
+  }
+
+  if (g_fileDataBuff)
+  {
+    delete g_fileDataBuff;
+    g_fileDataBuff = NULL;
+  }
+  if (tempFile)
+  {
+    tempFile.close();
+  }
+  if (cloneDiagnosticShouldRemoveIncompleteTemporaryFile(&g_cloneDiagnostic))
+  {
+    cleanupIncompleteCloneTempFile(tempFile);
+    emitCloneDiagnosticSnapshot();
   }
 
   return (failure);
@@ -3466,10 +3957,17 @@ void httpWebServerLoop(int blinkRate)
 
       if (g_numberOfWebClients == 0)
       {
-        stopWebSocketServer(); /* ensure all web socket clients are disconnected - this might not happen if WiFi connection was broken */
+        /* Drop stale clients but keep the listener reusable. Closing and then
+         * beginning this WebSocketsServer instance proved unreliable after a
+         * completed clone. */
+        g_webSocketServer.disconnect();
         g_numberOfSocketClients = 0;
         holdWebSocketClients = 0;
         g_LBOutputBuff->put(LB_MESSAGE_ESP_IDLE);
+      }
+      else if (g_littleFsMounted && !g_webSocketServerStarted)
+      {
+        startWebSocketServer();
       }
     }
 
@@ -3485,6 +3983,7 @@ void httpWebServerLoop(int blinkRate)
     linkbusLoop();
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
     serviceMasterCloneHandshake();
+    serviceMasterCloneWatchdog();
 
     relativeTimeSeconds = millis() / 1000;
 
@@ -4773,6 +5272,11 @@ void webSocketClientEvent(WStype_t type, uint8_t * payload, size_t length)
           Serial.printf("[WSc] Disconnected!\n");
         }
 #endif // TRANSMITTER_COMPILE_DEBUG_PRINTS
+        g_cloneDiagnosticCanReportToMaster = false;
+        if (g_cloneDiagnostic.active && g_cloneDiagnostic.phase != CLONE_DIAG_RELEASE)
+        {
+          reportCloneDiagnosticFailure("WebSocket disconnected during clone");
+        }
         g_slave_released = true;
         g_slaveFleetSoakCapabilitySeen = false;
         g_slaveFleetSoakSessionReady = false;
@@ -4781,6 +5285,8 @@ void webSocketClientEvent(WStype_t type, uint8_t * payload, size_t length)
 
     case WStype_CONNECTED:
       {
+        g_cloneDiagnosticCanReportToMaster = true;
+        emitCloneDiagnosticSnapshot();
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
         if (g_debug_prints_enabled)
         {
@@ -4855,6 +5361,9 @@ void webSocketClientEvent(WStype_t type, uint8_t * payload, size_t length)
               if (g_webSocketSlaveState == WSClientWaitingForFiles)
               {
                 g_webSocketSlaveState = WSClientReceiveFileUpdate;
+                g_cloneDiagnostic.fileIndex++;
+                g_cloneDiagnostic.receivedLines = 0;
+                reportCloneDiagnosticPhase(CLONE_DIAG_FILE_RECEIVE);
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
                 if (g_debug_prints_enabled)
@@ -4869,6 +5378,9 @@ void webSocketClientEvent(WStype_t type, uint8_t * payload, size_t length)
               if (g_webSocketSlaveState == WSClientWaitingForFiles)
               {
                 g_webSocketSlaveState = WSClientFilesComplete;
+                g_cloneDiagnostic.fileCount = g_cloneDiagnostic.fileIndex;
+                g_cloneDiagnostic.updatedMillis = millis();
+                emitCloneDiagnosticSnapshot();
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
                 if (g_debug_prints_enabled)
@@ -4950,11 +5462,14 @@ void webSocketClientEvent(WStype_t type, uint8_t * payload, size_t length)
                   g_timeOfDayFromTx = t;
                   p = convertEpochToTimeString(g_timeOfDayFromTx);
                   g_cloneClockExpected = g_timeOfDayFromTx;
+                  g_cloneClockReadback = 0;
+                  g_cloneClockReadbackDelta = 0;
                   g_cloneClockVerified = false;
                   g_cloneClockReadbackMismatch = false;
                   g_cloneClockWaitStartedMillis = millis();
                   g_linkBusAckTimoutOccurred = false;
                   g_linkBusNacksReceived = 0;
+                  reportCloneDiagnosticPhase(CLONE_DIAG_CLOCK_WRITE_READBACK);
 
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
                   if (g_debug_prints_enabled)
@@ -5002,7 +5517,19 @@ void webSocketClientEvent(WStype_t type, uint8_t * payload, size_t length)
 
                 if ((p.length() > 0) && (p.length() < 100))
                 {
-                  g_fileDataBuff->put(p);
+                  if (g_fileDataBuff->full())
+                  {
+                    g_cloneDiagnostic.receiveBufferOverflow = true;
+                    reportCloneDiagnosticFailure("file receive buffer overflowed");
+                    g_webSocketSlaveState = WSClientClose;
+                  }
+                  else
+                  {
+                    g_fileDataBuff->put(p);
+                    g_cloneDiagnostic.receivedLines++;
+                    g_cloneDiagnostic.updatedMillis = millis();
+                    captureCloneHeapDiagnostic();
+                  }
                 }
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
                 else
@@ -5172,7 +5699,18 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
             msgHeader = p;
           }
 
-          if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_ALIVE))
+          if (g_master_has_connected_slave && num == g_slave_socket_number)
+          {
+            g_masterCloneLastProgressMillis = millis();
+          }
+
+          if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_CLONE_DIAGNOSTIC))
+          {
+            g_masterLastTargetDiagnostic = p;
+            g_masterLastTargetDiagnosticMillis = millis();
+            g_webSocketServer.broadcastTXT(stringObjToConstCharString(&p), p.length());
+          }
+          else if (msgHeader.equalsIgnoreCase(SOCK_COMMAND_ALIVE))
           {
             g_socket_timeout = 10;
           }
@@ -5331,9 +5869,13 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
                                                   num == g_fleetSoakCandidateSocket;
               if (!g_master_has_connected_slave && fleetCandidateAllowed)
               {
+                const unsigned long now = millis();
                 g_master_has_connected_slave = true;
                 g_files_sent_to_slave = 0;
                 g_slave_socket_number = num;
+                g_masterCloneSessionStartedMillis = now;
+                g_masterCloneLastProgressMillis = now;
+                g_masterCloneLastFailure = "";
                 g_masterCloneQuietPending = true;
                 g_masterCloneQuietActive = false;
                 g_linkBusAckTimoutOccurred = false;
@@ -5357,10 +5899,6 @@ void webSocketServerEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t 
             else if (p.equals(SLAVE_FREE))
             {
               endMasterCloneSession();
-              if (g_numberOfSocketClients == 1)
-              {
-                stopWebSocketServer();
-              }
               msg = String(String(SOCK_COMMAND_SLAVE) + "," + SLAVE_FREE);
 #if TRANSMITTER_COMPILE_DEBUG_PRINTS
               if (g_debug_prints_enabled)
@@ -7093,7 +7631,11 @@ void handleLBMessage(String message)
     if (payload.startsWith("C,"))
     {
       unsigned long rtcEpoch = (unsigned long)payload.substring(2).toInt();
-      g_cloneClockVerified = g_cloneClockExpected && (rtcEpoch == g_cloneClockExpected);
+      g_cloneClockReadback = rtcEpoch;
+      g_cloneClockReadbackDelta = cloneClockReadbackDelta(g_cloneClockExpected, rtcEpoch);
+      /* Setting and reading the RTC can legitimately cross one second edge.
+       * Reject larger or backward deltas, but do not fail a correct +1 result. */
+      g_cloneClockVerified = cloneClockReadbackAccepted(g_cloneClockExpected, rtcEpoch);
       g_cloneClockReadbackMismatch = !g_cloneClockVerified;
       return;
     }

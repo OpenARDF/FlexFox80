@@ -155,6 +155,34 @@ ASAN_OPTIONS="${ASAN_OPTIONS:+$ASAN_OPTIONS:}allocator_may_return_null=1" \
 # shellcheck disable=SC2086 # Flags are intentionally expanded into individual compiler arguments.
 "$cxx" $common_flags $sanitizer_flags \
 	-I "$repo_root/Software/Huzzah/ARDF_Transmitter" \
+	"$repo_root/Tests/Host/esp_clone_diagnostic_state_test.cpp" \
+	-o "$build_dir/esp-clone-diagnostic-state-tests"
+
+"$build_dir/esp-clone-diagnostic-state-tests"
+
+# shellcheck disable=SC2086 # Flags are intentionally expanded into individual compiler arguments.
+"$cxx" $common_flags $sanitizer_flags \
+	-I "$repo_root/Software/Huzzah/ARDF_Transmitter" \
+	"$repo_root/Tests/Host/esp_clone_sync_safety_test.cpp" \
+	-o "$build_dir/esp-clone-sync-safety-tests"
+
+"$build_dir/esp-clone-sync-safety-tests"
+
+# Compile the production ESP String queue against a small host Arduino shim.
+# ASAN verifies that destroying the queue releases its backing String array.
+# shellcheck disable=SC2086 # Flags are intentionally expanded into individual compiler arguments.
+"$cxx" $common_flags $sanitizer_flags \
+	-I "$repo_root/Tests/Host/esp_arduino_shim" \
+	-I "$repo_root/Software/Huzzah/ARDF_Transmitter" \
+	"$repo_root/Software/Huzzah/ARDF_Transmitter/CircularStringBuff.cpp" \
+	"$repo_root/Tests/Host/esp_circular_string_buffer_test.cpp" \
+	-o "$build_dir/esp-circular-string-buffer-tests"
+
+"$build_dir/esp-circular-string-buffer-tests"
+
+# shellcheck disable=SC2086 # Flags are intentionally expanded into individual compiler arguments.
+"$cxx" $common_flags $sanitizer_flags \
+	-I "$repo_root/Software/Huzzah/ARDF_Transmitter" \
 	"$repo_root/Tests/Host/esp_linkbus_command_transaction_test.cpp" \
 	-o "$build_dir/esp-linkbus-command-transaction-tests"
 

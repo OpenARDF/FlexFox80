@@ -27,6 +27,7 @@
  */
 
 #include <Arduino.h>
+#include <utility>
 #include "CircularStringBuff.h"
 
 CircularStringBuff::CircularStringBuff(size_t size)
@@ -35,8 +36,17 @@ CircularStringBuff::CircularStringBuff(size_t size)
   max_size_ = size;
 }
 
+CircularStringBuff::~CircularStringBuff()
+{
+  delete[] buf_;
+}
+
 void CircularStringBuff::reset()
 {
+  for (size_t index = 0; index < max_size_; index++)
+  {
+    buf_[index] = String();
+  }
   head_ = tail_;
   full_ = false;
 }
@@ -78,7 +88,9 @@ size_t CircularStringBuff::size() const
 
 void CircularStringBuff::put(String item)
 {
-  buf_[head_] = item;
+  /* Transfer ownership of the temporary's allocation into the queue slot.
+   * Copying here caused two heap allocations per received event-file line. */
+  buf_[head_] = std::move(item);
 
   if (full_)
   {
@@ -98,7 +110,10 @@ String CircularStringBuff::get()
   }
 
   /*Read data and advance the tail (we now have a free space) */
-  String val = buf_[tail_];
+  /* Moving empties the consumed slot. The former copy left every line's heap
+   * allocation resident until the whole queue was destroyed, exhausting and
+   * fragmenting ESP heap during multi-file clones. */
+  String val = std::move(buf_[tail_]);
   full_ = false;
   tail_ = (tail_ + 1) % max_size_;
 

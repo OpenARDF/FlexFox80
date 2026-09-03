@@ -38,6 +38,8 @@ const reconnectSsid = String(
   process.env.FLEXFOX_RECONNECT_SSID ?? expectedDeviceSsid,
 ).trim();
 const expectFilesystemRecovery = process.env.FLEXFOX_EXPECTED_FILESYSTEM_RECOVERY === "1";
+const requireLittleFsDiagnostic = process.env.FLEXFOX_REQUIRE_LITTLEFS_2_5_1_DIAGNOSTIC === "1";
+const requireNormalBuild = process.env.FLEXFOX_REQUIRE_NORMAL_ESP_BUILD === "1";
 const adbSerial = String(process.env.FLEXFOX_ADB_SERIAL ?? "").trim();
 const adbPath = String(process.env.FLEXFOX_ADB ?? "adb").trim();
 const confirmation = process.env.FLEXFOX_UPDATE_CONFIRM;
@@ -52,6 +54,9 @@ const verificationTimeoutMs = Number.parseInt(
 
 if (confirmation !== "UPDATE FLEXFOX ESP") {
   throw new Error("Set FLEXFOX_UPDATE_CONFIRM='UPDATE FLEXFOX ESP' to authorize the sketch update");
+}
+if (requireLittleFsDiagnostic && requireNormalBuild) {
+  throw new Error("normal and sketch-only diagnostic build evidence cannot both be required");
 }
 if (!Number.isInteger(uploadTimeoutMs) || uploadTimeoutMs < 30000 || uploadTimeoutMs > 300000) {
   throw new Error("FLEXFOX_UPDATE_UPLOAD_TIMEOUT_MS must be 30000 through 300000");
@@ -85,6 +90,38 @@ if (expectFilesystemRecovery) {
     throw new Error("filesystem recovery may be expected only for the dedicated qualification build artifact");
   }
 }
+let requiredBuildEvidence = null;
+if (requireLittleFsDiagnostic || requireNormalBuild) {
+  const evidencePath = join(dirname(firmwarePath), "build-evidence.json");
+  if (!existsSync(evidencePath)) {
+    throw new Error("ESP update requires sibling build-evidence.json");
+  }
+  requiredBuildEvidence = JSON.parse(readFileSync(evidencePath, "utf8"));
+  const expectedStatus = requireNormalBuild
+    ? "hardware-compatible-normal-build"
+    : "clone-littlefs-2.5.1-diagnostic-build";
+  const expectedSketchOnlyDiagnostic = !requireNormalBuild;
+  if (
+    requiredBuildEvidence.status !== expectedStatus ||
+    requiredBuildEvidence.sketchOnlyDiagnostic !== expectedSketchOnlyDiagnostic ||
+    requiredBuildEvidence.firmwareVersion !== expectedVersion ||
+    requiredBuildEvidence.filesystemImageGenerated !== requireNormalBuild ||
+    requiredBuildEvidence.core !== "esp8266:esp8266@2.7.4" ||
+    requiredBuildEvidence.library !== "WebSockets@2.3.6" ||
+    requiredBuildEvidence.littleFsEngine !== "littlefs@2.5.1" ||
+    requiredBuildEvidence.littleFsDiskVersion !== "2.0" ||
+    requiredBuildEvidence.littleFsSourceArchive?.sha256 !==
+      "b3f47686d7783c120c2f10bf82788f921c53db8642cc87012599abb6e335b182" ||
+    !Array.isArray(requiredBuildEvidence.compiledLittleFsSources) ||
+    requiredBuildEvidence.compiledLittleFsSources.length !== 3
+  ) {
+    throw new Error(
+      requireNormalBuild
+        ? "firmware build evidence is not the qualified normal ESP build"
+        : "firmware build evidence is not the isolated LittleFS 2.5.1 clone diagnostic",
+    );
+  }
+}
 
 const firmware = readFileSync(firmwarePath);
 if (firmware.length < 4096 || firmware[0] !== 0xe9) {
@@ -95,6 +132,14 @@ const firmwareMd5 = digest("md5", firmware);
 const installedMd5Candidates = esp8266SketchMd5Candidates(firmware);
 const installedMd5Values = new Set(installedMd5Candidates.map(({ md5 }) => md5));
 const firmwareSha256 = digest("sha256", firmware);
+if (requiredBuildEvidence) {
+  const artifact = requiredBuildEvidence.artifacts?.find(
+    ({ file }) => file === basename(firmwarePath),
+  );
+  if (artifact?.bytes !== firmware.length || artifact?.sha256 !== firmwareSha256) {
+    throw new Error("firmware does not match its build evidence");
+  }
+}
 
 async function readStatus(timeoutMs = 5000) {
   const statusUrl = new URL("firmware/status", baseUrl);

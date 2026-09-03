@@ -197,6 +197,12 @@ class Event {
     static bool validEventFile(String path);
     static bool validEventFile(String path, String* filename);
     static bool validEventFile(String path, String* filename, bool requireChecksum);
+    static bool validEventFile(
+      String path,
+      String* filename,
+      bool requireChecksum,
+      uint32_t maximumDurationMillis,
+      bool* timedOut);
     bool validateEvent(void);
     bool readEventFile(String path);
     bool writeEventFile(void);
