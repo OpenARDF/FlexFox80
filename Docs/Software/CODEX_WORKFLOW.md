@@ -2,8 +2,10 @@
 
 ## Branch roles
 
-- `Development_AVR128DA48` is the active development branch. Routine hardening and bug work starts here and returns here after release integration.
-- `main` is the stable release branch and default GitHub branch for the current Ver 2.1 product line.
+- `main` is always the deployed, release-ready branch and the default GitHub branch for the current Ver 2.1 product line.
+- `Development1` collects firmware, software, tests, documentation, and release-workflow changes that have passed their applicable gates.
+- `Development1-KiCad` separately collects schematic, PCB, symbol, footprint, model, and simulation changes under `KiCad/`.
+- `Development_AVR128DA48` was retired after its final tip was verified identical to `main`. Do not recreate it.
 - The transitional `AVR128DA48` branch was removed after the approved 2026-07-14 replacement-tree merge. Do not recreate it as an integration layer.
 - `ATMEGA328p` and any other legacy hardware branches are historical product lines. Do not merge them into current firmware work without a specific compatibility objective.
 
@@ -11,7 +13,7 @@
 
 1. State the current branch in the first work update.
 2. Run `git status --short --branch` and identify pre-existing changes.
-3. Confirm that the task belongs on `Development_AVR128DA48` unless it is an explicitly authorized integration, release, or legacy-maintenance operation.
+3. Route the task to `Development1` or `Development1-KiCad`, then run `just branch-route-check <collector>`.
 4. Read [GENERATED_FILES.md](GENERATED_FILES.md) before changing IDE-generated, vendor-managed, build-output, or CAD files.
 5. Identify the behavior that must remain unchanged and the evidence required for the proposed change.
 
@@ -19,13 +21,29 @@ Pre-existing changes belong to the user. Do not alter, discard, stage, or publis
 
 ## Mac and Windows coordination
 
-Use the repository-root [Codex mailbox](../../CODEX_MAILBOX.md) for cross-machine requests and replies. Both agents communicate by fetching, editing that file, committing the mailbox/evidence update, and pushing `Development_AVR128DA48`.
+Use the repository-root [Codex mailbox](../../CODEX_MAILBOX.md) for cross-machine requests and replies. Mailbox, firmware, test, and release-evidence work uses `Development1`; KiCad-only work uses `Development1-KiCad`.
 
 - Preserve unacknowledged messages from the other agent.
 - Put durable results under `Docs/Software/Evidence/`; the mailbox is the coordination channel, not the only record.
 - Transfer toolchains, device packs, firmware images, and other large binaries outside Git. Record filenames, byte sizes, and SHA-256 hashes so the transfer can be verified.
 - Never resolve a mailbox push conflict with a force-push. Fetch and preserve both agents' messages.
-- Polling the mailbox means fetching `origin` and reviewing new commits on `origin/Development_AVR128DA48`; do not assume the local file is current.
+- Polling the mailbox means fetching `origin` and reviewing new commits on `origin/Development1`; do not assume the local file is current.
+
+## Topic branches and collector promotion
+
+1. Fetch `origin`; require a clean worktree and a synchronized local collector.
+2. Create a focused `codex/<topic>` branch from the appropriate collector. Do not start it from `main`, the other collector, or a stale topic.
+3. Keep firmware/software and KiCad changes in separate topics. `just branch-route-check <collector>` must pass before work and before return.
+4. Run focused checks plus `just check`; KiCad topics also run [the KiCad gate](KICAD_VALIDATION.md). Treat every unwaived warning as a failure.
+5. Merge only the proven topic into its collector with a merge-commit pull request, then return the checkout to that collector.
+6. Use a separate cumulative promotion pull request from each collector to `main`, merged by squash or rebase so `main` remains linear. Do not mix the collectors' pending contents.
+7. After any promotion reaches `main`, fetch `origin`, create a focused synchronization topic from each exact remote collector tip, and merge exact `origin/main` into it with `--no-ff`. Run `just collector-sync-check <collector>`, then merge each synchronization pull request with a merge commit. Do not rebase, squash, reset, or force-push collectors. Finish both synchronizations before starting another topic.
+
+`just collector-preflight <collector>` is the required local promotion gate. The firmware/software collector rejects `KiCad/` paths. The KiCad collector rejects firmware, tests, release notes, and release evidence, and runs every currently available KiCad/model/simulation check.
+
+`main` accepts squash or rebase pull requests and keeps a linear release history. Collectors accept merge commits only so topic ancestry and the exact `main` baseline remain auditable rather than being reproduced as equivalent file content under unrelated commits.
+
+Post-publication evidence is the only exception to the ordinary cumulative promotion sequence. Evidence that can exist only after publication may use a later evidence-only promotion PR from `Development1`; it must not alter firmware, KiCad content, the tag, or the already published artifacts.
 
 Exact same-source Windows parity has now been demonstrated for the accumulated `3bc10a5` hardening snapshot and the adjacent `912d24b` Linkbus message-ID correction. In both cases Windows and Mac produced matching resource totals, Intel HEX, EEPROM output, and EEPROM layout; host-sensitive ELF, map, listing, and S-record representations were deterministic on each host and the differences were explained.
 
@@ -105,13 +123,13 @@ See [GENERATED_FILES.md](GENERATED_FILES.md) for the detailed inventory.
 
 Integration requires explicit user authorization.
 
-1. Finish the applicable hardening or bug checkpoint on `Development_AVR128DA48`.
-2. Verify both the development branch and `main` remote state.
+1. Finish the applicable checkpoint on the correctly routed collector.
+2. Verify that collector, the other collector, and `main` remote state.
 3. Require a clean worktree.
-4. Prefer a fast-forward integration when `main` is exactly behind the development branch.
-5. If histories diverge, stop and review the commits and merge strategy before merging.
-6. Push `main` only after the integration result is verified.
-7. Fast-forward the development branch through the resulting `main` commit when necessary, return the checkout to `Development_AVR128DA48`, and verify it tracks its remote.
+4. Run the collector preflight and review the complete cumulative diff against `main`.
+5. Use a separate promotion pull request for that collector, merged by squash or rebase. If histories diverge, stop and review before any merge.
+6. Do not merge the pull request or push `main` without separate explicit authorization.
+7. After the separately authorized promotion, synchronize both collectors through exact two-parent merge topics validated by `just collector-sync-check <collector>`, return to the appropriate collector, and verify remote alignment.
 
 The one-time legacy-to-current transition is complete. Its preservation tag, exact parents, tree hash, and verification are recorded in [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md).
 
