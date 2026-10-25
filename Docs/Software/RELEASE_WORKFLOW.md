@@ -4,17 +4,19 @@
 
 | Branch | Role |
 | --- | --- |
-| `Development_AVR128DA48` | Active hardening and bug-development branch |
-| `main` | Stable release branch and default GitHub branch for current Ver 2.1 hardware |
+| `main` | Deployed, release-ready branch and default GitHub branch for current Ver 2.1 hardware |
+| `Development1` | Firmware/software/test/documentation/release-workflow collector |
+| `Development1-KiCad` | KiCad schematic/PCB/library/model/simulation collector |
+| `Development_AVR128DA48` | Preserved former integration branch; no new work |
 | `ATMEGA328p` | Historical hardware-generation branch |
 
-The transitional `AVR128DA48` branch was removed after the approved 2026-07-14 replacement-tree merge established the current product line on `main`. Its history remains reachable through `main`, `Development_AVR128DA48`, and release history.
+The transitional `AVR128DA48` branch was removed after the approved 2026-07-14 replacement-tree merge established the current product line on `main`. Its history remains reachable through `main`, the preserved `Development_AVR128DA48`, and release history.
 
 ## Release authority and phases
 
-- `Development_AVR128DA48` may produce a release candidate or explicitly approved prerelease.
+- `Development1` may produce a firmware/software release candidate or explicitly approved prerelease. `Development1-KiCad` is promoted independently and is not a firmware release source.
 - A stable release must be integrated into and reproduced from a clean `main` release commit.
-- After a release integration, fast-forward `Development_AVR128DA48` through the resulting `main` commit before resuming development. This keeps later release integrations linear when no independent release-only commit intervenes.
+- After either collector is promoted, synchronize both collectors from the resulting `main` before resuming work. If histories diverge, stop and review rather than rebasing or force-pushing.
 - Creating a tag, distributing release artifacts, or programming a fleet requires explicit owner approval; completion of local engineering gates does not imply deployment authority.
 
 FlexFox releases support one hardware target only: **Ver 2.1 (Mar 2022)**. Unlike SignalSlinger, the FlexFox release process does not build or publish parallel board variants. Earlier prototypes and any future revision require a separate compatibility decision before they can use these release assets.
@@ -44,30 +46,34 @@ just release-checklist Docs/Software/Releases/<release>/release-checklist.json r
 just release-checklist Docs/Software/Releases/<release>/release-checklist.json final
 ```
 
-The final checklist update may be a post-release documentation commit. It must not move or recreate the annotated release tag.
+The final checklist update may be a post-release evidence-only promotion from `Development1`. It must not change firmware, KiCad content, published artifacts, or the annotated release tag.
 
-## Development-to-main release integration checklist
+## Collector-to-main promotion checklist
 
-Before integrating `Development_AVR128DA48` into `main`:
+Before promoting either collector into `main`:
 
 1. Confirm the roadmap checkpoint or bug closure being integrated.
-2. Confirm all intended commits are pushed to `origin/Development_AVR128DA48`.
+2. Confirm all intended commits are pushed to the correct remote collector and excluded work remains on the other collector or its topic.
 3. Confirm the worktree is clean.
 4. Fetch `origin` and compare:
 
    ```text
-   Development_AVR128DA48
-   origin/Development_AVR128DA48
+   Development1
+   origin/Development1
+   Development1-KiCad
+   origin/Development1-KiCad
    main
    origin/main
    ```
 
-5. Run the full verification available at that roadmap stage.
-6. Review the commit list and diff from `main` to `Development_AVR128DA48`.
-7. Fast-forward when `main` is exactly behind development. Do not manufacture a merge commit when histories are already linear.
+5. Run `just collector-preflight <collector>` and every additional release gate applicable at that roadmap stage.
+6. Review the commit list and complete diff from `main` to the selected collector. Use a separate cumulative promotion PR for each collector.
+7. Merge only through the separately authorized promotion PR; do not manufacture a direct integration or combine collector contents.
 8. If `main` has independent commits, stop and review the divergence before selecting a merge strategy; never rebase or force-push published release history.
-9. Push the verified integration result to `origin/main`.
-10. Fast-forward `Development_AVR128DA48` through the resulting `main` commit when necessary, return the checkout to development, and verify both local/remote alignments.
+9. Verify that the separately authorized promotion updated `origin/main` to the reviewed result.
+10. Synchronize both collectors from the resulting `main`, return the checkout to the appropriate collector, and verify all local/remote alignments.
+
+The firmware/software collector preflight rejects every `KiCad/` path. The KiCad collector preflight rejects firmware, tests, release notes, and release evidence, and runs [KiCad validation](KICAD_VALIDATION.md). Every unwaived warning fails. The current legacy ERC/DRC findings are explicit fingerprinted waivers; they are not reported as clean.
 
 ## Firmware release gate
 
