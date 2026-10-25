@@ -5,7 +5,7 @@
 - `main` is always the deployed, release-ready branch and the default GitHub branch for the current Ver 2.1 product line.
 - `Development1` collects firmware, software, tests, documentation, and release-workflow changes that have passed their applicable gates.
 - `Development1-KiCad` separately collects schematic, PCB, symbol, footprint, model, and simulation changes under `KiCad/`.
-- `Development_AVR128DA48` is the preserved former integration branch. Do not add new work to it.
+- `Development_AVR128DA48` was retired after its final tip was verified identical to `main`. Do not recreate it.
 - The transitional `AVR128DA48` branch was removed after the approved 2026-07-14 replacement-tree merge. Do not recreate it as an integration layer.
 - `ATMEGA328p` and any other legacy hardware branches are historical product lines. Do not merge them into current firmware work without a specific compatibility objective.
 
