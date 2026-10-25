@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kicadVersion": "9.0.4",
+  "erc": {
+    "severities": { "error": 13, "warning": 301 },
+    "fingerprint": "facb404ad3cbab49f0e246795be8a22da391e3b3ac7e9162babe2c8858b7f5b1",
+    "allowedDiagnostics": [],
+    "waiver": "Imported legacy schematic baseline; every diagnostic is fingerprinted, and any addition, removal, or change fails the check pending explicit review."
+  },
+  "drc": {
+    "severities": { "error": 39, "warning": 443 },
+    "unconnected": 0,
+    "fingerprint": "33e9162de2630f025378eab0e540bc4127ce2321e505c09da6a137d82506cf67",
+    "allowedDiagnostics": [
+      "Warning: Legacy zone fill strategy is not supported anymore.",
+      "Zone fills will be converted on best-effort basis."
+    ],
+    "waiver": "Imported legacy board baseline, including the legacy-zone diagnostic; every result is fingerprinted, and any addition, removal, or change fails pending explicit review."
+  }
+}

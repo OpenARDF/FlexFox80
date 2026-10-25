@@ -5,6 +5,17 @@ default:
 status:
     git status --short --branch
 
+# Verify that the current topic or collector is routed through the named collector.
+branch-route-check collector:
+    ./scripts/check-branch-workflow.sh "{{collector}}"
+
+# Verify collector routing, repository gates, and secrets before a promotion PR.
+collector-preflight collector:
+    ./scripts/check-branch-workflow.sh "{{collector}}" --promotion
+    just check
+    if [ "{{collector}}" = "Development1-KiCad" ]; then just kicad-check; fi
+    just secrets
+
 # Verify that the local machine has the tools needed for Step A1 checks.
 doctor:
     ./scripts/repository-doctor.sh
@@ -48,11 +59,16 @@ test:
     node ./Tests/Host/fleet_upgrade_workflow_test.mjs
     node ./Tests/Host/release_checklist_validator_test.mjs
     node --check ./scripts/upgrade-flexfox-fleet-unit.mjs
+    node --check ./scripts/check-kicad.mjs
     node ./scripts/check-firmware-contracts.mjs
     node ./scripts/check-eeprom-layout.mjs
 
 # Run all currently available non-firmware checks and host tests.
 check: doctor docs-check policy-check test
+
+# Compare KiCad ERC/DRC output with the explicitly reviewed legacy baseline.
+kicad-check:
+    node ./scripts/check-kicad.mjs
 
 # Scan repository history using the exact-fingerprint false-positive baseline.
 secrets:
