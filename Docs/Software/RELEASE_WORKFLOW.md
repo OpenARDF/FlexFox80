@@ -7,16 +7,16 @@
 | `main` | Deployed, release-ready branch and default GitHub branch for current Ver 2.1 hardware |
 | `Development1` | Firmware/software/test/documentation/release-workflow collector |
 | `Development1-KiCad` | KiCad schematic/PCB/library/model/simulation collector |
-| `Development_AVR128DA48` | Preserved former integration branch; no new work |
 | `ATMEGA328p` | Historical hardware-generation branch |
 
-The transitional `AVR128DA48` branch was removed after the approved 2026-07-14 replacement-tree merge established the current product line on `main`. Its history remains reachable through `main`, the preserved `Development_AVR128DA48`, and release history.
+The transitional `AVR128DA48` branch was removed after the approved 2026-07-14 replacement-tree merge established the current product line on `main`. Its history remains reachable through `main` and release history. The former `Development_AVR128DA48` collector was later retired after its final tip was verified identical to `main`; historical evidence retains the branch name, but the branch must not be recreated.
 
 ## Release authority and phases
 
 - `Development1` may produce a firmware/software release candidate or explicitly approved prerelease. `Development1-KiCad` is promoted independently and is not a firmware release source.
 - A stable release must be integrated into and reproduced from a clean `main` release commit.
-- After either collector is promoted, synchronize both collectors from the resulting `main` before resuming work. If histories diverge, stop and review rather than rebasing or force-pushing.
+- Promotions into `main` use squash or rebase merges so `main` remains linear. Collector PRs use merge commits so a collector can preserve the promoted `main` commit as an ancestor.
+- After either collector is promoted, synchronize both collectors from the resulting `main` before resuming work. Create each synchronization topic from `origin/<collector>`, merge `origin/main` with `--no-ff`, run `just collector-sync-check <collector>`, and merge that topic into the collector with a merge-commit PR. If histories diverge, stop and review rather than rebasing or force-pushing.
 - Creating a tag, distributing release artifacts, or programming a fleet requires explicit owner approval; completion of local engineering gates does not imply deployment authority.
 
 FlexFox releases support one hardware target only: **Ver 2.1 (Mar 2022)**. Unlike SignalSlinger, the FlexFox release process does not build or publish parallel board variants. Earlier prototypes and any future revision require a separate compatibility decision before they can use these release assets.
@@ -68,10 +68,10 @@ Before promoting either collector into `main`:
 
 5. Run `just collector-preflight <collector>` and every additional release gate applicable at that roadmap stage.
 6. Review the commit list and complete diff from `main` to the selected collector. Use a separate cumulative promotion PR for each collector.
-7. Merge only through the separately authorized promotion PR; do not manufacture a direct integration or combine collector contents.
+7. Merge only through the separately authorized promotion PR, using squash or rebase; do not manufacture a direct integration or combine collector contents.
 8. If `main` has independent commits, stop and review the divergence before selecting a merge strategy; never rebase or force-push published release history.
 9. Verify that the separately authorized promotion updated `origin/main` to the reviewed result.
-10. Synchronize both collectors from the resulting `main`, return the checkout to the appropriate collector, and verify all local/remote alignments.
+10. Synchronize both collectors with exact two-parent merge topics: first parent `origin/<collector>`, second parent `origin/main`. Run `just collector-sync-check <collector>` before each merge-commit PR, then return the checkout to the appropriate collector and verify all local/remote alignments.
 
 The firmware/software collector preflight rejects every `KiCad/` path. The KiCad collector preflight rejects firmware, tests, release notes, and release evidence, and runs [KiCad validation](KICAD_VALIDATION.md). Every unwaived warning fails. The current legacy ERC/DRC findings are explicit fingerprinted waivers; they are not reported as clean.
 

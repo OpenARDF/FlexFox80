@@ -7,14 +7,25 @@ status:
 
 # Verify that the current topic or collector is routed through the named collector.
 branch-route-check collector:
+    git fetch --prune origin main "{{collector}}"
     ./scripts/check-branch-workflow.sh "{{collector}}"
+
+# Verify that a synchronization topic joins the exact remote collector and main tips.
+collector-sync-check collector:
+    git fetch --prune origin main "{{collector}}"
+    ./scripts/check-branch-workflow.sh "{{collector}}" --sync
 
 # Verify collector routing, repository gates, and secrets before a promotion PR.
 collector-preflight collector:
+    git fetch --prune origin main "{{collector}}"
     ./scripts/check-branch-workflow.sh "{{collector}}" --promotion
     just check
     if [ "{{collector}}" = "Development1-KiCad" ]; then just kicad-check; fi
     just secrets
+
+# Prove branch routing rejects stale collectors and malformed synchronization topics.
+branch-workflow-regression:
+    ./scripts/test-branch-workflow.sh
 
 # Verify that the local machine has the tools needed for Step A1 checks.
 doctor:
@@ -64,7 +75,7 @@ test:
     node ./scripts/check-eeprom-layout.mjs
 
 # Run all currently available non-firmware checks and host tests.
-check: doctor docs-check policy-check test
+check: doctor docs-check policy-check branch-workflow-regression test
 
 # Compare KiCad ERC/DRC output with the explicitly reviewed legacy baseline.
 kicad-check:
