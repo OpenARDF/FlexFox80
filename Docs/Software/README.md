@@ -1,6 +1,6 @@
 # FlexFox80 Software Documentation
 
-This directory documents the current AVR128DA48-based software architecture on the active `Development_AVR128DA48` branch and stable `main` release branch, and records the initial reliability review performed in July 2026. It is intended to give future maintainers and project threads a shared starting point before changing mature transmitter behavior.
+This directory documents the current AVR128DA48-based software architecture on the active `Development1` firmware/software collector, the separate `Development1-KiCad` collector, and the stable `main` release branch. It also records the initial reliability review performed in July 2026 and gives future maintainers and project threads a shared starting point before changing mature transmitter behavior.
 
 ## Documents
 

@@ -7,10 +7,9 @@
 | `main` | Deployed, release-ready branch and default GitHub branch for current Ver 2.1 hardware |
 | `Development1` | Firmware/software/test/documentation/release-workflow collector |
 | `Development1-KiCad` | KiCad schematic/PCB/library/model/simulation collector |
-| `Development_AVR128DA48` | Preserved former integration branch; no new work |
 | `ATMEGA328p` | Historical hardware-generation branch |
 
-The transitional `AVR128DA48` branch was removed after the approved 2026-07-14 replacement-tree merge established the current product line on `main`. Its history remains reachable through `main`, the preserved `Development_AVR128DA48`, and release history.
+The transitional `AVR128DA48` branch was removed after the approved 2026-07-14 replacement-tree merge established the current product line on `main`. Its history remains reachable through `main` and release history. The former `Development_AVR128DA48` collector was later retired after its final tip was verified identical to `main`; historical evidence retains the branch name, but the branch must not be recreated.
 
 ## Release authority and phases
 

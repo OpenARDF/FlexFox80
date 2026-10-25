@@ -1,6 +1,6 @@
 # FlexFox80 Hardening and Bug Plan
 
-**Plan status:** Step A1 is complete on `Development_AVR128DA48`; the exact AVR build is reproducible on Mac and Windows, the pinned ESP8266 core-2.7.4/WebSockets-2.3.6 build is hardware-compatible, and characterization-first TDD plus narrow firmware hardening slices are active.
+**Plan status:** Step A1 was completed on the former `Development_AVR128DA48` branch; current firmware/software work uses `Development1`. The exact AVR build is reproducible on Mac and Windows, the pinned ESP8266 core-2.7.4/WebSockets-2.3.6 build is hardware-compatible, and characterization-first TDD plus narrow firmware hardening slices remain active.
 
 ## Purpose
 
@@ -45,7 +45,7 @@ FlexFox80 was not originally developed with TDD, so the project will use **chara
 4. Re-run neighboring characterization, build, protocol, resource, and hardware gates.
 5. Refactor only when useful and only while all applicable tests remain green.
 
-The failing test and production fix normally belong to the same focused fix commit so the branch remains usable. Test-infrastructure changes that pass independently should be committed before the first production fix. A deliberately failing test may be preserved temporarily only on an explicitly identified diagnostic branch or in recorded pre-fix evidence; it must not leave `Development_AVR128DA48` red.
+The failing test and production fix normally belong to the same focused fix commit so the branch remains usable. Test-infrastructure changes that pass independently should be committed before the first production fix. A deliberately failing test may be preserved temporarily only on an explicitly identified diagnostic branch or in recorded pre-fix evidence; it must not leave `Development1` red.
 
 ### New behavior
 
@@ -64,13 +64,15 @@ Do not reorganize ISR, RF, persistence, or sleep/wake code merely to increase te
 
 ## Current branch model
 
-The provisional three-branch model was retired on 2026-07-14 after the approved replacement-tree transition preserved the earlier `main` at annotated tag `legacy-main-before-avr128da48-2026-07-14` and established the qualified Ver 2.1 tree on `main` without a force-push.
+The provisional three-branch model was retired on 2026-07-14 after the approved replacement-tree transition preserved the earlier `main` at annotated tag `legacy-main-before-avr128da48-2026-07-14` and established the qualified Ver 2.1 tree on `main` without a force-push. The later dual-collector workflow now separates firmware/software work from KiCad work.
 
-- `Development_AVR128DA48` is the active hardening and bug-development branch.
+- `Development1` is the active firmware/software hardening and bug-development collector.
+- `Development1-KiCad` separately collects schematic, PCB, library, model, and simulation work.
 - `main` holds approved releases for the current Ver 2.1 product line.
+- The former `Development_AVR128DA48` collector was retired after its final tip was verified identical to `main`; do not recreate it.
 - The redundant `AVR128DA48` integration branch was deleted locally and remotely.
 - Narrow topic branches remain appropriate for safety-critical or independently reviewable slices when they materially improve isolation.
-- Release integration follows [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md): verify development, integrate into `main` with explicit approval, then carry the release history back into development before resuming work.
+- Release integration follows [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md): verify the appropriate collector, integrate it into `main` with explicit approval, then synchronize both collectors from the resulting `main` before resuming work.
 
 ## Path A: Code hardening and clear-error removal
 
