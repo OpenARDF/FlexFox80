@@ -35,11 +35,13 @@ Use the repository-root [Codex mailbox](../../CODEX_MAILBOX.md) for cross-machin
 2. Create a focused `codex/<topic>` branch from the appropriate collector. Do not start it from `main`, the other collector, or a stale topic.
 3. Keep firmware/software and KiCad changes in separate topics. `just branch-route-check <collector>` must pass before work and before return.
 4. Run focused checks plus `just check`; KiCad topics also run [the KiCad gate](KICAD_VALIDATION.md). Treat every unwaived warning as a failure.
-5. Merge or otherwise land only the proven topic into its collector, then return the checkout to that collector.
-6. Use a separate cumulative promotion pull request from each collector to `main`. Do not mix their pending contents.
-7. After any promotion reaches `main`, synchronize both collectors from the new `main` before starting another topic. Stop for review if either collector has diverged.
+5. Merge only the proven topic into its collector with a merge-commit pull request, then return the checkout to that collector.
+6. Use a separate cumulative promotion pull request from each collector to `main`, merged by squash or rebase so `main` remains linear. Do not mix the collectors' pending contents.
+7. After any promotion reaches `main`, fetch `origin`, create a focused synchronization topic from each exact remote collector tip, and merge exact `origin/main` into it with `--no-ff`. Run `just collector-sync-check <collector>`, then merge each synchronization pull request with a merge commit. Do not rebase, squash, reset, or force-push collectors. Finish both synchronizations before starting another topic.
 
 `just collector-preflight <collector>` is the required local promotion gate. The firmware/software collector rejects `KiCad/` paths. The KiCad collector rejects firmware, tests, release notes, and release evidence, and runs every currently available KiCad/model/simulation check.
+
+`main` accepts squash or rebase pull requests and keeps a linear release history. Collectors accept merge commits only so topic ancestry and the exact `main` baseline remain auditable rather than being reproduced as equivalent file content under unrelated commits.
 
 Post-publication evidence is the only exception to the ordinary cumulative promotion sequence. Evidence that can exist only after publication may use a later evidence-only promotion PR from `Development1`; it must not alter firmware, KiCad content, the tag, or the already published artifacts.
 
@@ -125,9 +127,9 @@ Integration requires explicit user authorization.
 2. Verify that collector, the other collector, and `main` remote state.
 3. Require a clean worktree.
 4. Run the collector preflight and review the complete cumulative diff against `main`.
-5. Use a separate promotion pull request for that collector. If histories diverge, stop and review before any merge.
+5. Use a separate promotion pull request for that collector, merged by squash or rebase. If histories diverge, stop and review before any merge.
 6. Do not merge the pull request or push `main` without separate explicit authorization.
-7. After the separately authorized promotion, synchronize both collectors from the resulting `main`, return to the appropriate collector, and verify remote alignment.
+7. After the separately authorized promotion, synchronize both collectors through exact two-parent merge topics validated by `just collector-sync-check <collector>`, return to the appropriate collector, and verify remote alignment.
 
 The one-time legacy-to-current transition is complete. Its preservation tag, exact parents, tree hash, and verification are recorded in [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md).
 
