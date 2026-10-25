@@ -68,6 +68,7 @@ jq empty KiCad/FlexFox80.kicad_prl KiCad/FlexFox80.kicad_pro
 for required_file in \
 	Docs/Software/KICAD_VALIDATION.md \
 	scripts/check-branch-workflow.sh \
+	scripts/test-branch-workflow.sh \
 	scripts/check-kicad.mjs \
 	scripts/kicad-validation-baseline.json
 do
@@ -79,9 +80,16 @@ done
 
 if ! rg -q '^branch-route-check collector:' Justfile ||
 	! rg -q '^collector-preflight collector:' Justfile ||
+	! rg -q '^collector-sync-check collector:' Justfile ||
+	! rg -q '^branch-workflow-regression:' Justfile ||
 	! rg -q '^kicad-check:' Justfile
 then
 	printf '%s\n' "ERROR: Justfile is missing collector or KiCad enforcement recipes" >&2
+	failure=1
+fi
+
+if ! rg -q 'Collectors accept merge commits only' Docs/Software/CODEX_WORKFLOW.md; then
+	printf '%s\n' "ERROR: CODEX_WORKFLOW.md must preserve ancestry through collector merge commits" >&2
 	failure=1
 fi
 

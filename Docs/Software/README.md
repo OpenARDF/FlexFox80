@@ -8,8 +8,8 @@ This directory documents the current AVR128DA48-based software architecture on t
 - [Reliability review](RELIABILITY_REVIEW.md) records existing strengths, confirmed code-level concerns, suspected failure modes, and current verification gaps.
 - [Safe hardening strategy](SAFE_HARDENING_STRATEGY.md) defines a conservative process for reproducing and fixing bugs without unnecessarily changing proven transmitter behavior.
 - [Hardening and bug plan](HARDENING_AND_BUG_PLAN.md) turns the review into two coordinated work paths with specific deliverables, decision points, and exit checkpoints.
-- [Development workflow](CODEX_WORKFLOW.md) defines everyday branch, verification, staging, commit, integration, and handoff rules.
-- [Release workflow](RELEASE_WORKFLOW.md) defines current development/`main` branch roles, integration gates, release evidence, and the completed current-product transition to `main`.
+- [Development workflow](CODEX_WORKFLOW.md) defines everyday branch, verification, staging, commit, integration, handoff, and ancestry-preserving collector synchronization rules.
+- [Release workflow](RELEASE_WORKFLOW.md) defines current development/`main` branch roles, merge-method boundaries, integration gates, release evidence, and the completed current-product transition to `main`.
 - [Release package format](RELEASE_PACKAGE_FORMAT.md) defines the two-processor manifest, checksums, package contents, validation rules, and durable maintenance archive adapted from SignalSlinger.
 - [Release checklist template](release-checklist-template.json) provides evidence-bearing `candidate`, `release`, and `final` gates with explicit owner-attributed skips.
 - [Withdrawn FlexFox80 v1.0.0 record](Releases/v1.0.0/README.md) preserves the first tagged maintenance baseline, its critical AVR `0.201` safety advisory, and the verified GitHub release withdrawal.
