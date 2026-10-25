@@ -64,6 +64,29 @@ tracked_generated=$(git ls-files -ci --exclude-standard | wc -l | tr -d ' ')
 printf '%s\n' "Tracked files matching generated/IDE ignore rules: $tracked_generated (cleanup requires dedicated review)"
 
 jq empty KiCad/FlexFox80.kicad_prl KiCad/FlexFox80.kicad_pro
+
+for required_file in \
+	Docs/Software/KICAD_VALIDATION.md \
+	scripts/check-branch-workflow.sh \
+	scripts/check-kicad.mjs \
+	scripts/kicad-validation-baseline.json
+do
+	if [ ! -f "$required_file" ]; then
+		printf '%s\n' "ERROR: required workflow file is missing: $required_file" >&2
+		failure=1
+	fi
+done
+
+if ! rg -q '^branch-route-check collector:' Justfile ||
+	! rg -q '^collector-preflight collector:' Justfile ||
+	! rg -q '^kicad-check:' Justfile
+then
+	printf '%s\n' "ERROR: Justfile is missing collector or KiCad enforcement recipes" >&2
+	failure=1
+fi
+
+jq -e '.schemaVersion == 1 and .kicadVersion != "" and .erc.fingerprint != "PENDING" and .drc.fingerprint != "PENDING"' \
+	scripts/kicad-validation-baseline.json >/dev/null || failure=1
 git diff --check
 git diff --cached --check
 

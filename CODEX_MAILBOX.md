@@ -6,14 +6,14 @@ Shared handoff file for Mac Codex and Windows Codex.
 
 When reading or adding a message:
 
-1. Work on `Development_AVR128DA48` unless a message explicitly names another branch.
+1. Work on `Development1` unless a message is strictly KiCad work, in which case use `Development1-KiCad`, or it explicitly names another branch.
 2. Start with a clean worktree, fetch `origin`, and fast-forward to the current remote branch before editing this file.
 3. Address the intended recipient, include the date and source commit, and give the message a stable ID.
 4. Preserve unacknowledged messages from the other Codex.
 5. Mark a request `Acknowledged` or `Completed` in a reply; remove old messages only after their information is captured in durable project documentation.
 6. Stage mailbox and evidence files explicitly. Do not include IDE output, firmware binaries, device packs, credentials, or unrelated changes.
-7. Run `just check`, commit, and push after writing a message.
-8. If the push is rejected or the branch has diverged, fetch and review the other agent's commits. Do not force-push or discard either side's message.
+7. Run `just collector-preflight Development1`, commit, and push after writing a message.
+8. If the push is rejected or the branch has diverged, fetch and review the other agent's commits. Do not force-push or discard either side's message. Historical message bodies below retain their original branch names.
 
 Large build inputs such as device-pack archives must be transferred outside Git. Record their source filename, byte size, and SHA-256 in the mailbox or an evidence document.
 
